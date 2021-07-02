@@ -114,7 +114,7 @@ def apply_baseline(mode, data, limit):
 if __name__ == '__main__':
 
     mouse_ids = ['GN06']
-    root_paths = [r'B:\Master\ERS_calcium_analysis\code\GN06\2021-01-20_10-15-16']
+    root_paths = [r'B:\Master\ERS_calcium_analysis\data\GN06\2021-01-20_10-15-16']
     conds = ["cues_right_vis", "cues_left_vis", "cues_left_tact", "cues_right_tact"]
    #################################################
     extract_trials = False #True
