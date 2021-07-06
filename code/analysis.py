@@ -1,5 +1,5 @@
 import numpy as np
-from extract_trails import load_trials, first_frams, extract_all_trials
+from extract_trials import load_trials, first_frams, extract_all_trials
 import matplotlib.pyplot as plt
 from ipywidgets import interact, IntSlider
 from scipy.stats import wilcoxon, stats
@@ -9,6 +9,7 @@ import sklearn.discriminant_analysis as skda
 import sklearn.preprocessing as skppc
 import sklearn.pipeline as skppl
 from sklearn.model_selection import StratifiedShuffleSplit
+from pathlib import Path
 
 
 ##### plot through of trial-frames in in pixels space
@@ -114,7 +115,10 @@ def apply_baseline(mode, data, limit):
 if __name__ == '__main__':
 
     mouse_ids = ['GN06']
-    root_paths = [r'B:\Master\ERS_calcium_analysis\data\GN06\2021-01-20_10-15-16']
+    # relative to current working directory
+    root_paths = [ Path.cwd() / Path('data/GN06/2021-01-20_10-15-16') ]
+    # relative to script
+    root_paths = [ Path(__file__).parent.parent / Path('data/GN06/2021-01-20_10-15-16') ]
     conds = ["cues_right_vis", "cues_left_vis", "cues_left_tact", "cues_right_tact"]
    #################################################
     extract_trials = False #True
