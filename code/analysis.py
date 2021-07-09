@@ -223,10 +223,13 @@ if __name__ == '__main__':
     for i_conn in range(n_conn):
 
         if i_conn == 0:
+            print("Corrs")
             data, labels = data1, labels1
         elif i_conn == 1:
+            print("Means")
             data, labels = data2, labels2
         elif i_conn == 2:
+            print("Means+Corrs")
             data, labels = data3, labels1
 
         cv_split = cv.split(data, labels)
@@ -241,7 +244,7 @@ if __name__ == '__main__':
 
         i = 0  ## counter
         for train_idx, test_idx in cv_split:
-            print('\tRepetition %d' % i)
+            print(f'\tRepetition {i}' )
             c_MLR.fit(data[train_idx, :], labels[train_idx])
             c_1NN.fit(data[train_idx, :], labels[train_idx])
             c_LDA.fit(data[train_idx, :], labels[train_idx])
