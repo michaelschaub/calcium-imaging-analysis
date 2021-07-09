@@ -8,8 +8,10 @@ import sklearn.neighbors as sklnn
 import sklearn.discriminant_analysis as skda
 import sklearn.preprocessing as skppc
 import sklearn.pipeline as skppl
+from sklearn import preprocessing
 from sklearn.model_selection import StratifiedShuffleSplit
 from pathlib import Path
+from enum import Enum
 
 
 ##### plot through of trial-frames in in pixels space
@@ -57,6 +59,20 @@ def plot_ac(data):
         plt.colorbar(orientation='horizontal')
     interact(_plot, x0=IntSlider(0, 0, data.shape[0] - 1, 1, continuous_update=True))
 
+def colored_violinplot( *args, color=None, facecolor=None, edgecolor=None, **kwargs ):
+    violin_parts = plt.violinplot( *args, **kwargs )
+    for part in violin_parts:
+        #for pc in violin_parts['bodies']:
+        parts = violin_parts[part] if part == 'bodies' else [violin_parts[part]]
+        for pc in parts:
+            if color is not None:
+                pc.set_color(color)
+            if facecolor is not None:
+                pc.set_facecolor(facecolor)
+            if edgecolor is not None:
+                pc.set_edgecolor(edgecolor)
+    return violin_parts
+
 
 def divide(cor, runs):
 
@@ -68,12 +84,12 @@ def divide(cor, runs):
 
 def make_data_with_labels(data):
 
-    datas = np.concatenate(data, axis=0)
+    datas = np.concatenate(list(data.values()), axis=0)
     labels = list()
-    for index, element in enumerate(data):
-        labels.append(np.full(element.shape[0], index))
-    labs = np.concatenate(labels, axis=0)
-    return datas, labs
+    for label in data:
+        labels.append(np.full(data[label].shape[0], label.value))
+    labels = np.concatenate(labels, axis=0)
+    return datas, labels
 
 ##### convert from 3D to 2D
 def prepare_data(data):
@@ -82,9 +98,8 @@ def prepare_data(data):
     return d2_train_dataset
 
 ##### compute AC
-def ac_data(data, runs, comp):
-    n_tau = 3
-    T = 7
+def ac_data(data, comp, n_tau=3, T=7):
+    runs = data.shape[0]
     CM = np.zeros([runs, n_tau,comp,comp])
     for run in range(runs):
         for i_tau in range(n_tau):
@@ -109,6 +124,42 @@ def apply_baseline(mode, data, limit):
         fun(data, mean)
 
     return data
+
+def calc_features( cond, trials, frames, runs, max_tau=3, max_comps=50, t_interval=7 ):
+
+    ##### cut trials lenghth till the given frame
+    data = first_frams(trials[cond], frames)[:runs]
+
+    ##### calculate the mean of the conditions accross frames
+    mean = data.mean(1)[:,:max_comps]
+
+    ##### compute the covariance matrix; last parameter is number of components to use,for LDA only 50 would work
+    CA = ac_data(data, max_comps, max_tau, t_interval )
+    corr = np.copy(CA)[:, 0, :, :]
+    ##### divide by square of the outer product of the diagonals
+    corr = divide(corr, runs)
+    return data[:, :, :max_comps], mean, CA, corr
+
+class Features(Enum):
+    DIRECT      = 0
+    MEANS       = 1
+    COVS        = 2
+    TIMECOVS    = 3
+    CORRS       = 4
+
+
+class Conditions(Enum):
+    CUES_RIGHT_VIS  = 0
+    CUES_LEFT_VIS   = 1
+    CUES_RIGHT_TACT = 2
+    CUES_LEFT_TACT  = 3
+
+CONDITION_NAMES = {
+    Conditions.CUES_RIGHT_VIS  : "cues_right_vis",
+    Conditions.CUES_LEFT_VIS   : "cues_left_vis",
+    Conditions.CUES_RIGHT_TACT : "cues_right_tact",
+    Conditions.CUES_LEFT_TACT  : "cues_left_tact",
+}
 
 
 ########################################################################################################
@@ -139,98 +190,51 @@ if __name__ == '__main__':
     n_rep = 20  ### number of repetition
     n_comp_LDA = 1 ### number of LDA componants (conds -1)
 
+    features = [ Features.DIRECT, Features.MEANS, Features.COVS, Features.CORRS, Features.TIMECOVS ]
+    compared_conds = [ Conditions.CUES_RIGHT_VIS, Conditions.CUES_LEFT_TACT ]
 
-    ##### cut trials lenghth till the given frame
-    cond1 = first_frams(trials["cues_right_vis"], frames)[:runs]
-    cond2 = first_frams(trials["cues_left_vis"], frames)[:runs]
-    cond3 = first_frams(trials["cues_right_tact"], frames)[:runs]
-    cond4 = first_frams(trials["cues_left_tact"], frames)[:runs]
+    feature_data = { f : {} for f in features }
 
+    for i,cond in enumerate(compared_conds):
+        # calculate all features of trials with condition: cond
+        raw, mean, CA, corr = calc_features( CONDITION_NAMES[cond], trials, frames, runs, max_comps=40 )
 
+        for feat in feature_data:
+            if feat == Features.DIRECT:
+                feature_data[feat][cond] = raw.reshape( runs, -1 )
 
-    ########################
-    # This code is only to look at the data in the pixels space
+            if feat == Features.MEANS:
+                feature_data[feat][cond] = mean
 
-    # file_path = r'C:\Users\Mo\2021-01-20_10-15-16\SVD_data\Vc.mat'
-    # f = h5py.File(file_path, 'r')
-    # U = np.array(f['U'])  # mixing matrix (component x voxel x voxel)
-    # def bproj(x):
-    # return np.tensordot(x, U, axes=(-1, 0))
+            if feat in [ Features.CORRS, Features.COVS ]:
+                data = corr if feat==Features.CORRS else CA[:,0,:,:]
+                # flatten covariances or correlations (discard lower triangle)
+                ind = np.triu_indices(data.shape[1], k=0)
+                feature_data[feat][cond] = data[ :, ind[0], ind[1] ]
 
-    # projected_in_pixels_space = bproj(corrected.mean(0))
-    # plot_through_frames(projected_in_pixels_space)
-    # plot_frame_average(projected_in_pixels_space)
+            if feat == Features.TIMECOVS:
+                # flatten time lagged covariances
+                feature_data[feat][cond] = CA.reshape( runs, -1 )
 
-    #########################
+    feature_labels = {}
+    for feat, data in feature_data.items():
+        # concat data and create associated labels
+        feature_data[feat], feature_labels[feat] = make_data_with_labels( data )
+        assert len(feature_data[feat].shape) == 2 and feature_data[feat].shape[0] == feature_labels[feat].shape[0]
+        print(feat)
+        print(feature_data[feat].shape)
 
-    ##### compute the covariance matrix; last parameter is number of components to use,for LDA only 50 would work
-
-    CA1 = ac_data(cond1, runs, comp)
-    CA2 = ac_data(cond2, runs, comp)
-    CA3 = ac_data(cond3, runs, comp)
-    CA4 = ac_data(cond4, runs, comp)
-
-    ####plot when needed
-    # plot_ca(CA1)
-    # a = CA3[:,0,:,:].flatten()
-    # b = CA1[:,0,:,:].flatten()
-    # stat, p = wilcoxon(a,b)
-    # print('Statistics=%.3f, p=%.3f' % (stat, p))
-
-    corr1 = np.copy(CA1)[:, 0, :, :]
-    corr2 = np.copy(CA2)[:, 0, :, :]
-    corr3 = np.copy(CA3)[:, 0, :, :]
-    corr4 = np.copy(CA4)[:, 0, :, :]
-
-    ##### divide by square of the outer product of the diagonals
-    corr1 = divide(corr1, runs)
-    corr2 = divide(corr2, runs)
-    corr3 = divide(corr3, runs)
-    corr4 = divide(corr4, runs)
-
-    ##### Use all the conditions lenght for calssification
-    #corrected1 = corrected1.reshape([runs,-1])
-    #corrected2 = corrected2.reshape([runs,-1])
-    #corrected3 = corrected3.reshape([runs,-1])
-    #corrected4 = corrected4.reshape([runs,-1])
-
-    ##### calculate the mean of the conditions accross frames
-    cond1 = cond1.mean(1)
-    cond2 = cond2.mean(1)
-    cond3 = cond3.mean(1)
-    cond4 = cond4.mean(1)
-
-    ##### add data for classification to the lists
-    means = [cond1, cond4]
-    corrs = [corr1, corr4]
-
-    ######## correlation data & labels
-    data1, labels1 = make_data_with_labels(corrs)
-
-    ####### from 3D into 2D only for correlation data
-    data1 = prepare_data(data1)
-
-    ######## mean data & labels
-    data2, labels2 = make_data_with_labels(means)
-
-    ######## (mean & correlation) data & labels
-    data3  = np.concatenate([data1,data2], axis= 1)
-
-    n_conn = 3  ### number of measures (mean & correlation & (mean & correlation))
 
     cv = StratifiedShuffleSplit(n_rep, test_size=0.2, random_state=420)
-    perf = np.zeros([n_rep, n_conn, 3])
-    for i_conn in range(n_conn):
+    perf = np.zeros([n_rep, len(features), 3])
+    for i_feat, feat in enumerate(features):
+        print(feat.name)
 
-        if i_conn == 0:
-            print("Corrs")
-            data, labels = data1, labels1
-        elif i_conn == 1:
-            print("Means")
-            data, labels = data2, labels2
-        elif i_conn == 2:
-            print("Means+Corrs")
-            data, labels = data3, labels1
+        data = feature_data[feat]
+        labels = feature_labels[feat]
+
+        scaler = preprocessing.StandardScaler().fit( data )
+        data = scaler.transform(data)
 
         cv_split = cv.split(data, labels)
 
@@ -244,32 +248,27 @@ if __name__ == '__main__':
 
         i = 0  ## counter
         for train_idx, test_idx in cv_split:
-            print(f'\tRepetition {i}' )
+            print(f'\tRepetition {i:>2}/{n_rep}' )
             c_MLR.fit(data[train_idx, :], labels[train_idx])
             c_1NN.fit(data[train_idx, :], labels[train_idx])
             c_LDA.fit(data[train_idx, :], labels[train_idx])
-            perf[i, i_conn, 0] = c_MLR.score(data[test_idx, :], labels[test_idx])
-            perf[i, i_conn, 1] = c_1NN.score(data[test_idx, :], labels[test_idx])
-            perf[i, i_conn, 2] = c_LDA.score(data[test_idx, :], labels[test_idx])
+            perf[i, i_feat, 0] = c_MLR.score(data[test_idx, :], labels[test_idx])
+            perf[i, i_feat, 1] = c_1NN.score(data[test_idx, :], labels[test_idx])
+            perf[i, i_feat, 2] = c_LDA.score(data[test_idx, :], labels[test_idx])
             i += 1
 
     if save_outputs:
         np.save('perf_tasks.npy', perf)
     plt.figure()
-    plt.violinplot(perf[:, 1, 0], positions=np.arange(1) - 0.3, widths=[0.2])
-    plt.violinplot(perf[:, 1, 1], positions=np.arange(1), widths=[0.2])
-    plt.violinplot(perf[:, 1, 2], positions=np.arange(1) + 0.3, widths=[0.2])
+    for i, feat in enumerate(features):
+        v1 = colored_violinplot(perf[:, i, 0], positions=np.arange(1) + i - 0.2, widths=[0.2], color="blue")
+        v2 = colored_violinplot(perf[:, i, 1], positions=np.arange(1) + i + 0.1, widths=[0.2], color="orange")
+        v3 = colored_violinplot(perf[:, i, 2], positions=np.arange(1) + i + 0.4, widths=[0.2], color="green")
+        if i == 0:
+            plt.legend( [ v['bodies'][0] for v in [v1,v2,v3]], [ "MLR", "1NN", "LDA" ] )
 
-    plt.violinplot(perf[:, 0, 0], positions=np.arange(1) + 0.8, widths=[0.2])
-    plt.violinplot(perf[:, 0, 1], positions=np.arange(1) + 1.1, widths=[0.2])
-    plt.violinplot(perf[:, 0, 2], positions=np.arange(1) + 1.4, widths=[0.2])
-
-    plt.violinplot(perf[:, 2, 0], positions=np.arange(1) + 1.8, widths=[0.2])
-    plt.violinplot(perf[:, 2, 1], positions=np.arange(1) + 2.1, widths=[0.2])
-    plt.violinplot(perf[:, 2, 2], positions=np.arange(1) + 2.4, widths=[0.2])
-
-    plt.xticks(range(3), ["Mean", "FC", "Mean + FC"])
-    plt.plot([-1, 3], [0.5, 0.5], '--k')
+    plt.xticks(range(len(features)), [ feat.name for feat in features ])
+    plt.plot([-.5, len(features)-.5], [0.5, 0.5], '--k')
     plt.yticks(np.arange(0, 1, 0.1))
     plt.ylabel('Accuracy', fontsize=14)
     plt.show()
