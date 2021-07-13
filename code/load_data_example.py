@@ -5,9 +5,10 @@ After Compression, data is stored in the Folder SVD. File 'Vc.mat' usually contr
 
 import h5py
 import numpy as np
+from pathlib import Path
 
 
-file_path = r'B:\Master\ERS_calcium_analysis\Example_data\GN06\2021-01-20_10-15-16\SVD_data\Vc.mat'
+file_path = [ Path(__file__).parent.parent / Path('data/GN06/2021-01-20_10-15-16/SVD_data\Vc.mat') ]
 arrays = {}
 f = h5py.File(file_path, 'r')
 if False:
