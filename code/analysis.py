@@ -197,7 +197,7 @@ if __name__ == '__main__':
 
     for i,cond in enumerate(compared_conds):
         # calculate all features of trials with condition: cond
-        raw, mean, CA, corr = calc_features( CONDITION_NAMES[cond], trials, frames, runs, max_comps=40 )
+        raw, mean, CA, corr = calc_features( CONDITION_NAMES[cond], trials, frames, runs, max_comps=30 )
 
         for feat in feature_data:
             if feat == Features.DIRECT:
@@ -248,7 +248,7 @@ if __name__ == '__main__':
 
         i = 0  ## counter
         for train_idx, test_idx in cv_split:
-            print(f'\tRepetition {i:>2}/{n_rep}' )
+            print(f'\tRepetition {i:>2}/{n_rep}', end="\r" )
             c_MLR.fit(data[train_idx, :], labels[train_idx])
             c_1NN.fit(data[train_idx, :], labels[train_idx])
             c_LDA.fit(data[train_idx, :], labels[train_idx])
@@ -256,6 +256,7 @@ if __name__ == '__main__':
             perf[i, i_feat, 1] = c_1NN.score(data[test_idx, :], labels[test_idx])
             perf[i, i_feat, 2] = c_LDA.score(data[test_idx, :], labels[test_idx])
             i += 1
+        print(f'\tRepetition {n_rep}/{n_rep}' )
 
     if save_outputs:
         np.save('perf_tasks.npy', perf)
@@ -271,4 +272,5 @@ if __name__ == '__main__':
     plt.plot([-.5, len(features)-.5], [0.5, 0.5], '--k')
     plt.yticks(np.arange(0, 1, 0.1))
     plt.ylabel('Accuracy', fontsize=14)
+    plt.savefig("perf_tasks.png")
     plt.show()

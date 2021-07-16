@@ -82,7 +82,7 @@ def load_trials(path):
 ########################################################################################################
 if __name__ == '__main__':
     mouse_ids = ['GN06']
-    root_paths = [ Path(r'../2021-01-20_10-15-16') ]
+    root_paths = [ Path(__file__).parent.parent / Path('data/GN06/2021-01-20_10-15-16') ]
     conds = ["cues_right_vis", "cues_left_vis", "cues_left_tact", "cues_right_tact"]
     extract_trials = True
     samplingfreq = 15

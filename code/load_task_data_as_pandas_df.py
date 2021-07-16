@@ -5,12 +5,13 @@ import pandas as pd
 import copy
 from os import path
 import pickle as pkl
+from pathlib import Path
 
 
 def load_individual_session_data(date_folder, mouse_id):
-    file_paths = glob(date_folder + r'\*.h5')
+    file_paths = list(date_folder.glob('*.h5'))
     if len(file_paths) == 0:
-        file_paths = glob(date_folder + r'\task_data\*.h5')
+        file_paths = list((date_folder / r'task_data').glob('*.h5'))
     #
 
     file_paths = np.sort(file_paths)
@@ -138,16 +139,16 @@ def extract_session_data_and_save(root_paths, mouse_ids, reextract=False):
     save_individually = False
     for root_path in root_paths:
         for mouse_id in mouse_ids:
-            add = r"\task_data\MS_task_V2_1_"
-            mouse_path = root_path + add + mouse_id
-            date_paths = glob(mouse_path + r'*')
-            date_paths.sort()
+            date_paths = sorted((root_path / "task_data").glob( f"MS_task_V2_1_{mouse_id}*" ))
             # sessions = list()
 
-            for date_folder in date_paths:
+            n_paths = len(date_paths)
+            for n, date_folder in enumerate(date_paths):
+                print(f"Processed {date_folder} ({n}/{n_paths})", end='\r')
                 # mouse_id = 'AB24'
                 # session_pkl = path.join(date_folder, mouse_id + '_' + path.basename(date_folder) + '_performance_data_extracted.pkl')
                 session_pkl = path.join(date_folder, 'performance_data_extracted.pkl')
+                session_pkl = date_folder / 'performance_data_extracted.pkl'
                 if (not reextract) and path.isfile(session_pkl):
                     with open(session_pkl, 'rb') as handle:
                         data = pkl.load(handle)
@@ -164,12 +165,13 @@ def extract_session_data_and_save(root_paths, mouse_ids, reextract=False):
                 else:
                     sessions = sessions.append(pd.DataFrame.from_dict(data), ignore_index=True)
                 #
+            print(f"Processed {date_paths[-1]} ({n_paths}/{n_paths})")
             #
 
     # Some of the old files have a mixup of "_" and "-"
     sessions = fix_dates(sessions)
 
-    # pkl.dump(sessions, open(root_path+ add + 'extracted_data.pkl', 'wb'))
+    pkl.dump(sessions, open(root_path/"task_data/MS_task_V2_1_extracted_data.pkl", 'wb'))
     #
     return sessions
 
@@ -199,7 +201,7 @@ if __name__ == '__main__':
     modality_keys = ['visual', 'tactile', 'visual-tactile']
     mouse_ids = ['GN06', 'GN07', 'GN08', 'GN09', 'GN10', 'GN11']
 
-    root_paths = [r'..\2021-01-20_10-15-16']
+    root_paths = [ Path(__file__).parent.parent / Path('data/GN06/2021-01-20_10-15-16') ]
     run_extraction = True
 
     # extract sessions if desired
