@@ -7,6 +7,8 @@ import h5py
 import numpy as np
 from load_task_data_as_pandas_df import extract_session_data_and_save
 import matplotlib.pyplot as plt
+from pathlib import Path
+import pickle as pkl
 
 
 # calculate either the mean over trials or the z_score
@@ -14,23 +16,27 @@ plt_mean = False
 
 # Load Session Data
 mouse_ids = ['GN06']
-root_paths = [r'']
-run_extraction = True
+root_paths = [ Path(__file__).parent.parent / Path('data/GN06/2021-01-20_10-15-16') ]
+run_extraction = False
 
-# load behavior data
-sessions = extract_session_data_and_save(root_paths=root_paths, mouse_ids=mouse_ids, reextract=False)
+if run_extraction:
+    # load behavior data
+    sessions = extract_session_data_and_save(root_paths=root_paths, mouse_ids=mouse_ids, reextract=False)
+    with open( root_paths[0] / 'task_data' / 'extracted_data.pkl', 'wb') as handle:
+        pkl.dump(sessions, handle)
+else:
+    # load saved data
+    with open( root_paths[0] / 'task_data' / 'extracted_data.pkl', 'rb') as handle:
+        sessions = pkl.load(handle)
 
-# pre-select trials to look at
-# if looking only at the simplest cases (detection 6 vs. 0)
-trial_preselection = ((sessions.n_targets == 6) & (sessions.n_distractors == 0) &
-                      (sessions.auto_reward == 0) & (sessions.both_spouts == 1))
+# pre-selection moved after length match
 
 # # look at all difficulties
 # trial_preselection = ((sessions.auto_reward == 0) & (sessions.both_spouts == 1))
 #
 
 # Load imaging data
-file_path = r'GN06\2021-01-20_10-15-16\SVD_data\Vc.mat'
+file_path = root_paths[0] / Path('SVD_data/Vc.mat')
 f = h5py.File(file_path, 'r')
 frameCnt = np.array(f['frameCnt'])
 
@@ -44,6 +50,11 @@ if len(trial_starts) > sessions.shape[0]:
 if len(trial_starts) < sessions.shape[0]:
     sessions = sessions[:len(trial_starts)]
 #
+# pre-select trials to look at
+# if looking only at the simplest cases (detection 6 vs. 0)
+trial_preselection = ((sessions.n_targets == 6) & (sessions.n_distractors == 0) &
+                      (sessions.auto_reward == 0) & (sessions.both_spouts == 1))
+
 
 U = np.array(f['U'])
 U_shape = U.shape  # get the shape of the frames before reshaping for dot-product later
@@ -61,13 +72,15 @@ for modality_id in range(3):
 
         # get the frame_ids of stimulus frames in the selected trials
         trial_frame_range = np.arange(30, 75)  # stimulus frames
-        selected_frame_ids = trial_frame_range[np.newaxis, :] + trial_starts[selected_trials, np.newaxis]
+        # CHANGED: excluded last trial, since Vc ends at its start (is it supposed to?)
+        selected_frame_ids = np.array( trial_frame_range[np.newaxis, :] + trial_starts[:-1][selected_trials[:-1], np.newaxis], dtype=int)
 
         # get the baseline_ids to estimate a general baseline
         trial_frame_range = np.arange(15, 30)  # baseline frames (1sec before stimulus)
         # I'm using the trial_preselection just in case there are some weird trials in the beginning or end of the
         # session, where the animal might be still impatient or already disengaged
-        baseline_frame_ids = trial_frame_range[np.newaxis, :] + trial_starts[trial_preselection, np.newaxis]
+        # CHANGED: excluded last trial, since Vc ends at its start (is it supposed to?)
+        baseline_frame_ids = np.array( trial_frame_range[np.newaxis, :] + trial_starts[:-1][trial_preselection[:-1], np.newaxis], dtype=int)
 
         # calculate either the mean over trials or the z_score
         if plt_mean:

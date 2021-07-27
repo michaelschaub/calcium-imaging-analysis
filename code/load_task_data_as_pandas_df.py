@@ -35,6 +35,7 @@ def load_individual_session_data(date_folder, mouse_id):
             'control_condition_id': list()}
 
     for trial_file in file_paths:
+        #print(f"trial file: \"{trial_file}\"")
         # in case a file wasn't saved correctly.
         # e.g.: software was stopped in the middle of a trial no using the stop button
         # I'm first trying to read all the data and put it into a temporary dictionary and only if everything could be
@@ -155,6 +156,7 @@ def extract_session_data_and_save(root_paths, mouse_ids, reextract=False):
                     #
                 else:
 
+                    #print(f"date_folder: \"{root_path}\"")
                     data = load_individual_session_data(date_folder=root_path, mouse_id=mouse_id)
                     if save_individually:
                         with open(session_pkl, 'wb') as handle:
