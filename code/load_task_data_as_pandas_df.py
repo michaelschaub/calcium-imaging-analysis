@@ -140,7 +140,6 @@ def extract_session_data_and_save(root_paths, mouse_ids, reextract=False):
     save_individually = False
     for root_path in root_paths:
         for mouse_id in mouse_ids:
-            date_paths = sorted((root_path / "task_data").glob( f"MS_task_V2_1_{mouse_id}*" ))
             date_paths = sorted((root_path / str(mouse_id)).glob( "*" ))
             # sessions = list()
 
@@ -148,8 +147,6 @@ def extract_session_data_and_save(root_paths, mouse_ids, reextract=False):
             for n, date_folder in enumerate(date_paths):
                 print(f"Processed {date_folder} ({n}/{n_paths})", end='\r')
                 # mouse_id = 'AB24'
-                # session_pkl = path.join(date_folder, mouse_id + '_' + path.basename(date_folder) + '_performance_data_extracted.pkl')
-                session_pkl = path.join(date_folder, 'performance_data_extracted.pkl')
                 session_pkl = date_folder / 'performance_data_extracted.pkl'
                 if (not reextract) and path.isfile(session_pkl):
                     with open(session_pkl, 'rb') as handle:

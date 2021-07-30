@@ -17,9 +17,9 @@ plt_mean = False
 # Load Session Data
 mouse_ids = ['GN06']
 root_paths = [ Path(__file__).parent.parent / Path('data') ]
-run_extraction = True
+run_extraction = False
 
-if run_extraction:
+if run_extraction or not (root_paths[0]/'extracted_data.pkl').exists() :
     # load behavior data
     sessions = extract_session_data_and_save(root_paths=root_paths, mouse_ids=mouse_ids, reextract=False)
     with open( root_paths[0] / 'extracted_data.pkl', 'wb') as handle:
@@ -28,6 +28,7 @@ else:
     # load saved data
     with open( root_paths[0] / 'extracted_data.pkl', 'rb') as handle:
         sessions = pkl.load(handle)
+    print("Loaded pickled data.")
 
 # pre-selection moved after length match
 
