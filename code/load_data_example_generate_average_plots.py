@@ -16,17 +16,17 @@ plt_mean = False
 
 # Load Session Data
 mouse_ids = ['GN06']
-root_paths = [ Path(__file__).parent.parent / Path('data/GN06/2021-01-20_10-15-16') ]
-run_extraction = False
+root_paths = [ Path(__file__).parent.parent / Path('data') ]
+run_extraction = True
 
 if run_extraction:
     # load behavior data
     sessions = extract_session_data_and_save(root_paths=root_paths, mouse_ids=mouse_ids, reextract=False)
-    with open( root_paths[0] / 'task_data' / 'extracted_data.pkl', 'wb') as handle:
+    with open( root_paths[0] / 'extracted_data.pkl', 'wb') as handle:
         pkl.dump(sessions, handle)
 else:
     # load saved data
-    with open( root_paths[0] / 'task_data' / 'extracted_data.pkl', 'rb') as handle:
+    with open( root_paths[0] / 'extracted_data.pkl', 'rb') as handle:
         sessions = pkl.load(handle)
 
 # pre-selection moved after length match
@@ -36,7 +36,7 @@ else:
 #
 
 # Load imaging data
-file_path = root_paths[0] / Path('SVD_data/Vc.mat')
+file_path = root_paths[0] / mouse_ids[0] / Path('2021-01-20_10-15-16/SVD_data/Vc.mat')
 f = h5py.File(file_path, 'r')
 frameCnt = np.array(f['frameCnt'])
 

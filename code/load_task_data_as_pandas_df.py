@@ -141,6 +141,7 @@ def extract_session_data_and_save(root_paths, mouse_ids, reextract=False):
     for root_path in root_paths:
         for mouse_id in mouse_ids:
             date_paths = sorted((root_path / "task_data").glob( f"MS_task_V2_1_{mouse_id}*" ))
+            date_paths = sorted((root_path / str(mouse_id)).glob( "*" ))
             # sessions = list()
 
             n_paths = len(date_paths)
@@ -157,7 +158,7 @@ def extract_session_data_and_save(root_paths, mouse_ids, reextract=False):
                 else:
 
                     #print(f"date_folder: \"{root_path}\"")
-                    data = load_individual_session_data(date_folder=root_path, mouse_id=mouse_id)
+                    data = load_individual_session_data(date_folder=date_folder, mouse_id=mouse_id)
                     if save_individually:
                         with open(session_pkl, 'wb') as handle:
                             pkl.dump(data, handle, protocol=pkl.HIGHEST_PROTOCOL)
@@ -173,7 +174,7 @@ def extract_session_data_and_save(root_paths, mouse_ids, reextract=False):
     # Some of the old files have a mixup of "_" and "-"
     sessions = fix_dates(sessions)
 
-    pkl.dump(sessions, open(root_path/"task_data/MS_task_V2_1_extracted_data.pkl", 'wb'))
+    pkl.dump(sessions, open(root_path/"MS_task_V2_1_extracted_data.pkl", 'wb'))
     #
     return sessions
 
