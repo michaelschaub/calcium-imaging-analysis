@@ -12,131 +12,153 @@ class Data(ABC):
 
 # needs better name
 class SVDData(Data):
-    def __init__( self, frame, components, features ):
-        self._frame = frame
-        self._comps = components
-        self._feats = features
+    def __init__( self, df, temporal_comps, spatial_comps, trial_starts ):
+        self._df = df
+        self._temps = temporal_comps
+        self._spats = spatial_comps
+        self._starts = trial_starts
 
-    def save( self, file, comp_file=None, feat_file=None, frame_label="frame", comp_label="comps", feat_label="feats" ):
-        self._frame.to_hdf( file, frame_label, "w" )
+    def save( self, file, temps_file=None, spats_file=None, df_label="df", temps_label="temps", spats_label="spats" ):
+        self._df.to_hdf( file, df_label, "w" )
         h5_file = h5py.File( file, "a" )
-        if comp_file is None:
-            comps = h5_file.create_dataset(comp_label, data=self._comps)
+        if temps_file is None:
+            temps = h5_file.create_dataset(temps_label, data=self._temps)
         else:
-            with h5py.File( comp_file, "w" ) as h5_comps:
-                comps = h5_comps.create_dataset(comp_label, data=self._comps)
-            h5_file.attrs["comp_file"] = comp_file
-        h5_file.attrs["comp_hash"] = self.comp_hash
+            with h5py.File( temps_file, "w" ) as h5_temps:
+                temps = h5_temps.create_dataset(temps_label, data=self._temps)
+            h5_file.attrs["temps_file"] = temps_file
+        h5_file.attrs["temps_hash"] = self.temps_hash
 
-        if feat_file is None:
-            feats = h5_file.create_dataset(feat_label, data=self._feats)
+        if spats_file is None:
+            spats = h5_file.create_dataset(spats_label, data=self._spats)
         else:
-            with h5py.File( feat_file, "w" ) as h5_feats:
-                feats = h5_feats.create_dataset(feat_label, data=self._feats)
-            h5_file.attrs["feat_file"] = feat_file
-        h5_file.attrs["feat_hash"] = self.feat_hash
+            with h5py.File( spats_file, "w" ) as h5_spats:
+                spats = h5_spats.create_dataset(spats_label, data=self._spats)
+            h5_file.attrs["spats_file"] = spats_file
+        h5_file.attrs["spats_hash"] = self.spats_hash
 
-    def load( file, comp_file=None, feat_file=None, frame_label="frame", comp_label="comps", feat_label="feats" ):
-        frame = pd.read_hdf( file, frame_label )
+    def load( file, temps_file=None, spats_file=None, df_label="df", temps_label="temps", spats_label="spats" ):
+        df = pd.read_hdf( file, df_label )
         h5_file = h5py.File( file, "r")
-        if comp_file is None:
-            if comp_label in h5_file:
-                comps = np.array(h5_file[comp_label])
-            elif "comp_file" in h5_file.attrs:
-                with h5py.File( h5_file.attrs["comp_file"], "r" ) as h5_comps:
-                    comps = np.array(h5_comps[comp_label])
-                if "comp_hash" in h5_file.attrs and h5_file.attrs["comp_hash"] != hash(comps.data.tobytes()):
+        if temps_file is None:
+            if temps_label in h5_file:
+                temps = np.array(h5_file[temps_label])
+            elif "temps_file" in h5_file.attrs:
+                with h5py.File( h5_file.attrs["temps_file"], "r" ) as h5_temps:
+                    temps = np.array(h5_temps[temps_label])
+                if "temps_hash" in h5_file.attrs and h5_file.attrs["temps_hash"] != hash(temps.data.tobytes()):
                     warnings.warn( "Component hashes do not match", Warning )
             else:
                 raise ValueError
         else:
-            with h5py.File( comp_file, "r" ) as h5_comps:
-                comps = np.array(h5_comps[comp_label])
-            if "comp_hash" in h5_file.attrs and h5_file.attrs["comp_hash"] != hash(comps.data.tobytes()):
+            with h5py.File( temps_file, "r" ) as h5_temps:
+                temps = np.array(h5_temps[temps_label])
+            if "temps_hash" in h5_file.attrs and h5_file.attrs["temps_hash"] != hash(temps.data.tobytes()):
                 warnings.warn( "Component hashes do not match", Warning )
 
-        if feat_file is None:
-            if feat_label in h5_file:
-                feats = np.array(h5_file[feat_label])
-            elif "feat_file" in h5_file.attrs:
-                with h5py.File( h5_file.attrs["feat_file"], "r" ) as h5_feats:
-                    feats = np.array(h5_feats[feat_label])
-                if "feat_hash" in h5_file.attrs and h5_file.attrs["feat_hash"] != hash(feats.data.tobytes()):
+        if spats_file is None:
+            if spats_label in h5_file:
+                spats = np.array(h5_file[spats_label])
+            elif "spats_file" in h5_file.attrs:
+                with h5py.File( h5_file.attrs["spats_file"], "r" ) as h5_spats:
+                    spats = np.array(h5_spats[spats_label])
+                if "spats_hash" in h5_file.attrs and h5_file.attrs["spats_hash"] != hash(spats.data.tobytes()):
                     warnings.warn( "Feature hashes do not match", Warning )
             else:
                 raise ValueError
         else:
-            with h5py.File( feat_file, "r" ) as h5_feats:
-                feats = np.array(h5_feats[feat_label])
-            if "feat_hash" in h5_file.attrs and h5_file.attrs["feat_hash"] != hash(feats.data.tobytes()):
+            with h5py.File( spats_file, "r" ) as h5_spats:
+                spats = np.array(h5_spats[spats_label])
+            if "spats_hash" in h5_file.attrs and h5_file.attrs["spats_hash"] != hash(spats.data.tobytes()):
                 warnings.warn( "Feature hashes do not match", Warning )
-        return SVDData( frame, comps, feats )
+        return SVDData( df, temps, spats )
 
     @property
-    def comps( self ):
-        return self._comps
-
-    @comps.setter
-    def comps( self, comps ):
-        self._comps = comps
+    def temps_hash( self ):
+        return hash(self._temps.data.tobytes())
 
     @property
-    def feats( self ):
-        return self._feats
-
-    @feats.setter
-    def feats( self, feats ):
-        self._feats = feats
-
-    @property
-    def comp_hash( self ):
-        return hash(self._comps.data.tobytes())
-
-    @property
-    def feat_hash( self ):
-        return hash(self._feats.data.tobytes())
+    def spats_hash( self ):
+        return hash(self._spats.data.tobytes())
 
     @property
     def n_components( self ):
-        return self._feats.shape[0]
+        return self._spats.shape[0]
 
     @property
     def n_xaxis( self ):
-        return self._feats.shape[1]
+        return self._spats.shape[1]
 
     @property
     def n_yaxis( self ):
-        return self._feats.shape[2]
+        return self._spats.shape[2]
 
     @property
     def t_max( self ):
-        return self._comps.shape[0]
+        return self._temps.shape[0]
+
+    @property
+    def temporals( self ):
+        return self._temps.reshape( len(self), -1, self.n_components )
+
+    @property
+    def temporals_flat( self ):
+        return self._temps
+
+    @property
+    def spatials( self ):
+        return self._spats
+
 
     class PixelSlice:
-        def __init__(self, comps, feats ):
-            self._comps = comps
-            self._feats = feats
+        def __init__(self, temps, spats ):
+            self._temps = temps
+            self._spats = spats
 
         def __getitem__( self, keys ):
             if not isinstance(keys, tuple):
                 keys = (keys,)
-            comps = self._comps[ keys[0], :]
+            temps = self._temps[ keys[0], :]
             if len(keys)>1:
                 if np.array(keys[1]).ndim == 2:
-                    feats = self._feats[ :, keys[1] ]
+                    spats = self._spats[ :, keys[1] ]
                 else:
-                    feats = self._feats[ :, keys[1] ,keys[2] if len(keys)>2 else slice(None,None,None)]
+                    spats = self._spats[ :, keys[1] ,keys[2] if len(keys)>2 else slice(None,None,None)]
             else:
-                feats = self._feats
-            return np.tensordot( comps, feats, (-1,0) )
+                spats = self._spats
+            return np.tensordot( temps, spats, (-1,0) )
 
     @property
     def pixel( self ):
-        return SVDData.PixelSlice( self._comps, self._feats )
+        return SVDData.PixelSlice( self._temps, self._spats )
+
+
+    def __getitem__( self, keys ):
+        if not isinstance( keys, tuple):
+            keys = ( keys, slice(None,None,None) )
+            df = self._df
+        else:
+            if not len(keys) > 1:
+                keys[1] = keys[1:]
+            df = self._df[keys[1]]
+        spats = self._spats
+        try:
+            assert np.array(keys[0]).dtype == bool
+            trial_frames = np.array(np.arange(len(keys[0]))[keys[0]])
+        except:
+            trial_frames = np.array(np.arange(np.max(np.diff(self._starts)))[keys[0]])
+        starts = np.array(self._starts[:-1][keys[1]])
+        selected_temps = np.array( trial_frames[np.newaxis, :] + starts[:, np.newaxis], dtype=int)
+        new_starts = np.insert( np.cumsum( np.diff( selected_temps[:,(0,-1)] ) + 1), 0, 0)
+        temps = self._temps[ selected_temps.flatten() ]
+        return SVDData( df, temps, spats, new_starts  )
 
 
     def __getattr__( self, key ):
-        #if key in self._frame.keys():
-            return getattr(self._frame, key)
+        #if key in self._df.keys():
+            return getattr(self._df, key)
         #else:
             #raise AttributeError
+
+    def __len__( self ):
+        return self._df.__len__()
