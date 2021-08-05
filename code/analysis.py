@@ -8,6 +8,7 @@ import sklearn.neighbors as sklnn
 import sklearn.discriminant_analysis as skda
 import sklearn.preprocessing as skppc
 import sklearn.pipeline as skppl
+import sklearn.ensemble as skens
 from sklearn import preprocessing
 from sklearn.model_selection import StratifiedShuffleSplit
 from pathlib import Path
@@ -226,7 +227,7 @@ if __name__ == '__main__':
 
 
     cv = StratifiedShuffleSplit(n_rep, test_size=0.2, random_state=420)
-    perf = np.zeros([n_rep, len(features), 3])
+    perf = np.zeros([n_rep, len(features), 4])
     for i_feat, feat in enumerate(features):
         print(feat.name)
 
@@ -246,15 +247,19 @@ if __name__ == '__main__':
 
         c_LDA = skda.LinearDiscriminantAnalysis(n_components=n_comp_LDA, solver='eigen', shrinkage='auto')
 
+        c_RF = skens.RandomForestClassifier(n_estimators=100, bootstrap=False)
+
         i = 0  ## counter
         for train_idx, test_idx in cv_split:
-            print(f'\tRepetition {i:>2}/{n_rep}', end="\r" )
+            print(f'\tRepetition {i:>3}/{n_rep}', end="\r" )
             c_MLR.fit(data[train_idx, :], labels[train_idx])
             c_1NN.fit(data[train_idx, :], labels[train_idx])
             c_LDA.fit(data[train_idx, :], labels[train_idx])
+            c_RF .fit(data[train_idx, :], labels[train_idx])
             perf[i, i_feat, 0] = c_MLR.score(data[test_idx, :], labels[test_idx])
             perf[i, i_feat, 1] = c_1NN.score(data[test_idx, :], labels[test_idx])
             perf[i, i_feat, 2] = c_LDA.score(data[test_idx, :], labels[test_idx])
+            perf[i, i_feat, 3] = c_RF.score(data[test_idx, :], labels[test_idx])
             i += 1
         print(f'\tRepetition {n_rep}/{n_rep}' )
 
@@ -262,11 +267,12 @@ if __name__ == '__main__':
         np.save('perf_tasks.npy', perf)
     plt.figure()
     for i, feat in enumerate(features):
-        v1 = colored_violinplot(perf[:, i, 0], positions=np.arange(1) + i - 0.2, widths=[0.2], color="blue")
-        v2 = colored_violinplot(perf[:, i, 1], positions=np.arange(1) + i + 0.1, widths=[0.2], color="orange")
-        v3 = colored_violinplot(perf[:, i, 2], positions=np.arange(1) + i + 0.4, widths=[0.2], color="green")
+        v1 = colored_violinplot(perf[:, i, 0], positions=np.arange(1) + i - 0.3, widths=[0.15], color="blue")
+        v2 = colored_violinplot(perf[:, i, 1], positions=np.arange(1) + i - 0.1, widths=[0.15], color="orange")
+        v3 = colored_violinplot(perf[:, i, 2], positions=np.arange(1) + i + 0.1, widths=[0.15], color="green")
+        v4 = colored_violinplot(perf[:, i, 3], positions=np.arange(1) + i + 0.3, widths=[0.15], color="yellow")
         if i == 0:
-            plt.legend( [ v['bodies'][0] for v in [v1,v2,v3]], [ "MLR", "1NN", "LDA" ] )
+            plt.legend( [ v['bodies'][0] for v in [v1,v2,v3,v4]], [ "MLR", "1NN", "LDA","RF" ] )
 
     plt.xticks(range(len(features)), [ feat.name for feat in features ])
     plt.plot([-.5, len(features)-.5], [0.5, 0.5], '--k')
