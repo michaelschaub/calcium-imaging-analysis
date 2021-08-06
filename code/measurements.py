@@ -1,7 +1,7 @@
 
 import numpy as np
 from enum import Enum
-from data import SVDData #,Comp Superclass
+from data import DecompData #,Comp Superclass
 
 #functions expert temps in shape of trials x frames x comp with frames being already filtered to same length
 
