@@ -3,16 +3,31 @@ import numpy as np
 import pandas as pd
 import pickle as pkl
 from pathlib import Path
-from load_task_data_as_pandas_df import extract_session_data_and_save
+
+###Too complicated
+import sys
+sys.path.append(Path(__file__).parent)
+'''
+folders = ['features','loading']
+file_paths =  [Path(__file__).parent / Path(folder) for folder in folders]
+for  f in file_paths:
+    print(f)
+    sys.path.append(f)
+'''
+###
+
+from loading import load_task_data_as_pandas_df #import extract_session_data_and_save
 from data import DecompData
 from matplotlib import pyplot as plt
 
 plt_mean = False
 
+force_extraction = True
+
 data_path = Path(__file__).parent.parent / Path('data')
-if not (data_path/'extracted_data.pkl').exists():
+if (not (data_path/'extracted_data.pkl').exists()) or force_extraction:
     # load behavior data
-    sessions = extract_session_data_and_save(root_paths=[data_path], mouse_ids=["GN06"], reextract=False)
+    sessions = load_task_data_as_pandas_df.extract_session_data_and_save(root_paths=[data_path], mouse_ids=["GN06"], reextract=False)
     with open( data_path / 'extracted_data.pkl', 'wb') as handle:
         pkl.dump(sessions, handle)
 else:
@@ -30,6 +45,8 @@ svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_
 
 trial_preselection = ((svd.n_targets == 6) & (svd.n_distractors == 0) &
                       (svd.auto_reward == 0) & (svd.both_spouts == 1))
+print(trial_preselection.shape)
+print(svd[:,:].shape)
 svd_pre = svd[ :, trial_preselection ]
 
 modality_keys = ['visual', 'tactile', 'vistact']

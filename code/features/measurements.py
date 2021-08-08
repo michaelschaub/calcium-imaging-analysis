@@ -1,7 +1,15 @@
 
 import numpy as np
 from enum import Enum
+
+
+from pathlib import Path
+import sys
+file_path = [ Path(__file__).parent.parent]
+sys.path.append(file_path)
+
 from data import DecompData #,Comp Superclass
+
 
 #functions expert temps in shape of trials x frames x comp with frames being already filtered to same length
 

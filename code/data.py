@@ -14,12 +14,14 @@ class Data(ABC):
 # needs better name
 class DecompData(Data):
     def __init__(self, df, temporal_comps, spatial_comps, trial_starts, cond_filter=None):
-
         self._df = df
         self._temps = temporal_comps
         self._spats = spatial_comps
         self._starts = trial_starts
-        self._conditions = DecompData.Conditions(self, cond_filter)
+
+        if cond_filter is None:
+            cond_filter = []
+        self._cond_filters = cond_filter  # DecompData.Conditions(self, cond_filter)
 
     def save(self, file, temps_file=None, spats_file=None, df_label="df", temps_label="temps", spats_label="spats"):
         self._df.to_hdf(file, df_label, "w")
@@ -158,24 +160,15 @@ class DecompData(Data):
         # if key in self._df.keys():
         return getattr(self._df, key)
 
-    # else:
-    # raise AttributeError
+        # else:
+        # raise AttributeError
 
     def __len__(self):
         return self._df.__len__()
 
-
     '''
-    @property
-    def conditions(self):
-        return [self[:,filter] for filter in self._cond_filters]
 
-    def setConditions(self, cond_filters):
-        self._cond_filters = cond_filters
-
-    #def setCondition(self, ):
-    '''
-    #
+    
     class Conditions:
         def __init__(self, parent, cond_filters):
             if cond_filters is None:
@@ -194,23 +187,28 @@ class DecompData(Data):
 
         def __len__(self):
             return len(self._cond_filters)
+    '''
 
-    #Returns filtered conditions
+    # Returns filtered conditions
     @property
-    def conditions(self):
-        #return self._conditions
-        return [self[:,f] for f in self._conditions]
+    def conditions(self,keys=None):
+        # return self._conditions
+        if keys == None:
+            return [self[:, f] for f in self._cond_filters]
+        else: #not working, probably need a change to __getitem__
+            return [self[:, f] for f in self._cond_filters][keys[0]][keys[1,2]]
+
+
 
     @conditions.setter
-    def conditions(self,cond_filters):
-        self._conditions = cond_filters
+    def conditions(self, cond_filters):
+        self._cond_filters = cond_filters
 
-    #Returns conditions filter
+    # Returns conditions filter
     @property
     def condition_filter(self):
-        return self._conditions._cond_filters
+        return self._cond_filters
 
-    @condition_filter.setter #just another interface
-    def condition_filter(self,cond_filters):
-        self._conditions = self._cond_filters
-
+    @condition_filter.setter  # just another interface
+    def condition_filter(self, cond_filters):
+        self._cond_filters = self._cond_filters
