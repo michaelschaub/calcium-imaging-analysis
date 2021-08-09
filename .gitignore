@@ -3,3 +3,4 @@ plots/*
 .idea/*
 
 !data/.gitkeep
+!plots/.gitkeep
