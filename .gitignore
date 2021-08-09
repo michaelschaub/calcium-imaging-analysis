@@ -1,6 +1,7 @@
 data/*
 plots/*
 .idea/*
+.idea
 
 !data/.gitkeep
 !plots/.gitkeep
