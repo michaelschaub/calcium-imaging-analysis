@@ -15,8 +15,16 @@ from data import DecompData #,Comp Superclass
 
 #instead of temps, just access temps from comp super class
 
-def mean(temps):
-    return temps.mean(1) #average over frames
+def extract(temps, options):
+    features = {
+        mean :  mean (temps),
+        covs :  covs (temps),
+        corr :  corr (temps),
+    }
+
+def mean(temps, max_comps):
+    print(temps.temporals.shape)
+    return np.mean(temps.temporals[:,:,:max_comps],1) #average over frames
 
 def covs(temps):
     pass
