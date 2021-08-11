@@ -139,18 +139,16 @@ class DecompData(Data):
     def __getitem__(self, keys):
         if not isinstance(keys, tuple):
             keys = (keys, slice(None, None, None))
-            df = self._df
-        else:
-            if not len(keys) > 1:
-                keys[1] = keys[1:]
-            df = self._df[keys[1]]
+        elif len(keys) < 2:
+            keys = (keys[0], slice(None,None,None))
+        df = self._df[keys[0]]
         spats = self._spats
         try:
-            assert np.array(keys[0]).dtype == bool
-            trial_frames = np.array(np.arange(len(keys[0]))[keys[0]])
+            assert np.array(keys[1]).dtype == bool
+            trial_frames = np.array(np.arange(len(keys[1]))[keys[1]])
         except:
-            trial_frames = np.array(np.arange(np.max(np.diff(self._starts)))[keys[0]])
-        starts = np.array(self._starts[:-1][keys[1]])
+            trial_frames = np.array(np.arange(np.max(np.diff(self._starts)))[keys[1]])
+        starts = np.array(self._starts[:-1][keys[0]])
         selected_temps = np.array(trial_frames[np.newaxis, :] + starts[:, np.newaxis], dtype=int)
         new_starts = np.insert(np.cumsum(np.diff(selected_temps[:, (0, -1)]) + 1), 0, 0)
         temps = self._temps[selected_temps.flatten()]
@@ -168,7 +166,7 @@ class DecompData(Data):
 
     '''
 
-    
+
     class Conditions:
         def __init__(self, parent, cond_filters):
             if cond_filters is None:
@@ -212,3 +210,40 @@ class DecompData(Data):
     @condition_filter.setter  # just another interface
     def condition_filter(self, cond_filters):
         self._cond_filters = self._cond_filters
+
+    def conditional(self, conditions):
+        select = True
+        for attr, val in conditions.items():
+            select = select & getattr( self._df, attr ) == val
+        return self[select]
+
+class ConditionalData:
+    def __init__( self, data, conditions ):
+        if isinstance( conditions, dict ):
+            self._data = { key : data.conditional(cond) for key, cond in conditions.items() }
+        else:
+            self._data = [ data.conditional(cond) for cond in conditions ]
+
+    def __getitem__(self, keys):
+        if not isinstance(keys, tuple):
+            keys = (keys, slice(None, None, None))
+        if isinstance( self._data, dict ):
+            ret = self._data[keys[0]].__getitem__(keys[1:])
+        else:
+            dat = self._data[keys[0]]
+            if isinstance(dat, Data ):
+                ret = dat.__getitem__(keys[1:])
+            else:
+                ret = [ d.__getitem__(keys[1:]) for d in dat ]
+        return ret
+
+
+    def __getattr__(self, key):
+        if isinstance( self._data, dict ):
+            ret = { k : getattr(d, key) for k,d in self._data.items() }
+        else:
+            ret = [ getattr(d, key) for d in self._data ]
+        return ret
+
+    def __len__(self):
+        return len(self._data)
