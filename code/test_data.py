@@ -20,7 +20,7 @@ from loading import load_task_data_as_pandas_df #import extract_session_data_and
 from data import DecompData
 from matplotlib import pyplot as plt
 
-plt_mean = False
+plt_mean = True
 
 force_extraction = True
 
@@ -45,8 +45,7 @@ svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_
 
 trial_preselection = ((svd.n_targets == 6) & (svd.n_distractors == 0) &
                       (svd.auto_reward == 0) & (svd.both_spouts == 1))
-print(trial_preselection.shape)
-print(svd[:,:].shape)
+
 svd_pre = svd[ :, trial_preselection ]
 
 modality_keys = ['visual', 'tactile', 'vistact']

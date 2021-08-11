@@ -16,7 +16,6 @@ import sklearn.ensemble as skens
 from sklearn import preprocessing
 from sklearn.model_selection import StratifiedShuffleSplit
 
-
 from data import DecompData
 
 ##Need better solution
@@ -65,9 +64,9 @@ side_range = range(2)
 trial_preselection = ((svd.n_targets == 6) & (svd.n_distractors == 0) & (svd.auto_reward == 0) & (svd.both_spouts == 1))
 
 #set condition filter
-cond_keys =  itertools.product(modal_keys,side_keys)
-cond_keys_str = [f"{s}_{m}" for m, s in list(cond_keys)]
-svd.conditions = ([(svd.modality == modal) & (svd.target_side_left == side) & trial_preselection for modal, side in itertools.product(modal_range,side_range)])
+cond_keys =  itertools.product(side_keys,modal_keys)
+cond_keys_str = [f"{s}_{m}" for s, m in list(cond_keys)]
+svd.conditions = ([(svd.modality == modal) & (svd.target_side_left == side) & trial_preselection for side,modal in itertools.product(side_range,modal_range)])
 print(cond_keys_str)
 
 #Hardcoded 'vis_left','tact_right'
@@ -86,9 +85,9 @@ save_outputs = True
 frames = 30  #### trial duration
 baseline_mode = None  #### basline mode ('mean' / 'zscore' / None)
 runs = 200  ### number of runs
-comp = 1  ### number componants to use
-n_rep = 20  ### number of repetition
-n_comp_LDA = 1  ### number of LDA componants (conds -1)
+comp = 300  ### number componants to use
+n_rep = 1  ### number of repetition
+n_comp_LDA = 5  ### number of LDA componants (conds -1)
 
 
 #cond_mean = measurements.mean(svd.conditions[0][30:75,:]) #mean of stimulusframes for first cond
@@ -157,4 +156,17 @@ plt.plot([-.5, len(features)-.5], [1/len(svd.conditions), 1/len(svd.conditions)]
 plt.yticks(np.arange(0, 1, 0.1))
 plt.ylabel('Accuracy', fontsize=14)
 plt.savefig("perf_tasks.png")
-plt.show()
+#plt.show()
+
+### Show LDA weights
+#trial_preselection = ((svd.n_targets == 6) & (svd.n_distractors == 0) &
+#                      (svd.auto_reward == 0) & (svd.both_spouts == 1))
+#Vc = .temporals_flat ##can'T do that without filtering
+#Vc_mean = svd[30:75,trial_preselection].temporals_flat.mean(axis=0)
+#Vc_baseline_mean = svd[15:30,trial_preselection].temporals_flat.mean(axis=0)
+weights = c_LDA.coef_ #[Vc_mean-Vc_baseline_mean,Vc_mean[:comp],Vc_mean[:comp]]
+
+#weights = svd[:6,0].temporals #c_LDA.coef_ #c_LDA.means_ #
+conditions = c_LDA.classes_
+print(conditions)
+plots.plot_frame(weights, svd.spatials[:comp,:,:], conditions) ##comp = number of components , weights.shape = _ , comp
