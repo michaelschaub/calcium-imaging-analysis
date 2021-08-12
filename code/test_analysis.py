@@ -76,7 +76,6 @@ print(cond_keys_str)
 #cond_keys =  list(itertools.product(modal_keys,side_keys))
 #cond_keys_str = [f"{s}_{m}" for m, s in cond_keys]
 
-print(svd.conditions)
 #print(svd.conditions[:,:,:])
 
 
@@ -85,20 +84,22 @@ save_outputs = True
 frames = 30  #### trial duration
 baseline_mode = None  #### basline mode ('mean' / 'zscore' / None)
 runs = 200  ### number of runs
-comp = 300  ### number componants to use
-n_rep = 1  ### number of repetition
-n_comp_LDA = 5  ### number of LDA componants (conds -1)
+comp = 300 ### number componants to use
+n_rep = 10  ### number of repetition
+n_comp_LDA = None #5  ### number of LDA componants (conds -1)
 
 
 #cond_mean = measurements.mean(svd.conditions[0][30:75,:]) #mean of stimulusframes for first cond
-features  = ['mean']
+features  = ['mean',"mean(-base)"]
 feature_data = {
-    "mean": [measurements.mean(svd.conditions[i][30:75,:,:],comp) for i in range(len(svd.conditions))] #mean of stimulusframes for first cond
+    "mean": [measurements.mean(svd.conditions[i][30:75,:,:],comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond
+    "mean(-base)": [measurements.mean(svd.conditions[i][30:75,:,:],comp)-measurements.mean(svd.conditions[i][15:30,:,:],comp) for i in range(len(svd.conditions))]
 }
-feature_label = ['mean']
+feature_label = ['mean',"mean(stim)-mean(base)"]
 
 cv = StratifiedShuffleSplit(n_rep, test_size=0.2, random_state=420)
 perf = np.zeros([n_rep, len(features), 4])
+classifiers = {}
 
 for i_feat, feat in enumerate(features):
 
@@ -126,6 +127,8 @@ for i_feat, feat in enumerate(features):
 
     c_RF = skens.RandomForestClassifier(n_estimators=100, bootstrap=False)
 
+    classifiers[feat]={"c_MLR":c_MLR,"c_1NN":c_1NN,"c_LDA":c_LDA,"c_RF":c_RF}
+
     i = 0  ## counter
     for train_idx, test_idx in cv_split:
         print(f'\tRepetition {i:>3}/{n_rep}', end="\r" )
@@ -143,6 +146,8 @@ for i_feat, feat in enumerate(features):
 if save_outputs:
     np.save('perf_tasks.npy', perf)
 plt.figure()
+title = ' '.join(["Classifiers Accuracies","for",str(comp),"Components on Condtions: ",', '.join(cond_keys_str)]) #str(len(svd.conditions)),"Conditions"])
+plt.suptitle(title)
 for i, feat in enumerate(features):
     v1 = plots.colored_violinplot(perf[:, i, 0], positions=np.arange(1) + i - 0.3, widths=[0.15], color="blue")
     v2 = plots.colored_violinplot(perf[:, i, 1], positions=np.arange(1) + i - 0.1, widths=[0.15], color="orange")
@@ -151,12 +156,24 @@ for i, feat in enumerate(features):
     if i == 0:
         plt.legend( [ v['bodies'][0] for v in [v1,v2,v3,v4]], [ "MLR", "1NN", "LDA","RF" ] )
 
-plt.xticks(range(len(features)), [ feat for feat in features ])
+
+
+plt.xticks(range(len(features)), [ feat for feat in feature_label ])
 plt.plot([-.5, len(features)-.5], [1/len(svd.conditions), 1/len(svd.conditions)], '--k')
 plt.yticks(np.arange(0, 1, 0.1))
 plt.ylabel('Accuracy', fontsize=14)
-plt.savefig("perf_tasks.png")
-#plt.show()
+
+plt.savefig(title+".png")
+
+
+### Plots LDA
+conditions = c_LDA.classes_
+for i, feat in enumerate(classifiers):
+    plots.plot_frame(classifiers[feat]['c_LDA'].coef_, svd.spatials[:comp,:,:], conditions, "Coef of Classifier (LDA) for Feat: "+feature_label[i]) ##comp = number of components , weights.shape = _ , comp
+    plots.plot_frame(classifiers[feat]['c_LDA'].means_, svd.spatials[:comp,:,:], conditions, "Means of Classifier (LDA) for Feat: "+feature_label[i])
+
+    plots.plot_frame(classifiers[feat]['c_LDA'].coef_[[1,4]]-classifiers[feat]['c_LDA'].coef_[[2,5]], svd.spatials[:comp,:,:], ["vistact_left - vis_left","vistact_right - vis_right"], "Coef of Classifier (LDA) for Feat: "+feature_label[i])
+plt.show()
 
 ### Show LDA weights
 #trial_preselection = ((svd.n_targets == 6) & (svd.n_distractors == 0) &
@@ -164,9 +181,12 @@ plt.savefig("perf_tasks.png")
 #Vc = .temporals_flat ##can'T do that without filtering
 #Vc_mean = svd[30:75,trial_preselection].temporals_flat.mean(axis=0)
 #Vc_baseline_mean = svd[15:30,trial_preselection].temporals_flat.mean(axis=0)
-weights = c_LDA.coef_ #[Vc_mean-Vc_baseline_mean,Vc_mean[:comp],Vc_mean[:comp]]
+#weights = c_LDA.coef_#.means_ #coef_
 
 #weights = svd[:6,0].temporals #c_LDA.coef_ #c_LDA.means_ #
-conditions = c_LDA.classes_
-print(conditions)
-plots.plot_frame(weights, svd.spatials[:comp,:,:], conditions) ##comp = number of components , weights.shape = _ , comp
+#weights = c_LDA.coef_
+#conditions = c_LDA.classes_
+#print(conditions)
+#plots.plot_frame(c_LDA.coef_, svd.spatials[:comp,:,:], conditions, "Coef of Classifier (LDA) for") ##comp = number of components , weights.shape = _ , comp
+
+#plots.plot_frame(c_LDA.means_, svd.spatials[:comp,:,:], conditions)

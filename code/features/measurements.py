@@ -23,7 +23,6 @@ def extract(temps, options):
     }
 
 def mean(temps, max_comps):
-    print(temps.temporals.shape)
     return np.mean(temps.temporals[:,:,:max_comps],1) #average over frames
 
 def covs(temps):
