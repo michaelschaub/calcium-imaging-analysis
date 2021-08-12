@@ -16,9 +16,10 @@ import sklearn.ensemble as skens
 from sklearn import preprocessing
 from sklearn.model_selection import StratifiedShuffleSplit
 
+
 from data import DecompData
 
-##Need better solution
+##better solution?
 import sys
 sys.path.append(Path(__file__).parent)
 
@@ -32,7 +33,7 @@ from loading import load_task_data_as_pandas_df
 
 
 
-
+### New data extraction
 data_path = Path(__file__).parent.parent / Path('data')
 if not (data_path/'extracted_data.pkl').exists() :
     # load behavior data
@@ -84,7 +85,7 @@ save_outputs = True
 frames = 30  #### trial duration
 baseline_mode = None  #### basline mode ('mean' / 'zscore' / None)
 runs = 200  ### number of runs
-comp = 300 ### number componants to use
+comp = 1 ### number componants to use
 n_rep = 10  ### number of repetition
 n_comp_LDA = None #5  ### number of LDA componants (conds -1)
 
@@ -127,7 +128,7 @@ for i_feat, feat in enumerate(features):
 
     c_RF = skens.RandomForestClassifier(n_estimators=100, bootstrap=False)
 
-    classifiers[feat]={"c_MLR":c_MLR,"c_1NN":c_1NN,"c_LDA":c_LDA,"c_RF":c_RF}
+    classifiers[feat]={"c_MLR":c_MLR.get_params()['steps'][1][1],"c_1NN":c_1NN,"c_LDA":c_LDA,"c_RF":c_RF}
 
     i = 0  ## counter
     for train_idx, test_idx in cv_split:
@@ -167,12 +168,15 @@ plt.savefig(title+".png")
 
 
 ### Plots LDA
-conditions = c_LDA.classes_
-for i, feat in enumerate(classifiers):
-    plots.plot_frame(classifiers[feat]['c_LDA'].coef_, svd.spatials[:comp,:,:], conditions, "Coef of Classifier (LDA) for Feat: "+feature_label[i]) ##comp = number of components , weights.shape = _ , comp
-    plots.plot_frame(classifiers[feat]['c_LDA'].means_, svd.spatials[:comp,:,:], conditions, "Means of Classifier (LDA) for Feat: "+feature_label[i])
 
-    plots.plot_frame(classifiers[feat]['c_LDA'].coef_[[1,4]]-classifiers[feat]['c_LDA'].coef_[[2,5]], svd.spatials[:comp,:,:], ["vistact_left - vis_left","vistact_right - vis_right"], "Coef of Classifier (LDA) for Feat: "+feature_label[i])
+for i, feat in enumerate(classifiers):
+    for classifier in ["c_LDA","c_MLR"]:
+        conditions = classifiers[feat][classifier].classes_
+        plots.plot_frame(classifiers[feat][classifier].coef_, svd.spatials[:comp,:,:], conditions, "Coef of "+classifier+" for Feat: "+feature_label[i]) ##comp = number of components , weights.shape = _ , comp
+        #plots.plot_frame(classifiers[feat][classifier].means_, svd.spatials[:comp,:,:], conditions, "Means of "+classifier+" for Feat: "+feature_label[i])
+
+        plots.plot_frame(classifiers[feat][classifier].coef_[[1,4]]-classifiers[feat][classifier].coef_[[2,5]], svd.spatials[:comp,:,:], ["vistact_left - vis_left","vistact_right - vis_right"], "Difference of Coef from "+classifier+" for Feat: "+feature_label[i])
+
 plt.show()
 
 ### Show LDA weights

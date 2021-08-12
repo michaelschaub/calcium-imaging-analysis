@@ -35,8 +35,9 @@ def plot_frame(temps, spatial, titles, plt_title):
                 ax[h, w].set_title(titles[h*width + w])
                 ax[h, w].set_xticks([])
                 ax[h, w].set_yticks([])
-                plt.draw()
-                plt.pause(0.1)
+                #plt.draw()
+                #plt.pause(0.1)
     #plt.show()
 
+    plt.savefig(plt_title, format='png')
     print("plotted")
