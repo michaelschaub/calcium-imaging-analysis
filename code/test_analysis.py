@@ -66,7 +66,10 @@ trial_preselection = ((svd.n_targets == 6) & (svd.n_distractors == 0) & (svd.aut
 #set condition filter
 cond_keys =  itertools.product(side_keys,modal_keys)
 cond_keys_str = [f"{s}_{m}" for s, m in list(cond_keys)]
-svd.conditions = ([(svd.modality == modal) & (svd.target_side_left == side) & trial_preselection for side,modal in itertools.product(side_range,modal_range)])
+
+svd = svd[trial_preselection]
+svd.conditions = [ {"modality" : modal, "target_side_left" : side} for side in side_range for modal in modal_range]
+
 print(cond_keys_str)
 
 #Hardcoded 'vis_left','tact_right'
@@ -93,7 +96,7 @@ n_comp_LDA = 5  ### number of LDA componants (conds -1)
 #cond_mean = measurements.mean(svd.conditions[0][30:75,:]) #mean of stimulusframes for first cond
 features  = ['mean']
 feature_data = {
-    "mean": [measurements.mean(svd.conditions[i][30:75,:,:],comp) for i in range(len(svd.conditions))] #mean of stimulusframes for first cond
+    "mean": [measurements.mean(svd.conditions[i][:,30:75],comp) for i in range(len(svd.conditions))] #mean of stimulusframes for first cond
 }
 feature_label = ['mean']
 
