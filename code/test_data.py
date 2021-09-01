@@ -22,7 +22,7 @@ from matplotlib import pyplot as plt
 
 plt_mean = True
 
-force_extraction = True
+force_extraction = False
 
 data_path = Path(__file__).parent.parent / Path('data')
 if (not (data_path/'extracted_data.pkl').exists()) or force_extraction:
@@ -36,7 +36,7 @@ else:
         sessions = pkl.load(handle)
     print("Loaded pickled data.")
 
-file_path = data_path / "GN06" / Path('2021-01-20_10-15-16/SVD_data/Vc.mat')
+file_path = data_path / "GN06" / '2021-01-20_10-15-16'/'SVD_data/Vc.mat'
 f = h5py.File(file_path, 'r')
 
 frameCnt = np.array(f['frameCnt'])
@@ -46,7 +46,9 @@ svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_
 trial_preselection = ((svd.n_targets == 6) & (svd.n_distractors == 0) &
                       (svd.auto_reward == 0) & (svd.both_spouts == 1))
 
-svd_pre = svd[ :, trial_preselection ]
+print(trial_preselection.shape)
+print(svd[:,:].shape)
+svd_pre = svd[ trial_preselection ]
 
 modality_keys = ['visual', 'tactile', 'vistact']
 target_side_keys = ['right', 'left']
@@ -59,10 +61,10 @@ for modality_id in range(3):
         selected_trials = ((svd_pre.modality == modality_id) & (svd_pre.target_side_left == target_side))
 
         # stimulus frames
-        selected_frames = svd_pre[ 30:75, selected_trials ]
+        selected_frames = svd_pre[ selected_trials, 30:75 ]
 
         # baseline frames (1sec before stimulus)
-        baseline_frames = svd_pre[ 15:30, selected_trials ]
+        baseline_frames = svd_pre[ selected_trials, 15:30 ]
 
         # calculate either the mean over trials or the z_score
         if plt_mean:

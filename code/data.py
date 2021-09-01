@@ -104,7 +104,13 @@ class DecompData(Data):
 
     @property
     def temporals(self):
-        return self._temps.reshape(len(self), -1, self.n_components)
+        try:
+            return self._temps.reshape(len(self), -1, self.n_components)
+        except ValueError as err:
+            if "cannot reshape array of size 0 into shape" in err.args[0]:
+                return np.zeros((0, 0, self.n_components))
+            else:
+                raise
 
     @property
     def temporals_flat(self):
@@ -139,18 +145,23 @@ class DecompData(Data):
     def __getitem__(self, keys):
         if not isinstance(keys, tuple):
             keys = (keys, slice(None, None, None))
-            df = self._df
-        else:
-            if not len(keys) > 1:
-                keys[1] = keys[1:]
-            df = self._df[keys[1]]
+        elif len(keys) < 2:
+            keys = (keys[0], slice(None,None,None))
+        df = self._df[keys[0]]
         spats = self._spats
         try:
-            assert np.array(keys[0]).dtype == bool
-            trial_frames = np.array(np.arange(len(keys[0]))[keys[0]])
+            assert np.array(keys[1]).dtype == bool
+            trial_frames = np.array(np.arange(len(keys[1]))[keys[1]])
         except:
-            trial_frames = np.array(np.arange(np.max(np.diff(self._starts)))[keys[0]])
-        starts = np.array(self._starts[:-1][keys[1]])
+            try:
+                trial_frames = np.array(np.arange(np.max(np.diff(self._starts)))[keys[1]])
+            except ValueError as err:
+                if "zero-size array to reduction operation maximum" in err.args[0]:
+                    print("Warning: Data has size zero")
+                    trial_frames = np.array([])
+                else:
+                    raise
+        starts = np.array(self._starts[:-1][keys[0]])
         selected_temps = np.array(trial_frames[np.newaxis, :] + starts[:, np.newaxis], dtype=int)
         new_starts = np.insert(np.cumsum(np.diff(selected_temps[:, (0, -1)]) + 1), 0, 0)
         temps = self._temps[selected_temps.flatten()]
@@ -166,49 +177,58 @@ class DecompData(Data):
     def __len__(self):
         return self._df.__len__()
 
-    '''
-
-    
-    class Conditions:
-        def __init__(self, parent, cond_filters):
-            if cond_filters is None:
-                cond_filters = []
-            self._cond_filters = cond_filters
-
-        def __setitem__(self, parent, cond_filters):
-            print("GetMethod of Conditions")
-            if cond_filters is None:
-                cond_filters = []
-            self._cond_filters = cond_filters
-
-        def __getitem__(self, parent):
-            print("GetMethod of Conditions")
-            return [parent[f] for f in self._cond_filters]
-
-        def __len__(self):
-            return len(self._cond_filters)
-    '''
-
     # Returns filtered conditions
     @property
-    def conditions(self,keys=None):
-        # return self._conditions
-        if keys == None:
-            return [self[:, f] for f in self._cond_filters]
-        else: #not working, probably need a change to __getitem__
-            return [self[:, f] for f in self._cond_filters][keys[0]][keys[1,2]]
-
-
+    def conditions(self):
+        return self._conditional
 
     @conditions.setter
-    def conditions(self, cond_filters):
-        self._cond_filters = cond_filters
+    def conditions(self, conditions):
+        self._cond_filters = conditions
+        self._conditional = ConditionalData( self, conditions )
 
     # Returns conditions filter
     @property
-    def condition_filter(self):
+    def condition_filters(self):
         return self._cond_filters
 
-    @condition_filter.setter  # just another interface
-    def condition_filter(self, cond_filters):
-        self._cond_filters = self._cond_filters
+    @condition_filters.setter  # just another interface
+    def condition_filters(self, cond_filters):
+        self.conditions = cond_filters
+
+    def get_conditional(self, conditions):
+        select = True
+        for attr, val in conditions.items():
+            select = select & (getattr( self._df, attr ) == val)
+        return self[select]
+
+class ConditionalData:
+    def __init__( self, data, conditions ):
+        if isinstance( conditions, dict ):
+            self._data = { key : data.get_conditional(cond) for key, cond in conditions.items() }
+        else:
+            self._data = [ data.get_conditional(cond) for cond in conditions ]
+
+    def __getitem__(self, keys):
+        if not isinstance(keys, tuple):
+            keys = (keys, slice(None, None, None))
+        if isinstance( self._data, dict ):
+            ret = self._data[keys[0]].__getitem__(keys[1:])
+        else:
+            dat = self._data[keys[0]]
+            if isinstance(dat, Data ):
+                ret = dat.__getitem__(keys[1:])
+            else:
+                ret = [ d.__getitem__(keys[1:]) for d in dat ]
+        return ret
+
+
+    def __getattr__(self, key):
+        if isinstance( self._data, dict ):
+            ret = { k : getattr(d, key) for k,d in self._data.items() }
+        else:
+            ret = [ getattr(d, key) for d in self._data ]
+        return ret
+
+    def __len__(self):
+        return len(self._data)

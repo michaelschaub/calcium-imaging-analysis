@@ -32,10 +32,6 @@ else:
 
 # pre-selection moved after length match
 
-# # look at all difficulties
-# trial_preselection = ((sessions.auto_reward == 0) & (sessions.both_spouts == 1))
-#
-
 # Load imaging data
 file_path = root_paths[0] / mouse_ids[0] / Path('2021-01-20_10-15-16/SVD_data/Vc.mat')
 f = h5py.File(file_path, 'r')
@@ -50,11 +46,15 @@ if len(trial_starts) > sessions.shape[0]:
     trial_starts = trial_starts[:sessions.shape[0]]
 if len(trial_starts) < sessions.shape[0]:
     sessions = sessions[:len(trial_starts)]
-#
+
 # pre-select trials to look at
 # if looking only at the simplest cases (detection 6 vs. 0)
 trial_preselection = ((sessions.n_targets == 6) & (sessions.n_distractors == 0) &
                       (sessions.auto_reward == 0) & (sessions.both_spouts == 1))
+
+# # look at all difficulties
+# trial_preselection = ((sessions.auto_reward == 0) & (sessions.both_spouts == 1))
+#
 
 
 U = np.array(f['U'])
