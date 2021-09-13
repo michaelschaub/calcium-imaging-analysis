@@ -18,6 +18,7 @@ for  f in file_paths:
 
 from loading import load_task_data_as_pandas_df #import extract_session_data_and_save
 from data import DecompData
+from features.features import Means
 from matplotlib import pyplot as plt
 
 plt_mean = True
@@ -40,7 +41,7 @@ file_path = data_path / "GN06" / '2021-01-20_10-15-16'/'SVD_data/Vc.mat'
 f = h5py.File(file_path, 'r')
 
 frameCnt = np.array(f['frameCnt'])
-trial_starts = np.cumsum(frameCnt[:, 1])
+trial_starts = np.cumsum(frameCnt[:-1, 1])
 svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts) )
 
 trial_preselection = ((svd.n_targets == 6) & (svd.n_distractors == 0) &
@@ -69,14 +70,16 @@ for modality_id in range(3):
         # calculate either the mean over trials or the z_score
         if plt_mean:
             # average over all frames, if loaded accordingly
-            Vc_mean = selected_frames.temporals_flat.mean(axis=0)
-            Vc_baseline_mean = baseline_frames.temporals_flat.mean(axis=0)
+            #Vc_mean = selected_frames.temporals_flat.mean(axis=0)
+            #Vc_baseline_mean = baseline_frames.temporals_flat.mean(axis=0)
+            frames_corrected = Means(selected_frames - Means( baseline_frames ))
 
             """
             Visualization:
             """
             # compute dot product and reshape back into 2D frame
-            average_frame = np.einsum( "n,nij->ij", Vc_mean-Vc_baseline_mean, selected_frames.spatials )
+            #average_frame = np.einsum( "n,nij->ij", Vc_mean-Vc_baseline_mean, selected_frames.spatials )
+            average_frame = np.mean( frames_corrected.pixel[:], 0)
 
             # plot
             im = ax[target_side, modality_id].imshow(average_frame, vmin=-0.02, vmax=0.02)

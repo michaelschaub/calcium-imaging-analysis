@@ -4,16 +4,42 @@ import numpy as np
 import pandas as pd
 import h5py
 
+import sys
+from pathlib import Path
+#sys.path.append(Path(__file__).parent)
+
 
 class Data(ABC):
     @abstractmethod
     def load(self, file, **kwargs):
         pass
 
+    def binary_operation( a, b ):
+        notNone = lambda x,y : y if x is None else x
+        try:
+            a_df, a_temps, a_spats, a_starts = a._op_data(b)
+        except AttributeError:
+            a_df = None
+            a_temps = a
+            a_spats = None
+            a_starts = None
+        try:
+            b_df, b_temps, b_spats, b_starts = b._op_data(a)
+        except AttributeError:
+            b_df = None
+            b_temps = b
+            b_spats = None
+            b_starts = None
+        return a_temps, b_temps, notNone(a_df,b_df), notNone(a_spats, b_spats), notNone(a_starts, b_starts)
+
 
 # needs better name
 class DecompData(Data):
     def __init__(self, df, temporal_comps, spatial_comps, trial_starts, cond_filter=None):
+        assert len(df) != trial_starts.shape[0]-1, (
+            f"DataFrame df and trial_starts do not have matching length ({len(df)} != {len(trial_starts)})\n\t(maybe remove last entry?)")
+        assert len(df) == trial_starts.shape[0], (
+            f"DataFrame df and trial_starts do not have matching length ({len(df)} != {len(trial_starts)})")
         self._df = df
         self._temps = temporal_comps
         self._spats = spatial_comps
@@ -161,11 +187,25 @@ class DecompData(Data):
                     trial_frames = np.array([])
                 else:
                     raise
-        starts = np.array(self._starts[:-1][keys[0]])
+        # starts of selected frames in old temps
+        starts = np.array(self._starts[keys[0]])
+
+        # indices of temps in all selected frames (2d)
         selected_temps = np.array(trial_frames[np.newaxis, :] + starts[:, np.newaxis], dtype=int)
-        new_starts = np.insert(np.cumsum(np.diff(selected_temps[:, (0, -1)]) + 1), 0, 0)
+
+        # starts of selected frames in new temps
+        new_starts = np.insert(np.cumsum(np.diff(selected_temps[:-1, (0, -1)]) + 1), 0, 0)
+
         temps = self._temps[selected_temps.flatten()]
-        return DecompData(df, temps, spats, new_starts)
+        try:
+            data = DecompData(df, temps, spats, new_starts)
+        except AssertionError:
+                print( starts.shape )
+                print( selected_temps.shape )
+                print( new_starts.shape )
+                print( df )
+                raise
+        return data
 
     def __getattr__(self, key):
         # if key in self._df.keys():
@@ -201,6 +241,25 @@ class DecompData(Data):
         for attr, val in conditions.items():
             select = select & (getattr( self._df, attr ) == val)
         return self[select]
+
+    def _op_data(self, a):
+        df = self._df
+        temps = self.temporals_flat
+        spats = self.spatials
+        starts = self._starts
+        return df, temps, spats, starts
+
+    def __add__( a, b ):
+        a_temps, b_temps, df, spats, starts = Data.binary_operation( a, b )
+        return DecompData( df, a_temps+b_temps, spats, starts )
+
+    def __sub__( a, b ):
+        a_temps, b_temps, df, spats, starts = Data.binary_operation( a, b )
+        return DecompData( df, a_temps-b_temps, spats, starts )
+
+    def __mul__( a, b ):
+        a_temps, b_temps, df, spats, starts = Data.binary_operation( a, b )
+        return DecompData( df, a_temps*b_temps, spats, starts )
 
 class ConditionalData:
     def __init__( self, data, conditions ):
