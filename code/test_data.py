@@ -18,7 +18,7 @@ for  f in file_paths:
 
 from loading import load_task_data_as_pandas_df #import extract_session_data_and_save
 from data import DecompData
-from features.features import Means
+from features import Means
 from matplotlib import pyplot as plt
 
 plt_mean = True

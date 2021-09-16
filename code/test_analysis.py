@@ -24,8 +24,7 @@ import sys
 sys.path.append(Path(__file__).parent)
 
 
-from features import measurements
-from features.features import Means
+from features import Means
 from plotting import plots
 from loading import load_task_data_as_pandas_df
 
