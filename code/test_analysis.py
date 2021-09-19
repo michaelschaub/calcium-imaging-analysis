@@ -24,7 +24,7 @@ import sys
 sys.path.append(Path(__file__).parent)
 
 
-from features import Means
+from features import Raws,Means
 from plotting import plots
 from loading import load_task_data_as_pandas_df
 
@@ -95,18 +95,19 @@ print(cond_keys_str)
 #####
 save_outputs = True
 baseline_mode = None  #### basline mode ('mean' / 'zscore' / None)
-comp = 100 ### number componants to use
+comp = 10 ### number componants to use
 n_rep = 10  ### number of repetition
 n_comp_LDA = None #5  ### number of LDA componants (conds -1)
 
 
 #cond_mean = measurements.mean(svd.conditions[0][30:75,:]) #mean of stimulusframes for first cond
-features  = ['mean',"mean(-base)"]
+features  = ['mean',"mean(-base)","raw"]
 feature_data = {
     "mean": [Means(svd.conditions[i,:,30:75],comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond
-    "mean(-base)": [Means(svd.conditions[i,:,30:75]-Means(svd.conditions[i,:,15:30]),comp) for i in range(len(svd.conditions))]
+    "mean(-base)": [Means(svd.conditions[i,:,30:75]-Means(svd.conditions[i,:,15:30]),comp) for i in range(len(svd.conditions))],
+    "raw": [Raws(svd.conditions[i,:,30:75],comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond
 }
-feature_label = ['mean',"mean(stim)-mean(base)"]
+feature_label = ['mean',"mean(stim)-mean(base)","raw"]
 
 cv = StratifiedShuffleSplit(n_rep, test_size=0.2, random_state=420)
 perf = np.zeros([n_rep, len(features), 4])
@@ -181,6 +182,8 @@ plt.savefig( plot_path/(title+".png") )
 ### Plots LDA
 
 for i, feat in enumerate(classifiers):
+    if feat == "raw":
+        continue
     for classifier in ["c_LDA","c_MLR"]:
         conditions = classifiers[feat][classifier].classes_
         plots.plot_frame(classifiers[feat][classifier].coef_, svd.spatials[:comp,:,:], conditions, plot_path/("Coef of "+classifier+" for Feat: "+feature_label[i])) ##comp = number of components , weights.shape = _ , comp

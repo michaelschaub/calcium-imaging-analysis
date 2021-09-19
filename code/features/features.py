@@ -18,6 +18,24 @@ class Features:
             feat[starts[i]:starts[i+1]] = feats[i]
         return feat
 
+    @property
+    def mean( self ):
+        return FeatureMean( self )
+
+class Raws(Features):
+    def __init__( self, data, max_comps=None ):
+        self._data = data
+        self._feature = data.temporals[:,:,:max_comps]
+
+    def flatten( self, feat=None ):
+        if feat is None:
+            feat = self._feature
+        return np.reshape(feat, (feat.shape[0], -1))
+
+    @property
+    def pixel( self ):
+        return DecompData.PixelSlice( self.reshape(self._feature, (-1, *self._feature[2:])), self._data._spats[:self._feature.shape[2]] )
+
 def calc_means( temps ):
     return np.mean(temps, axis=1) #average over frames
 
@@ -26,8 +44,10 @@ class Means(Features):
         self._data = data
         self._feature = calc_means(data.temporals[:,:,:max_comps])
     
-    def flatten( self ):
-        return self._feature
+    def flatten( self, feat=None):
+        if feat is None:
+            feat = self._feature
+        return feat
 
     @property
     def pixel( self ):
@@ -65,8 +85,10 @@ class Covariances(Features):
 
         self._feature = calc_covs( data.temporals[:,:,:max_comps], self._means )
 
-    def flatten(self):
-        return flat_covs( self._feature )
+    def flatten(self, feat=None):
+        if feat is None:
+            feat = self._feature
+        return flat_covs( feat )
 
 def calc_acovs( temps, means, covs, n_tau ):
     temps = temps - means[:,None,:]
@@ -100,5 +122,29 @@ class AutoCovariances(Features):
             max_time_lag = DEFAULT_TIMELAG
         self._feature = calc_acovs( data.temporals[:,:,:max_comps], self._means, self._covs, max_time_lag )
 
-    def flatten(self):
-        return np.concatenate( (flat_covs(self._covs), self._feature[:,1:].reshape(self._feature.shape[0], -1) ), axis=1 )
+    def flatten(self, feat=None):
+        if feat is None:
+            feat = self._feature
+        return np.concatenate( (flat_covs(feat[:,0]), feat[:,1:].reshape((feat.shape[0], -1)) ), axis=1 )
+
+class FeatureMean(Features):
+    def __init__(self, base ):
+        self._base_feature = base
+        self._data = base._data
+        self._feature = np.mean( base._feature, axis=0 ).reshape((1, *base._feature.shape[1:]) )
+
+    def flatten( self, feat=None):
+        if feat is None:
+            feat = self._feature
+        return self._base_feature.flatten( self._feature )
+
+    @property
+    def pixel( self ):
+        if isinstance( self._base_feature, Raws ):
+            return DecompData.PixelSlice( np.reshape( self._feature, (self._feature.shape[1:])),
+                            self._data._spats[:self._feature.shape[2]] )
+        elif isinstance( self._base_feature, Means ):
+            return DecompData.PixelSlice( self._feature,
+                            self._data._spats[:self._feature.shape[1]] )
+        else:
+            raise AttributeError
