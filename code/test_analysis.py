@@ -24,17 +24,19 @@ import sys
 sys.path.append(Path(__file__).parent)
 
 
-from features import measurements
+from features import Raws,Means
 from plotting import plots
 from loading import load_task_data_as_pandas_df
 
 
 
-
+# add missing h5 files here
+missing_task_data = []
 
 
 ### New data extraction
 data_path = Path(__file__).parent.parent / Path('data')
+plot_path = Path(__file__).parent.parent / Path('plots')
 if not (data_path/'extracted_data.pkl').exists() :
     # load behavior data
     sessions = load_task_data_as_pandas_df.extract_session_data_and_save(root_paths=[data_path], mouse_ids=["GN06"], reextract=False)
@@ -50,7 +52,14 @@ file_path = data_path / "GN06" / Path('2021-01-20_10-15-16/SVD_data/Vc.mat')
 f = h5py.File(file_path, 'r')
 
 frameCnt = np.array(f['frameCnt'])
-trial_starts = np.cumsum(frameCnt[:, 1])
+trial_starts = np.cumsum(frameCnt[:, 1])[:-1]
+
+mask = np.ones( len(trial_starts), dtype=bool )
+mask[missing_task_data] = False
+trial_starts = trial_starts[mask]
+
+print(sessions)
+print(frameCnt.shape)
 svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts) )
 
 
@@ -85,21 +94,20 @@ print(cond_keys_str)
 
 #####
 save_outputs = True
-frames = 30  #### trial duration
 baseline_mode = None  #### basline mode ('mean' / 'zscore' / None)
-runs = 200  ### number of runs
-comp = 1 ### number componants to use
+comp = 10 ### number componants to use
 n_rep = 10  ### number of repetition
 n_comp_LDA = None #5  ### number of LDA componants (conds -1)
 
 
 #cond_mean = measurements.mean(svd.conditions[0][30:75,:]) #mean of stimulusframes for first cond
-features  = ['mean',"mean(-base)"]
+features  = ['mean',"mean(-base)","raw"]
 feature_data = {
-    "mean": [measurements.mean(svd.conditions[i,:,30:75],comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond
-    "mean(-base)": [measurements.mean(svd.conditions[i,:,30:75],comp)-measurements.mean(svd.conditions[i][:,15:30],comp) for i in range(len(svd.conditions))]
+    "mean": [Means(svd.conditions[i,:,30:75],comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond
+    "mean(-base)": [Means(svd.conditions[i,:,30:75]-Means(svd.conditions[i,:,15:30]),comp) for i in range(len(svd.conditions))],
+    "raw": [Raws(svd.conditions[i,:,30:75],comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond
 }
-feature_label = ['mean',"mean(stim)-mean(base)"]
+feature_label = ['mean',"mean(stim)-mean(base)","raw"]
 
 cv = StratifiedShuffleSplit(n_rep, test_size=0.2, random_state=420)
 perf = np.zeros([n_rep, len(features), 4])
@@ -108,8 +116,9 @@ classifiers = {}
 for i_feat, feat in enumerate(features):
 
 
-    data = np.concatenate(feature_data[feat])
-    labels = np.concatenate([np.full((len(feature_data[feat][i])),cond_keys_str[i]) for i in range(len(feature_data[feat]))])
+    data = np.concatenate([feat.flatten() for feat in feature_data[feat]])
+    labels = np.concatenate( [np.full((len(feature_data[feat][i].flatten())),cond_keys_str[i])
+                                for i in range(len(feature_data[feat]))] )
     #feature_labels[feat]
     #for i in range(len(feature_data[feat])):
          #= feature_data[feat][i]
@@ -150,7 +159,7 @@ for i_feat, feat in enumerate(features):
 if save_outputs:
     np.save('perf_tasks.npy', perf)
 plt.figure()
-title = ' '.join(["Classifiers Accuracies","for",str(comp),"Components on Condtions: ",', '.join(cond_keys_str)]) #str(len(svd.conditions)),"Conditions"])
+title = ' '.join(["Classifiers Accuracies","for",str(comp),"Components on Condtions:",', '.join(cond_keys_str)]) #str(len(svd.conditions)),"Conditions"])
 plt.suptitle(title)
 for i, feat in enumerate(features):
     v1 = plots.colored_violinplot(perf[:, i, 0], positions=np.arange(1) + i - 0.3, widths=[0.15], color="blue")
@@ -167,18 +176,20 @@ plt.plot([-.5, len(features)-.5], [1/len(svd.conditions), 1/len(svd.conditions)]
 plt.yticks(np.arange(0, 1, 0.1))
 plt.ylabel('Accuracy', fontsize=14)
 
-plt.savefig(title+".png")
+plt.savefig( plot_path/(title+".png") )
 
 
 ### Plots LDA
 
 for i, feat in enumerate(classifiers):
+    if feat == "raw":
+        continue
     for classifier in ["c_LDA","c_MLR"]:
         conditions = classifiers[feat][classifier].classes_
-        plots.plot_frame(classifiers[feat][classifier].coef_, svd.spatials[:comp,:,:], conditions, "Coef of "+classifier+" for Feat: "+feature_label[i]) ##comp = number of components , weights.shape = _ , comp
+        plots.plot_frame(classifiers[feat][classifier].coef_, svd.spatials[:comp,:,:], conditions, plot_path/("Coef of "+classifier+" for Feat: "+feature_label[i])) ##comp = number of components , weights.shape = _ , comp
         #plots.plot_frame(classifiers[feat][classifier].means_, svd.spatials[:comp,:,:], conditions, "Means of "+classifier+" for Feat: "+feature_label[i])
 
-        plots.plot_frame(classifiers[feat][classifier].coef_[[1,4]]-classifiers[feat][classifier].coef_[[2,5]], svd.spatials[:comp,:,:], ["vistact_left - vis_left","vistact_right - vis_right"], "Difference of Coef from "+classifier+" for Feat: "+feature_label[i])
+        plots.plot_frame(classifiers[feat][classifier].coef_[[1,4]]-classifiers[feat][classifier].coef_[[2,5]], svd.spatials[:comp,:,:], ["vistact_left - vis_left","vistact_right - vis_right"], plot_path/("Difference of Coef from "+classifier+" for Feat: "+feature_label[i]))
 
 plt.show()
 
