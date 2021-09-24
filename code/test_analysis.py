@@ -16,6 +16,10 @@ import sklearn.ensemble as skens
 from sklearn import preprocessing
 from sklearn.model_selection import StratifiedShuffleSplit
 
+#Progress Bar
+#from tqdm.auto import tqdm
+#from tqdm.notebook import tqdm
+from tqdm import tqdm
 
 from data import DecompData
 
@@ -24,7 +28,7 @@ import sys
 sys.path.append(Path(__file__).parent)
 
 
-from features import Raws,Means
+from features import Raws,Means, Moup, Covariances, AutoCovariances
 from plotting import plots
 from loading import load_task_data_as_pandas_df
 
@@ -58,8 +62,10 @@ mask = np.ones( len(trial_starts), dtype=bool )
 mask[missing_task_data] = False
 trial_starts = trial_starts[mask]
 
-print(sessions)
-print(frameCnt.shape)
+
+#print(sessions)
+#print(frameCnt.shape)
+
 svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts) )
 
 
@@ -101,19 +107,33 @@ n_comp_LDA = None #5  ### number of LDA componants (conds -1)
 
 
 #cond_mean = measurements.mean(svd.conditions[0][30:75,:]) #mean of stimulusframes for first cond
-features  = ['mean',"mean(-base)","raw"]
+#features  = ['mean',"mean(-base)","raw","mou"]
 feature_data = {
-    "mean": [Means(svd.conditions[i,:,30:75],comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond
-    "mean(-base)": [Means(svd.conditions[i,:,30:75]-Means(svd.conditions[i,:,15:30]),comp) for i in range(len(svd.conditions))],
-    "raw": [Raws(svd.conditions[i,:,30:75],comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond
+
+    #"mean": [Means(svd.conditions[i,:,30:75],max_comps=comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond
+    #"mean(-base)": [Means(svd.conditions[i,:,30:75]-Means(svd.conditions[i,:,15:30]),comp) for i in range(len(svd.conditions))],
+    #"raw": [Raws(svd.conditions[i,:,30:75],comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond,
+    #"Cov": [Covariances(svd.conditions[i,:,30:75],max_comps=comp) for i in tqdm(range(len(svd.conditions)),desc='Conditions')], #mean of stimulusframes for first cond
+    r"Cov($\tau$=0)": [AutoCovariances(svd.conditions[i,:,30:75],max_comps=comp,time_lag_range=[0]) for i in tqdm(range(len(svd.conditions)),desc='Conditions')],
+    #"mou1": [Moup(svd.conditions[i,:,30:75],comp,time_lag=1) for i in range(len(svd.conditions))],
 }
-feature_label = ['mean',"mean(stim)-mean(base)","raw"]
+
+
+for j in tqdm(range(1,10,1),desc="Features"):
+    feature_data[r"Cov($\tau$="+str(j)+")"] = [AutoCovariances(svd.conditions[i,:,30:75],max_comps=comp, time_lag_range=[j]) for i in tqdm(range(len(svd.conditions)),desc='Conditions')]
+    feature_data[r'Mou($\tau$='+str(j)+")"] = [Moup(svd.conditions[i,:,30:75],max_comps=comp,time_lag=j) for i in tqdm(range(len(svd.conditions)),desc='Conditions')]
+
+
+features = list(feature_data.keys())
+feature_label = features
+
+#feature_label = ['mean',"mean(stim)-mean(base)","raw","mou"]
 
 cv = StratifiedShuffleSplit(n_rep, test_size=0.2, random_state=420)
 perf = np.zeros([n_rep, len(features), 4])
 classifiers = {}
 
-for i_feat, feat in enumerate(features):
+for i_feat, feat in enumerate(tqdm(features,desc="Training classifiers for each features")):
 
 
     data = np.concatenate([feat.flatten() for feat in feature_data[feat]])
@@ -143,8 +163,8 @@ for i_feat, feat in enumerate(features):
     classifiers[feat]={"c_MLR":c_MLR.get_params()['steps'][1][1],"c_1NN":c_1NN,"c_LDA":c_LDA,"c_RF":c_RF}
 
     i = 0  ## counter
-    for train_idx, test_idx in cv_split:
-        print(f'\tRepetition {i:>3}/{n_rep}', end="\r" )
+    for train_idx, test_idx in tqdm(cv_split,desc='Fit and Score Classifiers'):
+        #print(f'\tRepetition {i:>3}/{n_rep}', end="\r" )
         c_MLR.fit(data[train_idx, :], labels[train_idx])
         c_1NN.fit(data[train_idx, :], labels[train_idx])
         c_LDA.fit(data[train_idx, :], labels[train_idx])
@@ -154,14 +174,16 @@ for i_feat, feat in enumerate(features):
         perf[i, i_feat, 2] = c_LDA.score(data[test_idx, :], labels[test_idx])
         perf[i, i_feat, 3] = c_RF.score(data[test_idx, :], labels[test_idx])
         i += 1
-    print(f'\tRepetition {n_rep:>3}/{n_rep}' )
+    #print(f'\tRepetition {n_rep:>3}/{n_rep}' )
 
 if save_outputs:
     np.save('perf_tasks.npy', perf)
 plt.figure()
 title = ' '.join(["Classifiers Accuracies","for",str(comp),"Components on Condtions:",', '.join(cond_keys_str)]) #str(len(svd.conditions)),"Conditions"])
 plt.suptitle(title)
-for i, feat in enumerate(features):
+
+
+for i, feat in enumerate(tqdm(features,desc="Plotting Features")):
     v1 = plots.colored_violinplot(perf[:, i, 0], positions=np.arange(1) + i - 0.3, widths=[0.15], color="blue")
     v2 = plots.colored_violinplot(perf[:, i, 1], positions=np.arange(1) + i - 0.1, widths=[0.15], color="orange")
     v3 = plots.colored_violinplot(perf[:, i, 2], positions=np.arange(1) + i + 0.1, widths=[0.15], color="green")
@@ -180,9 +202,9 @@ plt.savefig( plot_path/(title+".png") )
 
 
 ### Plots LDA
-
+'''
 for i, feat in enumerate(classifiers):
-    if feat == "raw":
+    if feat in ["raw","mou"]:
         continue
     for classifier in ["c_LDA","c_MLR"]:
         conditions = classifiers[feat][classifier].classes_
@@ -190,8 +212,9 @@ for i, feat in enumerate(classifiers):
         #plots.plot_frame(classifiers[feat][classifier].means_, svd.spatials[:comp,:,:], conditions, "Means of "+classifier+" for Feat: "+feature_label[i])
 
         plots.plot_frame(classifiers[feat][classifier].coef_[[1,4]]-classifiers[feat][classifier].coef_[[2,5]], svd.spatials[:comp,:,:], ["vistact_left - vis_left","vistact_right - vis_right"], plot_path/("Difference of Coef from "+classifier+" for Feat: "+feature_label[i]))
-
+'''
 plt.show()
+
 
 ### Show LDA weights
 #trial_preselection = ((svd.n_targets == 6) & (svd.n_distractors == 0) &
