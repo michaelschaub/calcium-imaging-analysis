@@ -5,6 +5,7 @@ from pymou import MOU
 
 #Progress Bar
 from tqdm.notebook import tqdm
+#from tqdm import tqdm
 
 class Features:
     # flatten contained feauture to one trial and one feature dimension
@@ -144,13 +145,13 @@ class Covariances(Features):
 def calc_acovs(temps, means, covs, n_tau_range, label):
     temps = temps - means[:, None, :]
     trials, n_frames, comps = temps.shape
-    cov_m = np.zeros([trials, len(n_tau_range), comps, comps])
+    cov_m = np.zeros([trials, len(n_tau_range)+1, comps, comps])
 
     cov_m[:, 0] = covs
 
     for trial in tqdm(range(trials),desc=label,leave=False):
 
-        for i,i_tau in enumerate(n_tau_range): #range(1, n_tau + 1):
+        for i,i_tau in enumerate(n_tau_range,1): #range(1, n_tau + 1):
             cov_m[trial, i, :, :] = np.tensordot(temps[trial, 0:n_frames - i_tau],
                                                      temps[trial, i_tau:n_frames],
                                                      axes=(0, 0)) / float(n_frames - i_tau)
