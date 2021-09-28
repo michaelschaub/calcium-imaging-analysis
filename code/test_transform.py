@@ -3,55 +3,66 @@ from PIL import Image
 from matplotlib import pyplot as plt
 import numpy
 import scipy.io, scipy.ndimage
-import sys
-sys.path.append(Path(__file__).parent)
 
-#data_path = Path(__file__).parent.parent/'data'
-#file_path = data_path/'GN06'/'2021-01-20_10-15-16'/'reference_image.tif'
-test_img = numpy.asarray(Image.open("C:/Master/Calcium_Analysis/data/GN06/2021-01-20_10-15-16/reference_image.tif"),dtype='float')
+data_path = Path(__file__).parent.parent/'data'/'GN06'/'2021-01-20_10-15-16'
+ref_path = data_path/'reference_image.tif'
+opts_path = data_path/'SVD_data'/'opts.mat'
 
-trans_params_obj = scipy.io.loadmat("C:/Master/Calcium_Analysis/data/GN06/2021-01-20_10-15-16/SVD_data/opts.mat",simplify_cells=True)
+img = numpy.asarray(Image.open(ref_path),dtype='float')
+org_img = img.copy()
+trans_params_obj = scipy.io.loadmat(opts_path,simplify_cells=True)
 trans_params = trans_params_obj['opts']['transParams']
 
-#tp_dict = dict(zip(trans_params_obj['opts']['transParams'][0,0][0][0].dtype.names, trans_params_obj['opts']['transParams'][0,0][0][0]))
-
 #org shape
-h , w = test_img.shape
+h , w = img.shape
 
 #Rotation
-#test_img = scipy.ndimage.rotate(test_img,numpy.asarray(trans_params['angleD'],dtype='int'), reshape=True, cval= numpy.NAN)
-min = numpy.nanmin(test_img)
+min = numpy.nanmin(img)
 offset = 10
-test_img = test_img - min + offset
-test_img = scipy.ndimage.rotate(test_img,trans_params['angleD'], reshape=True, cval= 0)
+img = img - min + offset
+img = scipy.ndimage.rotate(img,trans_params['angleD'], reshape=True, cval= 0)
 
 #Scale
-print(trans_params)
-test_img = scipy.ndimage.zoom(test_img, trans_params['scaleConst'])
+img = scipy.ndimage.zoom(img, trans_params['scaleConst'])
 
 #Translate
-test_img = scipy.ndimage.shift(test_img, numpy.flip(trans_params['tC']))
-
-test_img[test_img<0.9999*offset]= numpy.NAN
-test_img = test_img - offset + min
+img = scipy.ndimage.shift(img, numpy.flip(trans_params['tC']))
+img[img<0.9999*offset]= numpy.NAN
+img = img - offset + min
 
 #Crop
-hn , wn = test_img.shape
-trim_h = numpy.floor((hn - h) / 2 )
-trim_w = numpy.floor((wn - w) / 2 )
-
-new_img = numpy.empty((h,w))
+h_new , w_new = img.shape
+trim_h = int(numpy.floor((h_new - h) / 2 ))
+trim_w = int(numpy.floor((w_new - w) / 2 ))
 
 if trans_params['scaleConst'] < 1:
     if trim_h < 0:
+        temp_img = numpy.full((h, w_new),numpy.NAN)
+        temp_img[abs(trim_h):abs(trim_h)+h_new, :] = img
+        img = temp_img
+    else:
+        img = img[trim_h:trim_h + h, :]
 
-    #pad
-        test_img = numpy.pad(test_img)
+    h_new , w_new = img.shape
+    if trim_w < 0:
+        temp_img = numpy.full((h_new, w),numpy.NAN)
+        temp_img[:,abs(trim_w):abs(trim_w) + w_new] = img
+        img= temp_img
+    else:
+        img = img[:,trim_w:trim_w+w]
 
 else:
-    #pad
-    pass
+    img = img[trim_h:trim_h + h, trim_w:trim_w+w]
 
-plt.figure()
-img = plt.imshow(test_img)
+'''
+#Leftover from Matlab Code
+try
+    im = im(1:540, 1:size(dorsalMaps.edgeMapScaled, 2), :)
+catch
+end
+'''
+
+f, axs = plt.subplots(2)
+axs[0].imshow(img)
+axs[1].imshow(org_img)
 plt.show()
