@@ -4,6 +4,9 @@ import numpy as np
 import pandas as pd
 import h5py
 
+#For BrainAlignment
+import scipy.io, scipy.ndimage
+
 import sys
 from pathlib import Path
 #sys.path.append(Path(__file__).parent)
@@ -33,16 +36,15 @@ class Data(ABC):
         return a_temps, b_temps, notNone(a_df,b_df), notNone(a_spats, b_spats), notNone(a_starts, b_starts)
 
 
-# needs better name
 class DecompData(Data):
-    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, cond_filter=None):
+    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, cond_filter=None, trans_params=None):
         assert len(df) != trial_starts.shape[0]-1, (
             f"DataFrame df and trial_starts do not have matching length ({len(df)} != {len(trial_starts)})\n\t(maybe remove last entry?)")
         assert len(df) == trial_starts.shape[0], (
             f"DataFrame df and trial_starts do not have matching length ({len(df)} != {len(trial_starts)})")
         self._df = df
         self._temps = temporal_comps
-        self._spats = spatial_comps
+        self._spats = spatial_comps if trans_params is None else self.align_spatials(spatial_comps, trans_params)
         self._starts = trial_starts
 
         if cond_filter is None:
@@ -103,6 +105,57 @@ class DecompData(Data):
             if "spats_hash" in h5_file.attrs and h5_file.attrs["spats_hash"] != hash(spats.data.tobytes()):
                 warnings.warn("Feature hashes do not match", Warning)
         return DecompData(df, temps, spats)
+
+    #Auslagern
+    def align_spatials(self, spatials,trans_params):
+        _ , h , w = spatials.shape #org shape
+        print(spatials.shape)
+        #Rotation
+        print("rotation")
+        min = np.nanmin(spatials)
+        offset = 10
+        spatials = spatials - min + offset
+        spatials = scipy.ndimage.rotate(spatials,trans_params['angleD'], axes=(2,1), reshape=True, cval= 0)
+
+        #Scale
+        print("scale")
+        spatials = scipy.ndimage.zoom(spatials, (1,trans_params['scaleConst'],trans_params['scaleConst']),cval= 0) #very slow
+
+        #Translate
+        print("translate")
+        spatials = scipy.ndimage.shift(spatials, np.insert(np.flip(trans_params['tC']),0,0),cval= 0, mode='constant') #very slow
+        #spatials = scipy.ndimage.shift(spatials, [0,20,-20],cval= 0) #very slow
+
+        spatials[spatials<0.9999*offset]= np.NAN
+        spatials = spatials - offset + min
+
+        #Crop
+        print("crop")
+        n_spatials , h_new , w_new = spatials.shape
+        trim_h = int(np.floor((h_new - h) / 2 ))
+        trim_w = int(np.floor((w_new - w) / 2 ))
+
+        #Eleganter lösen, hier nur 1 zu 1 matlab nachgestellt
+        if trans_params['scaleConst'] < 1:
+            if trim_h < 0:
+                temp_spats = np.full((n_spatials, h, w_new),np.NAN)
+                temp_spats[:,abs(trim_h):abs(trim_h)+h_new, :] = spatials
+                spatials = temp_spats
+            else:
+                spatials = spatials[:,trim_h:trim_h + h, :]
+
+            n_spatials , h_new , w_new = spatials.shape
+            if trim_w < 0:
+                temp_spats = np.full((n_spatials, h_new, w),np.NAN)
+                temp_spats[:,:,abs(trim_w):abs(trim_w) + w_new] = spatials
+                spatials = temp_spats
+            else:
+                spatials = spatials[:,:,trim_w:trim_w+w]
+
+        else:
+            spatials = spatials[:,trim_h:trim_h + h, trim_w:trim_w+w]
+
+        return spatials
 
     @property
     def temps_hash(self):
