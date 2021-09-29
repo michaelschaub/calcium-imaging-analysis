@@ -109,12 +109,16 @@ class DecompData(Data):
     #Auslagern
     def align_spatials(self, spatials,trans_params):
         _ , h , w = spatials.shape #org shape
-        print(spatials.shape)
+
+        #Offset instead of Nans as interpolation is used
+        min = np.nanmin(spatials)
+        eps = np.finfo(np.float32).eps
+        offset = 2*eps # 10
+        spatials = spatials - min + offset
+
         #Rotation
         print("rotation")
-        min = np.nanmin(spatials)
-        offset = 10
-        spatials = spatials - min + offset
+
         spatials = scipy.ndimage.rotate(spatials,trans_params['angleD'], axes=(2,1), reshape=True, cval= 0)
 
         #Scale
@@ -126,8 +130,9 @@ class DecompData(Data):
         spatials = scipy.ndimage.shift(spatials, np.insert(np.flip(trans_params['tC']),0,0),cval= 0, mode='constant') #very slow
         #spatials = scipy.ndimage.shift(spatials, [0,20,-20],cval= 0) #very slow
 
-        spatials[spatials<0.9999*offset]= np.NAN
-        spatials = spatials - offset + min
+        #Remove offset
+        spatials[spatials<=eps]= np.NAN
+        spatials = spatials + min - offset
 
         #Crop
         print("crop")
