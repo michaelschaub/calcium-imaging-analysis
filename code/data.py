@@ -112,27 +112,34 @@ class DecompData(Data):
 
         #Offset instead of Nans as interpolation is used
         min = np.nanmin(spatials)
+        print(min)
         eps = np.finfo(np.float32).eps
-        offset = 2*eps # 10
-        spatials = spatials - min + offset
-
+        #offset = 2*eps # 10
+        spatials = spatials - min #+ offset
+        print(np.nanmin(spatials))
         #Rotation
         print("rotation")
+        spatials = scipy.ndimage.rotate(spatials,trans_params['angleD'], axes=(2,1), reshape=True, cval= -eps)
+        print(np.nanmin(spatials))
 
-        spatials = scipy.ndimage.rotate(spatials,trans_params['angleD'], axes=(2,1), reshape=True, cval= 0)
-
+        ### introduces weird aliasing along edges due to interpolation
         #Scale
         print("scale")
-        spatials = scipy.ndimage.zoom(spatials, (1,trans_params['scaleConst'],trans_params['scaleConst']),cval= 0) #very slow
+        spatials = scipy.ndimage.zoom(spatials, (1,trans_params['scaleConst'],trans_params['scaleConst']),cval= -eps) #slow
+        print(np.nanmin(spatials))
 
         #Translate
         print("translate")
-        spatials = scipy.ndimage.shift(spatials, np.insert(np.flip(trans_params['tC']),0,0),cval= 0, mode='constant') #very slow
-        #spatials = scipy.ndimage.shift(spatials, [0,20,-20],cval= 0) #very slow
+        spatials = scipy.ndimage.shift(spatials, np.insert(np.flip(trans_params['tC']),0,0),cval= -eps, mode='constant') #slow
+        ### ---
+        print(np.nanmin(spatials))
 
         #Remove offset
-        spatials[spatials<=eps]= np.NAN
-        spatials = spatials + min - offset
+        print(np.nanmin(spatials))
+        spatials[spatials<0]= np.NAN
+        print(eps)
+
+        spatials = spatials + min #- offset
 
         #Crop
         print("crop")

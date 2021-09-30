@@ -118,7 +118,7 @@ print(align_svd.spatials[0,:,:])
 print(svd.spatials[0,:,:])
 
 f, axs = plt.subplots(2)
-axs[0].imshow(align_svd.spatials[0,:,:], vmin=0, vmax=0.002)
+axs[0].imshow(align_svd.spatials[0,:,:]) #, vmin=0, vmax=0.002)
 axs[1].imshow(svd.spatials[0,:,:], vmin=0, vmax=0.002)
 plt.show()
 
