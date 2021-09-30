@@ -1,6 +1,7 @@
 from pathlib import Path
 from PIL import Image
 from matplotlib import pyplot as plt
+from matplotlib.colors import ListedColormap
 import numpy as np
 import scipy.io, scipy.ndimage
 
@@ -11,12 +12,8 @@ import h5py
 import sys
 sys.path.append(Path(__file__).parent)
 
-#include in loading df?
-data_path = Path(__file__).parent.parent/'data'/'GN06'/'2021-01-20_10-15-16'
-opts_path = data_path/'SVD_data'/'opts.mat'
 
-trans_params_obj = scipy.io.loadmat(opts_path,simplify_cells=True)
-trans_params = trans_params_obj['opts']['transParams']
+
 
 
 ######################
@@ -51,74 +48,113 @@ trial_starts = trial_starts[mask]
 
 ###########################
 
+#include in loading df?
+opts_path = data_path / "GN06" / Path('2021-01-20_10-15-16/SVD_data/opts.mat')
+dorsal_path = data_path/"anatomical"/"allenDorsalMap.mat"
+
+trans_params = scipy.io.loadmat(opts_path,simplify_cells=True)['opts']['transParams']
+dorsal_maps = scipy.io.loadmat(dorsal_path ,simplify_cells=True)['dorsalMaps']
+
 svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts))
 align_svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts), trans_params=trans_params)
 
 '''
-ref_path = data_path/'reference_image.tif'
-img = np.asarray(Image.open(ref_path),dtype='float')
-org_img = img.copy()
+###On reference image
+ref_path = data_path/ "GN06" / Path('2021-01-20_10-15-16/reference_image.tif')
+spatials = np.asarray(Image.open(ref_path),dtype='float')
+org_img = spatials.copy()
 
-#org shape
-h , w = img.shape
+h , w = spatials.shape #org shape
 
+#Offset instead of Nans as interpolation is used
+min = np.nanmin(spatials)
+print(min)
+eps = 2 * np.finfo(np.float32).eps
+#offset = 2*eps # 10
+spatials = spatials - min #+ offset
+print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
 #Rotation
-min = np.nanmin(img)
-offset = 10
-img = img - min + offset
-img = scipy.ndimage.rotate(img,trans_params['angleD'], reshape=True, cval= 0)
+print("Rotation")
+spatials = scipy.ndimage.rotate(spatials,trans_params['angleD'], reshape=True, cval= -eps)
+print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
 
+### introduces weird aliasing along edges due to interpolation
 #Scale
-img = scipy.ndimage.zoom(img, trans_params['scaleConst'])
+print("Scale/Zoom")
+spatials = scipy.ndimage.zoom(spatials, trans_params['scaleConst'],order=1,cval= -eps) #slow
+print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
 
 #Translate
-img = scipy.ndimage.shift(img, np.flip(trans_params['tC']))
-img[img<0.9999*offset]= np.NAN
-img = img - offset + min
+print("Translate/Shift")
+spatials = scipy.ndimage.shift(spatials, np.flip(trans_params['tC']),cval= -eps, order=1, mode='constant') #slow
+### ---
+print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
+
+#Remove offset
+spatials[spatials<0]= np.NAN
+
+spatials = spatials + min #- offset
 
 #Crop
-h_new , w_new = img.shape
+print("crop")
+h_new , w_new = spatials.shape
 trim_h = int(np.floor((h_new - h) / 2 ))
 trim_w = int(np.floor((w_new - w) / 2 ))
 
+#Eleganter lösen, hier nur 1 zu 1 matlab nachgestellt
 if trans_params['scaleConst'] < 1:
     if trim_h < 0:
-        temp_img = np.full((h, w_new),np.NAN)
-        temp_img[abs(trim_h):abs(trim_h)+h_new, :] = img
-        img = temp_img
+        temp_spats = np.full((h, w_new),np.NAN)
+        temp_spats[abs(trim_h):abs(trim_h)+h_new, :] = spatials
+        spatials = temp_spats
     else:
-        img = img[trim_h:trim_h + h, :]
+        spatials = spatials[trim_h:trim_h + h, :]
 
-    h_new , w_new = img.shape
+    h_new , w_new = spatials.shape
     if trim_w < 0:
-        temp_img = np.full((h_new, w),np.NAN)
-        temp_img[:,abs(trim_w):abs(trim_w) + w_new] = img
-        img= temp_img
+        temp_spats = np.full((h_new, w),np.NAN)
+        temp_spats[:,abs(trim_w):abs(trim_w) + w_new] = spatials
+        spatials = temp_spats
     else:
-        img = img[:,trim_w:trim_w+w]
+        spatials = spatials[:,trim_w:trim_w+w]
 
 else:
-    img = img[trim_h:trim_h + h, trim_w:trim_w+w]
-    
-    
+    spatials = spatials[trim_h:trim_h + h, trim_w:trim_w+w]
+
+
+_ , dorsal_w = dorsal_maps['edgeMapScaled'].shape
+spatials_h , _ = spatials[:,:].shape
+
 f, axs = plt.subplots(2)
-axs[0].imshow(img)
-axs[1].imshow(org_img)
+axs[0].imshow(spatials[:,:dorsal_w], interpolation='none')
+
+edges = dorsal_maps['edgeMapScaled']
+masked_data = np.ma.masked_where(edges < 1, edges)
+print(masked_data)
+#cmap = ListedColormap(['white', 'black'])
+#my_cmap = cmap(np.arange(cmap.N))
+#my_cmap[0,-1]=0
+axs[0].imshow(masked_data[:spatials_h,:], interpolation='none')
+#mask = edges>0
+
+#axs[0].imshow(np.full(edges.shape,1),alpha=edges)
+axs[1].imshow(org_img[:,:])
 plt.show()
 
 
-#Leftover from Matlab Code
-#try
-#    im = im(1:540, 1:size(dorsalMaps.edgeMapScaled, 2), :)
-#catch
-#end
 '''
-
-print(align_svd.spatials[0,:,:])
-print(svd.spatials[0,:,:])
+_ , dorsal_w = dorsal_maps['edgeMapScaled'].shape
+spatials_h , _ = align_svd.spatials[0,:,:].shape
 
 f, axs = plt.subplots(2)
-axs[0].imshow(align_svd.spatials[0,:,:], vmin=0, vmax=0.002)
+axs[0].imshow(align_svd.spatials[0,:,:dorsal_w], vmin=0, vmax=0.002, interpolation='none')
+
+edges = dorsal_maps['edgeMapScaled']
+masked_data = np.ma.masked_where(edges < 1, edges)
+
+
+axs[0].imshow(masked_data[:spatials_h,:], interpolation='none')
+
 axs[1].imshow(svd.spatials[0,:,:], vmin=0, vmax=0.002)
 plt.show()
 
