@@ -1,0 +1,19 @@
+# Data handling
+
+numpy
+pandas
+tables # requiremnt for saving and loading pandas.DataFrame
+h5py
+
+# Models
+pyMou@git+https://github.com/mb-BCA/pyMOU.git@master
+
+# Learning
+
+scikit-learn
+
+
+# Plotting and visualization
+
+matplotlib
+tqdm

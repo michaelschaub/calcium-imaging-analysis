@@ -1,0 +1,20 @@
+name: calcium_imaging_analysis
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - pip
+  # Data handling
+  - numpy
+  - pandas
+  - h5py
+  # Learning
+  - scikit-learn
+  # Plotting and visualization
+  - matplotlib
+  - tqdm
+  - pip:
+    - tables # requiremnt for saving and loading pandas.DataFrame
+    # Models
+    - pyMou@git+https://github.com/mb-BCA/pyMOU.git@master
