@@ -80,7 +80,7 @@ class Raws(Features):
 
     @property
     def pixel(self):
-        return DecompData.PixelSlice(self.reshape(self._feature, (-1, *self._feature[2:])),
+        return DecompData.PixelSlice(np.reshape(self._feature, (-1, *self._feature[2:])),
                                      self._data._spats[:self._feature.shape[2]])
 
 

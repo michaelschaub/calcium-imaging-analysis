@@ -131,7 +131,7 @@ class DecompData(Data):
     @property
     def temporals(self):
         try:
-            return self._temps.reshape(len(self), -1, self.n_components)
+            return np.reshape(self._temps, (len(self), -1, self.n_components))
         except ValueError as err:
             if "cannot reshape array of size 0 into shape" in err.args[0]:
                 return np.zeros((0, 0, self.n_components))
