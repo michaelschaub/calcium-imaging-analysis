@@ -17,9 +17,7 @@ from sklearn import preprocessing
 from sklearn.model_selection import StratifiedShuffleSplit
 
 #Progress Bar
-#from tqdm.auto import tqdm
-#from tqdm.notebook import tqdm
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from data import DecompData
 

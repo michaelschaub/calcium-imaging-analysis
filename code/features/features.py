@@ -4,8 +4,7 @@ from data import Data, DecompData
 from pymou import MOU
 
 #Progress Bar
-from tqdm.notebook import tqdm
-#from tqdm import tqdm
+from tqdm.auto import tqdm
 
 class Features:
     # flatten contained feauture to one trial and one feature dimension
