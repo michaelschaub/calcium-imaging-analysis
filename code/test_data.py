@@ -2,12 +2,13 @@ import h5py
 import numpy as np
 import pandas as pd
 import pickle as pkl
-from pathlib import Path
+#from pathlib import Path
+import pathlib
 import math
 
 ###Too complicated
 import sys
-sys.path.append(Path(__file__).parent)
+sys.path.append(pathlib.Path(__file__).parent)
 '''
 folders = ['features','loading']
 file_paths =  [Path(__file__).parent / Path(folder) for folder in folders]
@@ -28,24 +29,30 @@ raw_course_graining = 5
 
 force_extraction = False
 
-data_path = Path(__file__).parent.parent/'data'
-if (not (data_path/'extracted_data.pkl').exists()) or force_extraction:
-    # load behavior data
-    sessions = load_task_data_as_pandas_df.extract_session_data_and_save(root_paths=[data_path], mouse_ids=["GN06"], reextract=False)
-    with open( data_path/'extracted_data.pkl', 'wb') as handle:
-        pkl.dump(sessions, handle)
+data_path = pathlib.Path(__file__).parent.parent/'data'
+if (not (data_path/'svd_data.h5').exists()) or force_extraction:
+    if (not (data_path/'extracted_data.pkl').exists()) or force_extraction:
+        # load behavior data
+        sessions = load_task_data_as_pandas_df.extract_session_data_and_save(root_paths=[data_path], mouse_ids=["GN06"], reextract=False)
+        with open( data_path/'extracted_data.pkl', 'wb') as handle:
+            pkl.dump(sessions, handle)
+    else:
+        # load saved data
+        with open( data_path/'extracted_data.pkl', 'rb') as handle:
+            sessions = pkl.load(handle)
+        print("Loaded pickled data.")
+
+    file_path = data_path/'GN06'/'2021-01-20_10-15-16'/'SVD_data'/'Vc.mat'
+    f = h5py.File(file_path, 'r')
+
+    frameCnt = np.array(f['frameCnt'])
+    trial_starts = np.cumsum(frameCnt[:-1, 1])
+    svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts) )
+    svd.save(str(data_path/'svd_data.h5'))
 else:
-    # load saved data
-    with open( data_path/'extracted_data.pkl', 'rb') as handle:
-        sessions = pkl.load(handle)
-    print("Loaded pickled data.")
+    svd = DecompData.load(str(data_path/'svd_data.h5'))
+    print("Loaded DecompData object.")
 
-file_path = data_path/'GN06'/'2021-01-20_10-15-16'/'SVD_data'/'Vc.mat'
-f = h5py.File(file_path, 'r')
-
-frameCnt = np.array(f['frameCnt'])
-trial_starts = np.cumsum(frameCnt[:-1, 1])
-svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts) )
 
 trial_preselection = ((svd.n_targets == 6) & (svd.n_distractors == 0) &
                       (svd.auto_reward == 0) & (svd.both_spouts == 1))

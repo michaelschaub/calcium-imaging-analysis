@@ -5,8 +5,6 @@ import pandas as pd
 import h5py
 
 import sys
-from pathlib import Path
-#sys.path.append(Path(__file__).parent)
 
 
 class Data(ABC):
@@ -135,6 +133,10 @@ class DecompData(Data):
     @property
     def spats_hash(self):
         return hash(self._spats.data.tobytes())
+
+    @property
+    def starts_hash(self):
+        return hash(self._starts.data.tobytes())
 
     @property
     def n_components(self):
