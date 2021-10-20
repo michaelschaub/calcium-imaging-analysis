@@ -2,6 +2,7 @@ data/*
 plots/*
 .idea/*
 .idea
+.snakemake/*
 
 !data/.gitkeep
 !plots/.gitkeep

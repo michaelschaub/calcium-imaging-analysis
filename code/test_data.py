@@ -30,7 +30,7 @@ raw_course_graining = 5
 force_extraction = False
 
 data_path = pathlib.Path(__file__).parent.parent/'data'
-svd_path = data_path/'output'/'GN06'/'svd_data.h5'
+svd_path = data_path/'output/GN06/SVD/svd_data.h5'
 if (not svd_path.exists()) or force_extraction:
     if (not (data_path/'input/extracted_data.pkl').exists()) or force_extraction:
         # load behavior data
