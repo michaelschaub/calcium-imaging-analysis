@@ -30,27 +30,28 @@ raw_course_graining = 5
 force_extraction = False
 
 data_path = pathlib.Path(__file__).parent.parent/'data'
-if (not (data_path/'svd_data.h5').exists()) or force_extraction:
-    if (not (data_path/'extracted_data.pkl').exists()) or force_extraction:
+svd_path = data_path/'output'/'GN06'/'svd_data.h5'
+if (not svd_path.exists()) or force_extraction:
+    if (not (data_path/'input/extracted_data.pkl').exists()) or force_extraction:
         # load behavior data
-        sessions = load_task_data_as_pandas_df.extract_session_data_and_save(root_paths=[data_path], mouse_ids=["GN06"], reextract=False)
-        with open( data_path/'extracted_data.pkl', 'wb') as handle:
+        sessions = load_task_data_as_pandas_df.extract_session_data_and_save(root_paths=[data_path/"input"], mouse_ids=["GN06"], reextract=False)
+        with open( data_path/'input/extracted_data.pkl', 'wb') as handle:
             pkl.dump(sessions, handle)
     else:
         # load saved data
-        with open( data_path/'extracted_data.pkl', 'rb') as handle:
+        with open( data_path/'input/extracted_data.pkl', 'rb') as handle:
             sessions = pkl.load(handle)
         print("Loaded pickled data.")
 
-    file_path = data_path/'GN06'/'2021-01-20_10-15-16'/'SVD_data'/'Vc.mat'
+    file_path = data_path/'input'/'GN06'/'2021-01-20_10-15-16'/'SVD_data'/'Vc.mat'
     f = h5py.File(file_path, 'r')
 
     frameCnt = np.array(f['frameCnt'])
     trial_starts = np.cumsum(frameCnt[:-1, 1])
     svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts) )
-    svd.save(str(data_path/'svd_data.h5'))
+    svd.save(str(svd_path))
 else:
-    svd = DecompData.load(str(data_path/'svd_data.h5'))
+    svd = DecompData.load(str(svd_path))
     print("Loaded DecompData object.")
 
 

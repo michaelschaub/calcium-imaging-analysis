@@ -37,7 +37,7 @@ missing_task_data = []
 
 
 ### New data extraction
-data_path = Path(__file__).parent.parent / Path('data')
+data_path = Path(__file__).parent.parent / Path('data') / 'input'
 plot_path = Path(__file__).parent.parent / Path('plots')
 if not (data_path/'extracted_data.pkl').exists() :
     # load behavior data

@@ -3,18 +3,18 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.9
+  - python>=3.9
   - pip
   # Data handling
-  - numpy
-  - pandas
-  - h5py
+  - numpy>=1.21
+  - pandas>=1.3
+  - h5py>=3.4
   # Learning
-  - scikit-learn
+  - scikit-learn>=1.0
   # Plotting and visualization
-  - matplotlib
-  - tqdm
+  - matplotlib>=3.4
+  - tqdm>=4.62
   - pip:
-    - tables # requiremnt for saving and loading pandas.DataFrame
+    - tables>=3.6 # requiremnt for saving and loading pandas.DataFrame
     # Models
     - pyMou@git+https://github.com/mb-BCA/pyMOU.git@master
