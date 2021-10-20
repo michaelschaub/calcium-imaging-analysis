@@ -5,8 +5,6 @@ import pandas as pd
 import h5py
 
 import sys
-from pathlib import Path
-#sys.path.append(Path(__file__).parent)
 
 
 class Data(ABC):
@@ -47,9 +45,9 @@ class DecompData(Data):
 
         if cond_filter is None:
             cond_filter = []
-        self._cond_filters = cond_filter  # DecompData.Conditions(self, cond_filter)
+        self.conditions = cond_filter  # DecompData.Conditions(self, cond_filter)
 
-    def save(self, file, temps_file=None, spats_file=None, df_label="df", temps_label="temps", spats_label="spats"):
+    def save(self, file, temps_file=None, spats_file=None, starts_file=None, df_label="df", temps_label="temps", spats_label="spats", starts_label="starts" ):
         self._df.to_hdf(file, df_label, "w")
         h5_file = h5py.File(file, "a")
         if temps_file is None:
@@ -68,7 +66,15 @@ class DecompData(Data):
             h5_file.attrs["spats_file"] = spats_file
         h5_file.attrs["spats_hash"] = self.spats_hash
 
-    def load(file, temps_file=None, spats_file=None, df_label="df", temps_label="temps", spats_label="spats"):
+        if starts_file is None:
+            starts = h5_file.create_dataset(starts_label, data=self._starts)
+        else:
+            with h5py.File(starts_file, "w") as h5_starts:
+                starts = h5_starts.create_dataset(starts_label, data=self._starts)
+            h5_file.attrs["starts_file"] = starts_file
+        h5_file.attrs["starts_hash"] = self.starts_hash
+
+    def load(file, temps_file=None, spats_file=None, starts_file=None, df_label="df", temps_label="temps", spats_label="spats", starts_label="starts"):
         df = pd.read_hdf(file, df_label)
         h5_file = h5py.File(file, "r")
         if temps_file is None:
@@ -101,8 +107,24 @@ class DecompData(Data):
             with h5py.File(spats_file, "r") as h5_spats:
                 spats = np.array(h5_spats[spats_label])
             if "spats_hash" in h5_file.attrs and h5_file.attrs["spats_hash"] != hash(spats.data.tobytes()):
-                warnings.warn("Feature hashes do not match", Warning)
-        return DecompData(df, temps, spats)
+                warnings.warn("spatials hashes do not match", Warning)
+
+        if starts_file is None:
+            if starts_label in h5_file:
+                starts = np.array(h5_file[starts_label])
+            elif "starts_file" in h5_file.attrs:
+                with h5py.File(h5_file.attrs["starts_file"], "r") as h5_starts:
+                    starts = np.array(h5_starts[starts_label])
+                if "starts_hash" in h5_file.attrs and h5_file.attrs["starts_hash"] != hash(starts.data.tobytes()):
+                    warnings.warn("starts hashes do not match", Warning)
+            else:
+                raise ValueError
+        else:
+            with h5py.File(starts_file, "r") as h5_starts:
+                starts = np.array(h5_starts[starts_label])
+            if "starts_hash" in h5_file.attrs and h5_file.attrs["starts_hash"] != hash(starts.data.tobytes()):
+                warnings.warn("starts hashes do not match", Warning)
+        return DecompData(df, temps, spats, starts)
 
     @property
     def temps_hash(self):
@@ -111,6 +133,10 @@ class DecompData(Data):
     @property
     def spats_hash(self):
         return hash(self._spats.data.tobytes())
+
+    @property
+    def starts_hash(self):
+        return hash(self._starts.data.tobytes())
 
     @property
     def n_components(self):

@@ -132,6 +132,8 @@ class Covariances(Features):
             self._means = calc_means(data.temporals[:, :, :max_comps])
         elif isinstance(means, Means):
             self._means = means._feature
+        else:
+            self._means = mean
 
         self._feature = calc_covs(data.temporals[:, :, :max_comps], self._means)
 
@@ -168,10 +170,14 @@ class AutoCovariances(Features):
             self._means = calc_means(data.temporals[:, :, :max_comps])
         elif isinstance(means, Means):
             self._means = means._feature
+        else:
+            self._means = means
         if covs is None:
             self._covs = calc_covs(data.temporals[:, :, :max_comps], self._means)
         elif isinstance(covs, Covariances):
             self._covs = np.copy(covs._feature)
+        else:
+            self._covs = covs
 
         if max_time_lag is None or max_time_lag >= data.temporals.shape[1]:
             max_time_lag = DEFAULT_TIMELAG
