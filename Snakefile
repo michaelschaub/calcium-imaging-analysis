@@ -9,6 +9,8 @@ rule pipeline_entry:
 				for date in dates ],
 	output:
 		f"data/output/{{mouse}}/SVD/svd_data.h5"
+	conda:
+		"code/environment.yaml"
 	script:
 		"code/scripts/default_entry.py"
 
@@ -18,6 +20,6 @@ rule test_data:
 	input:
 		"data/output/GN06/SVD/svd_data.h5"
 	conda:
-		"code/environment.yml"
+		"code/environment.yaml"
 	script:
 		"code/test_data.py"

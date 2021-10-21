@@ -24,8 +24,10 @@ from features import Means, Raws
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-plt_mode = "raw" # should be from ["mean", "z_score", "raw"]
-raw_course_graining = 5
+plt_mode = "raw_z_score" # should be from ["mean", "z_score", "raw", "raw_z_score"]
+plt_mode = "raw" # should be from ["mean", "z_score", "raw", "raw_z_score"]
+raw_course_graining = 1
+animation_slowdown = 1
 
 force_extraction = False
 
@@ -107,7 +109,7 @@ if plt_mode in ["mean", "z_score"]:
                 Vc_mean = Vc.mean(axis=1)
 
                 Vc_baseline = baseline_frames.temporals
-                Vc_baseline_mean = Vc_baseline.mean(axis=1).mean(axis=0)
+                Vc_baseline_mean = Vc_baseline.mean(axis=1)#.mean(axis=0)
 
                 """
                 Visualization:
@@ -117,7 +119,7 @@ if plt_mode in ["mean", "z_score"]:
                 average_stimulus_frames = np.tensordot(Vc_mean, U, (-1,0) )
                 average_baseline_frames = np.tensordot(Vc_baseline_mean, U, (-1,0) )
 
-                average_stimulus_frames = average_stimulus_frames - average_baseline_frames
+                average_stimulus_frames = average_stimulus_frames - average_baseline_frames.mean(axis=0)
                 z_score = ((average_stimulus_frames.mean(axis=0)) / (average_stimulus_frames.std(axis=0)))
 
                 # plot
@@ -132,7 +134,7 @@ if plt_mode in ["mean", "z_score"]:
             plt.pause(0.1)
     #
     plt.show()
-elif plt_mode == "raw":
+elif plt_mode in ["raw", "raw_z_score" ]:
     for modality_id in range(3):
         for target_side in range(2):
             # get the trials to use
@@ -144,9 +146,15 @@ elif plt_mode == "raw":
             # baseline frames (1sec before stimulus)
             baseline_frames = svd_pre[ selected_trials, 15:30 ]
 
-            frames_corrected = Raws(selected_frames - Means( baseline_frames ))
-            average_frames = frames_corrected.mean.pixel[:,:,:]
-            print(average_frames.shape)
+            if plt_mode == "raw":
+                #frames_corrected = Raws(selected_frames)
+                frames_corrected = Raws(selected_frames - Means( baseline_frames ))
+                plot_frames = frames_corrected.mean.pixel[:,:,:]
+            else:
+                frames_corrected = Raws(selected_frames - Means( baseline_frames ))
+                average_frames = frames_corrected.mean.pixel[:,:,:]
+                baseline_frames = Means( baseline_frames ).pixel[:,:,:]
+                plot_frames = average_frames / baseline_frames.std()
 
             """
             Visualization:
@@ -154,14 +162,20 @@ elif plt_mode == "raw":
             fig, ax = plt.subplots()
 
             cg = raw_course_graining
+            im = [None] # the image has to be containered to pass it as reference
+
+            inter = animation_slowdown * 1e3*cg/15
 
             def draw_frame(t):
-                im = ax.imshow(
-                        np.mean( average_frames[cg*t:min(cg*(t+1),average_frames.shape[0]), :, :], axis=0),
-                        vmin=-0.02, vmax=0.02)
-                print(average_frames[cg*t:min(cg*(t+1),average_frames.shape[0]), :, :].shape)
-                #fig.colorbar(im, ax=ax[target_side, modality_id])
-            ani = FuncAnimation( fig, draw_frame, frames=math.ceil(average_frames.shape[0]/cg), interval=100, repeat=True)
+                if im[0] is None:
+                    im[0] = ax.imshow(
+                            np.mean( plot_frames[cg*t:min(cg*(t+1),plot_frames.shape[0]), :, :], axis=0),
+                            vmin=-0.02, vmax=0.02)
+                    cb = fig.colorbar(im[0], ax=ax)
+                else:
+                    im[0].set_data(np.mean( plot_frames[cg*t:min(cg*(t+1),plot_frames.shape[0]), :, :], axis=0))
+            ani = FuncAnimation( fig, draw_frame,
+                                frames=math.ceil(plot_frames.shape[0]/cg), interval=inter, repeat=True)
             plt.show()
 
 else:
