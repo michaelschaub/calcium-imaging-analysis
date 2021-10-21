@@ -36,18 +36,20 @@ class Moup(Features):
         self._mou_ests = fit_moup(data.temporals[:, :, :max_comps], time_lag, self._label)
 
     def flatten(self, feat=None):
+
         n = len(self._mou_ests[0].get_tau_x()) #Number of Components
-        triu_entries= int(n * (n-1) / 2)
-        flat_params = np.empty((len(self._mou_ests),triu_entries+n )) #Tri Matrix +
+        #triu_entries= int(n * (n-1) / 2)
+        flat_params = np.empty((len(self._mou_ests),n*n))#np.empty((len(self._mou_ests),triu_entries+n )) #Tri Matrix +
 
         for i,mou_est in enumerate(tqdm(self._mou_ests,desc=self._label,leave=False)):
-            covs = mou_est.get_C()
-            f_covs = covs[np.triu(np.ones(covs.shape, dtype=bool),1)] #diagonal redundant -> use tril instead of trid
+            #covs = mou_est.get_C()
+            #f_covs = covs[np.triu(np.ones(covs.shape, dtype=bool),1)] #diagonal redundant -> use tril instead of trid
 
-            tau_x = mou_est.get_tau_x()
+            #tau_x = mou_est.get_tau_x()
             # other params
-            flat_params[i] = np.concatenate((f_covs, tau_x))
+            flat_params[i] = np.asarray(mou_est.get_J()).flatten() #np.concatenate((f_covs, tau_x))
 
+        print(flat_params.shape)
         return flat_params
 
     @property
@@ -119,16 +121,18 @@ def calc_covs(temps, means):
     return np.einsum("itn,itm->inm", temps, temps) / temps.shape[1]
 
 
-def flat_covs(covs):
+def flat_covs(covs, diagonal):
     # true upper triangle matrix (same shape as covariance)
-    ind = np.triu(np.ones(covs.shape[1:], dtype=bool))
+    ind = np.triu(np.ones(covs.shape[1:], dtype=bool),k=int(not diagonal))
     # flattened upper triangle of covariances
     return covs[:, ind]
 
 
 class Covariances(Features):
-    def __init__(self, data, means=None, max_comps=None):
+    def __init__(self, data, means=None, max_comps=None, include_diagonal=True):
         self._data = data
+        self._include_diagonal = include_diagonal
+
         if means is None:
             self._means = calc_means(data.temporals[:, :, :max_comps])
         elif isinstance(means, Means):
@@ -139,7 +143,7 @@ class Covariances(Features):
     def flatten(self, feat=None):
         if feat is None:
             feat = self._feature
-        return flat_covs(feat)
+        return flat_covs(feat, self._include_diagonal)
 
 
 def calc_acovs(temps, means, covs, n_tau_range, label):

@@ -113,7 +113,7 @@ class DecompData(Data):
         #Offset instead of Nans as interpolation is used
         min = np.nanmin(spatials)
         print(min)
-        eps = np.finfo(np.float32).eps
+        eps = 2 * np.finfo(np.float32).eps
         #offset = 2*eps # 10
         spatials = spatials - min #+ offset
         print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))

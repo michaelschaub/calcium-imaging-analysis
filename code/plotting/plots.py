@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import networkx as nx
 import numpy as np
 
 
@@ -41,3 +42,60 @@ def plot_frame(temps, spatial, titles, plt_title):
 
     plt.savefig(plt_title, format='png')
     print("plotted")
+
+
+def graph_circle_plot(class_perfs, n_nodes, n_edges, title,type_measure=1):
+    #%% network and plot properties
+    N = n_nodes #20 # number of nodes
+    print(N)
+    # positions for circular layout with origin at bottoms
+    pos_circ = dict()
+    for i in range(N):
+        pos_circ[i] = np.array([np.sin(2*np.pi*(i/N+0.5/N)), np.cos(2*np.pi*(i/N+0.5/N))])
+
+    # channel labels
+    ch_labels = dict()
+    for i in range(N):
+        ch_labels[i] = i+1
+
+    # matrices to retrieve input/output channels from connections in support network
+    mask_tri = np.tri(N,N,-1, dtype=bool)
+    print(mask_tri.shape)
+    row_ind = np.repeat(np.arange(N).reshape([N,-1]),N,axis=1)
+    col_ind = np.repeat(np.arange(N).reshape([-1,N]),N,axis=0)
+    row_ind = row_ind[mask_tri]
+    col_ind = col_ind[mask_tri]
+    print(col_ind.shape)
+    print(row_ind.shape)
+    # plot RFE support network
+    plt.figure(figsize=[10,10])
+    plt.axes([0.05,0.05,0.95,0.95])
+    plt.axis('off')
+    plt.title=title
+    if type_measure == 0: # nodal
+        list_best_feat = np.argsort(class_perfs.mean(0))[:n_edges] # select n best features
+        node_color_aff = []
+        g = nx.Graph()
+        for i in range(N):
+            g.add_node(i)
+            if i in list_best_feat:
+                node_color_aff += ['red']
+            else:
+                node_color_aff += ['orange']
+        nx.draw_networkx_nodes(g,pos=pos_circ,node_color=node_color_aff)
+        nx.draw_networkx_labels(g,pos=pos_circ,labels=ch_labels)
+    else: # interactional
+        list_best_feat = np.argsort(class_perfs.mean(0))[:n_edges] # select n best features
+        g = nx.Graph()
+        for i in range(N):
+            g.add_node(i)
+        node_color_aff = ['orange']*N
+        list_ROI_from_to = [] # list of input/output ROIs involved in connections of support network
+        for ij in list_best_feat:
+            g.add_edge(col_ind[ij],row_ind[ij])
+        print(g)
+        nx.draw_networkx_nodes(g,pos=pos_circ,node_color=node_color_aff)
+        nx.draw_networkx_labels(g,pos=pos_circ,labels=ch_labels)
+        nx.draw_networkx_edges(g,pos=pos_circ,edgelist=g.edges(),edge_color='r')
+
+    plt.show()
