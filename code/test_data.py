@@ -24,8 +24,8 @@ from features import Means, Raws
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-plt_mode = "raw_z_score" # should be from ["mean", "z_score", "raw", "raw_z_score"]
-plt_mode = "raw" # should be from ["mean", "z_score", "raw", "raw_z_score"]
+plt_mode = "raw_z_score" # should be from ["mean", "z_score", "raw", "raw_z_score", None]
+plt_mode = None
 raw_course_graining = 1
 animation_slowdown = 1
 
@@ -53,9 +53,10 @@ if (not svd_path.exists()) or force_extraction:
     svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts) )
     svd.save(str(svd_path))
 else:
-    svd = DecompData.load(str(svd_path))
-    print("Loaded DecompData object.")
+    svd = DecompData.load(svd_path)
+    print(f"Loaded DecompData object from '{str(svd_path)}'.")
 
+print(f"SVD is saved at {svd.savefile}")
 
 trial_preselection = ((svd.n_targets == 6) & (svd.n_distractors == 0) &
                       (svd.auto_reward == 0) & (svd.both_spouts == 1))
@@ -178,5 +179,7 @@ elif plt_mode in ["raw", "raw_z_score" ]:
                                 frames=math.ceil(plot_frames.shape[0]/cg), interval=inter, repeat=True)
             plt.show()
 
+elif plt_mode is None:
+    pass
 else:
     raise ValueError("plt_mode not known")
