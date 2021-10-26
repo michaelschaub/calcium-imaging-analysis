@@ -19,7 +19,7 @@ def anatomical_parcellation(DecompDataObject):
     ### Processing (axes are switched)
     frames, _ = DecompDataObject.temporals_flat.shape
     n_svd , h, _ = DecompDataObject.spatials.shape
-    spatials = np.moveaxis(spatials,-1,0)[:,:h,] #w
+    spatials = np.moveaxis(spatials,-1,0)[:,:h,:] #w
     n_segments , _ , w = spatials.shape
     print(spatials.shape)
     print(DecompDataObject.temporals_flat.shape)
@@ -29,18 +29,19 @@ def anatomical_parcellation(DecompDataObject):
 
 
     svd_segments_bitmasks = np.broadcast_to(spatials,(n_svd,*spatials.shape))
-    print( svd_segments_bitmasks.shape)
+
 
     #svd_segment_mean = np.zeros((n_svd,n_segments, h, w)) #array too large for RAM  -> iterate over segments, apply bitmap and take mean over h,w
     svd_segment_mean = np.zeros((n_svd,n_segments))
 
     #use nanmean to use partially covered areas
-    svd_segment_mean = np.moveaxis([np.mean(DecompDataObject.spatials[:,:h,:w][svd_segments_bitmasks[:,i,:h,:w]].reshape(n_svd,-1),axis=-1) for i in range(n_segments)],-1,0)
+    svd_segment_mean = np.moveaxis([np.nanmean(DecompDataObject.spatials[:,:h,:w][svd_segments_bitmasks[:,i,:h,:w]].reshape(n_svd,-1),axis=-1) for i in range(n_segments)],-1,0)
     np.nan_to_num(svd_segment_mean,copy=False)
     #svd_segment_mean[svd_segment_mean == np.NAN] = 0
 
     new_temporals = np.tensordot(DecompDataObject.temporals_flat, svd_segment_mean, 1)
     new_spatial = spatials
+    print(new_temporals.shape)
 
     return new_temporals,new_spatial
     '''

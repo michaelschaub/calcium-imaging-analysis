@@ -108,14 +108,17 @@ class DecompData(Data):
 
     #Auslagern
     def align_spatials(self, spatials, trans_params):
-        _ , h , w = spatials.shape #org shape
+        f , h , w = spatials.shape #org shape
+
+        #Attend bitmap as last frame
+        spatials = np.append(spatials,np.ones((1,h,w)),axis=0)
 
         #Offset instead of Nans as interpolation is used
         min = np.nanmin(spatials)
-        print(min)
-        eps = np.finfo(np.float32).eps
+
+        eps = 0 #np.finfo(np.float32).eps
         #offset = 2*eps # 10
-        spatials = spatials - min #+ offset
+        #spatials = spatials - min #+ offset
         print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
         #Rotation
         print("Rotation")
@@ -135,12 +138,16 @@ class DecompData(Data):
         print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
 
         #Remove offset
-        spatials[spatials<0]= np.NAN
 
-        spatials = spatials + min #- offset
+        bitmask = spatials[-1,:,:]<0.5 #set bitmap as all elements that were interpolated under 0.5
+        spatials = np.delete(spatials,-1,axis=0) #delete Bitmap from spatials
+
+        bitmask = np.broadcast_to(bitmask,spatials.shape) #for easier broadcasting, is not in memory
+        np.putmask(spatials,bitmask,np.NAN) #set all elements of bitmap to NAN
+
 
         #Crop
-        print("crop")
+        print("Crop")
         n_spatials , h_new , w_new = spatials.shape
         trim_h = int(np.floor((h_new - h) / 2 ))
         trim_w = int(np.floor((w_new - w) / 2 ))
