@@ -110,7 +110,7 @@ baseline_mode = None  #### basline mode ('mean' / 'zscore' / None)
 comp = 20 ### number componants to use
 n_rep = 5  ### number of repetition
 n_comp_LDA = None #5  ### number of LDA componants (conds -1)
-RFE_edges = 190
+RFE_edges = 189
 
 
 #cond_mean = measurements.mean(svd.conditions[0][30:75,:]) #mean of stimulusframes for first cond
@@ -166,7 +166,7 @@ for i_feat, feat in enumerate(tqdm(features,desc="Training classifiers for each 
     ###### RFE
     print(data.shape)
 
-    rk_inter = np.zeros([n_rep,int(comp*(comp-1)/2)],dtype=np.int)
+    rk_inter = np.zeros([n_rep,RFE_edges],dtype=np.int)
 
     #####
 
@@ -195,7 +195,8 @@ for i_feat, feat in enumerate(tqdm(features,desc="Training classifiers for each 
         c_LDA.fit(data[train_idx, :], labels[train_idx])
         c_RF .fit(data[train_idx, :], labels[train_idx])
 
-        RFE_inter.fit(data[train_idx, :], labels[train_idx])
+        list_best_feat = np.argsort(rk_inter.mean(0))[:RFE_edges]
+        RFE_inter.fit(data[train_idx, :][:,list_best_feat], labels[train_idx])
 
 
         perf[i, i_feat, 0] = c_MLR.score(data[test_idx, :], labels[test_idx])
@@ -204,7 +205,7 @@ for i_feat, feat in enumerate(tqdm(features,desc="Training classifiers for each 
         perf[i, i_feat, 3] = c_RF.score(data[test_idx, :], labels[test_idx])
 
         print("MLR",perf[i, i_feat, 0])
-        list_best_feat = np.argsort(rk_inter.mean(0))[:RFE_edges]
+
         print(list_best_feat)
         print(test_idx)
         print(data[test_idx, :][:,list_best_feat].shape)

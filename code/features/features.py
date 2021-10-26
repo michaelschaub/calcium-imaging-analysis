@@ -166,8 +166,9 @@ DEFAULT_TIMELAG = 10
 
 
 class AutoCovariances(Features):
-    def __init__(self, data, means=None, covs=None, max_comps=None, max_time_lag=None, time_lag_range=None, label = None):
+    def __init__(self, data, means=None, covs=None, max_comps=None, max_time_lag=None, time_lag_range=None, label = None, include_diagonal=True):
         self._data = data
+        self._include_diagonal = include_diagonal
 
         if means is None:
             self._means = calc_means(data.temporals[:, :, :max_comps])
@@ -189,7 +190,7 @@ class AutoCovariances(Features):
     def flatten(self, feat=None):
         if feat is None:
             feat = self._feature
-        return np.concatenate((flat_covs(feat[:, 0]), feat[:, 1:].reshape((feat.shape[0], -1))), axis=1)
+        return np.concatenate((flat_covs(feat[:, 0],diagonal=self._include_diagonal), feat[:, 1:].reshape((feat.shape[0], -1))), axis=1)
 
 
 class FeatureMean(Features):
