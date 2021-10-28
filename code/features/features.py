@@ -44,6 +44,42 @@ class Features:
         else:
             raise ValueError("Data object of this Feature could not be reconstructed")
 
+    def save(self, file, data_file=None):
+        h5_file = save_h5( self, file,
+                            attributes=[self._feature],
+                            attr_files=[None ],
+                            labels=[ "feat" ],
+                            hashes=[ self.hash ] )
+        h5_file.attrs["data_hash"] = self._datahash
+        if self._data.savefile is None:
+            if data_file is None:
+                path = pathlib.Path(file)
+                data_file = path.parent / f"data.{path.stem}{path.suffix}"
+            self._data.save(data_file)
+        h5_file.attrs["data_file"] = str(self._data._savefile)
+        self._savefile = file
+
+    @classmethod
+    def load(Class, file, data_file=None, feature_hash=None, try_loaded=False):
+        if try_loaded and feature_hash is not None and feature_hash in Features.LOADED_FEATURES:
+            feat = Features.LOADED_FEATURES[feature_hash]
+        else:
+            h5_file, _, feature = load_h5( file, attr_files=[None], labels=["feat"])
+            if try_loaded and h5_file.attrs["data_hash"] in Data.LOADED_DATA:
+                data = Data.LOADED_DATA[h5_file.attrs["data_hash"]]
+            else:
+                if data_file is None:
+                    data_file = h5_file.attrs["data_file"]
+                data = DecompData.load(data_file)
+                if h5_file.attrs[f"data_hash"] != data.hash:
+                    warnings.warn(f"data hashes do not match", Warning)
+            feat = Class()
+            feat.data = data
+            feat._feature = feature
+            feat._savefile = file
+            Features.LOADED_FEATURES[feat.hash] = feat
+        return feat
+
     @data.setter
     def data(self, data):
         self._data = data
@@ -82,6 +118,18 @@ class Moup(Features):
     def _feature(self):
         return [[mou_est.get_tau_x, mou_est.get_C()] for mou_est in self._mou_ests]  # ,other params]
 
+    def save(self, file, data_file=None):
+        '''
+        not yet implemented
+        '''
+        pass
+
+    @classmethod
+    def load(Class, file, data_file=None, feature_hash=None, try_loaded=False):
+        '''
+        not yet implemented
+        '''
+        pass
 
 def fit_moup(temps, tau, label):
     mou_ests = np.empty((len(temps)),dtype=np.object_)
@@ -144,43 +192,6 @@ class Means(Features):
         starts = self.data._starts
         return df, temps, spats, starts
 
-    def save(self, file, data_file=None ):
-        h5_file = save_h5( self, file,
-                            attributes=[self._feature],
-                            attr_files=[None ],
-                            labels=[ "feat" ],
-                            hashes=[ self.hash ] )
-        h5_file.attrs["data_hash"] = self._datahash
-        if self._data._savefile is None:
-            if data_file is None:
-                path = pathlib.Path(file)
-                data_file = path.parent / f"data.{path.stem}{path.suffix}"
-            self._data.save(data_file)
-        h5_file.attrs["data_file"] = str(self._data._savefile)
-        self._savefile = file
-
-    def load(file, data_file=None, feature_hash=None, try_loaded=False):
-        if try_loaded and feature_hash is not None and feature_hash in Features.LOADED_FEATURES:
-            feat = Features.LOADED_FEATURES[feature_hash]
-        else:
-            h5_file, _, feature = load_h5( file,
-                                attr_files=[None],
-                                labels=["feat"])
-            if try_loaded and h5_file.attrs["data_hash"] in Data.LOADED_DATA:
-                data = Data.LOADED_DATA[h5_file.attrs["data_hash"]]
-            else:
-                if data_file is None:
-                    data_file = h5_file.attrs["data_file"]
-                data = DecompData.load(data_file)
-                if h5_file.attrs[f"data_hash"] != data.hash:
-                    warnings.warn(f"data hashes do not match", Warning)
-            feat = Means()
-            feat.data = data
-            feat._feature = feature
-            feat._savefile = file
-            Features.LOADED_FEATURES[feat.hash] = feat
-        return feat
-
 
 def calc_covs(temps, means):
     # TODO: Optimize, currently calculates off diagonals double
@@ -212,6 +223,19 @@ class Covariances(Features):
         if feat is None:
             feat = self._feature
         return flat_covs(feat)
+
+    def save(self, file, data_file=None):
+        '''
+        not yet implemented
+        '''
+        pass
+
+    @classmethod
+    def load(Class, file, data_file=None, feature_hash=None, try_loaded=False):
+        '''
+        not yet implemented
+        '''
+        pass
 
 
 def calc_acovs(temps, means, covs, n_tau_range, label):
@@ -265,6 +289,19 @@ class AutoCovariances(Features):
             feat = self._feature
         return np.concatenate((flat_covs(feat[:, 0]), feat[:, 1:].reshape((feat.shape[0], -1))), axis=1)
 
+    def save(self, file, data_file=None):
+        '''
+        not yet implemented
+        '''
+        pass
+
+    @classmethod
+    def load(Class, file, data_file=None, feature_hash=None, try_loaded=False):
+        '''
+        not yet implemented
+        '''
+        pass
+
 
 class FeatureMean(Features):
     def create(base):
@@ -290,4 +327,16 @@ class FeatureMean(Features):
         else:
             raise AttributeError
 
+    def save(self, file, data_file=None):
+        '''
+        not yet implemented
+        '''
+        pass
+
+    @classmethod
+    def load(Class, file, data_file=None, feature_hash=None, try_loaded=False):
+        '''
+        not yet implemented
+        '''
+        pass
 

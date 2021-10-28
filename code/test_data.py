@@ -25,7 +25,7 @@ from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 plt_mode = "raw_z_score" # should be from ["mean", "z_score", "raw", "raw_z_score", None]
-plt_mode = "mean"
+plt_mode = "raw"
 raw_course_graining = 1
 animation_slowdown = 1
 
@@ -73,6 +73,7 @@ modality_keys = ['visual', 'tactile', 'vistact']
 target_side_keys = ['right', 'left']
 
 save_files = [ [ data_path/f"output/{plt_mode}_{mod}_{side}.h5" for side in target_side_keys ] for mod in modality_keys ]
+data_save_file = data_path/f"output/data.h5"
 
 if plt_mode in ["mean", "z_score"]:
 
@@ -102,7 +103,7 @@ if plt_mode in ["mean", "z_score"]:
                     frames_corrected = Means.create(selected_frames - Means.create( baseline_frames ))
 
                     if save_feat:
-                        frames_corrected.save(save_files[modality_id][target_side])
+                        frames_corrected.save(save_files[modality_id][target_side], data_file=data_save_file)
                         print(f"Saved into {frames_corrected._savefile}")
 
                 """
@@ -162,8 +163,17 @@ elif plt_mode in ["raw", "raw_z_score" ]:
             baseline_frames = svd_pre[ selected_trials, 15:30 ]
 
             if plt_mode == "raw":
-                #frames_corrected = Raws.create(selected_frames)
-                frames_corrected = Raws.create(selected_frames - Means.create( baseline_frames ))
+                if load_feat and save_files[modality_id][target_side].exists():
+                    frames_corrected = Raws.load(save_files[modality_id][target_side])
+                    print(f"Loaded {frames_corrected._savefile}")
+                else:
+                    #frames_corrected = Raws.create(selected_frames)
+                    frames_corrected = Raws.create(selected_frames - Means.create( baseline_frames ))
+
+                    if save_feat:
+                        frames_corrected.save(save_files[modality_id][target_side], data_file=data_save_file)
+                        print(f"Saved into {frames_corrected._savefile}")
+
                 plot_frames = frames_corrected.mean.pixel[:,:,:]
             else:
                 frames_corrected = Raws.create(selected_frames - Means.create( baseline_frames ))
