@@ -25,11 +25,15 @@ from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 plt_mode = "raw_z_score" # should be from ["mean", "z_score", "raw", "raw_z_score", None]
-plt_mode = None
+plt_mode = "mean"
 raw_course_graining = 1
 animation_slowdown = 1
 
+save_feat = True
+load_feat = True
+
 force_extraction = False
+
 
 data_path = pathlib.Path(__file__).parent.parent/'data'
 svd_path = data_path/'output/GN06/SVD/svd_data.h5'
@@ -68,6 +72,8 @@ svd_pre = svd[ trial_preselection ]
 modality_keys = ['visual', 'tactile', 'vistact']
 target_side_keys = ['right', 'left']
 
+save_files = [ [ data_path/f"output/{plt_mode}_{mod}_{side}.h5" for side in target_side_keys ] for mod in modality_keys ]
+
 if plt_mode in ["mean", "z_score"]:
 
     fig, ax = plt.subplots(2, 3)
@@ -85,10 +91,19 @@ if plt_mode in ["mean", "z_score"]:
 
             # calculate either the mean over trials or the z_score
             if plt_mode == "mean":
-                # average over all frames, if loaded accordingly
-                #Vc_mean = selected_frames.temporals_flat.mean(axis=0)
-                #Vc_baseline_mean = baseline_frames.temporals_flat.mean(axis=0)
-                frames_corrected = Means(selected_frames - Means( baseline_frames ))
+
+                if load_feat and save_files[modality_id][target_side].exists():
+                    frames_corrected = Means.load(save_files[modality_id][target_side])
+                    print(f"Loaded {frames_corrected._savefile}")
+                else:
+                    # average over all frames, if loaded accordingly
+                    #Vc_mean = selected_frames.temporals_flat.mean(axis=0)
+                    #Vc_baseline_mean = baseline_frames.temporals_flat.mean(axis=0)
+                    frames_corrected = Means.create(selected_frames - Means.create( baseline_frames ))
+
+                    if save_feat:
+                        frames_corrected.save(save_files[modality_id][target_side])
+                        print(f"Saved into {frames_corrected._savefile}")
 
                 """
                 Visualization:
@@ -100,7 +115,6 @@ if plt_mode in ["mean", "z_score"]:
                 #print(average_frame.shape)
                 print("averages")
                 average_frame = frames_corrected.mean.pixel[0,:,:]
-                print(average_frame.shape)
 
                 # plot
                 im = ax[target_side, modality_id].imshow(average_frame, vmin=-0.02, vmax=0.02)
@@ -148,13 +162,13 @@ elif plt_mode in ["raw", "raw_z_score" ]:
             baseline_frames = svd_pre[ selected_trials, 15:30 ]
 
             if plt_mode == "raw":
-                #frames_corrected = Raws(selected_frames)
-                frames_corrected = Raws(selected_frames - Means( baseline_frames ))
+                #frames_corrected = Raws.create(selected_frames)
+                frames_corrected = Raws.create(selected_frames - Means.create( baseline_frames ))
                 plot_frames = frames_corrected.mean.pixel[:,:,:]
             else:
-                frames_corrected = Raws(selected_frames - Means( baseline_frames ))
+                frames_corrected = Raws.create(selected_frames - Means.create( baseline_frames ))
                 average_frames = frames_corrected.mean.pixel[:,:,:]
-                baseline_frames = Means( baseline_frames ).pixel[:,:,:]
+                baseline_frames = Means.create( baseline_frames ).pixel[:,:,:]
                 plot_frames = average_frames / baseline_frames.std()
 
             """

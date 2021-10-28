@@ -1,20 +1,22 @@
 import numpy as np
 from data import Data, DecompData
+from loading import reproducable_hash, load_h5, save_h5
 
 from pymou import MOU
+import pathlib
 
 #Progress Bar
 from tqdm.auto import tqdm
 
 class Features:
-    # flatten contained feauture to one trial and one feature dimension
     def flatten(self):
+        '''flatten contained feauture to one trial and one feature dimension'''
         pass
 
-    # expand feature into same shape as temporals in Data (for computation)
     def expand(self, data=None):
+        '''expand feature into same shape as temporals in Data (for computation)'''
         if data is None:
-            data = self._data
+            data = self.data
         feats = self._feature
         feat = np.empty((data.temporals_flat.shape[0], *feats.shape[1:]), dtype=float)
         starts = list(data._starts)
@@ -25,14 +27,39 @@ class Features:
 
     @property
     def mean(self):
-        return FeatureMean(self)
+        return FeatureMean.create(self)
+
+    @property
+    def hash(self):
+        return reproducable_hash(self._feature)
+
+    @property
+    def data(self):
+        if not self._data is None:
+            return self._data
+        elif self._datahash in Data.LOADED_DATA:
+            self._data = Data.LOADED_DATA[self._datahash]
+        elif not self._datafile is None:
+            self._data = DecompData.load(self._datafile)
+        else:
+            raise ValueError("Data object of this Feature could not be reconstructed")
+
+    @data.setter
+    def data(self, data):
+        self._data = data
+        self._datahash = data.hash
+        self._datafile = data.savefile
+
+    LOADED_FEATURES = {}
 
 
 class Moup(Features):
-    def __init__(self, data, max_comps=None, time_lag=None, label=None):
-        self._data = data
-        self._label = label
-        self._mou_ests = fit_moup(data.temporals[:, :, :max_comps], time_lag, self._label)
+    def create(data, max_comps=None, time_lag=None, label=None):
+        feat = Moup()
+        feat.data = data
+        feat._label = label
+        feat._mou_ests = fit_moup(data.temporals[:, :, :max_comps], time_lag, feat._label)
+        return feat
 
     def flatten(self, feat=None):
         n = len(self._mou_ests[0].get_tau_x()) #Number of Components
@@ -49,6 +76,8 @@ class Moup(Features):
 
         return flat_params
 
+    # may need workaround, _feature should be constant and as close to instant access as possible
+    # also maybe numpy array
     @property
     def _feature(self):
         return [[mou_est.get_tau_x, mou_est.get_C()] for mou_est in self._mou_ests]  # ,other params]
@@ -68,9 +97,11 @@ def fit_moup(temps, tau, label):
 
 
 class Raws(Features):
-    def __init__(self, data, max_comps=None):
-        self._data = data
-        self._feature = data.temporals[:, :, :max_comps]
+    def create(data, max_comps=None):
+        feat = Raws()
+        feat.data = data
+        feat._feature = data.temporals[:, :, :max_comps]
+        return feat
 
     def flatten(self, feat=None):
         if feat is None:
@@ -80,7 +111,7 @@ class Raws(Features):
     @property
     def pixel(self):
         return DecompData.PixelSlice(np.reshape(self._feature, (-1, *self._feature[2:])),
-                                     self._data._spats[:self._feature.shape[2]])
+                                     self.data._spats[:self._feature.shape[2]])
 
 
 def calc_means(temps):
@@ -88,9 +119,11 @@ def calc_means(temps):
 
 
 class Means(Features):
-    def __init__(self, data, max_comps=None):
-        self._data = data
-        self._feature = calc_means(data.temporals[:, :, :max_comps])
+    def create(data, max_comps=None):
+        feat = Means()
+        feat.data = data
+        feat._feature = calc_means(data.temporals[:, :, :max_comps])
+        return feat
 
     def flatten(self, feat=None):
         if feat is None:
@@ -99,17 +132,54 @@ class Means(Features):
 
     @property
     def pixel(self):
-        return DecompData.PixelSlice(self._feature, self._data._spats[:self._feature.shape[1]])
+        return DecompData.PixelSlice(self._feature, self.data._spats[:self._feature.shape[1]])
 
     def _op_data(self, a):
-        df = self._data._df
+        df = self.data._df
         if isinstance(a, Data):
             temps = self.expand(a)
         else:
             temps = self.expand()
-        spats = self._data.spatials
-        starts = self._data._starts
+        spats = self.data.spatials
+        starts = self.data._starts
         return df, temps, spats, starts
+
+    def save(self, file, data_file=None ):
+        h5_file = save_h5( self, file,
+                            attributes=[self._feature],
+                            attr_files=[None ],
+                            labels=[ "feat" ],
+                            hashes=[ self.hash ] )
+        h5_file.attrs["data_hash"] = self._datahash
+        if self._data._savefile is None:
+            if data_file is None:
+                path = pathlib.Path(file)
+                data_file = path.parent / f"data.{path.stem}{path.suffix}"
+            self._data.save(data_file)
+        h5_file.attrs["data_file"] = str(self._data._savefile)
+        self._savefile = file
+
+    def load(file, data_file=None, feature_hash=None, try_loaded=False):
+        if try_loaded and feature_hash is not None and feature_hash in Features.LOADED_FEATURES:
+            feat = Features.LOADED_FEATURES[feature_hash]
+        else:
+            h5_file, _, feature = load_h5( file,
+                                attr_files=[None],
+                                labels=["feat"])
+            if try_loaded and h5_file.attrs["data_hash"] in Data.LOADED_DATA:
+                data = Data.LOADED_DATA[h5_file.attrs["data_hash"]]
+            else:
+                if data_file is None:
+                    data_file = h5_file.attrs["data_file"]
+                data = DecompData.load(data_file)
+                if h5_file.attrs[f"data_hash"] != data.hash:
+                    warnings.warn(f"data hashes do not match", Warning)
+            feat = Means()
+            feat.data = data
+            feat._feature = feature
+            feat._savefile = file
+            Features.LOADED_FEATURES[feat.hash] = feat
+        return feat
 
 
 def calc_covs(temps, means):
@@ -126,16 +196,17 @@ def flat_covs(covs):
 
 
 class Covariances(Features):
-    def __init__(self, data, means=None, max_comps=None):
-        self._data = data
+    def create(data, means=None, max_comps=None):
+        feat = Covariances()
+        feat.data = data
         if means is None:
-            self._means = calc_means(data.temporals[:, :, :max_comps])
+            feat._means = calc_means(data.temporals[:, :, :max_comps])
         elif isinstance(means, Means):
-            self._means = means._feature
+            feat._means = means._feature
         else:
-            self._means = mean
-
-        self._feature = calc_covs(data.temporals[:, :, :max_comps], self._means)
+            feat._means = mean
+        feat._feature = calc_covs(data.temporals[:, :, :max_comps], feat._means)
+        return feat
 
     def flatten(self, feat=None):
         if feat is None:
@@ -163,21 +234,22 @@ DEFAULT_TIMELAG = 10
 
 
 class AutoCovariances(Features):
-    def __init__(self, data, means=None, covs=None, max_comps=None, max_time_lag=None, time_lag_range=None, label = None):
-        self._data = data
+    def create(data, means=None, covs=None, max_comps=None, max_time_lag=None, time_lag_range=None, label = None):
+        feat = AutoCovariances()
+        feat.data = data
 
         if means is None:
-            self._means = calc_means(data.temporals[:, :, :max_comps])
+            feat._means = calc_means(data.temporals[:, :, :max_comps])
         elif isinstance(means, Means):
-            self._means = means._feature
+            feat._means = means._feature
         else:
-            self._means = means
+            feat._means = means
         if covs is None:
-            self._covs = calc_covs(data.temporals[:, :, :max_comps], self._means)
+            feat._covs = calc_covs(data.temporals[:, :, :max_comps], feat._means)
         elif isinstance(covs, Covariances):
-            self._covs = np.copy(covs._feature)
+            feat._covs = np.copy(covs._feature)
         else:
-            self._covs = covs
+            feat._covs = covs
 
         if max_time_lag is None or max_time_lag >= data.temporals.shape[1]:
             max_time_lag = DEFAULT_TIMELAG
@@ -185,7 +257,8 @@ class AutoCovariances(Features):
         if time_lag_range is None or np.amax(time_lag_range) >= data.temporals.shape[1]:
             time_lag_range = range(1, max_time_lag + 1)
 
-        self._feature = calc_acovs(data.temporals[:, :, :max_comps], self._means, self._covs, time_lag_range, label)
+        feat._feature = calc_acovs(data.temporals[:, :, :max_comps], feat._means, feat._covs, time_lag_range, label)
+        return feat
 
     def flatten(self, feat=None):
         if feat is None:
@@ -194,10 +267,12 @@ class AutoCovariances(Features):
 
 
 class FeatureMean(Features):
-    def __init__(self, base):
-        self._base_feature = base
-        self._data = base._data
-        self._feature = np.mean(base._feature, axis=0).reshape((1, *base._feature.shape[1:]))
+    def create(base):
+        feat = FeatureMean()
+        feat._base_feature = base
+        feat.data = base.data
+        feat._feature = np.mean(base._feature, axis=0).reshape((1, *base._feature.shape[1:]))
+        return feat
 
     def flatten(self, feat=None):
         if feat is None:

@@ -18,7 +18,7 @@ def reproducable_hash( a ):
 
 def save_h5(data, file, df=None, attributes=[], attr_files=[], labels=[], hashes=[] ):
     if df is not None:
-        data._df.to_hdf(file, "df", "w")
+        df.to_hdf(file, "df", "w")
         h5_file = h5py.File(file, "a")
         h5_file.attrs[f"df_hash"] = hashes[0]
         hashes = hashes[1:]
@@ -32,7 +32,7 @@ def save_h5(data, file, df=None, attributes=[], attr_files=[], labels=[], hashes
             with h5py.File(file, "w") as h5_attr:
                 h5_attr.create_dataset(label, data=attr)
             h5_file.attrs[f"{label}_file"] = file
-        h5_file.attrs[f"{label}_hash"] = data.temps_hash
+        h5_file.attrs[f"{label}_hash"] = hsh
 
     return h5_file
 
@@ -59,4 +59,4 @@ def load_h5(file, attr_files=[], labels=[]):
         if f"{label}_hash" in h5_file.attrs and h5_file.attrs[f"{label}_hash"] != reproducable_hash(attr):
             warnings.warn(f"{label} hashes do not match", Warning)
         attributes.append(attr)
-    return (df, *attributes)
+    return (h5_file, df, *attributes)

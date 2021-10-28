@@ -108,18 +108,18 @@ n_comp_LDA = None #5  ### number of LDA componants (conds -1)
 #features  = ['mean',"mean(-base)","raw","mou"]
 feature_data = {
 
-    #"mean": [Means(svd.conditions[i,:,30:75],max_comps=comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond
-    #"mean(-base)": [Means(svd.conditions[i,:,30:75]-Means(svd.conditions[i,:,15:30]),comp) for i in range(len(svd.conditions))],
-    #"raw": [Raws(svd.conditions[i,:,30:75],comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond,
+    #"mean": [Means.create(svd.conditions[i,:,30:75],max_comps=comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond
+    #"mean(-base)": [Means.create(svd.conditions[i,:,30:75]-Means.create(svd.conditions[i,:,15:30]),comp) for i in range(len(svd.conditions))],
+    #"raw": [Raws.create(svd.conditions[i,:,30:75],comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond,
     #"Cov": [Covariances(svd.conditions[i,:,30:75],max_comps=comp) for i in tqdm(range(len(svd.conditions)),desc='Conditions')], #mean of stimulusframes for first cond
-    r"Cov($\tau$=0)": [AutoCovariances(svd.conditions[i,:,30:75],max_comps=comp,time_lag_range=[0]) for i in tqdm(range(len(svd.conditions)),desc='Conditions')],
-    #"mou1": [Moup(svd.conditions[i,:,30:75],comp,time_lag=1) for i in range(len(svd.conditions))],
+    r"Cov($\tau$=0)": [AutoCovariances.create(svd.conditions[i,:,30:75],max_comps=comp,time_lag_range=[0]) for i in tqdm(range(len(svd.conditions)),desc='Conditions')],
+    #"mou1": [Moup.create(svd.conditions[i,:,30:75],comp,time_lag=1) for i in range(len(svd.conditions))],
 }
 
 
 for j in tqdm(range(1,10,1),desc="Features"):
-    feature_data[r"Cov($\tau$="+str(j)+")"] = [AutoCovariances(svd.conditions[i,:,30:75],max_comps=comp, time_lag_range=[j]) for i in tqdm(range(len(svd.conditions)),desc='Conditions')]
-    feature_data[r'Mou($\tau$='+str(j)+")"] = [Moup(svd.conditions[i,:,30:75],max_comps=comp,time_lag=j) for i in tqdm(range(len(svd.conditions)),desc='Conditions')]
+    feature_data[r"Cov($\tau$="+str(j)+")"] = [AutoCovariances.create(svd.conditions[i,:,30:75],max_comps=comp, time_lag_range=[j]) for i in tqdm(range(len(svd.conditions)),desc='Conditions')]
+    feature_data[r'Mou($\tau$='+str(j)+")"] = [Moup.create(svd.conditions[i,:,30:75],max_comps=comp,time_lag=j) for i in tqdm(range(len(svd.conditions)),desc='Conditions')]
 
 
 features = list(feature_data.keys())
