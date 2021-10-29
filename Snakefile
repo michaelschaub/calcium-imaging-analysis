@@ -1,6 +1,6 @@
 mouses		= ["GN06"]
 dates		= ["2021-01-20_10-15-16"]
-parcelations	= ["SVD","LocaNMF"]
+parcelations	= ["SVD"]
 filters		= [ "All" ]
 sides		= ["left","right"]
 modalities	= ["visual", "tactile", "vistact"]
@@ -106,3 +106,13 @@ rule test_data:
 		"code/environment.yaml"
 	script:
 		"code/test_data.py"
+
+rule test_analysis:
+	input:
+		"data/output/GN06/SVD/data.h5"
+	log:
+		"data/output/GN06/SVD/test_analysis.log"
+	conda:
+		"code/environment.yaml"
+	script:
+		"code/test_analysis.py"

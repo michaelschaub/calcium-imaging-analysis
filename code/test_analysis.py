@@ -37,35 +37,41 @@ missing_task_data = []
 
 
 ### New data extraction
-data_path = Path(__file__).parent.parent / Path('data') / 'input'
+data_path = Path(__file__).parent.parent / Path('data')
 plot_path = Path(__file__).parent.parent / Path('plots')
-if not (data_path/'extracted_data.pkl').exists() :
-    # load behavior data
-    sessions = load_task_data_as_pandas_df.extract_session_data_and_save(root_paths=[data_path], mouse_ids=["GN06"], reextract=False)
-    with open( data_path / 'extracted_data.pkl', 'wb') as handle:
-        pkl.dump(sessions, handle)
+svd_path = data_path/'output/GN06/SVD/data.h5'
+if (not svd_path.exists()):
+    if not (data_path/'input'/'extracted_data.pkl').exists() :
+        # load behavior data
+        sessions = load_task_data_as_pandas_df.extract_session_data_and_save(root_paths=[data_path/'input'], mouse_ids=["GN06"], reextract=False)
+        with open( data_path/'input'/'extracted_data.pkl', 'wb') as handle:
+            pkl.dump(sessions, handle)
+    else:
+        # load saved data
+        with open( data_path/'input'/'extracted_data.pkl', 'rb') as handle:
+            sessions = pkl.load(handle)
+        print("Loaded pickled data.")
+
+    file_path = data_path/'input'/"GN06"/Path('2021-01-20_10-15-16/SVD_data/Vc.mat')
+    f = h5py.File(file_path, 'r')
+
+    frameCnt = np.array(f['frameCnt'])
+    trial_starts = np.cumsum(frameCnt[:, 1])[:-1]
+
+    mask = np.ones( len(trial_starts), dtype=bool )
+    mask[missing_task_data] = False
+    trial_starts = trial_starts[mask]
+
+
+    #print(sessions)
+    #print(frameCnt.shape)
+
+    svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts) )
+    svd.save(str(svd_path))
+
 else:
-    # load saved data
-    with open( data_path / 'extracted_data.pkl', 'rb') as handle:
-        sessions = pkl.load(handle)
-    print("Loaded pickled data.")
-
-file_path = data_path / "GN06" / Path('2021-01-20_10-15-16/SVD_data/Vc.mat')
-f = h5py.File(file_path, 'r')
-
-frameCnt = np.array(f['frameCnt'])
-trial_starts = np.cumsum(frameCnt[:, 1])[:-1]
-
-mask = np.ones( len(trial_starts), dtype=bool )
-mask[missing_task_data] = False
-trial_starts = trial_starts[mask]
-
-
-#print(sessions)
-#print(frameCnt.shape)
-
-svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts) )
-
+    svd = DecompData.load(str(svd_path))
+    print("Loaded DecompData object.")
 
 #define different conds
 modal_keys = ['visual', 'tactile', 'vistact']
