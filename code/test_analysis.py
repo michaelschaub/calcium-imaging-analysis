@@ -181,7 +181,7 @@ for i_feat, feat in enumerate(tqdm(features,desc="Training classifiers for each 
     #print(f'\tRepetition {n_rep:>3}/{n_rep}' )
 
 if save_outputs:
-    np.save('perf_tasks.npy', perf)
+    np.save(data_path/'output'/'perf_tasks.npy', perf)
 plt.figure()
 title = ' '.join(["Classifiers Accuracies","for",str(comp),"Components on Condtions:",', '.join(cond_keys_str)]) #str(len(svd.conditions)),"Conditions"])
 plt.suptitle(title)
