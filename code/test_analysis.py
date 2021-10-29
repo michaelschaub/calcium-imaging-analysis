@@ -18,9 +18,7 @@ from sklearn import preprocessing
 from sklearn.model_selection import StratifiedShuffleSplit
 
 #Progress Bar
-#from tqdm.auto import tqdm
-#from tqdm.notebook import tqdm
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from data import DecompData
 
@@ -40,7 +38,7 @@ missing_task_data = []
 
 
 ### New data extraction
-data_path = Path(__file__).parent.parent / Path('data')
+data_path = Path(__file__).parent.parent / Path('data') / 'input'
 plot_path = Path(__file__).parent.parent / Path('plots')
 if not (data_path/'extracted_data.pkl').exists() :
     # load behavior data

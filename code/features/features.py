@@ -4,8 +4,7 @@ from data import Data, DecompData
 from pymou import MOU
 
 #Progress Bar
-from tqdm.notebook import tqdm
-#from tqdm import tqdm
+from tqdm.auto import tqdm
 
 class Features:
     # flatten contained feauture to one trial and one feature dimension
@@ -80,7 +79,7 @@ class Raws(Features):
 
     @property
     def pixel(self):
-        return DecompData.PixelSlice(self.reshape(self._feature, (-1, *self._feature[2:])),
+        return DecompData.PixelSlice(np.reshape(self._feature, (-1, *self._feature[2:])),
                                      self._data._spats[:self._feature.shape[2]])
 
 
@@ -133,6 +132,8 @@ class Covariances(Features):
             self._means = calc_means(data.temporals[:, :, :max_comps])
         elif isinstance(means, Means):
             self._means = means._feature
+        else:
+            self._means = mean
 
         self._feature = calc_covs(data.temporals[:, :, :max_comps], self._means)
 
@@ -169,10 +170,14 @@ class AutoCovariances(Features):
             self._means = calc_means(data.temporals[:, :, :max_comps])
         elif isinstance(means, Means):
             self._means = means._feature
+        else:
+            self._means = means
         if covs is None:
             self._covs = calc_covs(data.temporals[:, :, :max_comps], self._means)
         elif isinstance(covs, Covariances):
             self._covs = np.copy(covs._feature)
+        else:
+            self._covs = covs
 
         if max_time_lag is None or max_time_lag >= data.temporals.shape[1]:
             max_time_lag = DEFAULT_TIMELAG

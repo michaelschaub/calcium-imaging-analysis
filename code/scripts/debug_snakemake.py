@@ -1,0 +1,6 @@
+print("snakemake:", dir(snakemake))
+print("input:", snakemake.input)
+print("output:", snakemake.output)
+print("log:", snakemake.log)
+print("param:", snakemake.params)
+print("config:", snakemake.config)
