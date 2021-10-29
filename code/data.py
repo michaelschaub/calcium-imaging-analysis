@@ -4,6 +4,9 @@ import numpy as np
 import pandas as pd
 import h5py
 
+#For BrainAlignment
+import scipy.io, scipy.ndimage
+
 import sys
 
 
@@ -31,16 +34,15 @@ class Data(ABC):
         return a_temps, b_temps, notNone(a_df,b_df), notNone(a_spats, b_spats), notNone(a_starts, b_starts)
 
 
-# needs better name
 class DecompData(Data):
-    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, cond_filter=None):
+    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, cond_filter=None, trans_params=None):
         assert len(df) != trial_starts.shape[0]-1, (
             f"DataFrame df and trial_starts do not have matching length ({len(df)} != {len(trial_starts)})\n\t(maybe remove last entry?)")
         assert len(df) == trial_starts.shape[0], (
             f"DataFrame df and trial_starts do not have matching length ({len(df)} != {len(trial_starts)})")
         self._df = df
         self._temps = temporal_comps
-        self._spats = spatial_comps
+        self._spats = spatial_comps if trans_params is None else self.align_spatials(spatial_comps, trans_params)
         self._starts = trial_starts
 
         if cond_filter is None:
@@ -125,6 +127,74 @@ class DecompData(Data):
             if "starts_hash" in h5_file.attrs and h5_file.attrs["starts_hash"] != hash(starts.data.tobytes()):
                 warnings.warn("starts hashes do not match", Warning)
         return DecompData(df, temps, spats, starts)
+
+    #Auslagern
+    def align_spatials(self, spatials, trans_params):
+        f , h , w = spatials.shape #org shape
+
+        #Attend bitmap as last frame
+        spatials = np.append(spatials,np.ones((1,h,w)),axis=0)
+
+        #Offset instead of Nans as interpolation is used
+        min = np.nanmin(spatials)
+
+        eps = 0 #np.finfo(np.float32).eps
+        #offset = 2*eps # 10
+        #spatials = spatials - min #+ offset
+        print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
+        #Rotation
+        print("Rotation")
+        spatials = scipy.ndimage.rotate(spatials,trans_params['angleD'], axes=(2,1), reshape=True, cval= -eps)
+        print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
+
+        ### introduces weird aliasing along edges due to interpolation
+        #Scale
+        print("Scale/Zoom")
+        spatials = scipy.ndimage.zoom(spatials, (1,trans_params['scaleConst'],trans_params['scaleConst']),order=1,cval= -eps) #slow
+        print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
+
+        #Translate
+        print("Translate/Shift")
+        spatials = scipy.ndimage.shift(spatials, np.insert(np.flip(trans_params['tC']),0,0),cval= -eps, order=1, mode='constant') #slow
+        ### ---
+        print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
+
+        #Remove offset
+
+        bitmask = spatials[-1,:,:]<0.5 #set bitmap as all elements that were interpolated under 0.5
+        spatials = np.delete(spatials,-1,axis=0) #delete Bitmap from spatials
+
+        bitmask = np.broadcast_to(bitmask,spatials.shape) #for easier broadcasting, is not in memory
+        np.putmask(spatials,bitmask,np.NAN) #set all elements of bitmap to NAN
+
+
+        #Crop
+        print("Crop")
+        n_spatials , h_new , w_new = spatials.shape
+        trim_h = int(np.floor((h_new - h) / 2 ))
+        trim_w = int(np.floor((w_new - w) / 2 ))
+
+        #Eleganter lösen, hier nur 1 zu 1 matlab nachgestellt
+        if trans_params['scaleConst'] < 1:
+            if trim_h < 0:
+                temp_spats = np.full((n_spatials, h, w_new),np.NAN)
+                temp_spats[:,abs(trim_h):abs(trim_h)+h_new, :] = spatials
+                spatials = temp_spats
+            else:
+                spatials = spatials[:,trim_h:trim_h + h, :]
+
+            n_spatials , h_new , w_new = spatials.shape
+            if trim_w < 0:
+                temp_spats = np.full((n_spatials, h_new, w),np.NAN)
+                temp_spats[:,:,abs(trim_w):abs(trim_w) + w_new] = spatials
+                spatials = temp_spats
+            else:
+                spatials = spatials[:,:,trim_w:trim_w+w]
+
+        else:
+            spatials = spatials[:,trim_h:trim_h + h, trim_w:trim_w+w]
+
+        return spatials
 
     @property
     def temps_hash(self):

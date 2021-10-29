@@ -24,12 +24,11 @@ def plot_frame(temps, spatial, titles, plt_title):
     #if height == 1: height = 2 #workaround for the moment as ax[h,w] wont work
     fig, ax = plt.subplots(height , width, constrained_layout=True, squeeze=False)
     fig.suptitle(plt_title)
-
     for h in range(height):
         for w in range(width):
             if h*width + w < len(temps):
                 frame =  np.tensordot(temps[h*width + w], spatial, 1) #np.einsum( "n,nij->ij", temps[h*width + w], spatial) #np.tensordot(temps[w + h], spatial, (-1, 0)) #np.dot(spatial,temps[w*height + h]) #
-                im = ax[h, w].imshow(frame, vmin=-0.02, vmax=0.02)
+                im = ax[h, w].imshow(frame)
 
                 fig.colorbar(im, ax=ax[h, w])
                 ax[h, w].set_title(titles[h*width + w])
