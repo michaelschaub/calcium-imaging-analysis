@@ -1,0 +1,33 @@
+rule_conf:
+  entry:
+    {}
+  parcelation:
+    {}
+  prefilters:
+    {}
+  conditions:
+    {}
+  feature_calculation:
+    {}
+
+branch_opts:
+  mouses:
+    - GN06
+  dates:
+    - 2021-01-20_10-15-16
+  parcelations:
+    - SVD
+  filters:
+    - All
+
+conditional_opts:
+  sides:
+    - left
+    - right
+  modalities:
+    - visual
+    - tactile
+    - vistact
+
+features:
+  - mean

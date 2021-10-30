@@ -1,9 +1,11 @@
+# add code library to path
+from pathlib import Path
 import sys
-import datetime
-std_out = sys.stdout
-log_file = open(str(snakemake.log),'a')
-sys.stdout = log_file
-print(f"[{datetime.datetime.now()}] Log of rule {snakemake.rule}")
+sys.path.append(str(Path(__file__).parent.parent.absolute()))
+from utils import snakemake_tools
+# redirect std_out to log file
+snakemake_tools.redirect_to_log(snakemake)
+snakemake_tools.save_conf(snakemake, sections=[])
 
 print("snakemake:", dir(snakemake))
 print("input:", snakemake.input)

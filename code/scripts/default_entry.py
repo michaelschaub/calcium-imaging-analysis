@@ -1,9 +1,11 @@
+# add code library to path
+from pathlib import Path
 import sys
-import datetime
-std_out = sys.stdout
-log_file = open(str(snakemake.log),'a')
-sys.stdout = log_file
-print(f"[{datetime.datetime.now()}] Log of rule {snakemake.rule}")
+sys.path.append(str(Path(__file__).parent.parent.absolute()))
+from utils import snakemake_tools
+# redirect std_out to log file
+snakemake_tools.redirect_to_log(snakemake)
+snakemake_tools.save_conf(snakemake, sections=["entry"])
 
 import numpy as np
 import h5py
@@ -25,6 +27,7 @@ data_path = "/".join(task_files_split[:-3])
 mouse_id = task_files_split[-3]
 sessions = load_task_data_as_pandas_df.extract_session_data_and_save(
         root_paths=[Path(data_path)], mouse_ids=[mouse_id], reextract=False)
+print("Loaded task data")
 ###   ###
 
 if len(files_Vc) > 1:
@@ -42,6 +45,7 @@ for file_Vc in files_Vc:
     assert (U[-1] == U[0]).all(), "Combining different dates with different Compositions is not yet supported"
     trial_starts.append(np.cumsum(frameCnt[:-1, 1]) + start)
     start += Vc[-1].shape[0]
+print("Loaded SVD data")
 
 trial_starts = np.concatenate( trial_starts )
 Vc = np.concatenate( Vc )
