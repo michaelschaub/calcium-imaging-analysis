@@ -6,7 +6,7 @@ import warnings
 def reproducable_hash( a ):
     '''
     should create hashes of DataFrames and ndarrays, that are consitent between saving and loading
-    does not work at all, so simply returns 0
+    does not work at all, so simply returns 0, may be better to return random number
     '''
     return 0 # not even the string works...
 

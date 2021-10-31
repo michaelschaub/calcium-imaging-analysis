@@ -9,6 +9,11 @@ import pathlib
 from tqdm.auto import tqdm
 
 class Features:
+    def __init__(self, data, feature, file=None):
+        self.data = data
+        self._feature = feature
+        self._savefile = file
+
     def flatten(self):
         '''flatten contained feauture to one trial and one feature dimension'''
         pass
@@ -27,14 +32,25 @@ class Features:
 
     @property
     def mean(self):
+        '''
+        Create FeatureMean object taking trial means over selfs features
+        '''
         return FeatureMean.create(self)
 
     @property
     def hash(self):
+        '''
+        reproducable hashsum of features to compare with others
+        WARNING: MAY NOT WORK, STILL IN DEVELOPMENT
+        '''
         return reproducable_hash(self._feature)
 
     @property
     def data(self):
+        '''
+        data object from with this feature is computated,
+        is retrieved from Data.LOADED_DATA by hash or loaded from file, when not set directly
+        '''
         if not self._data is None:
             return self._data
         elif self._datahash in Data.LOADED_DATA:
@@ -44,7 +60,18 @@ class Features:
         else:
             raise ValueError("Data object of this Feature could not be reconstructed")
 
+    @data.setter
+    def data(self, data):
+        '''
+        sets data object, as well as hash and savefile metadata
+        '''
+        self._data = data
+        self._datahash = data.hash
+        self._datafile = data.savefile
+
     def save(self, file, data_file=None):
+        '''
+        '''
         h5_file = save_h5( self, file,
                             attributes=[self._feature],
                             attr_files=[None ],
@@ -56,7 +83,8 @@ class Features:
                 path = pathlib.Path(file)
                 data_file = path.parent / f"data.{path.stem}{path.suffix}"
             self._data.save(data_file)
-        h5_file.attrs["data_file"] = str(self._data._savefile)
+        assert (self._data.savefile is not None), "Failure in saving underlaying data object!"
+        h5_file.attrs["data_file"] = str(self._data.savefile)
         self._savefile = file
 
     @classmethod
@@ -73,28 +101,23 @@ class Features:
                 data = DecompData.load(data_file)
                 if h5_file.attrs[f"data_hash"] != data.hash:
                     warnings.warn(f"data hashes do not match", Warning)
-            feat = Class()
-            feat.data = data
-            feat._feature = feature
-            feat._savefile = file
+            feat = Class(data, feature, file)
             Features.LOADED_FEATURES[feat.hash] = feat
         return feat
-
-    @data.setter
-    def data(self, data):
-        self._data = data
-        self._datahash = data.hash
-        self._datafile = data.savefile
 
     LOADED_FEATURES = {}
 
 
 class Moup(Features):
+    def __init__(self, data, mou_ests, label=None, file=None):
+        self.data = data
+        self._mou_ests = mou_ests
+        self._label = label
+        self._savefile = file
+
     def create(data, max_comps=None, time_lag=None, label=None):
-        feat = Moup()
-        feat.data = data
-        feat._label = label
-        feat._mou_ests = fit_moup(data.temporals[:, :, :max_comps], time_lag, feat._label)
+        mou_ests = fit_moup(data.temporals[:, :, :max_comps], time_lag, label)
+        feat = Moup(data, mou_ests, label)
         return feat
 
     def flatten(self, feat=None):
@@ -146,9 +169,7 @@ def fit_moup(temps, tau, label):
 
 class Raws(Features):
     def create(data, max_comps=None):
-        feat = Raws()
-        feat.data = data
-        feat._feature = data.temporals[:, :, :max_comps]
+        feat = Raws(data, data.temporals[:, :, :max_comps])
         return feat
 
     def flatten(self, feat=None):
@@ -168,9 +189,7 @@ def calc_means(temps):
 
 class Means(Features):
     def create(data, max_comps=None):
-        feat = Means()
-        feat.data = data
-        feat._feature = calc_means(data.temporals[:, :, :max_comps])
+        feat = Means(data, feature=calc_means(data.temporals[:, :, :max_comps]))
         return feat
 
     def flatten(self, feat=None):
@@ -207,16 +226,19 @@ def flat_covs(covs):
 
 
 class Covariances(Features):
+    def __init__(self, data, feature, means, file=None):
+        self.data = data
+        self._feature = feature
+        self._means = means
+        self._savefile = file
+
     def create(data, means=None, max_comps=None):
-        feat = Covariances()
-        feat.data = data
         if means is None:
-            feat._means = calc_means(data.temporals[:, :, :max_comps])
+            means = calc_means(data.temporals[:, :, :max_comps])
         elif isinstance(means, Means):
-            feat._means = means._feature
-        else:
-            feat._means = mean
-        feat._feature = calc_covs(data.temporals[:, :, :max_comps], feat._means)
+            means = means._feature
+        feature = calc_covs(data.temporals[:, :, :max_comps], means)
+        feat = Covariances(data, feature, means )
         return feat
 
     def flatten(self, feat=None):
@@ -226,16 +248,39 @@ class Covariances(Features):
 
     def save(self, file, data_file=None):
         '''
-        not yet implemented
         '''
-        pass
+        h5_file = save_h5( self, file,
+                            attributes=[self._feature, self._means],
+                            attr_files=[None,None],
+                            labels=[ "feat", "means" ],
+                            hashes=[ self.hash, reproducable_hash(self._means) ] )
+        h5_file.attrs["data_hash"] = self._datahash
+        if self._data.savefile is None:
+            if data_file is None:
+                path = pathlib.Path(file)
+                data_file = path.parent / f"data.{path.stem}{path.suffix}"
+            self._data.save(data_file)
+        assert (self._data.savefile is not None), "Failure in saving underlaying data object!"
+        h5_file.attrs["data_file"] = str(self._data.savefile)
+        self._savefile = file
 
     @classmethod
     def load(Class, file, data_file=None, feature_hash=None, try_loaded=False):
-        '''
-        not yet implemented
-        '''
-        pass
+        if try_loaded and feature_hash is not None and feature_hash in Features.LOADED_FEATURES:
+            feat = Features.LOADED_FEATURES[feature_hash]
+        else:
+            h5_file, _, feature, means = load_h5( file, attr_files=[None,None], labels=["feat","means"])
+            if try_loaded and h5_file.attrs["data_hash"] in Data.LOADED_DATA:
+                data = Data.LOADED_DATA[h5_file.attrs["data_hash"]]
+            else:
+                if data_file is None:
+                    data_file = h5_file.attrs["data_file"]
+                data = DecompData.load(data_file)
+                if h5_file.attrs[f"data_hash"] != data.hash:
+                    warnings.warn(f"data hashes do not match", Warning)
+            feat = Class(data, feature, means, file)
+            Features.LOADED_FEATURES[feat.hash] = feat
+        return feat
 
 
 def calc_acovs(temps, means, covs, n_tau_range, label):
@@ -258,22 +303,22 @@ DEFAULT_TIMELAG = 10
 
 
 class AutoCovariances(Features):
-    def create(data, means=None, covs=None, max_comps=None, max_time_lag=None, time_lag_range=None, label = None):
-        feat = AutoCovariances()
-        feat.data = data
+    def __init__(self, data, feature, means, covs, file=None):
+        self.data = data
+        self._feature = feature
+        self._means = means
+        self._covs = covs
+        self._savefile = file
 
+    def create(data, means=None, covs=None, max_comps=None, max_time_lag=None, time_lag_range=None, label = None):
         if means is None:
-            feat._means = calc_means(data.temporals[:, :, :max_comps])
+            means = calc_means(data.temporals[:, :, :max_comps])
         elif isinstance(means, Means):
-            feat._means = means._feature
-        else:
-            feat._means = means
+            means = means._feature
         if covs is None:
-            feat._covs = calc_covs(data.temporals[:, :, :max_comps], feat._means)
+            covs = calc_covs(data.temporals[:, :, :max_comps], means)
         elif isinstance(covs, Covariances):
-            feat._covs = np.copy(covs._feature)
-        else:
-            feat._covs = covs
+            covs = np.copy(covs._feature)
 
         if max_time_lag is None or max_time_lag >= data.temporals.shape[1]:
             max_time_lag = DEFAULT_TIMELAG
@@ -281,7 +326,8 @@ class AutoCovariances(Features):
         if time_lag_range is None or np.amax(time_lag_range) >= data.temporals.shape[1]:
             time_lag_range = range(1, max_time_lag + 1)
 
-        feat._feature = calc_acovs(data.temporals[:, :, :max_comps], feat._means, feat._covs, time_lag_range, label)
+        feature = calc_acovs(data.temporals[:, :, :max_comps], means, covs, time_lag_range, label)
+        feat = AutoCovariances(data, feature, means, covs )
         return feat
 
     def flatten(self, feat=None):
@@ -291,24 +337,46 @@ class AutoCovariances(Features):
 
     def save(self, file, data_file=None):
         '''
-        not yet implemented
         '''
-        pass
+        h5_file = save_h5( self, file,
+                            attributes=[self._feature, self._means],
+                            attr_files=[None,None,None],
+                            labels=[ "feat", "means", "covs" ],
+                            hashes=[ self.hash, reproducable_hash(self._means), reproducable_hash(self._covs) ] )
+        h5_file.attrs["data_hash"] = self._datahash
+        if self._data.savefile is None:
+            if data_file is None:
+                path = pathlib.Path(file)
+                data_file = path.parent / f"data.{path.stem}{path.suffix}"
+            self._data.save(data_file)
+        assert (self._data.savefile is not None), "Failure in saving underlaying data object!"
+        h5_file.attrs["data_file"] = str(self._data.savefile)
+        self._savefile = file
 
     @classmethod
     def load(Class, file, data_file=None, feature_hash=None, try_loaded=False):
-        '''
-        not yet implemented
-        '''
-        pass
+        if try_loaded and feature_hash is not None and feature_hash in Features.LOADED_FEATURES:
+            feat = Features.LOADED_FEATURES[feature_hash]
+        else:
+            h5_file, _, feature, means = load_h5( file, attr_files=[None,None,None], labels=["feat","means","covs"])
+            if try_loaded and h5_file.attrs["data_hash"] in Data.LOADED_DATA:
+                data = Data.LOADED_DATA[h5_file.attrs["data_hash"]]
+            else:
+                if data_file is None:
+                    data_file = h5_file.attrs["data_file"]
+                data = DecompData.load(data_file)
+                if h5_file.attrs[f"data_hash"] != data.hash:
+                    warnings.warn(f"data hashes do not match", Warning)
+            feat = Class(data, feature, means, covs, file)
+            Features.LOADED_FEATURES[feat.hash] = feat
+        return feat
 
 
 class FeatureMean(Features):
     def create(base):
-        feat = FeatureMean()
+        feature = np.mean(base._feature, axis=0).reshape((1, *base._feature.shape[1:]))
+        feat = FeatureMean(base.data, feature )
         feat._base_feature = base
-        feat.data = base.data
-        feat._feature = np.mean(base._feature, axis=0).reshape((1, *base._feature.shape[1:]))
         return feat
 
     def flatten(self, feat=None):

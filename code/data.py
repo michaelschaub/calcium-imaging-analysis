@@ -69,7 +69,7 @@ class DecompData(Data):
     @classmethod
     def load(Class, file, temps_file=None, spats_file=None, starts_file=None, df_label="df", temps_label="temps", spats_label="spats", starts_label="starts", data_hash=None, try_loaded=False):
         if try_loaded and data_hash is not None and data_hash in Data.LOADED_DATA:
-            data = Data.LOADED_DATA[h5_file.attrs["data_hash"]]
+            data = Data.LOADED_DATA[data_hash]
         else:
             _, df, temps, spats, starts = load_h5( file,
                                 attr_files=[temps_file, spats_file, starts_file ],
