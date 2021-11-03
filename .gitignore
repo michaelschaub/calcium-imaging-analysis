@@ -6,3 +6,4 @@ plots/*
 
 !data/.gitkeep
 !plots/.gitkeep
+!data/anatomical/*

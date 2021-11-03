@@ -6,6 +6,7 @@ import pickle as pkl
 from pathlib import Path
 from matplotlib import pyplot as plt
 import itertools
+import scipy.io, scipy.ndimage
 
 import sklearn.linear_model as skllm
 import sklearn.neighbors as sklnn
@@ -29,7 +30,7 @@ sys.path.append(Path(__file__).parent)
 from features import Raws,Means, Moup, Covariances, AutoCovariances
 from plotting import plots
 from loading import load_task_data_as_pandas_df
-
+from decomposition import anatomical_parcellation
 
 
 # add missing h5 files here
@@ -40,6 +41,7 @@ missing_task_data = []
 data_path = Path(__file__).parent.parent / Path('data')
 plot_path = Path(__file__).parent.parent / Path('plots')
 svd_path = data_path/'output/GN06/SVD/data.h5'
+ana_path = data_path/'output/GN06/Anatomical/data.h5'
 if (not svd_path.exists()):
     if not (data_path/'input'/'extracted_data.pkl').exists() :
         # load behavior data
@@ -62,15 +64,24 @@ if (not svd_path.exists()):
     mask[missing_task_data] = False
     trial_starts = trial_starts[mask]
 
-
+    opts_path = data_path/"input"/"GN06"/Path('2021-01-20_10-15-16/SVD_data/opts.mat')
+    trans_params = scipy.io.loadmat(opts_path,simplify_cells=True)['opts']['transParams']
     #print(sessions)
     #print(frameCnt.shape)
 
-    svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts) )
+    svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts))
     svd.save(str(svd_path))
 
+    align_svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts), trans_params=trans_params)
+
+    temps, spats = anatomical_parcellation(align_svd)
+
+    anatomical = DecompData(sessions, temps, spats, np.array(trial_starts))
+    anatomical.save(str(ana_path))
+    svd = anatomical
+
 else:
-    svd = DecompData.load(str(svd_path))
+    svd = DecompData.load(str(ana_path))
     print("Loaded DecompData object.")
 
 #define different conds
@@ -105,7 +116,7 @@ print(cond_keys_str)
 #####
 save_outputs = True
 baseline_mode = None  #### basline mode ('mean' / 'zscore' / None)
-comp = 10 ### number componants to use
+comp = 65 ### number componants to use
 n_rep = 10  ### number of repetition
 n_comp_LDA = None #5  ### number of LDA componants (conds -1)
 
@@ -114,7 +125,7 @@ n_comp_LDA = None #5  ### number of LDA componants (conds -1)
 #features  = ['mean',"mean(-base)","raw","mou"]
 feature_data = {
 
-    #"mean": [Means(svd.conditions[i,:,30:75],max_comps=comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond
+    "mean": [Means(svd.conditions[i,:,30:75],max_comps=comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond
     #"mean(-base)": [Means(svd.conditions[i,:,30:75]-Means(svd.conditions[i,:,15:30]),comp) for i in range(len(svd.conditions))],
     #"raw": [Raws(svd.conditions[i,:,30:75],comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond,
     #"Cov": [Covariances(svd.conditions[i,:,30:75],max_comps=comp) for i in tqdm(range(len(svd.conditions)),desc='Conditions')], #mean of stimulusframes for first cond
@@ -123,7 +134,7 @@ feature_data = {
 }
 
 
-for j in tqdm(range(1,10,1),desc="Features"):
+for j in tqdm(range(3,4,1),desc="Features"):
     feature_data[r"Cov($\tau$="+str(j)+")"] = [AutoCovariances(svd.conditions[i,:,30:75],max_comps=comp, time_lag_range=[j]) for i in tqdm(range(len(svd.conditions)),desc='Conditions')]
     feature_data[r'Mou($\tau$='+str(j)+")"] = [Moup(svd.conditions[i,:,30:75],max_comps=comp,time_lag=j) for i in tqdm(range(len(svd.conditions)),desc='Conditions')]
 
@@ -136,6 +147,11 @@ feature_label = features
 cv = StratifiedShuffleSplit(n_rep, test_size=0.2, random_state=420)
 perf = np.zeros([n_rep, len(features), 4])
 classifiers = {}
+
+##### RFE
+
+
+######
 
 for i_feat, feat in enumerate(tqdm(features,desc="Training classifiers for each features")):
 
@@ -153,6 +169,14 @@ for i_feat, feat in enumerate(tqdm(features,desc="Training classifiers for each 
     data = scaler.transform(data)
 
     cv_split = cv.split(data, labels)
+
+    ###### RFE
+
+
+
+    #####
+
+
 
     c_MLR = skppl.make_pipeline(skppc.StandardScaler(),
                                 skllm.LogisticRegression(C=1, penalty='l2', multi_class='multinomial',
