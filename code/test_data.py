@@ -153,6 +153,7 @@ if plt_mode in ["mean", "z_score"]:
 elif plt_mode in ["raw", "raw_z_score" ]:
     for modality_id in range(3):
         for target_side in range(2):
+            print(f"{modality_keys[modality_id]}, {target_side_keys[target_side]}")
             # get the trials to use
             selected_trials = ((svd_pre.modality == modality_id) & (svd_pre.target_side_left == target_side))
 

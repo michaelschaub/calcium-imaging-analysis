@@ -6,12 +6,11 @@ import warnings
 def reproducable_hash( a ):
     '''
     should create hashes of DataFrames and ndarrays, that are consitent between saving and loading
-    does not work at all, so simply returns 0, may be better to return random number
+    does not really work, basically returns random number unique per data and run
     '''
-    return 0 # not even the string works...
-
+    #TODO: fix
     if isinstance( a, pd.DataFrame ):
-        return hash(self._df.to_csv()) # there must be a better way to hash a DataFrame, right?
+        return hash(a.to_csv()) # there must be a better way to hash a DataFrame, right?
         # spoiler: No.
     else:
         return hash(a.tostring()) # everything else seems to not work?!

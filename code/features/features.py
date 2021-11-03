@@ -51,23 +51,62 @@ class Features:
         data object from with this feature is computated,
         is retrieved from Data.LOADED_DATA by hash or loaded from file, when not set directly
         '''
-        if not self._data is None:
-            return self._data
-        elif self._datahash in Data.LOADED_DATA:
-            self._data = Data.LOADED_DATA[self._datahash]
-        elif not self._datafile is None:
-            self._data = DecompData.load(self._datafile)
-        else:
-            raise ValueError("Data object of this Feature could not be reconstructed")
+        if not hasattr(self, '_data'):
+            if hasattr(self, 'data_hash') and self._data_hash in Data.LOADED_DATA:
+                self._data = Data.LOADED_DATA[self._data_hash]
+            elif hasattr(self, '_data_file'):
+                self._data = DecompData.load(self._data_file)
+            else:
+                raise ValueError("Data object of this Feature could not be reconstructed")
+        return self._data
 
     @data.setter
     def data(self, data):
         '''
         sets data object, as well as hash and savefile metadata
+        data should either be data object, integer data hash or pathlike
         '''
-        self._data = data
-        self._datahash = data.hash
-        self._datafile = data.savefile
+        if hasattr(self, '_data'):
+            raise AttributeError("Feature already has data object set.")
+        if isinstance( data, Data ):
+            self._data = data
+            self._data_hash = data.hash
+            self._data_file = data.savefile
+        elif type(data) == int:
+            self.data_hash = data
+        else:
+            try:
+                self.data_file = str(pathlib.Path(data))
+            except TypeError:
+                raise AttributeError(f"Feature data cannot be set via {type(data)}.") from None
+
+    @property
+    def data_hash(self):
+        if not hasattr(self, '_data'):
+            return self._data_hash
+        else:
+            return self._data.hash
+
+    @data_hash.setter
+    def data_hash(self, data_hash):
+        if not hasattr(self, '_data'):
+            self._data_hash = data_hash
+        elif  self._data.hash != data_hash:
+            raise AttributeError("Feature already has data object set.")
+
+    @property
+    def data_file(self):
+        if not hasattr(self, '_data'):
+            return self._data_file
+        else:
+            return self._data.savefile
+
+    @data_file.setter
+    def data_file(self, data_file):
+        if not hasattr(self, '_data') and not hasattr(self, '_data_hash'):
+            self._data_file = data_file
+        elif not ( hasattr(self, '_data') and str(pathlib.Path(self._data.file)) == str(pathlib.Path(data_file))):
+            raise AttributeError("Feature already has data object or hash set.")
 
     def save(self, file, data_file=None):
         '''
@@ -77,12 +116,12 @@ class Features:
                             attr_files=[None ],
                             labels=[ "feat" ],
                             hashes=[ self.hash ] )
-        h5_file.attrs["data_hash"] = self._datahash
-        if self._data.savefile is None:
+        h5_file.attrs["data_hash"] = self._data_hash
+        if self.data.savefile is None:
             if data_file is None:
                 path = pathlib.Path(file)
                 data_file = path.parent / f"data.{path.stem}{path.suffix}"
-            self._data.save(data_file)
+            self.data.save(data_file)
         assert (self._data.savefile is not None), "Failure in saving underlaying data object!"
         h5_file.attrs["data_file"] = str(self._data.savefile)
         self._savefile = file
@@ -95,13 +134,10 @@ class Features:
             h5_file, _, feature = load_h5( file, attr_files=[None], labels=["feat"])
             if try_loaded and h5_file.attrs["data_hash"] in Data.LOADED_DATA:
                 data = Data.LOADED_DATA[h5_file.attrs["data_hash"]]
-            else:
-                if data_file is None:
-                    data_file = h5_file.attrs["data_file"]
-                data = DecompData.load(data_file)
-                if h5_file.attrs[f"data_hash"] != data.hash:
-                    warnings.warn(f"data hashes do not match", Warning)
-            feat = Class(data, feature, file)
+            elif data_file is None:
+                data_file = h5_file.attrs["data_file"]
+            feat = Class(data_file, feature, file)
+            feat.data_hash = h5_file.attrs["data_hash"]
             Features.LOADED_FEATURES[feat.hash] = feat
         return feat
 
@@ -254,7 +290,7 @@ class Covariances(Features):
                             attr_files=[None,None],
                             labels=[ "feat", "means" ],
                             hashes=[ self.hash, reproducable_hash(self._means) ] )
-        h5_file.attrs["data_hash"] = self._datahash
+        h5_file.attrs["data_hash"] = self._data_hash
         if self._data.savefile is None:
             if data_file is None:
                 path = pathlib.Path(file)
@@ -272,13 +308,10 @@ class Covariances(Features):
             h5_file, _, feature, means = load_h5( file, attr_files=[None,None], labels=["feat","means"])
             if try_loaded and h5_file.attrs["data_hash"] in Data.LOADED_DATA:
                 data = Data.LOADED_DATA[h5_file.attrs["data_hash"]]
-            else:
-                if data_file is None:
-                    data_file = h5_file.attrs["data_file"]
-                data = DecompData.load(data_file)
-                if h5_file.attrs[f"data_hash"] != data.hash:
-                    warnings.warn(f"data hashes do not match", Warning)
-            feat = Class(data, feature, means, file)
+            elif data_file is None:
+                data_file = h5_file.attrs["data_file"]
+            feat = Class(data_file, feature, means, file)
+            feat.data_hash = h5_file.attrs["data_hash"]
             Features.LOADED_FEATURES[feat.hash] = feat
         return feat
 
@@ -339,11 +372,11 @@ class AutoCovariances(Features):
         '''
         '''
         h5_file = save_h5( self, file,
-                            attributes=[self._feature, self._means],
+                            attributes=[self._feature, self._means,self._covs],
                             attr_files=[None,None,None],
                             labels=[ "feat", "means", "covs" ],
                             hashes=[ self.hash, reproducable_hash(self._means), reproducable_hash(self._covs) ] )
-        h5_file.attrs["data_hash"] = self._datahash
+        h5_file.attrs["data_hash"] = self._data_hash
         if self._data.savefile is None:
             if data_file is None:
                 path = pathlib.Path(file)
@@ -358,16 +391,13 @@ class AutoCovariances(Features):
         if try_loaded and feature_hash is not None and feature_hash in Features.LOADED_FEATURES:
             feat = Features.LOADED_FEATURES[feature_hash]
         else:
-            h5_file, _, feature, means = load_h5( file, attr_files=[None,None,None], labels=["feat","means","covs"])
+            h5_file, _, feature, means, covs = load_h5( file, attr_files=[None,None,None], labels=["feat","means","covs"])
             if try_loaded and h5_file.attrs["data_hash"] in Data.LOADED_DATA:
                 data = Data.LOADED_DATA[h5_file.attrs["data_hash"]]
-            else:
-                if data_file is None:
-                    data_file = h5_file.attrs["data_file"]
-                data = DecompData.load(data_file)
-                if h5_file.attrs[f"data_hash"] != data.hash:
-                    warnings.warn(f"data hashes do not match", Warning)
-            feat = Class(data, feature, means, covs, file)
+            elif data_file is None:
+                data_file = h5_file.attrs["data_file"]
+            feat = Class(data_file, feature, means, covs, file)
+            feat.data_hash = h5_file.attrs["data_hash"]
             Features.LOADED_FEATURES[feat.hash] = feat
         return feat
 
