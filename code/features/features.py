@@ -171,35 +171,97 @@ class Moup(Features):
 
         return flat_params
 
+    @property
+    def hash(self):
+        return hash(tuple( reproducable_hash(getattr(mou,attr))
+                                    for attr in Moup.mou_attrs if attr != "d_fit" for mou in self._mou_ests))
+
     # may need workaround, _feature should be constant and as close to instant access as possible
     # also maybe numpy array
     @property
     def _feature(self):
         return [[mou_est.get_tau_x, mou_est.get_C()] for mou_est in self._mou_ests]  # ,other params]
 
+
+    mou_attrs = ["n_nodes", "J", "mu", "Sigma", "d_fit"]
+
     def save(self, file, data_file=None):
         '''
-        not yet implemented
         '''
-        pass
+        attr_arrays = decompose_mou_ests( self._mou_ests )
+        attr_arrays["d_fit"] = { key: np.array([ a[key] for a in attr_arrays["d_fit"]]) for key in attr_arrays["d_fit"][0].keys() }
+        labels = attr_arrays.keys()
+        attributes = attr_arrays.values()
+        hashes = [ reproducable_hash(attr) if not isinstance(attr, dict) else None for attr in attributes ]
+
+        h5_file = save_h5( self, file,
+                            attributes=attributes,
+                            attr_files=[None for l in labels],
+                            labels=labels,
+                            hashes=hashes )
+        h5_file.attrs["data_hash"] = self._data_hash
+        if self._data.savefile is None:
+            if data_file is None:
+                path = pathlib.Path(file)
+                data_file = path.parent / f"data.{path.stem}{path.suffix}"
+            self._data.save(data_file)
+        assert (self._data.savefile is not None), "Failure in saving underlaying data object!"
+        h5_file.attrs["data_file"] = str(self._data.savefile)
+        self._savefile = file
 
     @classmethod
-    def load(Class, file, data_file=None, feature_hash=None, try_loaded=False):
-        '''
-        not yet implemented
-        '''
-        pass
+    def load(Class, file, data_file=None, feature_hash=None, try_loaded=False, label=None):
+        if try_loaded and feature_hash is not None and feature_hash in Features.LOADED_FEATURES:
+            feat = Features.LOADED_FEATURES[feature_hash]
+        else:
+            h5_file, _, *attributes = load_h5( file, attr_files=[None for l in Class.mou_attrs], labels=Class.mou_attrs)
+            if try_loaded and h5_file.attrs["data_hash"] in Data.LOADED_DATA:
+                data = Data.LOADED_DATA[h5_file.attrs["data_hash"]]
+            elif data_file is None:
+                data_file = h5_file.attrs["data_file"]
+
+            attr_arrays = { attr:arr for attr, arr in zip(Class.mou_attrs,attributes) }
+            attr_arrays["d_fit"] = [ { k:a for k,a in attr_arrays["d_fit"].items()} for i in range(len(attr_arrays[Moup.mou_attrs[0]])) ]
+            mou_ests = recompose_mou_ests(attr_arrays)
+            feat = Class(data_file, mou_ests, label)
+            feat.data_hash = h5_file.attrs["data_hash"]
+            Features.LOADED_FEATURES[feat.hash] = feat
+        return feat
+
 
 def fit_moup(temps, tau, label):
     mou_ests = np.empty((len(temps)),dtype=np.object_)
 
     for i,trial in enumerate(tqdm(temps,desc=label,leave=False)):
         mou_est = MOU()
-        mou_ests[i] = mou_est.fit(trial, i_tau_opt=tau) #, regul_C=0.1
+        if tau is None:
+            mou_ests[i] = mou_est.fit(trial) #, regul_C=0.1
+        else:
+            mou_ests[i] = mou_est.fit(trial, i_tau_opt=tau) #, regul_C=0.1
 
 
         # regularization may be helpful here to "push" small weights to zero here
 
+    return mou_ests
+
+def decompose_mou_ests( mou_ests ):
+    attr_arrays = {attr : [] for attr in Moup.mou_attrs}
+    for mou in mou_ests:
+        for attr in Moup.mou_attrs:
+            attr_arrays[attr].append(getattr(mou,attr))
+    for attr in Moup.mou_attrs:
+        attr_arrays[attr] = np.array(attr_arrays[attr])
+    return attr_arrays
+
+def recompose_mou_ests( attr_arrays, mou_ests=None ):
+    if mou_ests is None:
+        mou_ests = [MOU() for n in attr_arrays[Moup.mou_attrs[0]] ]
+    for i, mou in enumerate(mou_ests):
+        for attr in Moup.mou_attrs:
+            if attr != "d_fit":
+                setattr( mou, attr, attr_arrays[attr][i] )
+            else:
+                mou.d_fit = attr_arrays[attr][i]
     return mou_ests
 
 

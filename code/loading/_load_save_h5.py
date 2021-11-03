@@ -12,8 +12,26 @@ def reproducable_hash( a ):
     if isinstance( a, pd.DataFrame ):
         return hash(a.to_csv()) # there must be a better way to hash a DataFrame, right?
         # spoiler: No.
-    else:
+    elif isinstance( a, np.ndarray ):
         return hash(a.tostring()) # everything else seems to not work?!
+    elif isinstance( a, list):
+        return hash(tuple(a))
+    else:
+        return hash(a)
+
+def save_object_h5(h5_obj, label, attr):
+    if isinstance(attr, dict):
+        for key, val in attr.items():
+            save_object_h5(h5_obj, f"{label}/{key}", val)
+    else:
+        h5_obj.create_dataset(label, data=attr)
+
+def load_object_h5(h5_obj, label):
+    obj = h5_obj[label]
+    if isinstance(obj, h5py.Group):
+        return { key: load_object_h5(obj, key) for key in obj.keys() }
+    else:
+        return np.array(obj)
 
 def save_h5(data, file, df=None, attributes=[], attr_files=[], labels=[], hashes=[] ):
     if df is not None:
@@ -26,12 +44,13 @@ def save_h5(data, file, df=None, attributes=[], attr_files=[], labels=[], hashes
 
     for attr, file, label, hsh  in zip(attributes, attr_files, labels, hashes):
         if  file is None:
-            h5_file.create_dataset(label, data=attr)
+            save_object_h5( h5_file, label, attr)
         else:
             with h5py.File(file, "w") as h5_attr:
-                h5_attr.create_dataset(label, data=attr)
+                save_object_h5( h5_attr, label, attr)
             h5_file.attrs[f"{label}_file"] = file
-        h5_file.attrs[f"{label}_hash"] = hsh
+        if hsh is not None:
+            h5_file.attrs[f"{label}_hash"] = hsh
 
     return h5_file
 
@@ -46,15 +65,15 @@ def load_h5(file, attr_files=[], labels=[]):
     for file, label in zip( attr_files, labels):
         if file is None:
             if label in h5_file:
-                attr = np.array(h5_file[label])
+                attr = load_object_h5(h5_file, label)
             elif f"{label}_file" in h5_file.attrs:
                 with h5py.File(h5_file.attrs[f"{label}_file"], "r") as h5_attr:
-                    attr = np.array(h5_attr[label])
+                    attr = load_object_h5(h5_attr, label)
             else:
                 raise ValueError
         else:
             with h5py.File(file, "r") as h5_attr:
-                attr = np.array(h5_attr[label])
+                attr = load_object_h5(h5_attr, label)
         if f"{label}_hash" in h5_file.attrs and h5_file.attrs[f"{label}_hash"] != reproducable_hash(attr):
             warnings.warn(f"{label} hashes do not match", Warning)
         attributes.append(attr)
