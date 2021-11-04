@@ -25,10 +25,10 @@ rule pipeline_entry:
 		Vc	= [ f"data/input/{{mouse}}/{date}/SVD_data/Vc.mat"
 				for date in dates ],
 	output:
-		touch(f"data/output/{{mouse}}/SVD/data.h5"),
-		config = f"data/output/{{mouse}}/SVD/conf.yaml",
+		"data/output/{mouse}/SVD/data.h5",
+		config = "data/output/{mouse}/SVD/conf.yaml",
 	log:
-		f"data/output/{{mouse}}/SVD/pipeline_entry.log"
+		"data/output/{mouse}/SVD/pipeline_entry.log"
 	conda:
 		"code/environment.yaml"
 	script:
@@ -36,12 +36,12 @@ rule pipeline_entry:
 
 rule parcelation:
 	input:
-		f"data/output/{{mouse}}/SVD/data.h5"
+		"data/output/{mouse}/SVD/data.h5"
 	output:
-		f"data/output/{{mouse}}/{{parcelation}}/data.h5",
-		config = f"data/output/{{mouse}}/{{parcelation}}/conf.yaml",
+		"data/output/{mouse}/{parcelation,.+(?!SVD)}/data.h5",
+		config = "data/output/{mouse}/{parcelation}/conf.yaml",
 	log:
-		f"data/output/{{mouse}}/{{parcelation}}/parcelation.log"
+		"data/output/{mouse}/{parcelation}/parcelation.log"
 	conda:
 		"code/environment.yaml"
 	script:
@@ -49,12 +49,12 @@ rule parcelation:
 
 rule prefilters:
 	input:
-		f"data/output/{{mouse}}/{{parcelation}}/data.h5"
+		"data/output/{mouse}/{parcelation}/data.h5"
 	output:
-		f"data/output/{{mouse}}/{{parcelation}}/{{filter}}/filtered_data.h5",
-		config = f"data/output/{{mouse}}/{{parcelation}}/{{filter}}/conf.yaml",
+		"data/output/{mouse}/{parcelation}/{filter}/filtered_data.h5",
+		config = "data/output/{mouse}/{parcelation}/{filter}/conf.yaml",
 	log:
-		f"data/output/{{mouse}}/{{parcelation}}/{{filter}}/prefilters.log"
+		"data/output/{mouse}/{parcelation}/{filter}/prefilters.log"
 	conda:
 		"code/environment.yaml"
 	script:
@@ -62,14 +62,14 @@ rule prefilters:
 
 rule conditions:
 	input:
-		f"data/output/{{mouse}}/{{parcelation}}/{{filter}}/filtered_data.h5"
+		"data/output/{mouse}/{parcelation}/{filter}/filtered_data.h5"
 	output:
-		touch(f"data/output/{{mouse}}/{{parcelation}}/{{filter}}/{{cond}}/conditional_data.h5"),
-		config = touch(f"data/output/{{mouse}}/{{parcelation}}/{{filter}}/{{cond}}/conf.yaml"),
+		touch("data/output/{mouse}/{parcelation}/{filter}/{cond}/conditional_data.h5"),
+		config = touch("data/output/{mouse}/{parcelation}/{filter}/{cond}/conf.yaml"),
 	params:
 		conditons = lambda wildcards : [condition_dicts[wildcards["cond"]]]
 	log:
-		f"data/output/{{mouse}}/{{parcelation}}/{{filter}}/{{cond}}/conditionals.log"
+		"data/output/{mouse}/{parcelation}/{filter}/{cond}/conditionals.log"
 	conda:
 		"code/environment.yaml"
 	script:
@@ -77,12 +77,12 @@ rule conditions:
 
 rule feature_calculation:
 	input:
-		f"data/output/{{mouse}}/{{parcelation}}/{{filter}}/{{cond}}/conditional_data.h5"
+		"data/output/{mouse}/{parcelation}/{filter}/{cond}/conditional_data.h5"
 	output:
-		touch(f"data/output/{{mouse}}/{{parcelation}}/{{filter}}/{{cond}}/{{feature}}/feature_data.h5"),
-		config = touch(f"data/output/{{mouse}}/{{parcelation}}/{{filter}}/{{cond}}/{{feature}}/conf.yaml"),
+		touch("data/output/{mouse}/{parcelation}/{filter}/{cond}/{feature}/feature_data.h5"),
+		config = touch("data/output/{mouse}/{parcelation}/{filter}/{cond}/{feature}/conf.yaml"),
 	log:
-		f"data/output/{{mouse}}/{{parcelation}}/{{filter}}/{{cond}}/{{feature}}/feature_calculation.log"
+		"data/output/{mouse}/{parcelation}/{filter}/{cond}/{feature}/feature_calculation.log"
 	conda:
 		"code/environment.yaml"
 	script:
