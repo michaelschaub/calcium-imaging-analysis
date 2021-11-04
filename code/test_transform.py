@@ -59,7 +59,8 @@ mask_path = data_path/"anatomical"/"areaMasks.mat"
 
 trans_params = scipy.io.loadmat(opts_path,simplify_cells=True)['opts']['transParams']
 dorsal_maps = scipy.io.loadmat(dorsal_path ,simplify_cells=True)['dorsalMaps']
-dorsal_masks = scipy.io.loadmat(mask_path ,simplify_cells=True)['areaMasks']
+dorsal_masks = np.asarray(scipy.io.loadmat(mask_path ,simplify_cells=True)['areaMasks'], dtype=np.bool)
+print(dorsal_masks.shape)
 
 svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts))
 
@@ -190,10 +191,14 @@ if len(imgs) > 0:
 #axs[1].imshow(svd.pixel[0,:,:], vmin=-0.003, vmax=0.003)
 
 
+### create mask
+
+mask = np.invert(np.any(dorsal_masks,axis=2))
+
 #Animation
 fig, ax = plt.subplots()
 
-ani = animation.ArtistAnimation(fig, [[ax.imshow(i, animated=True, vmin=-0.05, vmax=0.05)] for i in anatomical.pixel[:100,:,:dorsal_w]], interval=int(1000/5), blit=True,
+ani = animation.ArtistAnimation(fig, [[ax.imshow(np.ma.array(i,mask=mask).filled(np.nan), animated=True, vmin=-0.05, vmax=0.05)] for i in anatomical.pixel[:100,:,:dorsal_w]], interval=int(1000/5), blit=True,
                                 repeat_delay=1000)
 
 plt.show()
