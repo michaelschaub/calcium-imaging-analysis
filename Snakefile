@@ -64,10 +64,10 @@ rule conditions:
 	input:
 		"data/output/{mouse}/{parcelation}/{filter}/filtered_data.h5"
 	output:
-		touch("data/output/{mouse}/{parcelation}/{filter}/{cond}/conditional_data.h5"),
-		config = touch("data/output/{mouse}/{parcelation}/{filter}/{cond}/conf.yaml"),
+		"data/output/{mouse}/{parcelation}/{filter}/{cond}/conditional_data.h5",
+		config = "data/output/{mouse}/{parcelation}/{filter}/{cond}/conf.yaml",
 	params:
-		conditons = lambda wildcards : [condition_dicts[wildcards["cond"]]]
+		conditions = lambda wildcards : [condition_dicts[wildcards["cond"]]]
 	log:
 		"data/output/{mouse}/{parcelation}/{filter}/{cond}/conditionals.log"
 	conda:

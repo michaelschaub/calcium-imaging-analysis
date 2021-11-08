@@ -364,6 +364,12 @@ class ConditionalData:
         else:
             self._data = [ data.get_conditional(cond) for cond in conditions ]
 
+    def keys(self):
+        if isinstance( self._data, dict ):
+            return self._data.keys()
+        else:
+            return range(len(self._data))
+
     def __getitem__(self, keys):
         if not isinstance(keys, tuple):
             keys = (keys, slice(None, None, None))

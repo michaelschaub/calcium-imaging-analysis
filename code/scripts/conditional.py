@@ -7,3 +7,11 @@ from utils import snakemake_tools
 snakemake_tools.redirect_to_log(snakemake)
 snakemake_tools.save_conf(snakemake, sections=["entry","parcelation","prefilters","conditions"])
 
+from data import DecompData
+
+conditions = snakemake.params["conditions"]
+data = DecompData.load(snakemake.input[0])
+data.conditions = conditions
+
+for cond, file in zip(data.conditions.keys(), snakemake.output[:-1]):
+    data.conditions[cond].save(file)
