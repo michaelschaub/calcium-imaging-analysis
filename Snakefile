@@ -79,8 +79,8 @@ rule feature_calculation:
 	input:
 		"data/output/{mouse}/{parcelation}/{filter}/{cond}/conditional_data.h5"
 	output:
-		touch("data/output/{mouse}/{parcelation}/{filter}/{cond}/{feature}/feature_data.h5"),
-		config = touch("data/output/{mouse}/{parcelation}/{filter}/{cond}/{feature}/conf.yaml"),
+		"data/output/{mouse}/{parcelation}/{filter}/{cond}/{feature}/feature_data.h5",
+		config = "data/output/{mouse}/{parcelation}/{filter}/{cond}/{feature}/conf.yaml",
 	log:
 		"data/output/{mouse}/{parcelation}/{filter}/{cond}/{feature}/feature_calculation.log"
 	conda:

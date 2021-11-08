@@ -8,7 +8,10 @@ rule_conf:
   conditions:
     {}
   feature_calculation:
-    {}
+    base_start : 15
+    stim_start : 30
+    stim_stop : 75
+    max_components : 50
 
 branch_opts:
   mouses:
