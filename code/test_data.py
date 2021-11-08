@@ -24,15 +24,19 @@ from features import Means, Raws
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-plt_mode = "raw_z_score" # should be from ["mean", "z_score", "raw", "raw_z_score"]
-plt_mode = "raw" # should be from ["mean", "z_score", "raw", "raw_z_score"]
+plt_mode = "raw_z_score" # should be from ["mean", "z_score", "raw", "raw_z_score", None]
+plt_mode = "raw"
 raw_course_graining = 1
 animation_slowdown = 1
 
+save_feat = True
+load_feat = True
+
 force_extraction = False
 
+
 data_path = pathlib.Path(__file__).parent.parent/'data'
-svd_path = data_path/'output/GN06/SVD/svd_data.h5'
+svd_path = data_path/'output/GN06/SVD/data.h5'
 if (not svd_path.exists()) or force_extraction:
     if (not (data_path/'input/extracted_data.pkl').exists()) or force_extraction:
         # load behavior data
@@ -53,9 +57,10 @@ if (not svd_path.exists()) or force_extraction:
     svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts) )
     svd.save(str(svd_path))
 else:
-    svd = DecompData.load(str(svd_path))
-    print("Loaded DecompData object.")
+    svd = DecompData.load(svd_path)
+    print(f"Loaded DecompData object from '{str(svd_path)}'.")
 
+print(f"SVD is saved at {svd.savefile}")
 
 trial_preselection = ((svd.n_targets == 6) & (svd.n_distractors == 0) &
                       (svd.auto_reward == 0) & (svd.both_spouts == 1))
@@ -66,6 +71,9 @@ svd_pre = svd[ trial_preselection ]
 
 modality_keys = ['visual', 'tactile', 'vistact']
 target_side_keys = ['right', 'left']
+
+save_files = [ [ data_path/f"output/{plt_mode}_{mod}_{side}.h5" for side in target_side_keys ] for mod in modality_keys ]
+data_save_file = data_path/f"output/data.h5"
 
 if plt_mode in ["mean", "z_score"]:
 
@@ -84,10 +92,19 @@ if plt_mode in ["mean", "z_score"]:
 
             # calculate either the mean over trials or the z_score
             if plt_mode == "mean":
-                # average over all frames, if loaded accordingly
-                #Vc_mean = selected_frames.temporals_flat.mean(axis=0)
-                #Vc_baseline_mean = baseline_frames.temporals_flat.mean(axis=0)
-                frames_corrected = Means(selected_frames - Means( baseline_frames ))
+
+                if load_feat and save_files[modality_id][target_side].exists():
+                    frames_corrected = Means.load(save_files[modality_id][target_side])
+                    print(f"Loaded {frames_corrected._savefile}")
+                else:
+                    # average over all frames, if loaded accordingly
+                    #Vc_mean = selected_frames.temporals_flat.mean(axis=0)
+                    #Vc_baseline_mean = baseline_frames.temporals_flat.mean(axis=0)
+                    frames_corrected = Means.create(selected_frames - Means.create( baseline_frames ))
+
+                    if save_feat:
+                        frames_corrected.save(save_files[modality_id][target_side], data_file=data_save_file)
+                        print(f"Saved into {frames_corrected._savefile}")
 
                 """
                 Visualization:
@@ -99,7 +116,6 @@ if plt_mode in ["mean", "z_score"]:
                 #print(average_frame.shape)
                 print("averages")
                 average_frame = frames_corrected.mean.pixel[0,:,:]
-                print(average_frame.shape)
 
                 # plot
                 im = ax[target_side, modality_id].imshow(average_frame, vmin=-0.02, vmax=0.02)
@@ -137,6 +153,7 @@ if plt_mode in ["mean", "z_score"]:
 elif plt_mode in ["raw", "raw_z_score" ]:
     for modality_id in range(3):
         for target_side in range(2):
+            print(f"{modality_keys[modality_id]}, {target_side_keys[target_side]}")
             # get the trials to use
             selected_trials = ((svd_pre.modality == modality_id) & (svd_pre.target_side_left == target_side))
 
@@ -147,13 +164,22 @@ elif plt_mode in ["raw", "raw_z_score" ]:
             baseline_frames = svd_pre[ selected_trials, 15:30 ]
 
             if plt_mode == "raw":
-                #frames_corrected = Raws(selected_frames)
-                frames_corrected = Raws(selected_frames - Means( baseline_frames ))
+                if load_feat and save_files[modality_id][target_side].exists():
+                    frames_corrected = Raws.load(save_files[modality_id][target_side])
+                    print(f"Loaded {frames_corrected._savefile}")
+                else:
+                    #frames_corrected = Raws.create(selected_frames)
+                    frames_corrected = Raws.create(selected_frames - Means.create( baseline_frames ))
+
+                    if save_feat:
+                        frames_corrected.save(save_files[modality_id][target_side], data_file=data_save_file)
+                        print(f"Saved into {frames_corrected._savefile}")
+
                 plot_frames = frames_corrected.mean.pixel[:,:,:]
             else:
-                frames_corrected = Raws(selected_frames - Means( baseline_frames ))
+                frames_corrected = Raws.create(selected_frames - Means.create( baseline_frames ))
                 average_frames = frames_corrected.mean.pixel[:,:,:]
-                baseline_frames = Means( baseline_frames ).pixel[:,:,:]
+                baseline_frames = Means.create( baseline_frames ).pixel[:,:,:]
                 plot_frames = average_frames / baseline_frames.std()
 
             """
@@ -178,5 +204,7 @@ elif plt_mode in ["raw", "raw_z_score" ]:
                                 frames=math.ceil(plot_frames.shape[0]/cg), interval=inter, repeat=True)
             plt.show()
 
+elif plt_mode is None:
+    pass
 else:
     raise ValueError("plt_mode not known")

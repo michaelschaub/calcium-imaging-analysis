@@ -1,0 +1,40 @@
+rule_conf:
+  entry:
+    {}
+  parcelation:
+    {}
+  prefilters:
+    {}
+  conditions:
+    {}
+  feature_calculation:
+    base_start : 15
+    stim_start : 30
+    stim_stop : 75
+    max_components : 30
+
+branch_opts:
+  mouses:
+    - GN06
+  dates:
+    - 2021-01-20_10-15-16
+  parcelations:
+    - SVD
+  filters:
+    - All
+
+conditional_opts:
+  sides:
+    - left
+    - right
+  modalities:
+    - visual
+    - tactile
+    - vistact
+
+features:
+  - mean
+  - covariance
+  - moup
+
+different_config_inputs: 0

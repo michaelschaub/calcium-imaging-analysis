@@ -3,12 +3,14 @@ from abc import ABC, abstractmethod, abstractproperty
 import numpy as np
 import pandas as pd
 import h5py
+import pathlib
 
 #For BrainAlignment
 import scipy.io, scipy.ndimage
 
 import sys
 
+from loading import reproducable_hash, load_h5, save_h5
 
 class Data(ABC):
     @abstractmethod
@@ -33,9 +35,11 @@ class Data(ABC):
             b_starts = None
         return a_temps, b_temps, notNone(a_df,b_df), notNone(a_spats, b_spats), notNone(a_starts, b_starts)
 
+    LOADED_DATA = {}
+
 
 class DecompData(Data):
-    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, cond_filter=None, trans_params=None):
+    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, cond_filter=None, trans_params=None, savefile=None, read_only=True):
         assert len(df) != trial_starts.shape[0]-1, (
             f"DataFrame df and trial_starts do not have matching length ({len(df)} != {len(trial_starts)})\n\t(maybe remove last entry?)")
         assert len(df) == trial_starts.shape[0], (
@@ -48,85 +52,41 @@ class DecompData(Data):
         if cond_filter is None:
             cond_filter = []
         self.conditions = cond_filter  # DecompData.Conditions(self, cond_filter)
+        self._savefile = savefile
 
-    def save(self, file, temps_file=None, spats_file=None, starts_file=None, df_label="df", temps_label="temps", spats_label="spats", starts_label="starts" ):
-        self._df.to_hdf(file, df_label, "w")
-        h5_file = h5py.File(file, "a")
-        if temps_file is None:
-            temps = h5_file.create_dataset(temps_label, data=self._temps)
-        else:
-            with h5py.File(temps_file, "w") as h5_temps:
-                temps = h5_temps.create_dataset(temps_label, data=self._temps)
-            h5_file.attrs["temps_file"] = temps_file
-        h5_file.attrs["temps_hash"] = self.temps_hash
+        if read_only:
+            self._temps.flags.writeable = False
+            self._spats.flags.writeable = False
+            self._starts.flags.writeable = False
 
-        if spats_file is None:
-            spats = h5_file.create_dataset(spats_label, data=self._spats)
-        else:
-            with h5py.File(spats_file, "w") as h5_spats:
-                spats = h5_spats.create_dataset(spats_label, data=self._spats)
-            h5_file.attrs["spats_file"] = spats_file
-        h5_file.attrs["spats_hash"] = self.spats_hash
 
-        if starts_file is None:
-            starts = h5_file.create_dataset(starts_label, data=self._starts)
-        else:
-            with h5py.File(starts_file, "w") as h5_starts:
-                starts = h5_starts.create_dataset(starts_label, data=self._starts)
-            h5_file.attrs["starts_file"] = starts_file
-        h5_file.attrs["starts_hash"] = self.starts_hash
+    def save(self, file, temps_file=None, spats_file=None, starts_file=None, temps_label="temps", spats_label="spats", starts_label="starts" ):
+        h5_file = save_h5( self, file, df=self._df,
+                            attributes=[self._temps, self._spats, self._starts],
+                            attr_files=[temps_file, spats_file, starts_file ],
+                            labels=[temps_label, spats_label, starts_label ],
+                            hashes=[self.df_hash, self.temps_hash, self.spats_hash, self.starts_hash ] )
+        self._savefile = file
 
-    def load(file, temps_file=None, spats_file=None, starts_file=None, df_label="df", temps_label="temps", spats_label="spats", starts_label="starts"):
-        df = pd.read_hdf(file, df_label)
-        h5_file = h5py.File(file, "r")
-        if temps_file is None:
-            if temps_label in h5_file:
-                temps = np.array(h5_file[temps_label])
-            elif "temps_file" in h5_file.attrs:
-                with h5py.File(h5_file.attrs["temps_file"], "r") as h5_temps:
-                    temps = np.array(h5_temps[temps_label])
-                if "temps_hash" in h5_file.attrs and h5_file.attrs["temps_hash"] != hash(temps.data.tobytes()):
-                    warnings.warn("Component hashes do not match", Warning)
-            else:
-                raise ValueError
+    @classmethod
+    def load(Class, file, temps_file=None, spats_file=None, starts_file=None, df_label="df", temps_label="temps", spats_label="spats", starts_label="starts", data_hash=None, try_loaded=False):
+        if try_loaded and data_hash is not None and data_hash in Data.LOADED_DATA:
+            data = Data.LOADED_DATA[data_hash]
         else:
-            with h5py.File(temps_file, "r") as h5_temps:
-                temps = np.array(h5_temps[temps_label])
-            if "temps_hash" in h5_file.attrs and h5_file.attrs["temps_hash"] != hash(temps.data.tobytes()):
-                warnings.warn("Component hashes do not match", Warning)
+            _, df, temps, spats, starts = load_h5( file,
+                                attr_files=[temps_file, spats_file, starts_file ],
+                                labels=[temps_label, spats_label, starts_label ])
+            data = Class(df, temps, spats, starts, savefile=file)
+            Data.LOADED_DATA[data.hash] = data
+        return data
 
-        if spats_file is None:
-            if spats_label in h5_file:
-                spats = np.array(h5_file[spats_label])
-            elif "spats_file" in h5_file.attrs:
-                with h5py.File(h5_file.attrs["spats_file"], "r") as h5_spats:
-                    spats = np.array(h5_spats[spats_label])
-                if "spats_hash" in h5_file.attrs and h5_file.attrs["spats_hash"] != hash(spats.data.tobytes()):
-                    warnings.warn("Feature hashes do not match", Warning)
-            else:
-                raise ValueError
-        else:
-            with h5py.File(spats_file, "r") as h5_spats:
-                spats = np.array(h5_spats[spats_label])
-            if "spats_hash" in h5_file.attrs and h5_file.attrs["spats_hash"] != hash(spats.data.tobytes()):
-                warnings.warn("spatials hashes do not match", Warning)
+    @property
+    def hash(self):
+        return hash( (self.df_hash, self.temps_hash, self.spats_hash, self.starts_hash) )
 
-        if starts_file is None:
-            if starts_label in h5_file:
-                starts = np.array(h5_file[starts_label])
-            elif "starts_file" in h5_file.attrs:
-                with h5py.File(h5_file.attrs["starts_file"], "r") as h5_starts:
-                    starts = np.array(h5_starts[starts_label])
-                if "starts_hash" in h5_file.attrs and h5_file.attrs["starts_hash"] != hash(starts.data.tobytes()):
-                    warnings.warn("starts hashes do not match", Warning)
-            else:
-                raise ValueError
-        else:
-            with h5py.File(starts_file, "r") as h5_starts:
-                starts = np.array(h5_starts[starts_label])
-            if "starts_hash" in h5_file.attrs and h5_file.attrs["starts_hash"] != hash(starts.data.tobytes()):
-                warnings.warn("starts hashes do not match", Warning)
-        return DecompData(df, temps, spats, starts)
+    @property
+    def df_hash(self):
+        return reproducable_hash(self._df)
 
     #Auslagern
     def align_spatials(self, spatials, trans_params):
@@ -198,15 +158,38 @@ class DecompData(Data):
 
     @property
     def temps_hash(self):
-        return hash(self._temps.data.tobytes())
+        return reproducable_hash(self._temps)
 
     @property
     def spats_hash(self):
-        return hash(self._spats.data.tobytes())
+        return reproducable_hash(self._spats)
 
     @property
     def starts_hash(self):
-        return hash(self._starts.data.tobytes())
+        return reproducable_hash(self._starts)
+
+    def check_hashes(self, hashes, warn=True):
+        if hash(tuple(hashes)) == self.hash:
+            return True
+        elif warn:
+            if hashes[0] is not None and hashes[0] != self.df_hash:
+                warnings.warn("df hashes do not match", Warning)
+            if hashes[1] is not None and hashes[1] != self.temps_hash:
+                warnings.warn("temps hashes do not match", Warning)
+            if hashes[2] is not None and hashes[2] != self.spats_hash:
+                warnings.warn("spats hashes do not match", Warning)
+            if hashes[3] is not None and hashes[3] != self.starts_hash:
+                warnings.warn("starts hashes do not match", Warning)
+        return False
+
+    @property
+    def savefile(self):
+        if (not self._savefile is None and pathlib.Path(self._savefile).is_file()):
+            h5_file = h5py.File(self._savefile, "r")
+            #TODO: since hashes are not reproducable yet skip check
+            if True or self.check_hashes([ h5_file.attrs[f"{a}_hash"] for a in ["df","temps","spats","starts"] ]):#, warn=False):
+                return self._savefile
+        return None
 
     @property
     def n_components(self):
@@ -304,18 +287,17 @@ class DecompData(Data):
         return data
 
     def __getattr__(self, key):
-        # if key in self._df.keys():
-        return getattr(self._df, key)
-
-        # else:
-        # raise AttributeError
+        try:
+            return getattr(self._df, key)
+        except AttributeError:
+            raise AttributeError(f"'{type(self).__name__}' object has no attribute '{key}'") from None
 
     def __len__(self):
         return self._df.__len__()
 
-    # Returns filtered conditions
     @property
     def conditions(self):
+        '''Returns filtered conditions'''
         return self._conditional
 
     @conditions.setter
@@ -323,9 +305,9 @@ class DecompData(Data):
         self._cond_filters = conditions
         self._conditional = ConditionalData( self, conditions )
 
-    # Returns conditions filter
     @property
     def condition_filters(self):
+        '''Returns conditions filter'''
         return self._cond_filters
 
     @condition_filters.setter  # just another interface
@@ -363,6 +345,12 @@ class ConditionalData:
             self._data = { key : data.get_conditional(cond) for key, cond in conditions.items() }
         else:
             self._data = [ data.get_conditional(cond) for cond in conditions ]
+
+    def keys(self):
+        if isinstance( self._data, dict ):
+            return self._data.keys()
+        else:
+            return range(len(self._data))
 
     def __getitem__(self, keys):
         if not isinstance(keys, tuple):
