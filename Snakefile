@@ -36,7 +36,8 @@ rule pipeline_entry:
 
 rule parcelation:
 	input:
-		"data/output/{mouse}/SVD/data.h5"
+		"data/output/{mouse}/SVD/data.h5",
+		config = "data/output/{mouse}/SVD/conf.yaml",
 	output:
 		"data/output/{mouse}/{parcelation,.+(?!SVD)}/data.h5",
 		config = "data/output/{mouse}/{parcelation}/conf.yaml",
@@ -49,7 +50,8 @@ rule parcelation:
 
 rule prefilters:
 	input:
-		"data/output/{mouse}/{parcelation}/data.h5"
+		"data/output/{mouse}/{parcelation}/data.h5",
+		config = "data/output/{mouse}/{parcelation}/conf.yaml",
 	output:
 		"data/output/{mouse}/{parcelation}/{filter}/filtered_data.h5",
 		config = "data/output/{mouse}/{parcelation}/{filter}/conf.yaml",
@@ -62,7 +64,8 @@ rule prefilters:
 
 rule conditions:
 	input:
-		"data/output/{mouse}/{parcelation}/{filter}/filtered_data.h5"
+		"data/output/{mouse}/{parcelation}/{filter}/filtered_data.h5",
+		config = "data/output/{mouse}/{parcelation}/{filter}/conf.yaml",
 	output:
 		"data/output/{mouse}/{parcelation}/{filter}/{cond}/conditional_data.h5",
 		config = "data/output/{mouse}/{parcelation}/{filter}/{cond}/conf.yaml",
@@ -77,7 +80,8 @@ rule conditions:
 
 rule feature_calculation:
 	input:
-		"data/output/{mouse}/{parcelation}/{filter}/{cond}/conditional_data.h5"
+		"data/output/{mouse}/{parcelation}/{filter}/{cond}/conditional_data.h5",
+		config = "data/output/{mouse}/{parcelation}/{filter}/{cond}/conf.yaml",
 	output:
 		"data/output/{mouse}/{parcelation}/{filter}/{cond}/{feature}/feature_data.h5",
 		config = "data/output/{mouse}/{parcelation}/{filter}/{cond}/{feature}/conf.yaml",

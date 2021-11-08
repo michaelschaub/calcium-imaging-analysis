@@ -11,7 +11,7 @@ rule_conf:
     base_start : 15
     stim_start : 30
     stim_stop : 75
-    max_components : 50
+    max_components : 30
 
 branch_opts:
   mouses:
@@ -34,3 +34,7 @@ conditional_opts:
 
 features:
   - mean
+  - covariance
+  - moup
+
+different_config_inputs: 0
