@@ -24,6 +24,8 @@ rule pipeline_entry:
 				for date in dates ],
 		Vc	= [ f"data/input/{{mouse}}/{date}/SVD_data/Vc.mat"
 				for date in dates ],
+		trans_params = [ f"data/input/{{mouse}}/{date}/SVD_data/opts.mat"
+				  for date in dates ],
 	output:
 		"data/output/{mouse}/SVD/data.h5",
 		config = "data/output/{mouse}/SVD/conf.yaml",
