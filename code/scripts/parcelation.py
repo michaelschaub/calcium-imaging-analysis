@@ -9,6 +9,7 @@ from decomposition import anatomical_parcellation
 
 # redirect std_out to log file
 snakemake_tools.redirect_to_log(snakemake)
+snakemake_tools.check_conf(snakemake, sections=["entry"])
 snakemake_tools.save_conf(snakemake, sections=["entry","parcelation"])
 
 
