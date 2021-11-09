@@ -8,13 +8,24 @@ dependencies:
   # Data handling
   - numpy>=1.21
   - pandas>=1.3
-  - h5py>=3.4
+  #- scipy
+
+  #- h5py=2.8 #or higher for non windows
   # Learning
   - scikit-learn>=1.0
   # Plotting and visualization
   - matplotlib>=3.4
   - tqdm>=4.62
+  - hdf5
+  - pytables
+
   - pip:
-    - tables>=3.6 # requiremnt for saving and loading pandas.DataFrame
+    - h5py # conda h5py doesn't work for me
+    #- tables
+    #- tables>=3.6 # requiremnt for saving and loading pandas.DataFrame
     # Models
     - pyMou@git+https://github.com/mb-BCA/pyMOU.git@master
+    - scipy
+    #- wheel
+    #- pandas
+prefix: E:\Anaconda\envs\calcium_imaging_analysis

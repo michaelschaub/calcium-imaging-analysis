@@ -49,6 +49,11 @@ class DecompData(Data):
             cond_filter = []
         self.conditions = cond_filter  # DecompData.Conditions(self, cond_filter)
 
+    #Used for parcellations
+    def update(self,temporal_comps, spatial_comps):
+        self._temps = temporal_comps
+        self._spats = spatial_comps
+
     def save(self, file, temps_file=None, spats_file=None, starts_file=None, df_label="df", temps_label="temps", spats_label="spats", starts_label="starts" ):
         self._df.to_hdf(file, df_label, "w")
         h5_file = h5py.File(file, "a")

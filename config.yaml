@@ -16,7 +16,7 @@ branch_opts:
   dates:
     - 2021-01-20_10-15-16
   parcelations:
-    - SVD
+    - anatomical
   filters:
     - All
 
