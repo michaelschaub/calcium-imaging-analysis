@@ -11,4 +11,9 @@ All files in this folder will be ignored by git. Save changes in the datasets wh
       -> filter('condition')
    
 3. Analyse ->
-   1. 
+
+
+Info:
+to use envs with Anaconda on Windows you need to:
+   -download the buidling wheels for tables und h5py from here https://www.lfd.uci.edu/~gohlke/pythonlibs/
+   -installing through pip leads to errors in other modules

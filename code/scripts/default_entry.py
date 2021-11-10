@@ -7,6 +7,7 @@ from utils import snakemake_tools
 snakemake_tools.redirect_to_log(snakemake)
 snakemake_tools.save_conf(snakemake, sections=["entry"])
 
+import tables
 import numpy as np
 import h5py
 from pathlib import Path

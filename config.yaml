@@ -37,4 +37,12 @@ features:
   - covariance
   - moup
 
+decode_opts:
+  k_folds: 5
+  decoders:
+    - MLR
+    - 1NN
+    - LDA
+    - RF
+
 different_config_inputs: 0

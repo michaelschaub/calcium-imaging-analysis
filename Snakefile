@@ -17,6 +17,9 @@ condition_dicts	= { f"{side}_{modal}" : {"modality" : m, "target_side_left" : s}
 
 features	= config["features"]
 
+decoders = config["decode_opts"]["decoders"]
+k_folds = config["decode_opts"]["k_folds"]
+
 
 rule pipeline_entry:
 	input:
@@ -101,12 +104,25 @@ rule decoding:
 		touch("data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/decoder_model.h5"),
 		touch("data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/decoder_perf.h5"),
 		config = touch("data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/conf.yaml"),
+	params:
+		conds = conditions,
+		reps = k_folds,
 	log:
 	   "data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/decoding.log",
 	conda:
 		"code/environment.yaml"
 	script:
 		"code/scripts/decoding.py"
+
+rule all_decode:
+	input:
+		[ f"data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/decoder_model.h5"
+				for mouse in mouses
+				for parcelation in parcelations
+				for filter in filters
+				for cond in conditions
+				for feature in features
+		  		for decoder in decoders]
 
 rule all:
 	input:
