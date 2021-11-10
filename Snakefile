@@ -94,6 +94,20 @@ rule feature_calculation:
 	script:
 		"code/scripts/feature.py"
 
+rule decoding:
+	input:
+		[f"data/output/{{mouse}}/{{parcelation}}/{{filter}}/{cond}/{{feature}}/feature_data.h5" for cond in conditions],
+	output:
+		touch("data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/decoder_model.h5"),
+		touch("data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/decoder_perf.h5"),
+		config = touch("data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/conf.yaml"),
+	log:
+	   "data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/decoding.log",
+	conda:
+		"code/environment.yaml"
+	script:
+		"code/scripts/decoding.py"
+
 rule all:
 	input:
 		[ f"data/output/{mouse}/{parcelation}/{filter}/{cond}/{feature}/feature_data.h5"
