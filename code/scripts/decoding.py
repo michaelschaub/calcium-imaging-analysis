@@ -7,14 +7,16 @@ import sklearn.ensemble as skens
 from sklearn import preprocessing
 from sklearn.model_selection import StratifiedShuffleSplit
 import numpy as np
+import pickle
 
 
 from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).parent.parent.absolute()))
-from utils import snakemake_tools
 
+from utils import snakemake_tools
 from features import Features, Means, Raws, Covariances, AutoCovariances, Moup
+from loading import save_h5
 
 # redirect std_out to log file
 snakemake_tools.redirect_to_log(snakemake)
@@ -66,15 +68,22 @@ scaler = preprocessing.StandardScaler().fit( data )
 data = scaler.transform(data)
 cv_split = cv.split(data, labels)
 perf = np.zeros((rep))
+decoders = []
 
 ### Train & Eval
 for i, (train_index, test_index) in enumerate(cv_split):
     decoder.fit(data[train_index,:],labels[train_index])
     perf[i] = decoder.score(data[test_index,:],labels[test_index])
+    decoders.append(decoder)
 
+print(perf)
+print(decoder)
 
 #Save outputs
+#save_h5(perf, snakemake.output[1]) can't load with corresponding load function
+with open(snakemake.output[1], 'wb') as f:
+    pickle.dump(perf, f)
 
-# TODO
-model_path = snakemake.output[0]
-perf_path = snakemake.output[1]
+
+with open(snakemake.output[0], 'wb') as f:
+    pickle.dump(decoders, f)

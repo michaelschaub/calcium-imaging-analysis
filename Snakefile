@@ -101,8 +101,8 @@ rule decoding:
 	input:
 		[f"data/output/{{mouse}}/{{parcelation}}/{{filter}}/{cond}/{{feature}}/feature_data.h5" for cond in conditions],
 	output:
-		touch("data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/decoder_model.h5"),
-		touch("data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/decoder_perf.h5"),
+		touch("data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/decoder_model.pkl"),
+		touch("data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/decoder_perf.pkl"),
 		config = touch("data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/conf.yaml"),
 	params:
 		conds = conditions,
@@ -116,7 +116,7 @@ rule decoding:
 
 rule all_decode:
 	input:
-		[ f"data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/decoder_model.h5"
+		[ f"data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/decoder_model.pkl"
 				for mouse in mouses
 				for parcelation in parcelations
 				for filter in filters
