@@ -114,6 +114,19 @@ rule decoding:
 	script:
 		"code/scripts/decoding.py"
 
+rule plot_performance:
+	input:
+		[f"data/output/{{mouse}}/{{parcelation}}/{{filter}}/decoder/{{feature}}/{decoder}/decoder_perf.pkl" for decoder in decoders],
+	output:
+		touch("data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/plots/performance.png"),
+	params:
+		conds=conditions,
+		decoders=decoders,
+	conda:
+		 "code/environment.yaml"
+	script:
+		  "code/scripts/plot_performance.py"
+
 rule all_decode:
 	input:
 		[ f"data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/decoder_model.pkl"
@@ -123,6 +136,15 @@ rule all_decode:
 				for cond in conditions
 				for feature in features
 		  		for decoder in decoders]
+
+rule all_plots:
+	input:
+		 [ f"data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/plots/performance.png"
+			   for mouse in mouses
+			   for parcelation in parcelations
+			   for filter in filters
+			   for cond in conditions
+			   for feature in features]
 
 rule all:
 	input:
