@@ -18,14 +18,13 @@ for path in snakemake.input:
 decoders = snakemake.params['decoders']
 conditions = snakemake.params['conds']
 
-plt.figure()
+fig=plt.figure()
 plt.suptitle("Decoding performance")
 violin_plts = []
-
 colors = cm.get_cmap('Accent',len(decoders)) #[np.arange(0,len(decoders),1)]
 
 for i,decoder in enumerate(decoders):
-    violin_plts.append(plots.colored_violinplot(perf[i], positions=np.arange(1) + ((i+1)*1/(len(decoders)+1))-0.5, widths=[1/(len(decoders)+1)], color=colors(i/len(decoders))))
+    violin_plts.append(plots.colored_violinplot(perf[i], positions=np.arange(1) + ((i+1)*1/(len(decoders)+1))-0.5, widths=[1/(len(decoders)+2)], color=colors(i/len(decoders))))
 
 
 plt.legend( [ v['bodies'][0] for v in violin_plts], decoders )
@@ -36,3 +35,7 @@ plt.xticks(range(1), [snakemake.wildcards["feature"]])
 
 
 plt.savefig( snakemake.output[0] )
+
+
+with open(snakemake.output[1], 'wb') as f:
+    pickle.dump(fig, f)
