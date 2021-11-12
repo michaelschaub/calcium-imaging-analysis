@@ -168,7 +168,13 @@ rule plot:
 		[f"data/output/{mouse}/{parcelation}/{filter}/decoder/performances.png"
 			   for mouse in mouses
 			   for parcelation in parcelations
-			   for filter in filters]
+			   for filter in filters],
+		[ f"data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/plots/performance.png"
+					for mouse in mouses
+					for parcelation in parcelations
+					for filter in filters
+					for cond in conditions
+					for feature in features],
 
 rule all:
 	input:

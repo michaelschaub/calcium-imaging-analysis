@@ -24,6 +24,16 @@ branch_opts:
   filters:
     - All
 
+#Alternative manual conditions should be supported, currently having only left and right with unique modalities not possible e.g.
+# something like (or with strings and we put a corresponding dict in utils to resolve the actual values)
+# conditions:
+#   condition1:
+#     target_side_left:0
+#     modality: 1
+#   condition2:
+#     target_side_left:1
+#     modality: 0
+
 conditional_opts:
   sides:
     - left
