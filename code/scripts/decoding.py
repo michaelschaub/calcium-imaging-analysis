@@ -76,14 +76,11 @@ for i, (train_index, test_index) in enumerate(cv_split):
     perf[i] = decoder.score(data[test_index,:],labels[test_index])
     decoders.append(decoder)
 
-print(perf)
-print(decoder)
 
 #Save outputs
 #save_h5(perf, snakemake.output[1]) can't load with corresponding load function
 with open(snakemake.output[1], 'wb') as f:
     pickle.dump(perf, f)
-
 
 with open(snakemake.output[0], 'wb') as f:
     pickle.dump(decoders, f)

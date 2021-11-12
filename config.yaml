@@ -11,7 +11,7 @@ rule_conf:
     base_start : 15
     stim_start : 30
     stim_stop : 75
-    max_components : 30
+    max_components : 65
 
 branch_opts:
   mouses:
@@ -46,4 +46,4 @@ decode_opts:
     - LDA
     - RF
 
-different_config_inputs: 0
+different_config_inputs: 1
