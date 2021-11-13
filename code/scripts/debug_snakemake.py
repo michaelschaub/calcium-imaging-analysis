@@ -8,6 +8,7 @@ snakemake_tools.redirect_to_log(snakemake)
 snakemake_tools.save_conf(snakemake, sections=[])
 
 print("snakemake:", dir(snakemake))
+print("script_dir", snakemake.scriptdir)
 print("input:", snakemake.input)
 print("output:", snakemake.output)
 print("log:", snakemake.log)

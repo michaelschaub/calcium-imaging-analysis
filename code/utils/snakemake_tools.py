@@ -26,7 +26,7 @@ def match_conf(snakemake, sections):
     with open( snakemake.input["config"], 'r') as conf_file:
         config = yaml.safe_load(conf_file)
     for s in sections:
-        if config[s] != snakemake.config["rule_conf"][s]:
+        if s in config and config[s] != snakemake.config["rule_conf"][s]:
             return False
     return True
 

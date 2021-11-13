@@ -48,7 +48,6 @@ conditional_opts:
 features:
   - mean
   - covariance
-  - autocovariance
   - moup
 
 decode_opts:
