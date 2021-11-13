@@ -14,11 +14,13 @@ import warnings
 import sys
 sys.path.append(str(Path(__file__).parent.parent.absolute()))
 
-from loading import load_task_data_as_pandas_df #import extract_session_data_and_save
+from loading import load_task_data_as_pandas_df, alignment #import extract_session_data_and_save
 from data import DecompData
 
+
 files_Vc = snakemake.input["Vc"]
-task_files =  snakemake.input["tasks"]
+task_files = snakemake.input["tasks"]
+trans_paths = snakemake.input["trans_params"]
 
 ### should definitly be reworked ###
 
@@ -37,12 +39,17 @@ trial_starts = []
 Vc = []
 U = []
 start = 0
-for file_Vc in files_Vc:
+for file_Vc,trans_path in zip(files_Vc,trans_paths):
     f = h5py.File(file_Vc, 'r')
+
+    #Aligns spatials for each date with respective trans_params
+    alignend_U = alignment.align_spatials_path(np.array(f["U"]),trans_path)
+    U.append(alignend_U)
+
+
     frameCnt = np.array(f['frameCnt'])
     Vc.append(np.array(f["Vc"]))
-    U.append(np.array(f["U"]))
-    assert (U[-1] == U[0]).all(), "Combining different dates with different Compositions is not yet supported"
+    #assert (U[-1] == U[0]).all(), "Combining different dates with different Compositions is not yet supported"
     trial_starts.append(np.cumsum(frameCnt[:-1, 1]) + start)
     start += Vc[-1].shape[0]
 print("Loaded SVD data")
@@ -51,5 +58,7 @@ trial_starts = np.concatenate( trial_starts )
 Vc = np.concatenate( Vc )
 U = U[0]
 
-svd = DecompData( sessions, Vc, U, trial_starts )
+
+
+svd = DecompData( sessions, Vc, U, trial_starts)
 svd.save( snakemake.output[0] )

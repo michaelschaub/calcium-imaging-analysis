@@ -40,10 +40,12 @@ def anatomical_parcellation(DecompDataObject):
     #svd_segment_mean[svd_segment_mean == np.NAN] = 0
 
     new_temporals = np.tensordot(DecompDataObject.temporals_flat, svd_segment_mean, 1)
-    new_spatial = spatials
-    print(new_temporals.shape)
+    new_spatials = spatials
+    DecompDataObject.update(new_temporals,new_spatials)
 
-    return new_temporals,new_spatial
+
+    return DecompDataObject
+
     '''
     anatomical_segments = np.zeros((n_segments,h,w))
     anatomical_segments_mean = np.zeros((frames,n_segments))

@@ -8,13 +8,17 @@ dependencies:
   # Data handling
   - numpy>=1.21
   - pandas>=1.3
-  - h5py>=3.4
+  #- h5py=2.8 #doesn't work on win
   # Learning
   - scikit-learn>=1.0
   # Plotting and visualization
   - matplotlib>=3.4
   - tqdm>=4.62
+  - hdf5
+  - pytables
   - pip:
-    - tables>=3.6 # requiremnt for saving and loading pandas.DataFrame
-    # Models
-    - pyMou@git+https://github.com/mb-BCA/pyMOU.git@master
+      - h5py # conda h5py doesn't work for me
+      #- tables>=3.6 #doesn't work on win
+      # Models
+      - pyMou@git+https://github.com/mb-BCA/pyMOU.git@master
+      - scipy

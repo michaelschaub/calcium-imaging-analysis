@@ -59,6 +59,10 @@ class DecompData(Data):
             self._spats.flags.writeable = False
             self._starts.flags.writeable = False
 
+    #Used for parcellations
+    def update(self,temporal_comps, spatial_comps):
+        self._temps = temporal_comps
+        self._spats = spatial_comps
 
     def save(self, file, temps_file=None, spats_file=None, starts_file=None, temps_label="temps", spats_label="spats", starts_label="starts" ):
         h5_file = save_h5( self, file, df=self._df,

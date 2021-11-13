@@ -39,7 +39,7 @@ else:
         sessions = pkl.load(handle)
     print("Loaded pickled data.")
 
-file_path = data_path / "GN06" / Path('2021-01-20_10-15-16/SVD_data/Vc.mat')
+file_path = data_path / "input" / "GN06" / Path('2021-01-20_10-15-16/SVD_data/Vc.mat')
 f = h5py.File(file_path, 'r')
 
 frameCnt = np.array(f['frameCnt'])
@@ -53,7 +53,7 @@ trial_starts = trial_starts[mask]
 ###########################
 
 #include in loading df?
-opts_path = data_path / "GN06" / Path('2021-01-20_10-15-16/SVD_data/opts.mat')
+opts_path = data_path / "input" / "GN06" / Path('2021-01-20_10-15-16/SVD_data/opts.mat')
 dorsal_path = data_path/"anatomical"/"allenDorsalMap.mat"
 mask_path = data_path/"anatomical"/"areaMasks.mat"
 
