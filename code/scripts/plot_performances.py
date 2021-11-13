@@ -7,6 +7,9 @@ from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).parent.parent.absolute()))
 from plotting import plots
+from utils import snakemake_tools
+snakemake_tools.redirect_to_log(snakemake)
+
 
 decoders = snakemake.params['decoders']
 conditions = snakemake.params['conds']

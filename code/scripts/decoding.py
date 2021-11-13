@@ -20,8 +20,8 @@ from loading import save_h5
 
 # redirect std_out to log file
 snakemake_tools.redirect_to_log(snakemake)
-#snakemake_tools.check_conf(snakemake, sections=["entry","parcelation","prefilters"])
-#snakemake_tools.save_conf(snakemake, sections=["entry","parcelation","prefilters","decoder"])
+snakemake_tools.save_conf(snakemake, sections=["entry","parcelation","prefilters","conditions","feature_calculation","decoder"],
+                                        params=['conds','reps'])
 
 ### Load feature for all conditions
 cond_str = snakemake.params['conds']

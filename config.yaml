@@ -12,6 +12,8 @@ rule_conf:
     stim_start : 30
     stim_stop : 75
     max_components : 65
+  decoder:
+    {}
 
 branch_opts:
   mouses:
@@ -46,6 +48,7 @@ conditional_opts:
 features:
   - mean
   - covariance
+  - autocovariance
   - moup
 
 decode_opts:

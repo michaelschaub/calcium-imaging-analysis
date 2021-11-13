@@ -17,9 +17,58 @@ condition_dicts	= { f"{side}_{modal}" : {"modality" : m, "target_side_left" : s}
 
 features	= config["features"]
 
-decoders = config["decode_opts"]["decoders"]
-k_folds = config["decode_opts"]["k_folds"]
+decoders	= config["decode_opts"]["decoders"]
+k_folds 	= config["decode_opts"]["k_folds"]
 
+
+
+###   Output accumulation rules   ###
+
+# The first rule is default
+rule all:
+	input:
+		[f"data/output/{mouse}/{parcelation}/{filter}/decoder/performances.png"
+			   for mouse in mouses
+			   for parcelation in parcelations
+			   for filter in filters],
+		[ f"data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/plots/performance.png"
+					for mouse in mouses
+					for parcelation in parcelations
+					for filter in filters
+					for cond in conditions
+					for feature in features],
+
+rule all_plots:
+	input:
+		 [ f"data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/plots/performance.png"
+			   for mouse in mouses
+			   for parcelation in parcelations
+			   for filter in filters
+			   for cond in conditions
+			   for feature in features]
+
+rule all_decode:
+	input:
+		[ f"data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/decoder_model.pkl"
+				for mouse in mouses
+				for parcelation in parcelations
+				for filter in filters
+				for cond in conditions
+				for feature in features
+				for decoder in decoders]
+
+rule all_features:
+	input:
+		[ f"data/output/{mouse}/{parcelation}/{filter}/{cond}/{feature}/feature_data.h5"
+				for mouse in mouses
+				for parcelation in parcelations
+				for filter in filters
+				for cond in conditions
+				for feature in features ]
+
+
+
+###   Data processing   ###
 
 rule pipeline_entry:
 	input:
@@ -101,9 +150,9 @@ rule decoding:
 	input:
 		[f"data/output/{{mouse}}/{{parcelation}}/{{filter}}/{cond}/{{feature}}/feature_data.h5" for cond in conditions],
 	output:
-		touch("data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/decoder_model.pkl"),
-		touch("data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/decoder_perf.pkl"),
-		config = touch("data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/conf.yaml"),
+		"data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/decoder_model.pkl",
+		"data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/decoder_perf.pkl",
+		config = "data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/conf.yaml",
 	params:
 		conds = conditions,
 		reps = k_folds,
@@ -114,15 +163,21 @@ rule decoding:
 	script:
 		"code/scripts/decoding.py"
 
+
+
+###   Plotting   ###
+
 rule plot_performance:
 	input:
 		[f"data/output/{{mouse}}/{{parcelation}}/{{filter}}/decoder/{{feature}}/{decoder}/decoder_perf.pkl" for decoder in decoders],
 	output:
-		touch("data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/plots/performance.png"),
-		touch("data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/plots/performance.pkl"),
+		"data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/plots/performance.png",
+		"data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/plots/performance.pkl",
 	params:
 		conds=conditions,
 		decoders=decoders,
+	log:
+		"data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/plots/plot_performance.log",
 	conda:
 		 "code/environment.yaml"
 	script:
@@ -130,60 +185,23 @@ rule plot_performance:
 
 rule plot_performances:
 	input:
-		 [f"data/output/{{mouse}}/{{parcelation}}/{{filter}}/decoder/{feature}/{decoder}/decoder_perf.pkl"
+		[f"data/output/{{mouse}}/{{parcelation}}/{{filter}}/decoder/{feature}/{decoder}/decoder_perf.pkl"
 				for feature in features
 		  		for decoder in decoders],
 	output:
-		  touch("data/output/{mouse}/{parcelation}/{filter}/decoder/performances.png"),
+		"data/output/{mouse}/{parcelation}/{filter}/decoder/performances.png",
 	params:
-		  conds=conditions,
-		  decoders=decoders,
-		  features=features,
+		conds=conditions,
+		decoders=decoders,
+		features=features,
+	log:
+		"data/output/{mouse}/{parcelation}/{filter}/decoder/plot_performances.log",
 	conda:
 		 "code/environment.yaml"
 	script:
 		  "code/scripts/plot_performances.py"
 
-rule all_decode:
-	input:
-		[ f"data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/decoder_model.pkl"
-				for mouse in mouses
-				for parcelation in parcelations
-				for filter in filters
-				for cond in conditions
-				for feature in features
-		  		for decoder in decoders]
 
-rule all_plots:
-	input:
-		 [ f"data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/plots/performance.png"
-			   for mouse in mouses
-			   for parcelation in parcelations
-			   for filter in filters
-			   for cond in conditions
-			   for feature in features]
-
-rule plot:
-	input:
-		[f"data/output/{mouse}/{parcelation}/{filter}/decoder/performances.png"
-			   for mouse in mouses
-			   for parcelation in parcelations
-			   for filter in filters],
-		[ f"data/output/{mouse}/{parcelation}/{filter}/decoder/{feature}/plots/performance.png"
-					for mouse in mouses
-					for parcelation in parcelations
-					for filter in filters
-					for cond in conditions
-					for feature in features],
-
-rule all:
-	input:
-		[ f"data/output/{mouse}/{parcelation}/{filter}/{cond}/{feature}/feature_data.h5"
-				for mouse in mouses
-				for parcelation in parcelations
-				for filter in filters
-				for cond in conditions
-				for feature in features ]
 
 ###   legacy tests   ###
 

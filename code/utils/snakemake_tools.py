@@ -9,10 +9,12 @@ def redirect_to_log(snakemake):
     print(f"[{datetime.datetime.now()}] Log of rule {snakemake.rule}")
     return std_out
 
-def save_conf(snakemake, sections, additional_config=None):
+def save_conf(snakemake, sections, params=[], additional_config=None):
     config = {}
     for s in sections:
         config[s] = snakemake.config['rule_conf'][s]
+    for p in params:
+        config[p] = snakemake.params[p]
     config["wildcards"] = dict(snakemake.wildcards)
     if additional_config is not None:
         for key, item in additional_config:
