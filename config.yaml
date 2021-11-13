@@ -11,7 +11,9 @@ rule_conf:
     base_start : 15
     stim_start : 30
     stim_stop : 75
-    max_components : 30
+    max_components : 65
+  decoder:
+    {}
 
 branch_opts:
   mouses:
@@ -20,8 +22,19 @@ branch_opts:
     - 2021-01-20_10-15-16
   parcelations:
     - anatomical
+    - SVD
   filters:
     - All
+
+#Alternative manual conditions should be supported, currently having only left and right with unique modalities not possible e.g.
+# something like (or with strings and we put a corresponding dict in utils to resolve the actual values)
+# conditions:
+#   condition1:
+#     target_side_left:0
+#     modality: 1
+#   condition2:
+#     target_side_left:1
+#     modality: 0
 
 conditional_opts:
   sides:
@@ -37,4 +50,12 @@ features:
   - covariance
   - moup
 
-different_config_inputs: 0
+decode_opts:
+  k_folds: 5
+  decoders:
+    - MLR
+    - 1NN
+    - LDA
+    - RF
+
+different_config_inputs: 1

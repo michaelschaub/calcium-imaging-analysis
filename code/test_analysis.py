@@ -76,9 +76,7 @@ if (not svd_path.exists()):
 
     temps, spats = anatomical_parcellation(align_svd)
 
-    anatomical = DecompData(sessions, temps, spats, np.array(trial_starts))
-    anatomical.save(str(ana_path))
-    svd = anatomical
+    svd = anatomical_parcellation(align_svd)
 
 else:
     svd = DecompData.load(str(ana_path))

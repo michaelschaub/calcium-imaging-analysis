@@ -5,8 +5,10 @@ sys.path.append(str(Path(__file__).parent.parent.absolute()))
 from utils import snakemake_tools
 # redirect std_out to log file
 snakemake_tools.redirect_to_log(snakemake)
-snakemake_tools.save_conf(snakemake, sections=["entry"])
 
+snakemake_tools.save_conf(snakemake, sections=["entry","parcelation"]) #fixed a bug as we dont apply parcelation to SVD and then prefilter fails to compare config as it won't contain parcelation
+
+import tables
 import numpy as np
 import h5py
 from pathlib import Path

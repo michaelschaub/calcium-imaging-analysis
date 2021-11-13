@@ -19,8 +19,12 @@ def anatom():
     anatomical = anatomical_parcellation(svd)
     anatomical.save(snakemake.output[0])
 
+def locaNMF():
+    pass
 
-parcelation = {'anatomical': anatom}
+
+parcelation = {'anatomical': anatom,
+               'locaNMF': locaNMF}
 
 
 parcelation[snakemake.wildcards['parcelation']]()
