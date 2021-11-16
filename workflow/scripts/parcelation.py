@@ -1,7 +1,7 @@
 # add code library to path
 from pathlib import Path
 import sys
-sys.path.append(str(Path(__file__).parent.parent.absolute()))
+sys.path.append(str((Path(__file__).parent.parent.parent/"code").absolute()))
 from utils import snakemake_tools
 from data import DecompData
 from decomposition import anatomical_parcellation
@@ -11,6 +11,7 @@ from decomposition import anatomical_parcellation
 snakemake_tools.redirect_to_log(snakemake)
 snakemake_tools.check_conf(snakemake, sections=["entry"])
 snakemake_tools.save_conf(snakemake, sections=["entry","parcelation"])
+start = snakemake_tools.start_timer()
 
 
 
@@ -32,3 +33,5 @@ parcelation[snakemake.wildcards['parcelation']]()
 # only supported in 3.10
 #match snakemake.wildcards['parcelation']:
 #    case "anatomical":
+
+snakemake_tools.stop_timer(start, f"{snakemake.rule}")
