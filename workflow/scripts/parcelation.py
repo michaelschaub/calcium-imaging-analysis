@@ -1,7 +1,7 @@
 # add code library to path
 from pathlib import Path
 import sys
-sys.path.append(str((Path(__file__).parent.parent.parent/"code").absolute()))
+sys.path.append(str((Path(__file__).parent.parent.parent/"calciumimagingtools").absolute()))
 from utils import snakemake_tools
 from data import DecompData
 from decomposition import anatomical_parcellation

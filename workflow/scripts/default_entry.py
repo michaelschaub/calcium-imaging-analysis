@@ -1,7 +1,7 @@
 # add code library to path
 from pathlib import Path
 import sys
-sys.path.append(str((Path(__file__).parent.parent.parent/"code").absolute()))
+sys.path.append(str((Path(__file__).parent.parent.parent/"calciumimagingtools").absolute()))
 from utils import snakemake_tools
 # redirect std_out to log file
 snakemake_tools.redirect_to_log(snakemake)
@@ -15,7 +15,7 @@ import h5py
 from pathlib import Path
 import warnings
 import sys
-sys.path.append(str((Path(__file__).parent.parent.parent/"code").absolute()))
+sys.path.append(str((Path(__file__).parent.parent.parent/"calciumimagingtools").absolute()))
 
 from loading import load_task_data_as_pandas_df, alignment #import extract_session_data_and_save
 from data import DecompData

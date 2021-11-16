@@ -12,7 +12,7 @@ import pickle
 
 from pathlib import Path
 import sys
-sys.path.append(str((Path(__file__).parent.parent.parent/"code").absolute()))
+sys.path.append(str((Path(__file__).parent.parent.parent/"calciumimagingtools").absolute()))
 
 from utils import snakemake_tools
 from features import Features, Means, Raws, Covariances, AutoCovariances, Moup
