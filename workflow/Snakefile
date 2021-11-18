@@ -20,6 +20,14 @@ features	= config["features"]
 decoders	= config["decode_opts"]["decoders"]
 k_folds 	= config["decode_opts"]["k_folds"]
 
+wildcard_constraints:
+	mouse		= r"[a-zA-Z\d_]+",
+	parcellation	= r"[a-zA-Z\d_]+",
+	filter		= r"[a-zA-Z\d_]+",
+	cond		= r"[a-zA-Z\d_]+",
+	feature		= r"[a-zA-Z\d_]+",
+	decoder		= r"[a-zA-Z\d_]+",
+
 
 
 ###   Output accumulation rules   ###
@@ -90,15 +98,21 @@ rule pipeline_entry:
 	script:
 		"scripts/default_entry.py"
 
+def parcellation_input(wildcards):
+	input = {
+		"data"	: "results/{mouse}/SVD/data.h5",
+		"config": "results/{mouse}/SVD/conf.yaml" }
+	input["meta"]	= config["parcellation_opts"]["paths"][wildcards["parcellation"]]
+	return input
+
 rule parcellation:
 	input:
-		"results/{mouse}/SVD/data.h5",
-		config = "results/{mouse}/SVD/conf.yaml",
+		unpack(parcellation_input)
 	output:
-		"results/{mouse}/{parcellation,.+(?!SVD)}/data.h5",
+		"results/{mouse}/{parcellation}/data.h5",
 		config = "results/{mouse}/{parcellation}/conf.yaml",
-	params:
-		meta = lambda wildcards_p: config["parcellation_opts"]["paths"][wildcards_p["parcellation"]]
+	wildcard_constraints:
+		parcellation = "(?!SVD).+"
 	log:
 		"results/{mouse}/{parcellation}/parcellation.log"
 	conda:
