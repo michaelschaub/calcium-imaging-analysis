@@ -8,5 +8,5 @@ results/*
 
 !plots/.gitkeep
 !resources/.gitkeep
-!resources/anatomical/*
+!resources/meta/*
 !results/.gitkeep

@@ -97,6 +97,8 @@ rule parcellation:
 	output:
 		"results/{mouse}/{parcellation,.+(?!SVD)}/data.h5",
 		config = "results/{mouse}/{parcellation}/conf.yaml",
+	params:
+		meta = lambda wildcards_p: config["parcellation_opts"]["paths"][wildcards_p["parcellation"]]
 	log:
 		"results/{mouse}/{parcellation}/parcellation.log"
 	conda:

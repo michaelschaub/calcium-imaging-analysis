@@ -14,7 +14,7 @@ def anatomical_parcellation(DecompDataObject, mask_path=None):
     ### Loading MAT -> move to loading function
     if mask_path is None:
         data_path = Path(__file__).parent.parent.parent/"resources"
-        mask_path = data_path/"anatomical"/"areaMasks.mat"
+        mask_path = data_path/"meta"/"areaMasks.mat"
     spatials = np.asarray(scipy.io.loadmat(mask_path ,simplify_cells=True)['areaMasks'], dtype='bool')
 
     ### Processing (axes are switched)

@@ -17,7 +17,7 @@ start = snakemake_tools.start_timer()
 
 def anatom():
     svd = DecompData.load(snakemake.input[0])
-    anatomical = anatomical_parcellation(svd)
+    anatomical = anatomical_parcellation(svd, snakemake.params["meta"])
     anatomical.save(snakemake.output[0])
 
 def locaNMF():
