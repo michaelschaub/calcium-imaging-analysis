@@ -1,0 +1,24 @@
+name: calcium_imaging_analysis
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.9
+  - pip
+  # Data handling
+  - numpy>=1.21
+  - pandas>=1.3
+  #- h5py=2.8 #doesn't work on win
+  # Learning
+  - scikit-learn>=1.0
+  # Plotting and visualization
+  - matplotlib>=3.4
+  - tqdm>=4.62
+  - hdf5
+  - pytables
+  - pip:
+      - h5py # conda h5py doesn't work for me
+      #- tables>=3.6 #doesn't work on win
+      # Models
+      - pyMou@git+https://github.com/mb-BCA/pyMOU.git@master
+      - scipy

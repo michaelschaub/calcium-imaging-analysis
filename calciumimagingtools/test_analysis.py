@@ -6,6 +6,7 @@ import pickle as pkl
 from pathlib import Path
 from matplotlib import pyplot as plt
 import itertools
+import scipy.io, scipy.ndimage
 
 import sklearn.linear_model as skllm
 import sklearn.neighbors as sklnn
@@ -17,9 +18,7 @@ from sklearn import preprocessing
 from sklearn.model_selection import StratifiedShuffleSplit
 
 #Progress Bar
-#from tqdm.auto import tqdm
-#from tqdm.notebook import tqdm
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from data import DecompData
 
@@ -31,7 +30,7 @@ sys.path.append(Path(__file__).parent)
 from features import Raws,Means, Moup, Covariances, AutoCovariances
 from plotting import plots
 from loading import load_task_data_as_pandas_df
-
+from decomposition import anatomical_parcellation
 
 
 # add missing h5 files here
@@ -41,33 +40,47 @@ missing_task_data = []
 ### New data extraction
 data_path = Path(__file__).parent.parent / Path('data')
 plot_path = Path(__file__).parent.parent / Path('plots')
-if not (data_path/'extracted_data.pkl').exists() :
-    # load behavior data
-    sessions = load_task_data_as_pandas_df.extract_session_data_and_save(root_paths=[data_path], mouse_ids=["GN06"], reextract=False)
-    with open( data_path / 'extracted_data.pkl', 'wb') as handle:
-        pkl.dump(sessions, handle)
+svd_path = data_path/'output/GN06/SVD/data.h5'
+ana_path = data_path/'output/GN06/Anatomical/data.h5'
+if (not svd_path.exists()):
+    if not (data_path/'input'/'extracted_data.pkl').exists() :
+        # load behavior data
+        sessions = load_task_data_as_pandas_df.extract_session_data_and_save(root_paths=[data_path/'input'], mouse_ids=["GN06"], reextract=False)
+        with open( data_path/'input'/'extracted_data.pkl', 'wb') as handle:
+            pkl.dump(sessions, handle)
+    else:
+        # load saved data
+        with open( data_path/'input'/'extracted_data.pkl', 'rb') as handle:
+            sessions = pkl.load(handle)
+        print("Loaded pickled data.")
+
+    file_path = data_path/'input'/"GN06"/Path('2021-01-20_10-15-16/SVD_data/Vc.mat')
+    f = h5py.File(file_path, 'r')
+
+    frameCnt = np.array(f['frameCnt'])
+    trial_starts = np.cumsum(frameCnt[:, 1])[:-1]
+
+    mask = np.ones( len(trial_starts), dtype=bool )
+    mask[missing_task_data] = False
+    trial_starts = trial_starts[mask]
+
+    opts_path = data_path/"input"/"GN06"/Path('2021-01-20_10-15-16/SVD_data/opts.mat')
+    trans_params = scipy.io.loadmat(opts_path,simplify_cells=True)['opts']['transParams']
+    #print(sessions)
+    #print(frameCnt.shape)
+
+    svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts))
+    svd.save(str(svd_path))
+
+    align_svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts), trans_params=trans_params)
+
+    temps, spats = anatomical_parcellation(align_svd)
+
+    svd = anatomical_parcellation(align_svd)
+
 else:
-    # load saved data
-    with open( data_path / 'extracted_data.pkl', 'rb') as handle:
-        sessions = pkl.load(handle)
-    print("Loaded pickled data.")
-
-file_path = data_path / "GN06" / Path('2021-01-20_10-15-16/SVD_data/Vc.mat')
-f = h5py.File(file_path, 'r')
-
-frameCnt = np.array(f['frameCnt'])
-trial_starts = np.cumsum(frameCnt[:, 1])[:-1]
-
-mask = np.ones( len(trial_starts), dtype=bool )
-mask[missing_task_data] = False
-trial_starts = trial_starts[mask]
-
-
-#print(sessions)
-#print(frameCnt.shape)
-
-svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts) )
-
+    svd = DecompData.load(str(ana_path))
+    print("Loaded DecompData object.")
 
 #define different conds
 modal_keys = ['visual', 'tactile', 'vistact']
@@ -101,7 +114,7 @@ print(cond_keys_str)
 #####
 save_outputs = True
 baseline_mode = None  #### basline mode ('mean' / 'zscore' / None)
-comp = 10 ### number componants to use
+comp = 65 ### number componants to use
 n_rep = 10  ### number of repetition
 n_comp_LDA = None #5  ### number of LDA componants (conds -1)
 
@@ -109,19 +122,18 @@ n_comp_LDA = None #5  ### number of LDA componants (conds -1)
 #cond_mean = measurements.mean(svd.conditions[0][30:75,:]) #mean of stimulusframes for first cond
 #features  = ['mean',"mean(-base)","raw","mou"]
 feature_data = {
-
-    #"mean": [Means(svd.conditions[i,:,30:75],max_comps=comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond
-    #"mean(-base)": [Means(svd.conditions[i,:,30:75]-Means(svd.conditions[i,:,15:30]),comp) for i in range(len(svd.conditions))],
-    #"raw": [Raws(svd.conditions[i,:,30:75],comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond,
-    #"Cov": [Covariances(svd.conditions[i,:,30:75],max_comps=comp) for i in tqdm(range(len(svd.conditions)),desc='Conditions')], #mean of stimulusframes for first cond
-    r"Cov($\tau$=0)": [AutoCovariances(svd.conditions[i,:,30:75],max_comps=comp,time_lag_range=[0]) for i in tqdm(range(len(svd.conditions)),desc='Conditions')],
-    #"mou1": [Moup(svd.conditions[i,:,30:75],comp,time_lag=1) for i in range(len(svd.conditions))],
+    "mean": [Means.create(svd.conditions[i,:,30:75],max_comps=comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond
+    #"mean(-base)": [Means.createsvd.conditions[i,:,30:75]-Means.createsvd.conditions[i,:,15:30]),comp) for i in range(len(svd.conditions))],
+    #"raw": [Raws.createsvd.conditions[i,:,30:75],comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond,
+    #"Cov": [Covariances.create(svd.conditions[i,:,30:75],max_comps=comp) for i in tqdm(range(len(svd.conditions)),desc='Conditions')], #mean of stimulusframes for first cond
+    r"Cov($\tau$=0)": [AutoCovariances.create(svd.conditions[i,:,30:75],max_comps=comp,time_lag_range=[0]) for i in tqdm(range(len(svd.conditions)),desc='Conditions')],
+    #"mou1": [Moup.create(svd.conditions[i,:,30:75],comp,time_lag=1) for i in range(len(svd.conditions))],
 }
 
 
-for j in tqdm(range(1,10,1),desc="Features"):
-    feature_data[r"Cov($\tau$="+str(j)+")"] = [AutoCovariances(svd.conditions[i,:,30:75],max_comps=comp, time_lag_range=[j]) for i in tqdm(range(len(svd.conditions)),desc='Conditions')]
-    feature_data[r'Mou($\tau$='+str(j)+")"] = [Moup(svd.conditions[i,:,30:75],max_comps=comp,time_lag=j) for i in tqdm(range(len(svd.conditions)),desc='Conditions')]
+for j in tqdm(range(3,4,1),desc="Features"):
+    feature_data[r"Cov($\tau$="+str(j)+")"] = [AutoCovariances.create(svd.conditions[i,:,30:75],max_comps=comp, time_lag_range=[j]) for i in tqdm(range(len(svd.conditions)),desc='Conditions')]
+    feature_data[r'Mou($\tau$='+str(j)+")"] = [Moup.create(svd.conditions[i,:,30:75],max_comps=comp,time_lag=j) for i in tqdm(range(len(svd.conditions)),desc='Conditions')]
 
 
 features = list(feature_data.keys())
@@ -132,6 +144,11 @@ feature_label = features
 cv = StratifiedShuffleSplit(n_rep, test_size=0.2, random_state=420)
 perf = np.zeros([n_rep, len(features), 4])
 classifiers = {}
+
+##### RFE
+
+
+######
 
 for i_feat, feat in enumerate(tqdm(features,desc="Training classifiers for each features")):
 
@@ -149,6 +166,14 @@ for i_feat, feat in enumerate(tqdm(features,desc="Training classifiers for each 
     data = scaler.transform(data)
 
     cv_split = cv.split(data, labels)
+
+    ###### RFE
+
+
+
+    #####
+
+
 
     c_MLR = skppl.make_pipeline(skppc.StandardScaler(),
                                 skllm.LogisticRegression(C=1, penalty='l2', multi_class='multinomial',
@@ -177,7 +202,7 @@ for i_feat, feat in enumerate(tqdm(features,desc="Training classifiers for each 
     #print(f'\tRepetition {n_rep:>3}/{n_rep}' )
 
 if save_outputs:
-    np.save('perf_tasks.npy', perf)
+    np.save(data_path/'output'/'perf_tasks.npy', perf)
 plt.figure()
 title = ' '.join(["Classifiers Accuracies","for",str(comp),"Components on Condtions:",', '.join(cond_keys_str)]) #str(len(svd.conditions)),"Conditions"])
 plt.suptitle(title)

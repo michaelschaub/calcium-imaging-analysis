@@ -2,11 +2,15 @@ from pathlib import Path
 from PIL import Image
 from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
+import matplotlib.animation as animation
+
 import numpy as np
 import scipy.io, scipy.ndimage
 
 
 from data import DecompData
+from decomposition import anatomical_parcellation
+
 import pickle as pkl
 import h5py
 import sys
@@ -35,7 +39,7 @@ else:
         sessions = pkl.load(handle)
     print("Loaded pickled data.")
 
-file_path = data_path / "GN06" / Path('2021-01-20_10-15-16/SVD_data/Vc.mat')
+file_path = data_path / "input" / "GN06" / Path('2021-01-20_10-15-16/SVD_data/Vc.mat')
 f = h5py.File(file_path, 'r')
 
 frameCnt = np.array(f['frameCnt'])
@@ -49,14 +53,22 @@ trial_starts = trial_starts[mask]
 ###########################
 
 #include in loading df?
-opts_path = data_path / "GN06" / Path('2021-01-20_10-15-16/SVD_data/opts.mat')
+opts_path = data_path / "input" / "GN06" / Path('2021-01-20_10-15-16/SVD_data/opts.mat')
 dorsal_path = data_path/"anatomical"/"allenDorsalMap.mat"
+mask_path = data_path/"anatomical"/"areaMasks.mat"
 
 trans_params = scipy.io.loadmat(opts_path,simplify_cells=True)['opts']['transParams']
 dorsal_maps = scipy.io.loadmat(dorsal_path ,simplify_cells=True)['dorsalMaps']
+dorsal_masks = np.asarray(scipy.io.loadmat(mask_path ,simplify_cells=True)['areaMasks'], dtype=np.bool)
+print(dorsal_masks.shape)
 
 svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts))
+
 align_svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts), trans_params=trans_params)
+
+temps, spats = anatomical_parcellation(align_svd)
+
+anatomical = DecompData( sessions, temps, spats, np.array(trial_starts))
 
 '''
 ###On reference image
@@ -143,18 +155,50 @@ plt.show()
 
 
 '''
+
+
+
 _ , dorsal_w = dorsal_maps['edgeMapScaled'].shape
 spatials_h , _ = align_svd.spatials[0,:,:].shape
 
+print((spatials_h, dorsal_w))
+
 f, axs = plt.subplots(2)
-axs[0].imshow(align_svd.spatials[0,:,:dorsal_w], vmin=0, vmax=0.002, interpolation='none')
+axs[0].imshow(anatomical.pixel[0,:,:dorsal_w], interpolation='none')
 
 edges = dorsal_maps['edgeMapScaled']
+
+
 masked_data = np.ma.masked_where(edges < 1, edges)
 
 
 axs[0].imshow(masked_data[:spatials_h,:], interpolation='none')
 
-axs[1].imshow(svd.spatials[0,:,:], vmin=0, vmax=0.002)
-plt.show()
+imgs = axs[0].get_images()
+if len(imgs) > 0:
+    print(imgs[0].get_clim())
+#######
 
+
+axs[1].imshow(align_svd.pixel[0,:,:dorsal_w],  interpolation='none')
+
+axs[1].imshow(masked_data[:spatials_h,:], interpolation='none')
+
+imgs = axs[1].get_images()
+if len(imgs) > 0:
+    print(imgs[0].get_clim())
+######
+#axs[1].imshow(svd.pixel[0,:,:], vmin=-0.003, vmax=0.003)
+
+
+### create mask
+
+mask = np.invert(np.any(dorsal_masks,axis=2))
+
+#Animation
+fig, ax = plt.subplots()
+
+ani = animation.ArtistAnimation(fig, [[ax.imshow(np.ma.array(i,mask=mask).filled(np.nan), animated=True, vmin=-0.05, vmax=0.05)] for i in anatomical.pixel[:100,:,:dorsal_w]], interval=int(1000/5), blit=True,
+                                repeat_delay=1000)
+
+plt.show()
