@@ -1,7 +1,7 @@
 rule_conf:
   entry:
     {}
-  parcelation:
+  parcellation:
     {}
   prefilters:
     {}
@@ -20,11 +20,15 @@ branch_opts:
     - GN06
   dates:
     - 2021-01-20_10-15-16
-  parcelations:
+  parcellations:
     - anatomical
     - SVD
   filters:
     - All
+
+parcellation_opts:
+  paths:
+    anatomical: resources/meta/areaMasks.mat
 
 #Alternative manual conditions should be supported, currently having only left and right with unique modalities not possible e.g.
 # something like (or with strings and we put a corresponding dict in utils to resolve the actual values)
@@ -48,7 +52,7 @@ conditional_opts:
 features:
   - mean
   - covariance
-  - moup
+
 
 decode_opts:
   k_folds: 5

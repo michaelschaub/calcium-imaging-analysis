@@ -37,3 +37,10 @@ def check_conf(snakemake, sections):
         else:
             warnings.warn("Config used to generate input does not match current config!")
 
+def start_timer():
+    return datetime.datetime.now()
+
+def stop_timer(start, name="Timer"):
+    stop = datetime.datetime.now()
+    delta = stop - start
+    print(f"[{stop}] {name} finished after {delta}")

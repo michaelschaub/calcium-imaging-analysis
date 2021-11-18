@@ -12,7 +12,7 @@ import pickle
 
 from pathlib import Path
 import sys
-sys.path.append(str(Path(__file__).parent.parent.absolute()))
+sys.path.append(str((Path(__file__).parent.parent.parent/"calciumimagingtools").absolute()))
 
 from utils import snakemake_tools
 from features import Features, Means, Raws, Covariances, AutoCovariances, Moup
@@ -20,8 +20,9 @@ from loading import save_h5
 
 # redirect std_out to log file
 snakemake_tools.redirect_to_log(snakemake)
-snakemake_tools.save_conf(snakemake, sections=["entry","parcelation","prefilters","conditions","feature_calculation","decoder"],
+snakemake_tools.save_conf(snakemake, sections=["entry","parcellation","prefilters","conditions","feature_calculation","decoder"],
                                         params=['conds','reps'])
+start = snakemake_tools.start_timer()
 
 ### Load feature for all conditions
 cond_str = snakemake.params['conds']
@@ -84,3 +85,5 @@ with open(snakemake.output[1], 'wb') as f:
 
 with open(snakemake.output[0], 'wb') as f:
     pickle.dump(decoders, f)
+
+snakemake_tools.stop_timer(start, f"{snakemake.rule}")
