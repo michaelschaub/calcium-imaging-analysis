@@ -6,7 +6,6 @@ results/*
 .idea
 .snakemake/*
 
-!data/.gitkeep
 !plots/.gitkeep
 !resources/.gitkeep
 !resources/anatomical/*

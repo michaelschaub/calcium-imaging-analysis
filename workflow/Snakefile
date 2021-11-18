@@ -72,11 +72,11 @@ rule all_features:
 
 rule pipeline_entry:
 	input:
-		tasks	= [ f"resources/{{mouse}}/{date}/task_data/"
+		tasks	= [ f"resources/experiment/{{mouse}}/{date}/task_data/"
 				for date in dates ],
-		Vc	= [ f"resources/{{mouse}}/{date}/SVD_data/Vc.mat"
+		Vc	= [ f"resources/experiment/{{mouse}}/{date}/SVD_data/Vc.mat"
 				for date in dates ],
-		trans_params = [ f"resources/{{mouse}}/{date}/SVD_data/opts.mat"
+		trans_params = [ f"resources/experiment/{{mouse}}/{date}/SVD_data/opts.mat"
 				  for date in dates ],
 	output:
 		"results/{mouse}/SVD/data.h5",
@@ -217,7 +217,7 @@ rule plot_performances:
 
 rule debug:
 	input:
-		tasks	= [ f"resources/{mouse}/{date}/task_data/"
+		tasks	= [ f"resources/experiment/{mouse}/{date}/task_data/"
 				for date in dates for mouse in mouses ],
 	conda:
 		"envs/environment.yaml"
