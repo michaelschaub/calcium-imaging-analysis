@@ -37,7 +37,16 @@ sys.path.append(Path(__file__).parent)
 from features import Raws,Means, Moup, Covariances, AutoCovariances
 from plotting import graph_circle_plot, plots
 from loading import load_task_data_as_pandas_df
-from decoding import RFE_pipeline
+
+
+# MLR adapted for recursive feature elimination (RFE)
+class RFE_pipeline(skppl.Pipeline):
+    def fit(self, X, y=None, **fit_params):
+        """simply extends the pipeline to recover the coefficients (used by RFE) from the last element (the classifier)
+        """
+        super(RFE_pipeline, self).fit(X, y, **fit_params)
+        self.coef_ = self.steps[-1][-1].coef_
+        return self
 
 
 # add missing h5 files here
@@ -45,7 +54,7 @@ missing_task_data = []
 
 
 ### New data extraction
-data_path = Path(__file__).parent.parent / Path('data')
+data_path = Path(__file__).parent.parent / Path('resources/experiment')
 plot_path = Path(__file__).parent.parent / Path('plots')
 if not (data_path/'extracted_data.pkl').exists() :
     # load behavior data
@@ -110,7 +119,7 @@ baseline_mode = None  #### basline mode ('mean' / 'zscore' / None)
 comp = 20 ### number componants to use
 n_rep = 5  ### number of repetition
 n_comp_LDA = None #5  ### number of LDA componants (conds -1)
-RFE_edges = 189
+RFE_edges = 20
 
 
 #cond_mean = measurements.mean(svd.conditions[0][30:75,:]) #mean of stimulusframes for first cond
@@ -120,16 +129,16 @@ feature_data = {
     #"mean": [Means(svd.conditions[i,:,30:75],max_comps=comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond
     #"mean(-base)": [Means(svd.conditions[i,:,30:75]-Means(svd.conditions[i,:,15:30]),comp) for i in range(len(svd.conditions))],
     #"raw": [Raws(svd.conditions[i,:,30:75],comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond,
-    "Cov w/o_Diagonal": [Covariances(svd.conditions[i,:,30:75],max_comps=comp, include_diagonal= False) for i in tqdm(range(len(svd.conditions)),desc='Conditions')], #mean of stimulusframes for first cond
+    "Cov w/o_Diagonal": [Covariances.create(svd.conditions[i,:,30:75],max_comps=comp, include_diagonal= False) for i in tqdm(range(len(svd.conditions)),desc='Conditions')], #mean of stimulusframes for first cond
     #"Cov w/Diagonal": [Covariances(svd.conditions[i,:,30:75],max_comps=comp, include_diagonal= True) for i in tqdm(range(len(svd.conditions)),desc='Conditions')],
     #r"Cov($\tau$=0)": [AutoCovariances(svd.conditions[i,:,30:75],max_comps=comp,time_lag_range=[0]) for i in tqdm(range(len(svd.conditions)),desc='Conditions')],
     #"mou1": [Moup(svd.conditions[i,:,30:75],comp,time_lag=1) for i in range(len(svd.conditions))],
 }
 
 
-for j in tqdm(range(1,0,1),desc="Features"):
-    feature_data[r"Cov($\tau$="+str(j)+")"] = [AutoCovariances(svd.conditions[i,:,30:75],max_comps=comp, time_lag_range=[j]) for i in tqdm(range(len(svd.conditions)),desc='Conditions')]
-    feature_data[r'Mou($\tau$='+str(j)+")"] = [Moup(svd.conditions[i,:,30:75],max_comps=comp,time_lag=j) for i in tqdm(range(len(svd.conditions)),desc='Conditions')]
+#for j in tqdm(range(1,0,1),desc="Features"):
+#    feature_data[r"Cov($\tau$="+str(j)+")"] = [AutoCovariances(svd.conditions[i,:,30:75],max_comps=comp, time_lag_range=[j]) for i in tqdm(range(len(svd.conditions)),desc='Conditions')]
+#    feature_data[r'Mou($\tau$='+str(j)+")"] = [Moup(svd.conditions[i,:,30:75],max_comps=comp,time_lag=j) for i in tqdm(range(len(svd.conditions)),desc='Conditions')]
 
 
 features = list(feature_data.keys())
@@ -164,18 +173,20 @@ for i_feat, feat in enumerate(tqdm(features,desc="Training classifiers for each 
     cv_split = cv.split(data, labels)
 
     ###### RFE
-    print(data.shape)
+    _ , feats = data.shape
 
-    rk_inter = np.zeros([n_rep,RFE_edges],dtype=np.int)
+    rk_inter = np.zeros([n_rep,feats],dtype=np.int_)
 
     #####
 
 
 
-    c_MLR = skppl.make_pipeline(skppc.StandardScaler(),
-                                skllm.LogisticRegression(C=1, penalty='l2', multi_class='multinomial',
-                                                         solver='lbfgs',
-                                                         max_iter=500))
+    #c_MLR = skppl.make_pipeline(skppc.StandardScaler(),
+    #                            skllm.LogisticRegression(C=1, penalty='l2', multi_class='multinomial',
+    #                                                     solver='lbfgs',
+    #                                                    max_iter=500))
+
+    c_MLR = RFE_pipeline([('std_scal',skprp.StandardScaler()),('clf',skllm.LogisticRegression(C=10, penalty='l2', multi_class='multinomial', solver='lbfgs', max_iter=500))])
 
     RFE_inter = skfs.RFE(c_MLR,n_features_to_select=int(RFE_edges))
 
@@ -195,8 +206,8 @@ for i_feat, feat in enumerate(tqdm(features,desc="Training classifiers for each 
         c_LDA.fit(data[train_idx, :], labels[train_idx])
         c_RF .fit(data[train_idx, :], labels[train_idx])
 
-        list_best_feat = np.argsort(rk_inter.mean(0))[:RFE_edges]
-        RFE_inter.fit(data[train_idx, :][:,list_best_feat], labels[train_idx])
+        RFE_inter.fit(data[train_idx, :], labels[train_idx])
+        #RFE_inter.fit(data[train_idx, :][:,list_best_feat], labels[train_idx])
 
 
         perf[i, i_feat, 0] = c_MLR.score(data[test_idx, :], labels[test_idx])
@@ -206,15 +217,19 @@ for i_feat, feat in enumerate(tqdm(features,desc="Training classifiers for each 
 
         print("MLR",perf[i, i_feat, 0])
 
-        print(list_best_feat)
-        print(test_idx)
-        print(data[test_idx, :][:,list_best_feat].shape)
-        perf[i, i_feat, 4] = RFE_inter.estimator_.score(data[test_idx, :][:,list_best_feat], labels[test_idx])
-        print("RFE MLR",perf[i, i_feat, 0])
 
         rk_inter[i,:] = RFE_inter.ranking_
+        list_best_feat = np.argsort(rk_inter[i])[:RFE_edges]
+        perf[i, i_feat, 4] = RFE_inter.estimator_.score(data[test_idx, :][:,list_best_feat], labels[test_idx])
+        print("RFE MLR",perf[i, i_feat, 4])
+
+
+        print("ranking",rk_inter)
+        print("best_feat",list_best_feat)
 
         i += 1
+    print("best_feat_all",np.argsort(rk_inter.mean(0))[:RFE_edges])
+    #list_best_feat = np.argsort(rk_inter.mean(0))[:RFE_edges]
     graph_circle_plot(rk_inter,n_nodes= comp,n_edges=RFE_edges, title=feature_label[i_feat])
     #print(f'\tRepetition {n_rep:>3}/{n_rep}' )
 
