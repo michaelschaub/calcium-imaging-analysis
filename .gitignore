@@ -1,12 +1,10 @@
 data/*
-plots/*
 resources/*
 results/*
 .idea/*
 .idea
 .snakemake/*
 
-!plots/.gitkeep
 !resources/.gitkeep
 !resources/meta/*
 !results/.gitkeep
