@@ -10,7 +10,7 @@ from decomposition import anatomical_parcellation
 # redirect std_out to log file
 snakemake_tools.redirect_to_log(snakemake)
 snakemake_tools.check_conf(snakemake, sections=["entry"])
-snakemake_tools.save_conf(snakemake, sections=["entry","parcelation"])
+snakemake_tools.save_conf(snakemake, sections=["entry","parcellation"])
 start = snakemake_tools.start_timer()
 
 
@@ -24,14 +24,14 @@ def locaNMF():
     pass
 
 
-parcelation = {'anatomical': anatom,
+parcellation = {'anatomical': anatom,
                'locaNMF': locaNMF}
 
 
-parcelation[snakemake.wildcards['parcelation']]()
+parcellation[snakemake.wildcards['parcellation']]()
 
 # only supported in 3.10
-#match snakemake.wildcards['parcelation']:
+#match snakemake.wildcards['parcellation']:
 #    case "anatomical":
 
 snakemake_tools.stop_timer(start, f"{snakemake.rule}")

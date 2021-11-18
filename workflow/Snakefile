@@ -1,10 +1,10 @@
-configfile: "config.yaml"
+configfile: "config/config.yaml"
 
-ruleorder: pipeline_entry > parcelation
+ruleorder: pipeline_entry > parcellation
 
 mouses 		= config["branch_opts"]["mouses"]
 dates		= config["branch_opts"]["dates"]
-parcelations	= config["branch_opts"]["parcelations"]
+parcellations	= config["branch_opts"]["parcellations"]
 filters		= config["branch_opts"]["filters"]
 
 sides		= config["conditional_opts"]["sides"]
@@ -27,31 +27,31 @@ k_folds 	= config["decode_opts"]["k_folds"]
 # The first rule is default
 rule all:
 	input:
-		[f"results/{mouse}/{parcelation}/{filter}/decoder/performances.png"
+		[f"results/{mouse}/{parcellation}/{filter}/decoder/performances.png"
 			   for mouse in mouses
-			   for parcelation in parcelations
+			   for parcellation in parcellations
 			   for filter in filters],
-		[ f"results/{mouse}/{parcelation}/{filter}/decoder/{feature}/plots/performance.png"
+		[ f"results/{mouse}/{parcellation}/{filter}/decoder/{feature}/plots/performance.png"
 					for mouse in mouses
-					for parcelation in parcelations
+					for parcellation in parcellations
 					for filter in filters
 					for cond in conditions
 					for feature in features],
 
 rule all_plots:
 	input:
-		 [ f"results/{mouse}/{parcelation}/{filter}/decoder/{feature}/plots/performance.png"
+		 [ f"results/{mouse}/{parcellation}/{filter}/decoder/{feature}/plots/performance.png"
 			   for mouse in mouses
-			   for parcelation in parcelations
+			   for parcellation in parcellations
 			   for filter in filters
 			   for cond in conditions
 			   for feature in features]
 
 rule all_decode:
 	input:
-		[ f"results/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/decoder_model.pkl"
+		[ f"results/{mouse}/{parcellation}/{filter}/decoder/{feature}/{decoder}/decoder_model.pkl"
 				for mouse in mouses
-				for parcelation in parcelations
+				for parcellation in parcellations
 				for filter in filters
 				for cond in conditions
 				for feature in features
@@ -59,9 +59,9 @@ rule all_decode:
 
 rule all_features:
 	input:
-		[ f"results/{mouse}/{parcelation}/{filter}/{cond}/{feature}/feature_data.h5"
+		[ f"results/{mouse}/{parcellation}/{filter}/{cond}/{feature}/feature_data.h5"
 				for mouse in mouses
-				for parcelation in parcelations
+				for parcellation in parcellations
 				for filter in filters
 				for cond in conditions
 				for feature in features ]
@@ -90,31 +90,31 @@ rule pipeline_entry:
 	script:
 		"scripts/default_entry.py"
 
-rule parcelation:
+rule parcellation:
 	input:
 		"results/{mouse}/SVD/data.h5",
 		config = "results/{mouse}/SVD/conf.yaml",
 	output:
-		"results/{mouse}/{parcelation,.+(?!SVD)}/data.h5",
-		config = "results/{mouse}/{parcelation}/conf.yaml",
+		"results/{mouse}/{parcellation,.+(?!SVD)}/data.h5",
+		config = "results/{mouse}/{parcellation}/conf.yaml",
 	log:
-		"results/{mouse}/{parcelation}/parcelation.log"
+		"results/{mouse}/{parcellation}/parcellation.log"
 	conda:
 		"envs/environment.yaml"
 	resources:
 		memb_mb=1000
 	script:
-		"scripts/parcelation.py"
+		"scripts/parcellation.py"
 
 rule prefilters:
 	input:
-		"results/{mouse}/{parcelation}/data.h5",
-		config = "results/{mouse}/{parcelation}/conf.yaml",
+		"results/{mouse}/{parcellation}/data.h5",
+		config = "results/{mouse}/{parcellation}/conf.yaml",
 	output:
-		"results/{mouse}/{parcelation}/{filter}/filtered_data.h5",
-		config = "results/{mouse}/{parcelation}/{filter}/conf.yaml",
+		"results/{mouse}/{parcellation}/{filter}/filtered_data.h5",
+		config = "results/{mouse}/{parcellation}/{filter}/conf.yaml",
 	log:
-		"results/{mouse}/{parcelation}/{filter}/prefilters.log"
+		"results/{mouse}/{parcellation}/{filter}/prefilters.log"
 	conda:
 		"envs/environment.yaml"
 	resources:
@@ -124,15 +124,15 @@ rule prefilters:
 
 rule conditions:
 	input:
-		"results/{mouse}/{parcelation}/{filter}/filtered_data.h5",
-		config = "results/{mouse}/{parcelation}/{filter}/conf.yaml",
+		"results/{mouse}/{parcellation}/{filter}/filtered_data.h5",
+		config = "results/{mouse}/{parcellation}/{filter}/conf.yaml",
 	output:
-		"results/{mouse}/{parcelation}/{filter}/{cond}/conditional_data.h5",
-		config = "results/{mouse}/{parcelation}/{filter}/{cond}/conf.yaml",
+		"results/{mouse}/{parcellation}/{filter}/{cond}/conditional_data.h5",
+		config = "results/{mouse}/{parcellation}/{filter}/{cond}/conf.yaml",
 	params:
 		conditions = lambda wildcards : [condition_dicts[wildcards["cond"]]]
 	log:
-		"results/{mouse}/{parcelation}/{filter}/{cond}/conditionals.log"
+		"results/{mouse}/{parcellation}/{filter}/{cond}/conditionals.log"
 	conda:
 		"envs/environment.yaml"
 	resources:
@@ -142,13 +142,13 @@ rule conditions:
 
 rule feature_calculation:
 	input:
-		"results/{mouse}/{parcelation}/{filter}/{cond}/conditional_data.h5",
-		config = "results/{mouse}/{parcelation}/{filter}/{cond}/conf.yaml",
+		"results/{mouse}/{parcellation}/{filter}/{cond}/conditional_data.h5",
+		config = "results/{mouse}/{parcellation}/{filter}/{cond}/conf.yaml",
 	output:
-		"results/{mouse}/{parcelation}/{filter}/{cond}/{feature}/feature_data.h5",
-		config = "results/{mouse}/{parcelation}/{filter}/{cond}/{feature}/conf.yaml",
+		"results/{mouse}/{parcellation}/{filter}/{cond}/{feature}/feature_data.h5",
+		config = "results/{mouse}/{parcellation}/{filter}/{cond}/{feature}/conf.yaml",
 	log:
-		"results/{mouse}/{parcelation}/{filter}/{cond}/{feature}/feature_calculation.log"
+		"results/{mouse}/{parcellation}/{filter}/{cond}/{feature}/feature_calculation.log"
 	conda:
 		"envs/environment.yaml"
 	resources:
@@ -158,16 +158,16 @@ rule feature_calculation:
 
 rule decoding:
 	input:
-		[f"results/{{mouse}}/{{parcelation}}/{{filter}}/{cond}/{{feature}}/feature_data.h5" for cond in conditions],
+		[f"results/{{mouse}}/{{parcellation}}/{{filter}}/{cond}/{{feature}}/feature_data.h5" for cond in conditions],
 	output:
-		"results/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/decoder_model.pkl",
-		"results/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/decoder_perf.pkl",
-		config = "results/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/conf.yaml",
+		"results/{mouse}/{parcellation}/{filter}/decoder/{feature}/{decoder}/decoder_model.pkl",
+		"results/{mouse}/{parcellation}/{filter}/decoder/{feature}/{decoder}/decoder_perf.pkl",
+		config = "results/{mouse}/{parcellation}/{filter}/decoder/{feature}/{decoder}/conf.yaml",
 	params:
 		conds = conditions,
 		reps = k_folds,
 	log:
-	   "results/{mouse}/{parcelation}/{filter}/decoder/{feature}/{decoder}/decoding.log",
+	   "results/{mouse}/{parcellation}/{filter}/decoder/{feature}/{decoder}/decoding.log",
 	conda:
 		"envs/environment.yaml"
 	resources:
@@ -181,15 +181,15 @@ rule decoding:
 
 rule plot_performance:
 	input:
-		[f"results/{{mouse}}/{{parcelation}}/{{filter}}/decoder/{{feature}}/{decoder}/decoder_perf.pkl" for decoder in decoders],
+		[f"results/{{mouse}}/{{parcellation}}/{{filter}}/decoder/{{feature}}/{decoder}/decoder_perf.pkl" for decoder in decoders],
 	output:
-		"results/{mouse}/{parcelation}/{filter}/decoder/{feature}/plots/performance.png",
-		"results/{mouse}/{parcelation}/{filter}/decoder/{feature}/plots/performance.pkl",
+		"results/{mouse}/{parcellation}/{filter}/decoder/{feature}/plots/performance.png",
+		"results/{mouse}/{parcellation}/{filter}/decoder/{feature}/plots/performance.pkl",
 	params:
 		conds=conditions,
 		decoders=decoders,
 	log:
-		"results/{mouse}/{parcelation}/{filter}/decoder/{feature}/plots/plot_performance.log",
+		"results/{mouse}/{parcellation}/{filter}/decoder/{feature}/plots/plot_performance.log",
 	conda:
 		 "envs/environment.yaml"
 	script:
@@ -197,17 +197,17 @@ rule plot_performance:
 
 rule plot_performances:
 	input:
-		[f"results/{{mouse}}/{{parcelation}}/{{filter}}/decoder/{feature}/{decoder}/decoder_perf.pkl"
+		[f"results/{{mouse}}/{{parcellation}}/{{filter}}/decoder/{feature}/{decoder}/decoder_perf.pkl"
 				for feature in features
 				for decoder in decoders],
 	output:
-		"results/{mouse}/{parcelation}/{filter}/decoder/performances.png",
+		"results/{mouse}/{parcellation}/{filter}/decoder/performances.png",
 	params:
 		conds=conditions,
 		decoders=decoders,
 		features=features,
 	log:
-		"results/{mouse}/{parcelation}/{filter}/decoder/plot_performances.log",
+		"results/{mouse}/{parcellation}/{filter}/decoder/plot_performances.log",
 	conda:
 		 "envs/environment.yaml"
 	script:

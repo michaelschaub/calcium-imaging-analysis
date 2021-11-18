@@ -6,7 +6,7 @@ from utils import snakemake_tools
 # redirect std_out to log file
 snakemake_tools.redirect_to_log(snakemake)
 
-snakemake_tools.save_conf(snakemake, sections=["entry","parcelation"]) #fixed a bug as we dont apply parcelation to SVD and then prefilter fails to compare config as it won't contain parcelation
+snakemake_tools.save_conf(snakemake, sections=["entry","parcellation"]) #fixed a bug as we dont apply parcellation to SVD and then prefilter fails to compare config as it won't contain parcellation
 timer_start = snakemake_tools.start_timer()
 
 import tables
