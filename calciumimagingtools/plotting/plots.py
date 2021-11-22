@@ -43,7 +43,7 @@ def plot_frame(temps, spatial, titles, plt_title):
     print("plotted")
 
 
-def graph_circle_plot(class_perfs, n_nodes, n_edges, title,type_measure=1):
+def graph_circle_plot(list_best_feat, n_nodes, n_edges, title,type_measure=1,save_path=False):
     #%% network and plot properties
     N = n_nodes #20 # number of nodes
     print(N)
@@ -58,7 +58,7 @@ def graph_circle_plot(class_perfs, n_nodes, n_edges, title,type_measure=1):
         ch_labels[i] = i+1
 
     # matrices to retrieve input/output channels from connections in support network
-    mask_tri = np.tri(N,N,-1, dtype=bool)
+    mask_tri = np.tri(N,N,0, dtype=bool)
     print(mask_tri.shape)
     row_ind = np.repeat(np.arange(N).reshape([N,-1]),N,axis=1)
     col_ind = np.repeat(np.arange(N).reshape([-1,N]),N,axis=0)
@@ -72,7 +72,7 @@ def graph_circle_plot(class_perfs, n_nodes, n_edges, title,type_measure=1):
     plt.axis('off')
     plt.title=title
     if type_measure == 0: # nodal
-        list_best_feat = np.argsort(class_perfs.mean(0))[:n_edges] # select n best features
+        #list_best_feat = np.argsort(class_perfs.mean(0))[:n_edges] # select n best features
         node_color_aff = []
         g = nx.Graph()
         for i in range(N):
@@ -84,17 +84,22 @@ def graph_circle_plot(class_perfs, n_nodes, n_edges, title,type_measure=1):
         nx.draw_networkx_nodes(g,pos=pos_circ,node_color=node_color_aff)
         nx.draw_networkx_labels(g,pos=pos_circ,labels=ch_labels)
     else: # interactional
-        list_best_feat = np.argsort(class_perfs.mean(0))[:n_edges] # select n best features
+        #list_best_feat = np.argsort(class_perfs.mean(0))[:n_edges] # select n best features
         g = nx.Graph()
         for i in range(N):
             g.add_node(i)
         node_color_aff = ['orange']*N
         list_ROI_from_to = [] # list of input/output ROIs involved in connections of support network
         for ij in list_best_feat:
-            g.add_edge(col_ind[ij],row_ind[ij])
+            if(col_ind[ij] == row_ind[ij]): #checks for loops
+                node_color_aff[col_ind[ij]]='red' #colors node red
+            else:
+                g.add_edge(col_ind[ij],row_ind[ij])
         print(g)
         nx.draw_networkx_nodes(g,pos=pos_circ,node_color=node_color_aff)
         nx.draw_networkx_labels(g,pos=pos_circ,labels=ch_labels)
         nx.draw_networkx_edges(g,pos=pos_circ,edgelist=g.edges(),edge_color='r')
-
-    plt.show()
+    if (not save_path):
+        plt.show()
+    else:
+        plt.savefig(save_path)

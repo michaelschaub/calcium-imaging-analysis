@@ -52,11 +52,18 @@ conditional_opts:
 features:
   - mean
   - covariance
+  - moup
 
-selected_features_n:
-  - full
-  - 20
-  - 50
+rfe_opts:
+  selected_features_n:
+    - full
+    - 20
+    - 50
+  node_feats:
+    -mean
+  interaction_feats:
+    -covariance
+    -moup
 
 #rfe_opts:
 

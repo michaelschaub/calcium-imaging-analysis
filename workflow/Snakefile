@@ -18,7 +18,7 @@ condition_dicts	= { f"{side}_{modal}" : {"modality" : m, "target_side_left" : s}
 features	= config["features"]
 
 components = config["rule_conf"]["feature_calculation"]["max_components"]
-rfe_ns = config["selected_features_n"]
+rfe_ns = config["rfe_opts"]["selected_features_n"]
 
 decoders	= config["decode_opts"]["decoders"]
 k_folds 	= config["decode_opts"]["k_folds"]
@@ -194,6 +194,7 @@ rule feature_elimination:
 		model = "results/{mouse}/{parcellation}/{filter}/rfe/{rfe_n}/{feature}/decoder_model.pkl",
 		perf = "results/{mouse}/{parcellation}/{filter}/rfe/{rfe_n}/{feature}/decoder_perf.pkl",
 		config = "results/{mouse}/{parcellation}/{filter}/rfe/{rfe_n}/{feature}/conf.yaml",
+		plot = "results/{mouse}/{parcellation}/{filter}/rfe/{rfe_n}/{feature}/circle_plot.png",
 	params:
 		conds = conditions,
 		reps = k_folds,

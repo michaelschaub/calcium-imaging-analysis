@@ -120,23 +120,23 @@ print(cond_keys_str)
 #####
 save_outputs = True
 baseline_mode = None  #### basline mode ('mean' / 'zscore' / None)
-comp = 65 ### number componants to use
-n_rep = 5  ### number of repetition
+comp = 50 ### number componants to use
+n_rep = 1  ### number of repetition
 n_comp_LDA = None #5  ### number of LDA componants (conds -1)
-RFE_edges = 400
+RFE_edges = 100
 
 
 #cond_mean = measurements.mean(svd.conditions[0][30:75,:]) #mean of stimulusframes for first cond
 #features  = ['mean',"mean(-base)","raw","mou"]
 feature_data = {
 
-    #"mean": [Means(svd.conditions[i,:,30:75],max_comps=comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond
+    #"mean": [Means.create(svd.conditions[i,:,30:75],max_comps=comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond
     #"mean(-base)": [Means(svd.conditions[i,:,30:75]-Means(svd.conditions[i,:,15:30]),comp) for i in range(len(svd.conditions))],
     #"raw": [Raws(svd.conditions[i,:,30:75],comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond,
-    "Cov w/o_Diagonal": [Covariances.create(svd.conditions[i,:,30:75],max_comps=comp, include_diagonal= False) for i in tqdm(range(len(svd.conditions)),desc='Conditions')], #mean of stimulusframes for first cond
+    "Cov w/o_Diagonal": [Covariances.create(svd.conditions[i,:,30:75],max_comps=comp, include_diagonal= True) for i in tqdm(range(len(svd.conditions)),desc='Conditions')], #mean of stimulusframes for first cond
     #"Cov w/Diagonal": [Covariances(svd.conditions[i,:,30:75],max_comps=comp, include_diagonal= True) for i in tqdm(range(len(svd.conditions)),desc='Conditions')],
     #r"Cov($\tau$=0)": [AutoCovariances(svd.conditions[i,:,30:75],max_comps=comp,time_lag_range=[0]) for i in tqdm(range(len(svd.conditions)),desc='Conditions')],
-    #"mou1": [Moup(svd.conditions[i,:,30:75],comp,time_lag=1) for i in range(len(svd.conditions))],
+    #"mou1": [Moup.create(svd.conditions[i,:,30:75],max_comps=comp,time_lag=3) for i in range(len(svd.conditions))],
 }
 
 
@@ -190,42 +190,42 @@ for i_feat, feat in enumerate(tqdm(features,desc="Training classifiers for each 
     #                                                     solver='lbfgs',
     #                                                    max_iter=500))
 
-    c_MLR = RFE_pipeline([('std_scal',skprp.StandardScaler()),('clf',skllm.LogisticRegression(C=10, penalty='l2', multi_class='multinomial', solver='lbfgs', max_iter=500))])
+    c_MLR = RFE_pipeline([('std_scal',skprp.StandardScaler()),('clf',skllm.LogisticRegression(C=0.00001, penalty='l2', multi_class='multinomial', solver='lbfgs', max_iter=500))])
 
     RFE_inter = skfs.RFE(c_MLR,n_features_to_select=int(RFE_edges))
 
-    c_1NN = sklnn.KNeighborsClassifier(n_neighbors=1, algorithm='brute', metric='correlation')
+    #c_1NN = sklnn.KNeighborsClassifier(n_neighbors=1, algorithm='brute', metric='correlation')
 
-    c_LDA = skda.LinearDiscriminantAnalysis(n_components=n_comp_LDA, solver='eigen', shrinkage='auto')
+    #c_LDA = skda.LinearDiscriminantAnalysis(n_components=n_comp_LDA, solver='eigen', shrinkage='auto')
 
-    c_RF = skens.RandomForestClassifier(n_estimators=100, bootstrap=False)
+    #c_RF = skens.RandomForestClassifier(n_estimators=100, bootstrap=False)
 
-    classifiers[feat]={"c_MLR":c_MLR.get_params()['steps'][1][1],"c_1NN":c_1NN,"c_LDA":c_LDA,"c_RF":c_RF}
+    #classifiers[feat]={"c_MLR":c_MLR.get_params()['steps'][1][1],"c_1NN":c_1NN,"c_LDA":c_LDA,"c_RF":c_RF}
 
     i = 0  ## counter
     for train_idx, test_idx in tqdm(cv_split,desc='Fit and Score Classifiers'):
         #print(f'\tRepetition {i:>3}/{n_rep}', end="\r" )
-        c_MLR.fit(data[train_idx, :], labels[train_idx])
-        c_1NN.fit(data[train_idx, :], labels[train_idx])
-        c_LDA.fit(data[train_idx, :], labels[train_idx])
-        c_RF .fit(data[train_idx, :], labels[train_idx])
+        #c_MLR.fit(data[train_idx, :], labels[train_idx])
+        #c_1NN.fit(data[train_idx, :], labels[train_idx])
+        #c_LDA.fit(data[train_idx, :], labels[train_idx])
+        #c_RF .fit(data[train_idx, :], labels[train_idx])
 
         RFE_inter.fit(data[train_idx, :], labels[train_idx])
         #RFE_inter.fit(data[train_idx, :][:,list_best_feat], labels[train_idx])
 
 
-        perf[i, i_feat, 0] = c_MLR.score(data[test_idx, :], labels[test_idx])
-        perf[i, i_feat, 1] = c_1NN.score(data[test_idx, :], labels[test_idx])
-        perf[i, i_feat, 2] = c_LDA.score(data[test_idx, :], labels[test_idx])
-        perf[i, i_feat, 3] = c_RF.score(data[test_idx, :], labels[test_idx])
+        #perf[i, i_feat, 0] = c_MLR.score(data[test_idx, :], labels[test_idx])
+        #perf[i, i_feat, 1] = c_1NN.score(data[test_idx, :], labels[test_idx])
+        #perf[i, i_feat, 2] = c_LDA.score(data[test_idx, :], labels[test_idx])
+        #perf[i, i_feat, 3] = c_RF.score(data[test_idx, :], labels[test_idx])
 
-        print("MLR",perf[i, i_feat, 0])
+        #print("MLR",perf[i, i_feat, 0])
 
 
         rk_inter[i,:] = RFE_inter.ranking_
         list_best_feat = np.argsort(rk_inter[i])[:RFE_edges]
         perf[i, i_feat, 4] = RFE_inter.estimator_.score(data[test_idx, :][:,list_best_feat], labels[test_idx])
-        print("RFE MLR",perf[i, i_feat, 4])
+        #print("RFE MLR",perf[i, i_feat, 4])
 
 
         print("ranking",rk_inter)
@@ -233,8 +233,8 @@ for i_feat, feat in enumerate(tqdm(features,desc="Training classifiers for each 
 
         i += 1
     print("best_feat_all",np.argsort(rk_inter.mean(0))[:RFE_edges])
-    #list_best_feat = np.argsort(rk_inter.mean(0))[:RFE_edges]
-    graph_circle_plot(rk_inter,n_nodes= comp,n_edges=RFE_edges, title=feature_label[i_feat])
+    list_best_feat = np.argsort(rk_inter.mean(0))[:RFE_edges]
+    graph_circle_plot(list_best_feat,n_nodes= comp,n_edges=RFE_edges, title=feature_label[i_feat],type_measure=1)
     #print(f'\tRepetition {n_rep:>3}/{n_rep}' )
 
 '''

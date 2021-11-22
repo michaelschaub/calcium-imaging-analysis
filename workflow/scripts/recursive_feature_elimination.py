@@ -10,6 +10,7 @@ import sklearn.preprocessing as skprp
 import sklearn.pipeline as skppl
 import sklearn.feature_selection as skfs
 import sklearn.model_selection as skms
+import warnings
 
 from pathlib import Path
 import sys
@@ -38,8 +39,9 @@ start = snakemake_tools.start_timer()
 
 ### Load feature for all conditions
 cond_str = snakemake.params['conds']
+feature = snakemake.wildcards["feature"]
 feature_dict = { "mean" : Means, "raw" : Raws, "covariance" : Covariances, "autocovariance" : AutoCovariances, "moup" :Moup }
-feature_class = feature_dict[snakemake.wildcards["feature"]]
+feature_class = feature_dict[feature]
 
 cond_feats = []
 for path in snakemake.input:
@@ -47,7 +49,7 @@ for path in snakemake.input:
 
 
 rfe_n = snakemake.wildcards["rfe_n"]
-n_rep = snakemake.params['reps']
+n_rep = 1 #snakemake.params['reps']
 
 
 ### Scale & Split
@@ -64,13 +66,14 @@ data = scaler.transform(data)
 cv_split = cv.split(data, labels)
 
 # Build RFE pipeline
-c_MLR = RFE_pipeline([('std_scal',skprp.StandardScaler()),('clf',skllm.LogisticRegression(C=10, penalty='l2', multi_class='multinomial', solver='lbfgs', max_iter=500))])
+c_MLR = RFE_pipeline([('std_scal',skprp.StandardScaler()),('clf',skllm.LogisticRegression(C=0.00001, penalty='l2', multi_class='multinomial', solver='lbfgs', max_iter=500))])
 
 _ , feats = data.shape
 if(rfe_n=="full"): rfe_n = feats
+
 RFE = skfs.RFE(c_MLR,n_features_to_select=int(rfe_n))
 
-ranking = np.zeros([n_rep,feats],dtype=np.int32)
+ranking = np.zeros([n_rep,feats],dtype=np.int)
 perf = np.zeros((n_rep))
 decoders = []
 
@@ -79,12 +82,11 @@ for i, (train_i, test_i) in enumerate(cv_split):
 
     RFE.fit(data[train_i, :], labels[train_i])
     ranking[i,:] = RFE.ranking_
-
-    best_feat_iter = np.argsort(ranking[i])[:rfe_n]
+    best_feat_iter = np.argsort(ranking[i])[:int(rfe_n)]
     perf[i] = RFE.estimator_.score(data[test_i, :][:,best_feat_iter], labels[test_i])
     decoders.append(RFE.estimator_)
 
-list_best_feat = np.argsort(ranking.mean(0))[:rfe_n]
+list_best_feat = np.argsort(ranking.mean(0))[:int(rfe_n)]
 
 with open(snakemake.output["perf"], 'wb') as f:
     pickle.dump(perf, f)
@@ -96,4 +98,12 @@ with open(snakemake.output["model"], 'wb') as f:
     pickle.dump(decoders, f)
 
 
-#graph_circle_plot(ranking,n_nodes= snakemake.params["n_comps"],n_edges=rfe_n, title="")
+##Plots
+node_feats = snakemake.config["rfe_opts"]["node_feats"]
+inter_feats = snakemake.config["rfe_opts"]["interaction_feats"]
+if snakemake.wildcards["feature"] in inter_feats:
+    graph_circle_plot(list_best_feat,n_nodes= snakemake.params["n_comps"],n_edges=rfe_n, title=feature,type_measure=1,save_path=snakemake.output["plot"])
+
+if snakemake.wildcards["feature"] in node_feats:
+    graph_circle_plot(list_best_feat,n_nodes= snakemake.params["n_comps"],n_edges=rfe_n, title=feature,type_measure=0,save_path=snakemake.output["plot"])
+
