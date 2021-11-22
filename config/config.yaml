@@ -53,6 +53,23 @@ features:
   - mean
   - covariance
 
+selected_features_n:
+  - full
+  - 20
+  - 50
+
+#rfe_opts:
+
+  #node_feats:
+  #  -mean
+  #n_nodes:  #Reduced Number of Components (Mean, Time Series,...)
+  #  -20
+  #interaction_feats:
+  #  -covariance
+  #n_interactions:  #Reduced Number of Edges between Components (Cov,Cor,Moup,...)
+  #  -50
+
+
 
 decode_opts:
   k_folds: 5

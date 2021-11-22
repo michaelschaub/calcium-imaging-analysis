@@ -1,6 +1,6 @@
 configfile: "config/config.yaml"
 
-ruleorder: pipeline_entry > parcellation
+ruleorder: pipeline_entry > parcellation > feature_calculation > feature_elimination
 
 mouses 		= config["branch_opts"]["mouses"]
 dates		= config["branch_opts"]["dates"]
@@ -16,6 +16,9 @@ condition_dicts	= { f"{side}_{modal}" : {"modality" : m, "target_side_left" : s}
 			for s,side in enumerate(sides) for m,modal in enumerate(modalities)}
 
 features	= config["features"]
+
+components = config["rule_conf"]["feature_calculation"]["max_components"]
+rfe_ns = config["selected_features_n"]
 
 decoders	= config["decode_opts"]["decoders"]
 k_folds 	= config["decode_opts"]["k_folds"]
@@ -73,6 +76,16 @@ rule all_features:
 				for filter in filters
 				for cond in conditions
 				for feature in features ]
+
+rule all_rfe:
+	input:
+		 [ f"results/{mouse}/{parcellation}/{filter}/rfe/{rfe_n}/{feature}/best_feats.pkl"
+		   for mouse in mouses
+		   for parcellation in parcellations
+		   for filter in filters
+		   for cond in conditions
+		   for feature in features
+		   for rfe_n in rfe_ns]
 
 
 
@@ -171,6 +184,28 @@ rule feature_calculation:
 		memb_mb=1000
 	script:
 		"scripts/feature.py"
+
+rule feature_elimination:
+	input:
+		[f"results/{{mouse}}/{{parcellation}}/{{filter}}/{cond}/{{feature}}/feature_data.h5" for cond in conditions],
+		#config = "results/{mouse}/{parcellation}/{filter}/{cond}/{feature}/conf.yaml",
+	output:
+		best_feats = "results/{mouse}/{parcellation}/{filter}/rfe/{rfe_n}/{feature}/best_feats.pkl",
+		model = "results/{mouse}/{parcellation}/{filter}/rfe/{rfe_n}/{feature}/decoder_model.pkl",
+		perf = "results/{mouse}/{parcellation}/{filter}/rfe/{rfe_n}/{feature}/decoder_perf.pkl",
+		config = "results/{mouse}/{parcellation}/{filter}/rfe/{rfe_n}/{feature}/conf.yaml",
+	params:
+		conds = conditions,
+		reps = k_folds,
+		n_comps = components
+	log:
+		"results/{mouse}/{parcellation}/{filter}/rfe/{rfe_n}/{feature}/feature_calculation.log"
+	conda:
+		 "envs/environment.yaml"
+	resources:
+		memb_mb=1000
+	script:
+		  "scripts/recursive_feature_elimination.py"
 
 rule decoding:
 	input:

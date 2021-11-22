@@ -37,7 +37,7 @@ for path in snakemake.input:
 ### Select decoder
 def MLR():
     return skppl.make_pipeline(skppc.StandardScaler(),
-                               skllm.LogisticRegression(C=1, penalty='l2', multi_class='multinomial',
+                               skllm.LogisticRegression(C=10, penalty='l2', multi_class='multinomial',
                                                          solver='lbfgs', max_iter=500))
 
 def NN():

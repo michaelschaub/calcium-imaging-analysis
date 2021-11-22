@@ -22,3 +22,4 @@ dependencies:
       # Models
       - pyMou@git+https://github.com/mb-BCA/pyMOU.git@master
       - scipy
+      - networkx

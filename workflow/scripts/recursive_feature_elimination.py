@@ -1,13 +1,15 @@
-import sklearn.linear_model as skllm
-import sklearn.neighbors as sklnn
-import sklearn.discriminant_analysis as skda
-import sklearn.preprocessing as skppc
-import sklearn.pipeline as skppl
-import sklearn.ensemble as skens
-from sklearn import preprocessing
-from sklearn.model_selection import StratifiedShuffleSplit
 import numpy as np
 import pickle
+
+from sklearn import preprocessing
+from sklearn.model_selection import StratifiedShuffleSplit
+
+import scipy
+import sklearn.linear_model as skllm
+import sklearn.preprocessing as skprp
+import sklearn.pipeline as skppl
+import sklearn.feature_selection as skfs
+import sklearn.model_selection as skms
 
 from pathlib import Path
 import sys
@@ -15,7 +17,18 @@ sys.path.append(str((Path(__file__).parent.parent.parent/"calciumimagingtools").
 
 from utils import snakemake_tools
 from features import Features, Means, Raws, Covariances, AutoCovariances, Moup
-from loading import save_h5
+from plotting import graph_circle_plot
+
+
+# MLR adapted for recursive feature elimination (RFE)
+class RFE_pipeline(skppl.Pipeline):
+    def fit(self, X, y=None, **fit_params):
+        """simply extends the pipeline to recover the coefficients (used by RFE) from the last element (the classifier)
+        """
+        super(RFE_pipeline, self).fit(X, y, **fit_params)
+        self.coef_ = self.steps[-1][-1].coef_
+        return self
+
 
 # redirect std_out to log file
 snakemake_tools.redirect_to_log(snakemake)
@@ -32,39 +45,55 @@ cond_feats = []
 for path in snakemake.input:
     cond_feats.append(feature_class.load(path))
 
-# Build RFE pipeline
-c_MLR = skppl.make_pipeline(skppc.StandardScaler(),
-                            skllm.LogisticRegression(C=1, penalty='l2', multi_class='multinomial',
-                                                     solver='lbfgs',
-                                                     max_iter=500))
 
-RFE = skfs.RFE(c_MLR,n_features_to_select=int(RFE_edges))
-rk_inter = np.zeros([n_rep,RFE_edges],dtype=np.int)
+rfe_n = snakemake.wildcards["rfe_n"]
+n_rep = snakemake.params['reps']
 
-### Split
-rep = snakemake.params['reps']
-cv = StratifiedShuffleSplit(rep, test_size=0.2, random_state=420)
+
+### Scale & Split
+
+cv = StratifiedShuffleSplit(n_rep, test_size=0.2, random_state=420)
 
 data = np.concatenate([feat.flatten() for feat in cond_feats])
 labels = np.concatenate([np.full((len(cond_feats[i].flatten())), cond_str[i])
                          for i in range(len(cond_feats))])
 
-### Scale
+
 scaler = preprocessing.StandardScaler().fit( data )
 data = scaler.transform(data)
 cv_split = cv.split(data, labels)
-perf = np.zeros((rep))
-perf = []
+
+# Build RFE pipeline
+c_MLR = RFE_pipeline([('std_scal',skprp.StandardScaler()),('clf',skllm.LogisticRegression(C=10, penalty='l2', multi_class='multinomial', solver='lbfgs', max_iter=500))])
+
+_ , feats = data.shape
+if(rfe_n=="full"): rfe_n = feats
+RFE = skfs.RFE(c_MLR,n_features_to_select=int(rfe_n))
+
+ranking = np.zeros([n_rep,feats],dtype=np.int32)
+perf = np.zeros((n_rep))
+decoders = []
 
 ### Train & Eval
-for i, (train_index, test_index) in enumerate(cv_split):
-    list_best_feat = np.argsort(rk_inter.mean(0))[:RFE_edges]
-    RFE_inter.fit(data[train_idx, :][:,list_best_feat], labels[train_idx])
+for i, (train_i, test_i) in enumerate(cv_split):
 
-    #decoder.fit(data[train_index,:],labels[train_index])
-    #perf[i] = decoder.score(data[test_index,:],labels[test_index])
-    #decoders.append(decoder)
-    perf.append(RFE_inter.estimator_.score(data[test_idx, :][:,list_best_feat], labels[test_idx]))
-    rk_inter[i,:] = RFE_inter.ranking_
+    RFE.fit(data[train_i, :], labels[train_i])
+    ranking[i,:] = RFE.ranking_
 
-graph_circle_plot(rk_inter,n_nodes= comp,n_edges=RFE_edges, title=feature_label[i_feat])
+    best_feat_iter = np.argsort(ranking[i])[:rfe_n]
+    perf[i] = RFE.estimator_.score(data[test_i, :][:,best_feat_iter], labels[test_i])
+    decoders.append(RFE.estimator_)
+
+list_best_feat = np.argsort(ranking.mean(0))[:rfe_n]
+
+with open(snakemake.output["perf"], 'wb') as f:
+    pickle.dump(perf, f)
+
+with open(snakemake.output["best_feats"], 'wb') as f:
+    pickle.dump(list_best_feat, f)
+
+with open(snakemake.output["model"], 'wb') as f:
+    pickle.dump(decoders, f)
+
+
+#graph_circle_plot(ranking,n_nodes= snakemake.params["n_comps"],n_edges=rfe_n, title="")

@@ -16,6 +16,7 @@ import sklearn.ensemble as skens
 from sklearn import preprocessing
 from sklearn.model_selection import StratifiedShuffleSplit
 
+import scipy
 import sklearn.linear_model as skllm
 import sklearn.preprocessing as skprp
 import sklearn.pipeline as skppl
@@ -37,6 +38,7 @@ sys.path.append(Path(__file__).parent)
 from features import Raws,Means, Moup, Covariances, AutoCovariances
 from plotting import graph_circle_plot, plots
 from loading import load_task_data_as_pandas_df
+from decomposition import anatomical_parcellation
 
 
 # MLR adapted for recursive feature elimination (RFE)
@@ -80,9 +82,11 @@ trial_starts = trial_starts[mask]
 
 #print(sessions)
 #print(frameCnt.shape)
+opts_path = data_path/"GN06"/Path('2021-01-20_10-15-16/SVD_data/opts.mat')
+trans_params = scipy.io.loadmat(opts_path,simplify_cells=True)['opts']['transParams']
 
-svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts) )
-
+align_svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts), trans_params=trans_params)
+svd = anatomical_parcellation(align_svd)
 
 #define different conds
 modal_keys = ['visual', 'tactile', 'vistact']
@@ -116,10 +120,10 @@ print(cond_keys_str)
 #####
 save_outputs = True
 baseline_mode = None  #### basline mode ('mean' / 'zscore' / None)
-comp = 20 ### number componants to use
+comp = 65 ### number componants to use
 n_rep = 5  ### number of repetition
 n_comp_LDA = None #5  ### number of LDA componants (conds -1)
-RFE_edges = 20
+RFE_edges = 400
 
 
 #cond_mean = measurements.mean(svd.conditions[0][30:75,:]) #mean of stimulusframes for first cond
@@ -233,6 +237,7 @@ for i_feat, feat in enumerate(tqdm(features,desc="Training classifiers for each 
     graph_circle_plot(rk_inter,n_nodes= comp,n_edges=RFE_edges, title=feature_label[i_feat])
     #print(f'\tRepetition {n_rep:>3}/{n_rep}' )
 
+'''
 if save_outputs:
     np.save('perf_tasks.npy', perf)
 plt.figure()
@@ -257,7 +262,7 @@ plt.yticks(np.arange(0, 1, 0.1))
 plt.ylabel('Accuracy', fontsize=14)
 
 plt.savefig( plot_path/(title+".png") )
-
+'''
 
 ### Plots LDA
 '''
