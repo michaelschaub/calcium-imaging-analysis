@@ -79,7 +79,7 @@ rule all_features:
 
 rule all_rfe:
 	input:
-		 [ f"results/{mouse}/{parcellation}/{filter}/rfe/{rfe_n}/{feature}/best_feats.pkl"
+		 [ f"results/{mouse}/{parcellation}/{filter}/rfe/{rfe_n}/{feature}/circle_plot.png"
 		   for mouse in mouses
 		   for parcellation in parcellations
 		   for filter in filters

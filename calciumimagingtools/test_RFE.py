@@ -85,8 +85,10 @@ trial_starts = trial_starts[mask]
 opts_path = data_path/"GN06"/Path('2021-01-20_10-15-16/SVD_data/opts.mat')
 trans_params = scipy.io.loadmat(opts_path,simplify_cells=True)['opts']['transParams']
 
-align_svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts), trans_params=trans_params)
-svd = anatomical_parcellation(align_svd)
+#align_
+svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts), trans_params=trans_params)
+#svd = anatomical_parcellation(align_svd)
+
 
 #define different conds
 modal_keys = ['visual', 'tactile', 'vistact']
@@ -120,10 +122,10 @@ print(cond_keys_str)
 #####
 save_outputs = True
 baseline_mode = None  #### basline mode ('mean' / 'zscore' / None)
-comp = 50 ### number componants to use
+comp = 20 ### number componants to use
 n_rep = 1  ### number of repetition
 n_comp_LDA = None #5  ### number of LDA componants (conds -1)
-RFE_edges = 100
+RFE_edges = 50
 
 
 #cond_mean = measurements.mean(svd.conditions[0][30:75,:]) #mean of stimulusframes for first cond
@@ -234,7 +236,7 @@ for i_feat, feat in enumerate(tqdm(features,desc="Training classifiers for each 
         i += 1
     print("best_feat_all",np.argsort(rk_inter.mean(0))[:RFE_edges])
     list_best_feat = np.argsort(rk_inter.mean(0))[:RFE_edges]
-    graph_circle_plot(list_best_feat,n_nodes= comp,n_edges=RFE_edges, title=feature_label[i_feat],type_measure=1)
+    graph_circle_plot(list_best_feat,n_nodes= comp, title=feature_label[i_feat],type_measure=1,directed=True)
     #print(f'\tRepetition {n_rep:>3}/{n_rep}' )
 
 '''

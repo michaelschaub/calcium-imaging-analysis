@@ -50,7 +50,9 @@ for path in snakemake.input:
 
 rfe_n = snakemake.wildcards["rfe_n"]
 n_rep = 1 #snakemake.params['reps']
-
+node_feats = snakemake.config["rfe_opts"]["node_feats"]
+inter_feats = snakemake.config["rfe_opts"]["interaction_feats"]
+directed_feats = snakemake.config["rfe_opts"]["directed_feats"]
 
 ### Scale & Split
 
@@ -69,11 +71,14 @@ cv_split = cv.split(data, labels)
 c_MLR = RFE_pipeline([('std_scal',skprp.StandardScaler()),('clf',skllm.LogisticRegression(C=0.00001, penalty='l2', multi_class='multinomial', solver='lbfgs', max_iter=500))])
 
 _ , feats = data.shape
-if(rfe_n=="full"): rfe_n = feats
+if(rfe_n=="full"):
+    rfe_n = feats
+if(int(rfe_n)>int(snakemake.params["n_comps"]) and (snakemake.wildcards["feature"] in node_feats)):
+    rfe_n = feats
 
 RFE = skfs.RFE(c_MLR,n_features_to_select=int(rfe_n))
 
-ranking = np.zeros([n_rep,feats],dtype=np.int)
+ranking = np.zeros([n_rep,feats],dtype=np.int32)
 perf = np.zeros((n_rep))
 decoders = []
 
@@ -99,11 +104,13 @@ with open(snakemake.output["model"], 'wb') as f:
 
 
 ##Plots
-node_feats = snakemake.config["rfe_opts"]["node_feats"]
-inter_feats = snakemake.config["rfe_opts"]["interaction_feats"]
+
+
 if snakemake.wildcards["feature"] in inter_feats:
-    graph_circle_plot(list_best_feat,n_nodes= snakemake.params["n_comps"],n_edges=rfe_n, title=feature,type_measure=1,save_path=snakemake.output["plot"])
+    graph_circle_plot(list_best_feat,n_nodes= snakemake.params["n_comps"], title=feature,type_measure=1,save_path=snakemake.output["plot"])
 
 if snakemake.wildcards["feature"] in node_feats:
-    graph_circle_plot(list_best_feat,n_nodes= snakemake.params["n_comps"],n_edges=rfe_n, title=feature,type_measure=0,save_path=snakemake.output["plot"])
+    graph_circle_plot(list_best_feat,n_nodes= snakemake.params["n_comps"], title=feature,type_measure=0,save_path=snakemake.output["plot"])
 
+if snakemake.wildcards["feature"] in directed_feats:
+    graph_circle_plot(list_best_feat,n_nodes= snakemake.params["n_comps"], title=feature,type_measure=1,save_path=snakemake.output["plot"],directed=True)

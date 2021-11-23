@@ -157,17 +157,18 @@ class Moup(Features):
         return feat
 
     def flatten(self, feat=None):
-        n = len(self._mou_ests[0].get_tau_x()) #Number of Components
-        triu_entries= int(n * (n-1) / 2)
-        flat_params = np.empty((len(self._mou_ests),triu_entries+n )) #Tri Matrix +
+        #n = len(self._mou_ests[0].get_tau_x()) #Number of Components
+        #triu_entries= int(n * (n-1) / 2)
+        n, n = self._mou_ests[0].get_J().shape
+        flat_params = np.empty((len(self._mou_ests),n*n)) #Tri Matrix +
 
         for i,mou_est in enumerate(tqdm(self._mou_ests,desc=self._label,leave=False)):
-            covs = mou_est.get_C()
-            f_covs = covs[np.triu(np.ones(covs.shape, dtype=bool),1)] #diagonal redundant -> use tril instead of trid
+            #covs = mou_est.get_C()
+            #f_covs = covs[np.triu(np.ones(covs.shape, dtype=bool),1)] #diagonal redundant -> use tril instead of trid
 
-            tau_x = mou_est.get_tau_x()
+            #tau_x = mou_est.get_tau_x()
             # other params
-            flat_params[i] = np.concatenate((f_covs, tau_x))
+            flat_params[i,:] = mou_est.get_J().flatten()# np.concatenate((f_covs, tau_x))
 
         return flat_params
 
@@ -180,7 +181,7 @@ class Moup(Features):
     # also maybe numpy array
     @property
     def _feature(self):
-        return [[mou_est.get_tau_x, mou_est.get_C()] for mou_est in self._mou_ests]  # ,other params]
+        return np.asarray([[mou_est.get_J()] for mou_est in self._mou_ests])  # ,other params]
 
 
     mou_attrs = ["n_nodes", "J", "mu", "Sigma", "d_fit"]
