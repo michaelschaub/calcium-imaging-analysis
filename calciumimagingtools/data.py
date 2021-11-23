@@ -100,28 +100,24 @@ class DecompData(Data):
         spatials = np.append(spatials,np.ones((1,h,w)),axis=0)
 
         #Offset instead of Nans as interpolation is used
-        min = np.nanmin(spatials)
-        print(min)
-        eps = np.finfo(np.float32).eps
-        #offset = 2*eps # 10
-        #spatials = spatials - min #+ offset
-        print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
+
+        #print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
         #Rotation
         print("Rotation")
-        spatials = scipy.ndimage.rotate(spatials,trans_params['angleD'], axes=(2,1), reshape=True, cval= -eps)
-        print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
+        spatials = scipy.ndimage.rotate(spatials,trans_params['angleD'], axes=(2,1), reshape=True, cval= 0)
+        #print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
 
         ### introduces weird aliasing along edges due to interpolation
         #Scale
         print("Scale/Zoom")
-        spatials = scipy.ndimage.zoom(spatials, (1,trans_params['scaleConst'],trans_params['scaleConst']),order=1,cval= -eps) #slow
-        print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
+        spatials = scipy.ndimage.zoom(spatials, (1,trans_params['scaleConst'],trans_params['scaleConst']),order=1,cval= 0) #slow
+        #print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
 
         #Translate
         print("Translate/Shift")
-        spatials = scipy.ndimage.shift(spatials, np.insert(np.flip(trans_params['tC']),0,0),cval= -eps, order=1, mode='constant') #slow
+        spatials = scipy.ndimage.shift(spatials, np.insert(np.flip(trans_params['tC']),0,0),cval= 0, order=1, mode='constant') #slow
         ### ---
-        print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
+        #print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
 
         #Remove offset
 
