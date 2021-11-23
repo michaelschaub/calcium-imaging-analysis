@@ -15,6 +15,7 @@ dependencies:
   - matplotlib>=3.4
   - tqdm>=4.62
   - hdf5
+  - pyyaml
   - pytables
   - pip:
       - h5py # conda h5py doesn't work for me

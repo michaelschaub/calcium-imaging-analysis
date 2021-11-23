@@ -7,13 +7,24 @@ dates		= config["branch_opts"]["dates"]
 parcellations	= config["branch_opts"]["parcellations"]
 filters		= config["branch_opts"]["filters"]
 
-sides		= config["conditional_opts"]["sides"]
-modalities	= config["conditional_opts"]["modalities"]
+conditions	= config["branch_opts"]["conditions"]
+if conditions is None:
+	sides			= config["trial_conditions"]["sides"]["conds"]
+	modalities		= config["trial_conditions"]["modalities"]["conds"]
 
-conditions	= [ f"{side}_{modal}"
-			for side in sides for modal in modalities]
-condition_dicts	= { f"{side}_{modal}" : {"modality" : m, "target_side_left" : s}
-			for s,side in enumerate(sides) for m,modal in enumerate(modalities)}
+	trial_conditions	= { f"{side}_{modal}" : {"modality" : m, "target_side_left" : s}
+					for side,s in sides.items() for modal,m in modalities.items()}
+	phase_conditions	= dict.fromkeys(trial_conditions.keys(),"stimulus")
+else:
+	trial_condition		= config["trial_conditions"]
+	phase_condition		= config["phase_conditions"]
+	trial_conditions	= { label :
+					{ trial_condition[condition]["column"] : trial_condition[condition]["conds"][key]
+						for condition, key in conds.items() if condition != "phase" }
+					for label, conds in conditions.items() }
+	phase_conditions	= { label : phase_condition[conds["phase"]] if "phase" in conds else None
+					for label, conds in conditions.items() }
+
 
 features	= config["features"]
 
@@ -43,7 +54,7 @@ rule all:
 					for mouse in mouses
 					for parcellation in parcellations
 					for filter in filters
-					for cond in conditions
+					for cond in trial_conditions.keys()
 					for feature in features],
 
 rule all_plots:
@@ -52,7 +63,7 @@ rule all_plots:
 			   for mouse in mouses
 			   for parcellation in parcellations
 			   for filter in filters
-			   for cond in conditions
+			   for cond in trial_conditions.keys()
 			   for feature in features]
 
 rule all_decode:
@@ -61,7 +72,7 @@ rule all_decode:
 				for mouse in mouses
 				for parcellation in parcellations
 				for filter in filters
-				for cond in conditions
+				for cond in trial_conditions.keys()
 				for feature in features
 				for decoder in decoders]
 
@@ -71,7 +82,7 @@ rule all_features:
 				for mouse in mouses
 				for parcellation in parcellations
 				for filter in filters
-				for cond in conditions
+				for cond in trial_conditions.keys()
 				for feature in features ]
 
 
@@ -138,7 +149,14 @@ rule prefilters:
 	script:
 		"scripts/prefilter.py"
 
-rule conditions:
+def condition_params(wildcards):
+	params = {
+		"trial_conditions" : { wildcards["cond"] : trial_conditions[wildcards["cond"]]},
+		"phase_conditions" : { wildcards["cond"] : phase_conditions[wildcards["cond"]]},
+	}
+	return params
+
+rule condition:
 	input:
 		"results/{mouse}/{parcellation}/{filter}/filtered_data.h5",
 		config = "results/{mouse}/{parcellation}/{filter}/conf.yaml",
@@ -146,7 +164,7 @@ rule conditions:
 		"results/{mouse}/{parcellation}/{filter}/{cond}/conditional_data.h5",
 		config = "results/{mouse}/{parcellation}/{filter}/{cond}/conf.yaml",
 	params:
-		conditions = lambda wildcards : [condition_dicts[wildcards["cond"]]]
+		condition_params
 	log:
 		"results/{mouse}/{parcellation}/{filter}/{cond}/conditionals.log"
 	conda:
@@ -174,13 +192,13 @@ rule feature_calculation:
 
 rule decoding:
 	input:
-		[f"results/{{mouse}}/{{parcellation}}/{{filter}}/{cond}/{{feature}}/feature_data.h5" for cond in conditions],
+		[f"results/{{mouse}}/{{parcellation}}/{{filter}}/{cond}/{{feature}}/feature_data.h5" for cond in trial_conditions.keys()],
 	output:
 		"results/{mouse}/{parcellation}/{filter}/decoder/{feature}/{decoder}/decoder_model.pkl",
 		"results/{mouse}/{parcellation}/{filter}/decoder/{feature}/{decoder}/decoder_perf.pkl",
 		config = "results/{mouse}/{parcellation}/{filter}/decoder/{feature}/{decoder}/conf.yaml",
 	params:
-		conds = conditions,
+		conds = list(trial_conditions.keys()),
 		reps = k_folds,
 	log:
 	   "results/{mouse}/{parcellation}/{filter}/decoder/{feature}/{decoder}/decoding.log",
@@ -202,7 +220,7 @@ rule plot_performance:
 		"results/{mouse}/{parcellation}/{filter}/decoder/{feature}/plots/performance.png",
 		"results/{mouse}/{parcellation}/{filter}/decoder/{feature}/plots/performance.pkl",
 	params:
-		conds=conditions,
+		conds=list(trial_conditions.keys()),
 		decoders=decoders,
 	log:
 		"results/{mouse}/{parcellation}/{filter}/decoder/{feature}/plots/plot_performance.log",
@@ -219,7 +237,7 @@ rule plot_performances:
 	output:
 		"results/{mouse}/{parcellation}/{filter}/decoder/performances.png",
 	params:
-		conds=conditions,
+		conds=list(trial_conditions.keys()),
 		decoders=decoders,
 		features=features,
 	log:

@@ -18,7 +18,7 @@ feature_dict = { "mean" : Means, "raw" : Raws, "covariance" : Covariances, "auto
 feature = snakemake.wildcards["feature"]
 data = DecompData.load(snakemake.input[0])
 
-feat = feature_dict[feature].create(data[:,config["stim_start"]:config["stim_stop"]], max_comps=config["max_components"])
+feat = feature_dict[feature].create(data, max_comps=config["max_components"])
 
 
 feat.save(snakemake.output[0])
