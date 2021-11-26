@@ -28,6 +28,20 @@ branch_opts:
       #phase:      stimulus
       #sides:      left
       #modalities: visual
+  features:
+    mean:
+    covariance:
+    autocovariance:
+      max_timelag: [2]
+  decoders:
+    MLR:
+      reps: [5]
+    1NN:
+      reps: [5]
+    LDA:
+      reps: [5]
+    RF:
+      reps: [5]
 
 parcellation_opts:
   paths:
@@ -64,17 +78,4 @@ phase_conditions:
     start:  30
     stop:   75
 
-features:
-  - mean
-  - covariance
-
-
-decode_opts:
-  k_folds: 5
-  decoders:
-    - MLR
-    - 1NN
-    - LDA
-    - RF
-
-different_config_inputs: 1
+different_config_inputs: 0
