@@ -35,21 +35,22 @@ load_feat = True
 force_extraction = False
 
 
-data_path = pathlib.Path(__file__).parent.parent/'data'
-svd_path = data_path/'output/GN06/SVD/data.h5'
+resc_path = pathlib.Path(__file__).parent.parent/'resources'
+resl_path = pathlib.Path(__file__).parent.parent/'results'
+svd_path = resl_path/'GN06/SVD/data.h5'
 if (not svd_path.exists()) or force_extraction:
-    if (not (data_path/'input/extracted_data.pkl').exists()) or force_extraction:
+    if (not (resc_path/'extracted_data.pkl').exists()) or force_extraction:
         # load behavior data
-        sessions = load_task_data_as_pandas_df.extract_session_data_and_save(root_paths=[data_path/"input"], mouse_ids=["GN06"], reextract=False)
-        with open( data_path/'input/extracted_data.pkl', 'wb') as handle:
+        sessions = load_task_data_as_pandas_df.extract_session_data_and_save(root_paths=[resc_path/"experiments"], mouse_ids=["GN06"], reextract=False)
+        with open( resc_path/'extracted_data.pkl', 'wb') as handle:
             pkl.dump(sessions, handle)
     else:
         # load saved data
-        with open( data_path/'input/extracted_data.pkl', 'rb') as handle:
+        with open( resc_path/'extracted_data.pkl', 'rb') as handle:
             sessions = pkl.load(handle)
         print("Loaded pickled data.")
 
-    file_path = data_path/'input'/'GN06'/'2021-01-20_10-15-16'/'SVD_data'/'Vc.mat'
+    file_path = resc_path/'experiments'/'GN06'/'2021-01-20_10-15-16'/'SVD_data'/'Vc.mat'
     f = h5py.File(file_path, 'r')
 
     frameCnt = np.array(f['frameCnt'])
@@ -72,8 +73,8 @@ svd_pre = svd[ trial_preselection ]
 modality_keys = ['visual', 'tactile', 'vistact']
 target_side_keys = ['right', 'left']
 
-save_files = [ [ data_path/f"output/{plt_mode}_{mod}_{side}.h5" for side in target_side_keys ] for mod in modality_keys ]
-data_save_file = data_path/f"output/data.h5"
+save_files = [ [ resl_path/f"{plt_mode}_{mod}_{side}.h5" for side in target_side_keys ] for mod in modality_keys ]
+data_save_file = resl_path/f"data.h5"
 
 if plt_mode in ["mean", "z_score"]:
 
