@@ -39,7 +39,7 @@ class Data(ABC):
 
 
 class DecompData(Data):
-    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, cond_filter=None, trans_params=None, savefile=None, read_only=True):
+    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, cond_filter=None, trans_params=None, savefile=None, read_only=True, spatial_labels=None):
         assert len(df) != trial_starts.shape[0]-1, (
             f"DataFrame df and trial_starts do not have matching length ({len(df)} != {len(trial_starts)})\n\t(maybe remove last entry?)")
         assert len(df) == trial_starts.shape[0], (
@@ -47,7 +47,10 @@ class DecompData(Data):
         self._df = df
         self._temps = temporal_comps
         self._spats = spatial_comps if trans_params is None else self.align_spatials(spatial_comps, trans_params)
+
         self._starts = trial_starts
+        self._spat_labels = spatial_labels
+
 
         if cond_filter is None:
             cond_filter = []
@@ -60,9 +63,10 @@ class DecompData(Data):
             self._starts.flags.writeable = False
 
     #Used for parcellations
-    def update(self,temporal_comps, spatial_comps):
+    def update(self,temporal_comps, spatial_comps, spatial_labels=None):
         self._temps = temporal_comps
         self._spats = spatial_comps
+        self._spat_labels = spatial_labels
 
     def save(self, file, temps_file=None, spats_file=None, starts_file=None, temps_label="temps", spats_label="spats", starts_label="starts" ):
         h5_file = save_h5( self, file, df=self._df,

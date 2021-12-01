@@ -4,9 +4,16 @@ from loading import reproducable_hash, load_h5, save_h5
 
 from pymou import MOU
 import pathlib
+from enum import Enum
 
 #Progress Bar
 from tqdm.auto import tqdm
+
+class Feature_Type(Enum):
+    NODE = 0
+    UNDIRECTED = 1
+    DIRECTED = 2
+    TIMESERIES = 3
 
 class Features:
     def __init__(self, data, feature, file=None):
@@ -143,13 +150,20 @@ class Features:
 
     LOADED_FEATURES = {}
 
+    @property
+    def type(self):
+        return self._type
+
 
 class Moup(Features):
+    _type = Feature_Type.DIRECTED
+
     def __init__(self, data, mou_ests, label=None, file=None):
         self.data = data
         self._mou_ests = mou_ests
         self._label = label
         self._savefile = file
+
 
     def create(data, max_comps=None, time_lag=None, label=None):
         mou_ests = fit_moup(data.temporals[:, :, :max_comps], time_lag, label)
@@ -268,7 +282,7 @@ def recompose_mou_ests( attr_arrays, mou_ests=None ):
 
 class Raws(Features):
     def create(data, max_comps=None):
-        feat = Raws(data, data.temporals[:, :, :max_comps])
+        feat = Raws(data, data.temporals[:, :, :max_comps],type=Feature_Type.TIMESERIES)
         return feat
 
     def flatten(self, feat=None):
@@ -287,6 +301,8 @@ def calc_means(temps):
 
 
 class Means(Features):
+    _type = Feature_Type.NODE
+
     def create(data, max_comps=None):
         feat = Means(data, feature=calc_means(data.temporals[:, :, :max_comps]))
         return feat
@@ -325,6 +341,8 @@ def flat_covs(covs, diagonal):
 
 
 class Covariances(Features):
+    _type = Feature_Type.UNDIRECTED
+
     def __init__(self, data, feature, means, file=None, include_diagonal=True):
         self.data = data
         self._feature = feature
@@ -400,6 +418,8 @@ DEFAULT_TIMELAG = 10
 
 
 class AutoCovariances(Features):
+    _type=Feature_Type.UNDIRECTED
+
     def __init__(self, data, feature, means, covs, file=None, include_diagonal=True):
         self.data = data
         self._feature = feature

@@ -2,6 +2,11 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 
+import sys
+from pathlib import Path
+sys.path.append(Path(__file__).parent)
+from features import Feature_Type
+
 
 def colored_violinplot(*args, color=None, facecolor=None, edgecolor=None, **kwargs):
     violin_parts = plt.violinplot(*args, **kwargs)
@@ -43,7 +48,7 @@ def plot_frame(temps, spatial, titles, plt_title):
     print("plotted")
 
 
-def graph_circle_plot(list_best_feat, n_nodes, title,type_measure=1,save_path=False, directed=False):
+def graph_circle_plot(list_best_feat, n_nodes, title, feature_type, save_path=False,  node_labels=None):
     #%% network and plot properties
     N = n_nodes #20 # number of nodes
     print(N)
@@ -52,13 +57,16 @@ def graph_circle_plot(list_best_feat, n_nodes, title,type_measure=1,save_path=Fa
     for i in range(N):
         pos_circ[i] = np.array([np.sin(2*np.pi*(i/N+0.5/N)), np.cos(2*np.pi*(i/N+0.5/N))])
 
-    # channel labels
-    ch_labels = dict()
-    for i in range(N):
-        ch_labels[i] = i+1
+    # channel labels need to be dict for nx
+    if node_labels is None:
+        node_labels = dict()
+        for i in range(N):
+            node_labels[i] = i+1
+    else:
+        node_labels = dict(enumerate(node_labels))
 
     # matrices to retrieve input/output channels from connections in support network
-    mask = np.tri(N,N,0, dtype=bool) if not directed else np.ones((N,N), dtype=bool)
+    mask = np.tri(N,N,0, dtype=bool) if feature_type == Feature_Type.UNDIRECTED else np.ones((N,N), dtype=bool)
 
     print(mask.shape)
     row_ind = np.repeat(np.arange(N).reshape([N,-1]),N,axis=1)
@@ -72,7 +80,7 @@ def graph_circle_plot(list_best_feat, n_nodes, title,type_measure=1,save_path=Fa
     plt.axes([0.05,0.05,0.95,0.95])
     plt.axis('off')
     plt.title=title
-    if type_measure == 0: # nodal
+    if feature_type == Feature_Type.NODE: # nodal
         #list_best_feat = np.argsort(class_perfs.mean(0))[:n_edges] # select n best features
         node_color_aff = []
         g = nx.Graph()
@@ -83,10 +91,11 @@ def graph_circle_plot(list_best_feat, n_nodes, title,type_measure=1,save_path=Fa
             else:
                 node_color_aff += ['#E8F0F2']
         nx.draw_networkx_nodes(g,pos=pos_circ,node_color=node_color_aff)
-        nx.draw_networkx_labels(g,pos=pos_circ,labels=ch_labels)
-    else: # interactional
+        nx.draw_networkx_labels(g,pos=pos_circ,labels=node_labels)
+
+    if feature_type == Feature_Type.DIRECTED or feature_type == Feature_Type.UNDIRECTED:
         #list_best_feat = np.argsort(class_perfs.mean(0))[:n_edges] # select n best features
-        g = nx.Graph() if not directed else nx.MultiDiGraph()
+        g = nx.Graph() if feature_type == Feature_Type.UNDIRECTED else nx.MultiDiGraph()
         for i in range(N):
             g.add_node(i)
         node_color_aff = ['#E8F0F2']*N
@@ -99,7 +108,7 @@ def graph_circle_plot(list_best_feat, n_nodes, title,type_measure=1,save_path=Fa
                 g.add_edge(col_ind[ij],row_ind[ij])
         print(g)
         nx.draw_networkx_nodes(g,pos=pos_circ,node_color=node_color_aff)
-        nx.draw_networkx_labels(g,pos=pos_circ,labels=ch_labels)
+        nx.draw_networkx_labels(g,pos=pos_circ,labels=node_labels)
         nx.draw_networkx_edges(g,pos=pos_circ,edgelist=g.edges(),edge_color='#009DAE')
     if (not save_path):
         plt.show()

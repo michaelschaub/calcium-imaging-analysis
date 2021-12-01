@@ -86,8 +86,8 @@ opts_path = data_path/"GN06"/Path('2021-01-20_10-15-16/SVD_data/opts.mat')
 trans_params = scipy.io.loadmat(opts_path,simplify_cells=True)['opts']['transParams']
 
 #align_
-svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts), trans_params=trans_params)
-#svd = anatomical_parcellation(align_svd)
+align_svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts), trans_params=trans_params)
+svd = anatomical_parcellation(align_svd)
 
 
 #define different conds
@@ -122,17 +122,17 @@ print(cond_keys_str)
 #####
 save_outputs = True
 baseline_mode = None  #### basline mode ('mean' / 'zscore' / None)
-comp = 20 ### number componants to use
+comp = 65 ### number componants to use
 n_rep = 1  ### number of repetition
 n_comp_LDA = None #5  ### number of LDA componants (conds -1)
-RFE_edges = 50
+RFE_edges = 20
 
 
 #cond_mean = measurements.mean(svd.conditions[0][30:75,:]) #mean of stimulusframes for first cond
 #features  = ['mean',"mean(-base)","raw","mou"]
 feature_data = {
 
-    #"mean": [Means.create(svd.conditions[i,:,30:75],max_comps=comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond
+    "mean": [Means.create(svd.conditions[i,:,30:75],max_comps=comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond
     #"mean(-base)": [Means(svd.conditions[i,:,30:75]-Means(svd.conditions[i,:,15:30]),comp) for i in range(len(svd.conditions))],
     #"raw": [Raws(svd.conditions[i,:,30:75],comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond,
     "Cov w/o_Diagonal": [Covariances.create(svd.conditions[i,:,30:75],max_comps=comp, include_diagonal= True) for i in tqdm(range(len(svd.conditions)),desc='Conditions')], #mean of stimulusframes for first cond
@@ -162,6 +162,7 @@ classifiers = {}
 ######
 
 for i_feat, feat in enumerate(tqdm(features,desc="Training classifiers for each features")):
+    print(feature_data[feat][0].type)
 
 
     data = np.concatenate([feat.flatten() for feat in feature_data[feat]])
@@ -236,7 +237,12 @@ for i_feat, feat in enumerate(tqdm(features,desc="Training classifiers for each 
         i += 1
     print("best_feat_all",np.argsort(rk_inter.mean(0))[:RFE_edges])
     list_best_feat = np.argsort(rk_inter.mean(0))[:RFE_edges]
-    graph_circle_plot(list_best_feat,n_nodes= comp, title=feature_label[i_feat],type_measure=1,directed=True)
+
+    data_path = Path(__file__).parent.parent / Path('resources')
+    dict_path = data_path/"meta"/"anatomical.mat"
+    dorsal_labels = np.asarray(scipy.io.loadmat(dict_path ,simplify_cells=True) ['areaLabels'], dtype ='str')
+
+    graph_circle_plot(list_best_feat,n_nodes= comp, title=feature_label[i_feat],feature_type = feature_data[feat][0].type,node_labels=dorsal_labels)
     #print(f'\tRepetition {n_rep:>3}/{n_rep}' )
 
 '''
