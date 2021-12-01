@@ -35,7 +35,7 @@ import sys
 sys.path.append(Path(__file__).parent)
 
 
-from features import Raws,Means, Moup, Covariances, AutoCovariances
+from features import Raws,Means, Moup, Covariances, AutoCovariances, Feature_Type
 from plotting import graph_circle_plot, plots
 from loading import load_task_data_as_pandas_df
 from decomposition import anatomical_parcellation
@@ -53,7 +53,6 @@ class RFE_pipeline(skppl.Pipeline):
 
 # add missing h5 files here
 missing_task_data = []
-
 
 ### New data extraction
 data_path = Path(__file__).parent.parent / Path('resources/experiment')

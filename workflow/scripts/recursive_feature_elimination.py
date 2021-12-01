@@ -17,7 +17,7 @@ import sys
 sys.path.append(str((Path(__file__).parent.parent.parent/"calciumimagingtools").absolute()))
 
 from utils import snakemake_tools
-from features import Features, Means, Raws, Covariances, AutoCovariances, Moup
+from features import Features, Means, Raws, Covariances, AutoCovariances, Moup, Feature_Type
 from plotting import graph_circle_plot
 
 
@@ -47,15 +47,11 @@ cond_feats = []
 for path in snakemake.input:
     cond_feats.append(feature_class.load(path))
 
-
+feat_type = cond_feats[0].type
 rfe_n = snakemake.wildcards["rfe_n"]
 n_rep = 1 #snakemake.params['reps']
-node_feats = snakemake.config["rfe_opts"]["node_feats"]
-inter_feats = snakemake.config["rfe_opts"]["interaction_feats"]
-directed_feats = snakemake.config["rfe_opts"]["directed_feats"]
 
 ### Scale & Split
-
 cv = StratifiedShuffleSplit(n_rep, test_size=0.2, random_state=420)
 
 data = np.concatenate([feat.flatten() for feat in cond_feats])
@@ -73,7 +69,7 @@ c_MLR = RFE_pipeline([('std_scal',skprp.StandardScaler()),('clf',skllm.LogisticR
 _ , feats = data.shape
 if(rfe_n=="full"):
     rfe_n = feats
-if(int(rfe_n)>int(snakemake.params["n_comps"]) and (snakemake.wildcards["feature"] in node_feats)):
+if(int(rfe_n)>int(snakemake.params["n_comps"]) and feat_type == Feature_Type.NODE):
     rfe_n = feats
 
 RFE = skfs.RFE(c_MLR,n_features_to_select=int(rfe_n))
@@ -104,13 +100,4 @@ with open(snakemake.output["model"], 'wb') as f:
 
 
 ##Plots
-
-
-if snakemake.wildcards["feature"] in inter_feats:
-    graph_circle_plot(list_best_feat,n_nodes= snakemake.params["n_comps"], title=feature,type_measure=1,save_path=snakemake.output["plot"])
-
-if snakemake.wildcards["feature"] in node_feats:
-    graph_circle_plot(list_best_feat,n_nodes= snakemake.params["n_comps"], title=feature,type_measure=0,save_path=snakemake.output["plot"])
-
-if snakemake.wildcards["feature"] in directed_feats:
-    graph_circle_plot(list_best_feat,n_nodes= snakemake.params["n_comps"], title=feature,type_measure=1,save_path=snakemake.output["plot"],directed=True)
+graph_circle_plot(list_best_feat,n_nodes= snakemake.params["n_comps"], title=feature, feature_type = feat_type, save_path=snakemake.output["plot"])
