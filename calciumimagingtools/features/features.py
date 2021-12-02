@@ -111,11 +111,7 @@ class Features:
     def save(self, file, data_file=None):
         '''
         '''
-        h5_file = save_h5( self, file,
-                            attributes=[self._feature],
-                            attr_files=[None ],
-                            labels=[ "feat" ],
-                            hashes=[ self.hash ] )
+        h5_file = save_h5( self, file, { "feature": self._feature } )
         h5_file.attrs["data_hash"] = self._data_hash
         if self.data.savefile is None:
             if data_file is None:
@@ -131,7 +127,7 @@ class Features:
         if try_loaded and feature_hash is not None and feature_hash in Features.LOADED_FEATURES:
             feat = Features.LOADED_FEATURES[feature_hash]
         else:
-            h5_file, _, feature = load_h5( file, attr_files=[None], labels=["feat"])
+            h5_file, feature = load_h5( file, ["feature"] )
             if try_loaded and h5_file.attrs["data_hash"] in Data.LOADED_DATA:
                 data = Data.LOADED_DATA[h5_file.attrs["data_hash"]]
             elif data_file is None:
@@ -190,15 +186,8 @@ class Moup(Features):
         '''
         attr_arrays = decompose_mou_ests( self._mou_ests )
         attr_arrays["d_fit"] = { key: np.array([ a[key] for a in attr_arrays["d_fit"]]) for key in attr_arrays["d_fit"][0].keys() }
-        labels = attr_arrays.keys()
-        attributes = attr_arrays.values()
-        hashes = [ reproducable_hash(attr) if not isinstance(attr, dict) else None for attr in attributes ]
 
-        h5_file = save_h5( self, file,
-                            attributes=attributes,
-                            attr_files=[None for l in labels],
-                            labels=labels,
-                            hashes=hashes )
+        h5_file = save_h5( self, file, attr_arrays )
         h5_file.attrs["data_hash"] = self._data_hash
         if self._data.savefile is None:
             if data_file is None:
@@ -214,7 +203,7 @@ class Moup(Features):
         if try_loaded and feature_hash is not None and feature_hash in Features.LOADED_FEATURES:
             feat = Features.LOADED_FEATURES[feature_hash]
         else:
-            h5_file, _, *attributes = load_h5( file, attr_files=[None for l in Class.mou_attrs], labels=Class.mou_attrs)
+            h5_file, *attributes = load_h5( file, labels=Class.mou_attrs )
             if try_loaded and h5_file.attrs["data_hash"] in Data.LOADED_DATA:
                 data = Data.LOADED_DATA[h5_file.attrs["data_hash"]]
             elif data_file is None:
@@ -347,11 +336,8 @@ class Covariances(Features):
     def save(self, file, data_file=None):
         '''
         '''
-        h5_file = save_h5( self, file,
-                            attributes=[self._feature, self._means],
-                            attr_files=[None,None],
-                            labels=[ "feat", "means" ],
-                            hashes=[ self.hash, reproducable_hash(self._means) ] )
+        h5_file = save_h5( self, file, {"feature" : self._feature,
+                                        "means" : self._means } )
         h5_file.attrs["data_hash"] = self._data_hash
         if self._data.savefile is None:
             if data_file is None:
@@ -367,7 +353,7 @@ class Covariances(Features):
         if try_loaded and feature_hash is not None and feature_hash in Features.LOADED_FEATURES:
             feat = Features.LOADED_FEATURES[feature_hash]
         else:
-            h5_file, _, feature, means = load_h5( file, attr_files=[None,None], labels=["feat","means"])
+            h5_file, feature, means = load_h5( file, labels=["feature","means"])
             if try_loaded and h5_file.attrs["data_hash"] in Data.LOADED_DATA:
                 data = Data.LOADED_DATA[h5_file.attrs["data_hash"]]
             elif data_file is None:
@@ -433,11 +419,9 @@ class AutoCovariances(Features):
     def save(self, file, data_file=None):
         '''
         '''
-        h5_file = save_h5( self, file,
-                            attributes=[self._feature, self._means,self._covs],
-                            attr_files=[None,None,None],
-                            labels=[ "feat", "means", "covs" ],
-                            hashes=[ self.hash, reproducable_hash(self._means), reproducable_hash(self._covs) ] )
+        h5_file = save_h5( self, file, {"feature" : self._feature,
+                                        "means" : self._means,
+                                        "covs" : self._covs } )
         h5_file.attrs["data_hash"] = self._data_hash
         if self._data.savefile is None:
             if data_file is None:
@@ -453,7 +437,7 @@ class AutoCovariances(Features):
         if try_loaded and feature_hash is not None and feature_hash in Features.LOADED_FEATURES:
             feat = Features.LOADED_FEATURES[feature_hash]
         else:
-            h5_file, _, feature, means, covs = load_h5( file, attr_files=[None,None,None], labels=["feat","means","covs"])
+            h5_file, feature, means, covs = load_h5( file, labels=["feature","means","covs"])
             if try_loaded and h5_file.attrs["data_hash"] in Data.LOADED_DATA:
                 data = Data.LOADED_DATA[h5_file.attrs["data_hash"]]
             elif data_file is None:

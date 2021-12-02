@@ -25,7 +25,7 @@ from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 plt_mode = "raw_z_score" # should be from ["mean", "z_score", "raw", "raw_z_score", None]
-plt_mode = "raw"
+plt_mode = "mean"
 raw_course_graining = 1
 animation_slowdown = 1
 
