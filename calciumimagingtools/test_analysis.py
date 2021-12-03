@@ -91,7 +91,7 @@ side_keys = ['right', 'left']
 side_range = range(2)
 
 #filter for all conds
-trial_preselection = ((svd.n_targets == 6) & (svd.n_distractors == 0) & (svd.auto_reward == 0) & (svd.both_spouts == 1))
+trial_preselection = ((svd._df.n_targets == 6) & (svd._df.n_distractors == 0) & (svd._df.auto_reward == 0) & (svd._df.both_spouts == 1))
 
 #set condition filter
 cond_keys =  itertools.product(side_keys,modal_keys)
@@ -103,7 +103,7 @@ svd.conditions = [ {"modality" : modal, "target_side_left" : side} for side in s
 print(cond_keys_str)
 
 #Hardcoded 'vis_left','tact_right'
-#svd.conditions = [(svd.modality == 0) & (svd.target_side_left == 0) & trial_preselection, (svd.modality ==  1) & (svd.target_side_left == 1) & trial_preselection]
+#svd.conditions = [(svd._df.modality == 0) & (svd._df.target_side_left == 0) & trial_preselection, (svd._df.modality ==  1) & (svd._df.target_side_left == 1) & trial_preselection]
 #cond_keys_str = ['vis_left','tact_right']
 
 #cond_keys =  list(itertools.product(modal_keys,side_keys))
