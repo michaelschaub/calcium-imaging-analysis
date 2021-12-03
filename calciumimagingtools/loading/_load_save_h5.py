@@ -3,26 +3,46 @@ import pandas as pd
 import h5py
 import warnings
 
-CHECK_HASH = False
+from hashlib import sha1
 
-def reproducable_hash( a, vtype=None ):
+CHECK_HASH = True
+
+def reproducable_hash( a, hsh=None, vtype=None ):
     '''
-    should create hashes of DataFrames and ndarrays, that are consitent between saving and loading
-    does not really work, basically returns random number unique per data and run
+    creates hashes, that are consistent between saving and loading
     '''
-    #TODO: fix
+    if hsh is None:
+        hsh = sha1()
+
     if vtype == "panda_frame" or isinstance( a, pd.DataFrame ):
-        return hash(a.to_csv()) # there must be a better way to hash a DataFrame, right?
-        # spoiler: No.
+        hsh.update(a.to_csv().encode("utf-8"))
     elif vtype == "numpy_array" or isinstance( a, np.ndarray ):
-        return hash(a.tostring()) # everything else seems to not work?!
+        hsh.update(a.tobytes())
     elif vtype == "dictionary" or isinstance(a, dict):
-        return hash(tuple( (key, reproducable_hash(val)) for key,val in a.items() ))
+        for key,val in a.items():
+            hsh = reproducable_hash(key, hsh)
+            hsh = reproducable_hash(val, hsh)
+    elif isinstance(a, tuple):
+        for val in a:
+            hsh = reproducable_hash(val, hsh)
+    #elif isinstance(a, str):
+        #hsh.update( a.encode("utf-8") )
     else:
         try:
-            return hash(a)
+            hsh.update( a )
+            return hsh
         except TypeError as err:
-            raise TypeError(f"Cannot reproducably hash object {a} of type {type(a)}.") from None
+            pass
+
+        try:
+            arr = np.array(a)
+            error = False
+        except TypeError as err:
+            error = True
+        if error or arr.dtype.hasobject:
+            raise TypeError(f"Cannot reproducably hash object {a} of type {type(a)}.")
+        hsh.update(arr.tobytes())
+    return hsh
 
 
 SAVEABLE_TYPES = [
@@ -73,7 +93,7 @@ def save_h5(data, file, attributes={} ):
 
     for label, attr in attributes.items():
         h5_file = save_object_h5( h5_file, label, attr)
-        h5_file[label].attrs["hash"] = reproducable_hash(attr)
+        h5_file[label].attrs["hash"] = reproducable_hash(attr).hexdigest()
 
     return h5_file
 
@@ -85,7 +105,7 @@ def load_h5(file, labels=[] ):
         h5_file, attr = load_object_h5(h5_file, label)
 
         if CHECK_HASH and ( "hash" in h5_file[label].attrs and
-            h5_file[label].attrs["hash"] != reproducable_hash(attr, h5_file[label].attrs["vtype"])):
+            h5_file[label].attrs["hash"] != reproducable_hash(attr, vtype=h5_file[label].attrs["vtype"]).hexdigest()):
             warnings.warn(f"{label} hashes do not match", Warning)
 
         attributes.append(attr)

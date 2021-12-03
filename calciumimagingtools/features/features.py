@@ -70,9 +70,9 @@ class Features:
             raise AttributeError("Feature already has data object set.")
         if isinstance( data, Data ):
             self._data = data
-            self._data_hash = data.hash
+            self._data_hash = data.hash.hexdigest()
             self._data_file = data.savefile
-        elif type(data) == int:
+        elif type(data) == str:
             self.data_hash = data
         else:
             try:
@@ -85,13 +85,13 @@ class Features:
         if not hasattr(self, '_data'):
             return self._data_hash
         else:
-            return self._data.hash
+            return self._data.hash.hexdigest()
 
     @data_hash.setter
     def data_hash(self, data_hash):
         if not hasattr(self, '_data'):
             self._data_hash = data_hash
-        elif  self._data.hash != data_hash:
+        elif  self._data.hash.hexdigest() != data_hash:
             raise AttributeError("Feature already has data object set.")
 
     @property
@@ -134,7 +134,7 @@ class Features:
                 data_file = h5_file.attrs["data_file"]
             feat = Class(data_file, feature, file)
             feat.data_hash = h5_file.attrs["data_hash"]
-            Features.LOADED_FEATURES[feat.hash] = feat
+            Features.LOADED_FEATURES[feat.hash.hexdigest()] = feat
         return feat
 
     LOADED_FEATURES = {}
@@ -169,7 +169,7 @@ class Moup(Features):
 
     @property
     def hash(self):
-        return hash(tuple( reproducable_hash(getattr(mou,attr))
+        return reproducable_hash(tuple( getattr(mou,attr)
                                     for attr in Moup.mou_attrs if attr != "d_fit" for mou in self._mou_ests))
 
     # may need workaround, _feature should be constant and as close to instant access as possible
@@ -188,7 +188,7 @@ class Moup(Features):
         attr_arrays["d_fit"] = { key: np.array([ a[key] for a in attr_arrays["d_fit"]]) for key in attr_arrays["d_fit"][0].keys() }
 
         h5_file = save_h5( self, file, attr_arrays )
-        h5_file.attrs["data_hash"] = self._data_hash
+        h5_file.attrs["data_hash"] = self._data_hash.hexdigest()
         if self._data.savefile is None:
             if data_file is None:
                 path = pathlib.Path(file)
@@ -214,7 +214,7 @@ class Moup(Features):
             mou_ests = recompose_mou_ests(attr_arrays)
             feat = Class(data_file, mou_ests, label)
             feat.data_hash = h5_file.attrs["data_hash"]
-            Features.LOADED_FEATURES[feat.hash] = feat
+            Features.LOADED_FEATURES[feat.hash.hexdigest()] = feat
         return feat
 
 
@@ -360,7 +360,7 @@ class Covariances(Features):
                 data_file = h5_file.attrs["data_file"]
             feat = Class(data_file, feature, means, file)
             feat.data_hash = h5_file.attrs["data_hash"]
-            Features.LOADED_FEATURES[feat.hash] = feat
+            Features.LOADED_FEATURES[feat.hash.hexdigest()] = feat
         return feat
 
 
@@ -444,7 +444,7 @@ class AutoCovariances(Features):
                 data_file = h5_file.attrs["data_file"]
             feat = Class(data_file, feature, means, covs, file)
             feat.data_hash = h5_file.attrs["data_hash"]
-            Features.LOADED_FEATURES[feat.hash] = feat
+            Features.LOADED_FEATURES[feat.hash.hexdigest()] = feat
         return feat
 
 

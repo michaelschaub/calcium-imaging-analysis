@@ -146,12 +146,12 @@ class DecompData(Data):
         else:
             _, df, temps, spats, starts = load_h5( file, labels=["df", "temps", "spats", "starts"])
             data = Class(df, temps, spats, starts, savefile=file)
-            Data.LOADED_DATA[data.hash] = data
+            Data.LOADED_DATA[data.hash.hexdigest()] = data
         return data
 
     @property
     def hash(self):
-        return hash( (self.df_hash, self.temps_hash, self.spats_hash, self.starts_hash) )
+        return reproducable_hash(tuple( hsh.digest() for hsh in (self.df_hash, self.temps_hash, self.spats_hash, self.starts_hash)))
 
     @property
     def df_hash(self):
@@ -170,7 +170,7 @@ class DecompData(Data):
         return reproducable_hash(self._starts)
 
     def check_hashes(self, hashes, warn=True):
-        if hash(tuple(hashes)) == self.hash:
+        if reproducable_hash(tuple( bytes.fromhex(hsh) for hsh in hashes)).hexdigest() == self.hash.hexdigest():
             return True
         elif warn:
             if hashes[0] is not None and hashes[0] != self.df_hash:
@@ -187,8 +187,7 @@ class DecompData(Data):
     def savefile(self):
         if (not self._savefile is None and pathlib.Path(self._savefile).is_file()):
             h5_file = h5py.File(self._savefile, "r")
-            #TODO: since hashes are not reproducable yet skip check
-            if True or self.check_hashes([ h5_file.attrs[f"{a}_hash"] for a in ["df","temps","spats","starts"] ]):#, warn=False):
+            if self.check_hashes([ h5_file[a].attrs["hash"] for a in ["df","temps","spats","starts"] ]):
                 return self._savefile
         return None
 
@@ -286,12 +285,6 @@ class DecompData(Data):
                 print( df )
                 raise
         return data
-
-    def __getattr__(self, key):
-        try:
-            return getattr(self._df, key)
-        except AttributeError:
-            raise AttributeError(f"'{type(self).__name__}' object has no attribute '{key}'") from None
 
     def __len__(self):
         return self._df.__len__()
