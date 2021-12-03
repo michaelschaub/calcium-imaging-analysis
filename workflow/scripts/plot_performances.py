@@ -12,9 +12,9 @@ snakemake_tools.redirect_to_log(snakemake)
 timer_start = snakemake_tools.start_timer()
 
 
-decoders = snakemake.params['decoders']
+decoders = [ dec.split('_')[0] for dec in snakemake.params['decoders']]
 conditions = snakemake.params['conds']
-features = snakemake.params["features"]
+features = [ feat.split('_')[0] for feat in snakemake.params["features"]]
 
 dec_n = len(decoders)
 

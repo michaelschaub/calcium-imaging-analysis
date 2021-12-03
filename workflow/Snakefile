@@ -2,34 +2,68 @@ configfile: "config/config.yaml"
 
 ruleorder: pipeline_entry > parcellation > feature_calculation > feature_elimination
 
+
+from itertools import product as iterproduct
+def create_parameter_product( conf ):
+	features	= {}
+	for feat, params in conf.items():
+		if params is None:
+			features[feat] = {}
+		else:
+			# create a pattern of form "featurename_{}_{}_...", with # of params replacement fields
+			pattern = "_".join( [f"{feat}"] +  ["{}"]*len(params) )
+			# insert parameter names and parameter name replacement fields into pattern
+			pattern = pattern.format(*map( "{0}~{{{0}}}".format, params.keys() ))
+			# create cartesian product over all parameter values
+			values = iterproduct( *params.values() )
+			# create list parameter dictionaries from cartesian product
+			values = [ dict(zip(params.keys(), vals)) for vals in values]
+			for vals in values:
+				features[ pattern.format(**vals) ] = vals
+	return features
+
 mouses 		= config["branch_opts"]["mouses"]
 dates		= config["branch_opts"]["dates"]
 parcellations	= config["branch_opts"]["parcellations"]
 filters		= config["branch_opts"]["filters"]
 
-sides		= config["conditional_opts"]["sides"]
-modalities	= config["conditional_opts"]["modalities"]
+conditions	= config["branch_opts"]["conditions"]
+if conditions is None:
+	# if no conditions are given, create cartesian product of all sides and modalities
+	sides			= config["trial_conditions"]["sides"]["conds"]
+	modalities		= config["trial_conditions"]["modalities"]["conds"]
 
-conditions	= [ f"{side}_{modal}"
-			for side in sides for modal in modalities]
-condition_dicts	= { f"{side}_{modal}" : {"modality" : m, "target_side_left" : s}
-			for s,side in enumerate(sides) for m,modal in enumerate(modalities)}
+	trial_conditions	= { f"{side}_{modal}" : {"modality" : m, "target_side_left" : s}
+					for side,s in sides.items() for modal,m in modalities.items()}
+	phase_conditions	= dict.fromkeys(trial_conditions.keys(),"stimulus")
+else:
+	# create trial_conditions fitting for trial data by resolving column names and conditions from trial_conditions
+	trial_condition		= config["trial_conditions"]
+	trial_conditions	= { label :
+					{ trial_condition[condition]["column"] : trial_condition[condition]["conds"][key]
+						for condition, key in conds.items() if condition != "phase" }
+					for label, conds in conditions.items() }
+	# lookup specified phases in phase_conditions
+	phase_condition		= config["phase_conditions"]
+	phase_conditions	= { label : phase_condition[conds["phase"]] if "phase" in conds else None
+					for label, conds in conditions.items() }
 
-features	= config["features"]
+feature_conf	= config["branch_opts"]["features"]
+features	= create_parameter_product( feature_conf )
 
 components = config["rule_conf"]["feature_calculation"]["max_components"]
 rfe_ns = config["rfe_opts"]["selected_features_n"]
 
-decoders	= config["decode_opts"]["decoders"]
-k_folds 	= config["decode_opts"]["k_folds"]
+decoder_conf	= config["branch_opts"]["decoders"]
+decoders	= create_parameter_product( decoder_conf )
 
 wildcard_constraints:
 	mouse		= r"[a-zA-Z\d_]+",
 	parcellation	= r"[a-zA-Z\d_]+",
 	filter		= r"[a-zA-Z\d_]+",
 	cond		= r"[a-zA-Z\d_]+",
-	feature		= r"[a-zA-Z\d_]+",
-	decoder		= r"[a-zA-Z\d_]+",
+	feature		= r"[a-zA-Z\d_~.\[\], ]+",
+	decoder		= r"[a-zA-Z\d_~.]+",
 
 
 
@@ -46,7 +80,7 @@ rule all:
 					for mouse in mouses
 					for parcellation in parcellations
 					for filter in filters
-					for cond in conditions
+					for cond in trial_conditions
 					for feature in features],
 
 rule all_plots:
@@ -55,7 +89,7 @@ rule all_plots:
 			   for mouse in mouses
 			   for parcellation in parcellations
 			   for filter in filters
-			   for cond in conditions
+			   for cond in trial_conditions
 			   for feature in features]
 
 rule all_decode:
@@ -64,7 +98,7 @@ rule all_decode:
 				for mouse in mouses
 				for parcellation in parcellations
 				for filter in filters
-				for cond in conditions
+				for cond in trial_conditions
 				for feature in features
 				for decoder in decoders]
 
@@ -74,7 +108,7 @@ rule all_features:
 				for mouse in mouses
 				for parcellation in parcellations
 				for filter in filters
-				for cond in conditions
+				for cond in trial_conditions
 				for feature in features ]
 
 rule all_rfe:
@@ -151,7 +185,14 @@ rule prefilters:
 	script:
 		"scripts/prefilter.py"
 
-rule conditions:
+def condition_params(wildcards):
+	params = {
+		"trial_conditions" : { wildcards["cond"] : trial_conditions[wildcards["cond"]]},
+		"phase_conditions" : { wildcards["cond"] : phase_conditions[wildcards["cond"]]},
+	}
+	return params
+
+rule condition:
 	input:
 		"results/{mouse}/{parcellation}/{filter}/filtered_data.h5",
 		config = "results/{mouse}/{parcellation}/{filter}/conf.yaml",
@@ -159,7 +200,7 @@ rule conditions:
 		"results/{mouse}/{parcellation}/{filter}/{cond}/conditional_data.h5",
 		config = "results/{mouse}/{parcellation}/{filter}/{cond}/conf.yaml",
 	params:
-		conditions = lambda wildcards : [condition_dicts[wildcards["cond"]]]
+		condition_params
 	log:
 		"results/{mouse}/{parcellation}/{filter}/{cond}/conditionals.log"
 	conda:
@@ -176,6 +217,8 @@ rule feature_calculation:
 	output:
 		"results/{mouse}/{parcellation}/{filter}/{cond}/{feature}/feature_data.h5",
 		config = "results/{mouse}/{parcellation}/{filter}/{cond}/{feature}/conf.yaml",
+	params:
+		params = lambda wildcards: features[wildcards["feature"]]
 	log:
 		"results/{mouse}/{parcellation}/{filter}/{cond}/{feature}/feature_calculation.log"
 	conda:
@@ -210,14 +253,14 @@ rule feature_elimination:
 
 rule decoding:
 	input:
-		[f"results/{{mouse}}/{{parcellation}}/{{filter}}/{cond}/{{feature}}/feature_data.h5" for cond in conditions],
+		[f"results/{{mouse}}/{{parcellation}}/{{filter}}/{cond}/{{feature}}/feature_data.h5" for cond in trial_conditions],
 	output:
 		"results/{mouse}/{parcellation}/{filter}/decoder/{feature}/{decoder}/decoder_model.pkl",
 		"results/{mouse}/{parcellation}/{filter}/decoder/{feature}/{decoder}/decoder_perf.pkl",
 		config = "results/{mouse}/{parcellation}/{filter}/decoder/{feature}/{decoder}/conf.yaml",
 	params:
-		conds = conditions,
-		reps = k_folds,
+		conds = list(trial_conditions),
+		params = lambda wildcards: decoders[wildcards["decoder"]]
 	log:
 	   "results/{mouse}/{parcellation}/{filter}/decoder/{feature}/{decoder}/decoding.log",
 	conda:
@@ -238,7 +281,7 @@ rule plot_performance:
 		"results/{mouse}/{parcellation}/{filter}/decoder/{feature}/plots/performance.png",
 		"results/{mouse}/{parcellation}/{filter}/decoder/{feature}/plots/performance.pkl",
 	params:
-		conds=conditions,
+		conds=list(trial_conditions),
 		decoders=decoders,
 	log:
 		"results/{mouse}/{parcellation}/{filter}/decoder/{feature}/plots/plot_performance.log",
@@ -255,7 +298,7 @@ rule plot_performances:
 	output:
 		"results/{mouse}/{parcellation}/{filter}/decoder/performances.png",
 	params:
-		conds=conditions,
+		conds=list(trial_conditions),
 		decoders=decoders,
 		features=features,
 	log:
