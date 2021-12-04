@@ -3,78 +3,110 @@ import pandas as pd
 import h5py
 import warnings
 
-def reproducable_hash( a ):
+from hashlib import sha1
+
+CHECK_HASH = True
+
+def reproducable_hash( a, hsh=None, vtype=None ):
     '''
-    should create hashes of DataFrames and ndarrays, that are consitent between saving and loading
-    does not really work, basically returns random number unique per data and run
+    creates hashes, that are consistent between saving and loading
     '''
-    #TODO: fix
-    if isinstance( a, pd.DataFrame ):
-        return hash(a.to_csv()) # there must be a better way to hash a DataFrame, right?
-        # spoiler: No.
-    elif isinstance( a, np.ndarray ):
-        return hash(a.tostring()) # everything else seems to not work?!
-    elif isinstance( a, list):
-        return hash(tuple(a))
+    if hsh is None:
+        hsh = sha1()
+
+    if vtype == "panda_frame" or isinstance( a, pd.DataFrame ):
+        hsh.update(a.to_csv().encode("utf-8"))
+    elif vtype == "numpy_array" or isinstance( a, np.ndarray ):
+        hsh.update(a.tobytes())
+    elif vtype == "dictionary" or isinstance(a, dict):
+        for key,val in a.items():
+            hsh = reproducable_hash(key, hsh)
+            hsh = reproducable_hash(val, hsh)
+    elif isinstance(a, tuple):
+        for val in a:
+            hsh = reproducable_hash(val, hsh)
+    #elif isinstance(a, str):
+        #hsh.update( a.encode("utf-8") )
     else:
-        return hash(a)
+        try:
+            hsh.update( a )
+            return hsh
+        except TypeError as err:
+            pass
+
+        try:
+            arr = np.array(a)
+            error = False
+        except TypeError as err:
+            error = True
+        if error or arr.dtype.hasobject:
+            raise TypeError(f"Cannot reproducably hash object {a} of type {type(a)}.")
+        hsh.update(arr.tobytes())
+    return hsh
+
+
+SAVEABLE_TYPES = [
+        "numpy_array",
+        "panda_frame",
+        "dictionary",
+        ]
 
 def save_object_h5(h5_obj, label, attr):
     if isinstance(attr, dict):
+        new_obj = h5_obj.create_group(label)
+        old_path = h5_obj.name
         for key, val in attr.items():
-            save_object_h5(h5_obj, f"{label}/{key}", val)
-    else:
+            new_obj = save_object_h5(new_obj, key, val)
+        new_obj.attrs["vtype"] = "dictionary"
+        h5_obj = new_obj[old_path]
+    elif isinstance( attr, np.ndarray ):
         h5_obj.create_dataset(label, data=attr)
+        h5_obj[label].attrs["vtype"] = "numpy_array"
+    elif isinstance( attr, pd.DataFrame ):
+        path = h5_obj.name
+        file = h5_obj.file.filename
+        h5_obj.file.close()
+        attr.to_hdf(file, f"{path}/{label}", "a")
+        h5_obj = h5py.File(file, "a")[path]
+        h5_obj[label].attrs["vtype"] = "pandas_frame"
+    else:
+        return TypeError(f"Cannot save object {attr} of type {type(attr)}.")
+    return h5_obj
 
 def load_object_h5(h5_obj, label):
-    obj = h5_obj[label]
-    if isinstance(obj, h5py.Group):
-        return { key: load_object_h5(obj, key) for key in obj.keys() }
+    new_obj = h5_obj[label]
+    if new_obj.attrs["vtype"] == "dictionary":
+        old_path = h5_obj.name
+        d = {}
+        for key in new_obj.keys():
+            new_obj, d[key] = load_object_h5(new_obj, key)
+        return new_obj[old_path], d
+    elif new_obj.attrs["vtype"] == "numpy_array":
+        return h5_obj, np.array(new_obj)
+    elif new_obj.attrs["vtype"] == "pandas_frame":
+        return h5_obj, pd.read_hdf(new_obj.file.filename, new_obj.name)
     else:
-        return np.array(obj)
+        return TypeError(f"Object type {new_obj.attrs['type']} is unkown.")
 
-def save_h5(data, file, df=None, attributes=[], attr_files=[], labels=[], hashes=[] ):
-    if df is not None:
-        df.to_hdf(file, "df", "w")
-        h5_file = h5py.File(file, "a")
-        h5_file.attrs[f"df_hash"] = hashes[0]
-        hashes = hashes[1:]
-    else:
-        h5_file = h5py.File(file, "w")
+def save_h5(data, file, attributes={} ):
+    h5_file = h5py.File(file, "w")
 
-    for attr, file, label, hsh  in zip(attributes, attr_files, labels, hashes):
-        if  file is None:
-            save_object_h5( h5_file, label, attr)
-        else:
-            with h5py.File(file, "w") as h5_attr:
-                save_object_h5( h5_attr, label, attr)
-            h5_file.attrs[f"{label}_file"] = file
-        if hsh is not None:
-            h5_file.attrs[f"{label}_hash"] = hsh
+    for label, attr in attributes.items():
+        h5_file = save_object_h5( h5_file, label, attr)
+        h5_file[label].attrs["hash"] = reproducable_hash(attr).hexdigest()
 
     return h5_file
 
-def load_h5(file, attr_files=[], labels=[]):
+def load_h5(file, labels=[] ):
     h5_file = h5py.File(file, "r")
-    try:
-        df = pd.read_hdf(file, "df")
-    except KeyError:
-        df = None
 
     attributes = []
-    for file, label in zip( attr_files, labels):
-        if file is None:
-            if label in h5_file:
-                attr = load_object_h5(h5_file, label)
-            elif f"{label}_file" in h5_file.attrs:
-                with h5py.File(h5_file.attrs[f"{label}_file"], "r") as h5_attr:
-                    attr = load_object_h5(h5_attr, label)
-            else:
-                raise ValueError
-        else:
-            with h5py.File(file, "r") as h5_attr:
-                attr = load_object_h5(h5_attr, label)
-        if f"{label}_hash" in h5_file.attrs and h5_file.attrs[f"{label}_hash"] != reproducable_hash(attr):
+    for label in labels:
+        h5_file, attr = load_object_h5(h5_file, label)
+
+        if CHECK_HASH and ( "hash" in h5_file[label].attrs and
+            h5_file[label].attrs["hash"] != reproducable_hash(attr, vtype=h5_file[label].attrs["vtype"]).hexdigest()):
             warnings.warn(f"{label} hashes do not match", Warning)
+
         attributes.append(attr)
-    return (h5_file, df, *attributes)
+    return h5_file, *attributes

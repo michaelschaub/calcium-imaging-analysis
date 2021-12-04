@@ -25,7 +25,7 @@ from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 plt_mode = "raw_z_score" # should be from ["mean", "z_score", "raw", "raw_z_score", None]
-plt_mode = "raw"
+plt_mode = "mean"
 raw_course_graining = 1
 animation_slowdown = 1
 
@@ -63,11 +63,11 @@ else:
 
 print(f"SVD is saved at {svd.savefile}")
 
-trial_preselection = ((svd.n_targets == 6) & (svd.n_distractors == 0) &
-                      (svd.auto_reward == 0) & (svd.both_spouts == 1))
+trial_preselection = ((svd._df.n_targets == 6) & (svd._df.n_distractors == 0) &
+                      (svd._df.auto_reward == 0) & (svd._df.both_spouts == 1))
 
 print(trial_preselection.shape)
-print(svd[:,:].shape)
+print(svd[:,:]._df.shape)
 svd_pre = svd[ trial_preselection ]
 
 modality_keys = ['visual', 'tactile', 'vistact']
@@ -83,7 +83,7 @@ if plt_mode in ["mean", "z_score"]:
     for modality_id in range(3):
         for target_side in range(2):
             # get the trials to use
-            selected_trials = ((svd_pre.modality == modality_id) & (svd_pre.target_side_left == target_side))
+            selected_trials = ((svd_pre._df.modality == modality_id) & (svd_pre._df.target_side_left == target_side))
 
             # stimulus frames
             selected_frames = svd_pre[ selected_trials, 30:75 ]
@@ -156,7 +156,7 @@ elif plt_mode in ["raw", "raw_z_score" ]:
         for target_side in range(2):
             print(f"{modality_keys[modality_id]}, {target_side_keys[target_side]}")
             # get the trials to use
-            selected_trials = ((svd_pre.modality == modality_id) & (svd_pre.target_side_left == target_side))
+            selected_trials = ((svd_pre._df.modality == modality_id) & (svd_pre._df.target_side_left == target_side))
 
             # stimulus frames
             selected_frames = svd_pre[ selected_trials, 30:75 ]
