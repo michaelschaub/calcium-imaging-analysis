@@ -293,12 +293,6 @@ class DecompData(Data):
                 raise
         return data
 
-    def __getattr__(self, key):
-        try:
-            return getattr(self._df, key)
-        except AttributeError:
-            raise AttributeError(f"'{type(self).__name__}' object has no attribute '{key}'") from None
-
     def __len__(self):
         return self._df.__len__()
 
