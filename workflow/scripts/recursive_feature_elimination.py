@@ -19,6 +19,8 @@ sys.path.append(str((Path(__file__).parent.parent.parent/"calciumimagingtools").
 from utils import snakemake_tools
 from features import Features, Means, Raws, Covariances, AutoCovariances, Moup, Feature_Type
 from plotting import graph_circle_plot
+from data import DecompData
+
 
 
 # MLR adapted for recursive feature elimination (RFE)
@@ -41,10 +43,10 @@ start = snakemake_tools.start_timer()
 cond_str = snakemake.params['conds']
 feature = snakemake.wildcards["feature"]
 feature_dict = { "mean" : Means, "raw" : Raws, "covariance" : Covariances, "autocovariance" : AutoCovariances, "moup" :Moup }
-feature_class = feature_dict[feature]
+feature_class = feature_dict[snakemake.wildcards["feature"].split("_")[0]]
 
 cond_feats = []
-for path in snakemake.input:
+for path in snakemake.input["feats"]:
     cond_feats.append(feature_class.load(path))
 
 feat_type = cond_feats[0].type
@@ -100,4 +102,6 @@ with open(snakemake.output["model"], 'wb') as f:
 
 
 ##Plots
-graph_circle_plot(list_best_feat,n_nodes= snakemake.params["n_comps"], title=feature, feature_type = feat_type, save_path=snakemake.output["plot"])
+
+data = DecompData.load(snakemake.input["labels"])
+graph_circle_plot(list_best_feat,n_nodes= snakemake.params["n_comps"], title=feature, feature_type = feat_type, node_labels=data.spatial_labels, save_path=snakemake.output["plot"])

@@ -31,8 +31,8 @@ branch_opts:
   features:
     mean:
     covariance:
-    autocovariance:
-      max_timelag: [2]
+#    autocovariance:
+#      max_timelag: [2]
   decoders:
     MLR:
       reps: [5]

@@ -87,6 +87,7 @@ trans_params = scipy.io.loadmat(opts_path,simplify_cells=True)['opts']['transPar
 #align_
 align_svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts), trans_params=trans_params)
 svd = anatomical_parcellation(align_svd)
+print(svd.spatial_labels)
 
 
 #define different conds
@@ -104,9 +105,12 @@ cond_keys =  itertools.product(side_keys,modal_keys)
 cond_keys_str = [f"{s}_{m}" for s, m in list(cond_keys)]
 
 svd = svd[trial_preselection]
+
+print(svd.spatial_labels)
 svd.conditions = [ {"modality" : modal, "target_side_left" : side} for side in side_range for modal in modal_range]
 
-print(cond_keys_str)
+print(svd.spatial_labels)
+
 
 #Hardcoded 'vis_left','tact_right'
 #svd.conditions = [(svd.modality == 0) & (svd.target_side_left == 0) & trial_preselection, (svd.modality ==  1) & (svd.target_side_left == 1) & trial_preselection]
@@ -241,7 +245,7 @@ for i_feat, feat in enumerate(tqdm(features,desc="Training classifiers for each 
     dict_path = data_path/"meta"/"anatomical.mat"
     dorsal_labels = np.asarray(scipy.io.loadmat(dict_path ,simplify_cells=True) ['areaLabels'], dtype ='str')
 
-    graph_circle_plot(list_best_feat,n_nodes= comp, title=feature_label[i_feat],feature_type = feature_data[feat][0].type,node_labels=dorsal_labels)
+    graph_circle_plot(list_best_feat,n_nodes= comp, title=feature_label[i_feat],feature_type = feature_data[feat][0].type,node_labels=svd.spatial_labels)
     #print(f'\tRepetition {n_rep:>3}/{n_rep}' )
 
 '''

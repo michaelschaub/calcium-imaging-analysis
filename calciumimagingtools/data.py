@@ -20,20 +20,22 @@ class Data(ABC):
     def binary_operation( a, b ):
         notNone = lambda x,y : y if x is None else x
         try:
-            a_df, a_temps, a_spats, a_starts = a._op_data(b)
+            a_df, a_temps, a_spats, a_starts, a_labels = a._op_data(b)
         except AttributeError:
             a_df = None
             a_temps = a
             a_spats = None
             a_starts = None
+            a_labels = None
         try:
-            b_df, b_temps, b_spats, b_starts = b._op_data(a)
+            b_df, b_temps, b_spats, b_starts, b_labels = b._op_data(a)
         except AttributeError:
             b_df = None
             b_temps = b
             b_spats = None
             b_starts = None
-        return a_temps, b_temps, notNone(a_df,b_df), notNone(a_spats, b_spats), notNone(a_starts, b_starts)
+            b_labels = None
+        return a_temps, b_temps, notNone(a_df,b_df), notNone(a_spats, b_spats), notNone(a_starts, b_starts), notNone(a_labels,b_labels)
 
     LOADED_DATA = {}
 
@@ -136,7 +138,8 @@ class DecompData(Data):
         h5_file = save_h5( self, file, {"df"    : self._df,
                                         "temps" : self._temps,
                                         "spats" : self._spats,
-                                        "starts" : self._starts})
+                                        "starts" : self._starts,
+                                        "labels":self._spat_labels})
         self._savefile = file
 
     @classmethod
@@ -144,10 +147,14 @@ class DecompData(Data):
         if try_loaded and data_hash is not None and data_hash in Data.LOADED_DATA:
             data = Data.LOADED_DATA[data_hash]
         else:
-            _, df, temps, spats, starts = load_h5( file, labels=["df", "temps", "spats", "starts"])
-            data = Class(df, temps, spats, starts, savefile=file)
+            _, df, temps, spats, starts, spat_labels = load_h5( file, labels=["df", "temps", "spats", "starts","labels"])
+            data = Class(df, temps, spats, starts, spatial_labels=spat_labels, savefile=file)
             Data.LOADED_DATA[data.hash.hexdigest()] = data
         return data
+
+    @property
+    def spatial_labels(self):
+        return self._spat_labels
 
     @property
     def hash(self):
@@ -277,7 +284,7 @@ class DecompData(Data):
 
         temps = self._temps[selected_temps.flatten()]
         try:
-            data = DecompData(df, temps, spats, new_starts)
+            data = DecompData(df, temps, spats, new_starts, spatial_labels=self._spat_labels)
         except AssertionError:
                 print( starts.shape )
                 print( selected_temps.shape )
@@ -285,6 +292,12 @@ class DecompData(Data):
                 print( df )
                 raise
         return data
+
+    def __getattr__(self, key):
+        try:
+            return getattr(self._df, key)
+        except AttributeError:
+            raise AttributeError(f"'{type(self).__name__}' object has no attribute '{key}'") from None
 
     def __len__(self):
         return self._df.__len__()
@@ -322,16 +335,16 @@ class DecompData(Data):
         return df, temps, spats, starts
 
     def __add__( a, b ):
-        a_temps, b_temps, df, spats, starts = Data.binary_operation( a, b )
-        return DecompData( df, a_temps+b_temps, spats, starts )
+        a_temps, b_temps, df, spats, starts, spat_labels = Data.binary_operation( a, b )
+        return DecompData( df, a_temps+b_temps, spats, starts, spatial_labels=spat_labels)
 
     def __sub__( a, b ):
-        a_temps, b_temps, df, spats, starts = Data.binary_operation( a, b )
-        return DecompData( df, a_temps-b_temps, spats, starts )
+        a_temps, b_temps, df, spats, starts, spat_labels = Data.binary_operation( a, b )
+        return DecompData( df, a_temps-b_temps, spats, starts, spatial_labels=spat_labels)
 
     def __mul__( a, b ):
-        a_temps, b_temps, df, spats, starts = Data.binary_operation( a, b )
-        return DecompData( df, a_temps*b_temps, spats, starts )
+        a_temps, b_temps, df, spats, starts, spat_labels = Data.binary_operation( a, b )
+        return DecompData( df, a_temps*b_temps, spats, starts, spatial_labels=spat_labels)
 
 class ConditionalData:
     def __init__( self, data, conditions ):
