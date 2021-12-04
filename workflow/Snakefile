@@ -95,6 +95,8 @@ rule pipeline_entry:
 		"envs/environment.yaml"
 	resources:
 		memb_mb=1000
+	threads:
+		workflow.cores
 	script:
 		"scripts/default_entry.py"
 
@@ -119,6 +121,8 @@ rule parcellation:
 		"envs/environment.yaml"
 	resources:
 		memb_mb=1000
+	threads:
+		workflow.cores * 0.5
 	script:
 		"scripts/parcellation.py"
 
@@ -168,7 +172,9 @@ rule feature_calculation:
 	conda:
 		"envs/environment.yaml"
 	resources:
-		memb_mb=1000
+		memb_mb=4000
+	threads:
+		workflow.cores * 0.25
 	script:
 		"scripts/feature.py"
 
@@ -187,7 +193,9 @@ rule decoding:
 	conda:
 		"envs/environment.yaml"
 	resources:
-		memb_mb=1000
+		memb_mb=4000
+	threads:
+		workflow.cores * 0.25
 	script:
 		"scripts/decoding.py"
 
