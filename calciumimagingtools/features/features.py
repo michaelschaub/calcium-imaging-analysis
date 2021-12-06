@@ -52,7 +52,7 @@ class Features:
         is retrieved from Data.LOADED_DATA by hash or loaded from file, when not set directly
         '''
         if not hasattr(self, '_data'):
-            if hasattr(self, 'data_hash') and self._data_hash in Data.LOADED_DATA:
+            if hasattr(self, '_data_hash') and self._data_hash in Data.LOADED_DATA:
                 self._data = Data.LOADED_DATA[self._data_hash]
             elif hasattr(self, '_data_file'):
                 self._data = DecompData.load(self._data_file)
@@ -70,9 +70,9 @@ class Features:
             raise AttributeError("Feature already has data object set.")
         if isinstance( data, Data ):
             self._data = data
-            self._data_hash = data.hash.hexdigest()
+            self._data_hash = data.hash.digest()
             self._data_file = data.savefile
-        elif type(data) == str:
+        elif type(data) == bytes:
             self.data_hash = data
         else:
             try:
@@ -85,13 +85,13 @@ class Features:
         if not hasattr(self, '_data'):
             return self._data_hash
         else:
-            return self._data.hash.hexdigest()
+            return self._data.hash.digest()
 
     @data_hash.setter
     def data_hash(self, data_hash):
         if not hasattr(self, '_data'):
             self._data_hash = data_hash
-        elif  self._data.hash.hexdigest() != data_hash:
+        elif  self._data.hash.digest() != data_hash:
             raise AttributeError("Feature already has data object set.")
 
     @property
@@ -112,7 +112,7 @@ class Features:
         '''
         '''
         h5_file = save_h5( self, file, { "feature": self._feature } )
-        h5_file.attrs["data_hash"] = self._data_hash
+        h5_file.attrs["data_hash"] = self.data_hash.hex()
         if self.data.savefile is None:
             if data_file is None:
                 path = pathlib.Path(file)
@@ -128,13 +128,14 @@ class Features:
             feat = Features.LOADED_FEATURES[feature_hash]
         else:
             h5_file, feature = load_h5( file, ["feature"] )
-            if try_loaded and h5_file.attrs["data_hash"] in Data.LOADED_DATA:
-                data = Data.LOADED_DATA[h5_file.attrs["data_hash"]]
+            data_hash = bytes.fromhex(h5_file.attrs["data_hash"])
+            if try_loaded and data_hash in Data.LOADED_DATA:
+                data = Data.LOADED_DATA[data_hash]
             elif data_file is None:
-                data_file = h5_file.attrs["data_file"]
-            feat = Class(data_file, feature, file)
-            feat.data_hash = h5_file.attrs["data_hash"]
-            Features.LOADED_FEATURES[feat.hash.hexdigest()] = feat
+                data = h5_file.attrs["data_file"]
+            feat = Class(data, feature, file)
+            feat.data_hash = bytes.fromhex(h5_file.attrs["data_hash"])
+            Features.LOADED_FEATURES[feat.hash.digest()] = feat
         return feat
 
     LOADED_FEATURES = {}
@@ -188,7 +189,7 @@ class Moup(Features):
         attr_arrays["d_fit"] = { key: np.array([ a[key] for a in attr_arrays["d_fit"]]) for key in attr_arrays["d_fit"][0].keys() }
 
         h5_file = save_h5( self, file, attr_arrays )
-        h5_file.attrs["data_hash"] = self._data_hash.hexdigest()
+        h5_file.attrs["data_hash"] = self.data_hash.hex()
         if self._data.savefile is None:
             if data_file is None:
                 path = pathlib.Path(file)
@@ -213,8 +214,8 @@ class Moup(Features):
             attr_arrays["d_fit"] = [ { k:a for k,a in attr_arrays["d_fit"].items()} for i in range(len(attr_arrays[Moup.mou_attrs[0]])) ]
             mou_ests = recompose_mou_ests(attr_arrays)
             feat = Class(data_file, mou_ests, label)
-            feat.data_hash = h5_file.attrs["data_hash"]
-            Features.LOADED_FEATURES[feat.hash.hexdigest()] = feat
+            feat.data_hash = bytes.fromhex(h5_file.attrs["data_hash"])
+            Features.LOADED_FEATURES[feat.hash.digest()] = feat
         return feat
 
 
@@ -338,7 +339,7 @@ class Covariances(Features):
         '''
         h5_file = save_h5( self, file, {"feature" : self._feature,
                                         "means" : self._means } )
-        h5_file.attrs["data_hash"] = self._data_hash
+        h5_file.attrs["data_hash"] = self._data_hash.hex()
         if self._data.savefile is None:
             if data_file is None:
                 path = pathlib.Path(file)
@@ -359,8 +360,8 @@ class Covariances(Features):
             elif data_file is None:
                 data_file = h5_file.attrs["data_file"]
             feat = Class(data_file, feature, means, file)
-            feat.data_hash = h5_file.attrs["data_hash"]
-            Features.LOADED_FEATURES[feat.hash.hexdigest()] = feat
+            feat.data_hash = bytes.fromhex(h5_file.attrs["data_hash"])
+            Features.LOADED_FEATURES[feat.hash.digest()] = feat
         return feat
 
 
@@ -422,7 +423,7 @@ class AutoCovariances(Features):
         h5_file = save_h5( self, file, {"feature" : self._feature,
                                         "means" : self._means,
                                         "covs" : self._covs } )
-        h5_file.attrs["data_hash"] = self._data_hash
+        h5_file.attrs["data_hash"] = self._data_hash.hex()
         if self._data.savefile is None:
             if data_file is None:
                 path = pathlib.Path(file)
@@ -443,8 +444,8 @@ class AutoCovariances(Features):
             elif data_file is None:
                 data_file = h5_file.attrs["data_file"]
             feat = Class(data_file, feature, means, covs, file)
-            feat.data_hash = h5_file.attrs["data_hash"]
-            Features.LOADED_FEATURES[feat.hash.hexdigest()] = feat
+            feat.data_hash = bytes.fromhex(h5_file.attrs["data_hash"])
+            Features.LOADED_FEATURES[feat.hash.digest()] = feat
         return feat
 
 

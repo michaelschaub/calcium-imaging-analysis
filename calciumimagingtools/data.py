@@ -146,7 +146,7 @@ class DecompData(Data):
         else:
             _, df, temps, spats, starts = load_h5( file, labels=["df", "temps", "spats", "starts"])
             data = Class(df, temps, spats, starts, savefile=file)
-            Data.LOADED_DATA[data.hash.hexdigest()] = data
+            Data.LOADED_DATA[data.hash.digest()] = data
         return data
 
     @property
@@ -170,7 +170,7 @@ class DecompData(Data):
         return reproducable_hash(self._starts)
 
     def check_hashes(self, hashes, warn=True):
-        if reproducable_hash(tuple( bytes.fromhex(hsh) for hsh in hashes)).hexdigest() == self.hash.hexdigest():
+        if reproducable_hash(tuple( hsh for hsh in hashes)).digest() == self.hash.digest():
             return True
         elif warn:
             if hashes[0] is not None and hashes[0] != self.df_hash:
@@ -187,7 +187,7 @@ class DecompData(Data):
     def savefile(self):
         if (not self._savefile is None and pathlib.Path(self._savefile).is_file()):
             h5_file = h5py.File(self._savefile, "r")
-            if self.check_hashes([ h5_file[a].attrs["hash"] for a in ["df","temps","spats","starts"] ]):
+            if self.check_hashes([ bytes.fromhex(h5_file[a].attrs["hash"]) for a in ["df","temps","spats","starts"] ]):
                 return self._savefile
         return None
 
