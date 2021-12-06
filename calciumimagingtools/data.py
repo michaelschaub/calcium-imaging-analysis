@@ -49,7 +49,6 @@ class DecompData(Data):
         self._df = df
         self._temps = temporal_comps
         self._spats = spatial_comps if trans_params is None else self.align_spatials(spatial_comps, trans_params)
-
         self._starts = trial_starts
         self._spat_labels = spatial_labels
 
@@ -77,25 +76,17 @@ class DecompData(Data):
         #Attend bitmap as last frame
         spatials = np.append(spatials,np.ones((1,h,w)),axis=0)
 
-        #Offset instead of Nans as interpolation is used
-
-        #print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
         #Rotation
         print("Rotation")
         spatials = scipy.ndimage.rotate(spatials,trans_params['angleD'], axes=(2,1), reshape=True, cval= 0)
-        #print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
 
-        ### introduces weird aliasing along edges due to interpolation
         #Scale
         print("Scale/Zoom")
         spatials = scipy.ndimage.zoom(spatials, (1,trans_params['scaleConst'],trans_params['scaleConst']),order=1,cval= 0) #slow
-        #print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
 
         #Translate
         print("Translate/Shift")
         spatials = scipy.ndimage.shift(spatials, np.insert(np.flip(trans_params['tC']),0,0),cval= 0, order=1, mode='constant') #slow
-        ### ---
-        #print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
 
         #Remove offset
 
@@ -149,7 +140,7 @@ class DecompData(Data):
         else:
             _, df, temps, spats, starts, spat_labels = load_h5( file, labels=["df", "temps", "spats", "starts","labels"])
             data = Class(df, temps, spats, starts, spatial_labels=spat_labels, savefile=file)
-            Data.LOADED_DATA[data.hash.hexdigest()] = data
+            Data.LOADED_DATA[data.hash.digest()] = data
         return data
 
     @property
@@ -177,7 +168,7 @@ class DecompData(Data):
         return reproducable_hash(self._starts)
 
     def check_hashes(self, hashes, warn=True):
-        if reproducable_hash(tuple( bytes.fromhex(hsh) for hsh in hashes)).hexdigest() == self.hash.hexdigest():
+        if reproducable_hash(tuple( hsh for hsh in hashes)).digest() == self.hash.digest():
             return True
         elif warn:
             if hashes[0] is not None and hashes[0] != self.df_hash:
@@ -194,7 +185,7 @@ class DecompData(Data):
     def savefile(self):
         if (not self._savefile is None and pathlib.Path(self._savefile).is_file()):
             h5_file = h5py.File(self._savefile, "r")
-            if self.check_hashes([ h5_file[a].attrs["hash"] for a in ["df","temps","spats","starts"] ]):
+            if self.check_hashes([ bytes.fromhex(h5_file[a].attrs["hash"]) for a in ["df","temps","spats","starts"] ]):
                 return self._savefile
         return None
 
