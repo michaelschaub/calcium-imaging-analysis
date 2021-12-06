@@ -5,9 +5,11 @@ ruleorder: pipeline_entry > parcellation
 
 from itertools import product as iterproduct
 def create_parameter_product( conf ):
+	# could also be decoders, or really any other step
 	features	= {}
 	for feat, params in conf.items():
 		if params is None:
+			# just add single feature, without parameters
 			features[feat] = {}
 		else:
 			# create a pattern of form "featurename_{}_{}_...", with # of params replacement fields
@@ -113,6 +115,9 @@ rule all_features:
 ###   Data processing   ###
 
 rule pipeline_entry:
+	'''
+	aggregates all task and svd data from one session with one animal
+	'''
 	input:
 		tasks	= [ f"resources/experiment/{{mouse}}/{date}/task_data/"
 				for date in dates ],
@@ -137,17 +142,22 @@ rule pipeline_entry:
 def parcellation_input(wildcards):
 	input = {
 		"data"	: "results/{mouse}/SVD/data.h5",
-		"config": "results/{mouse}/SVD/conf.yaml" }
-	input["meta"]	= config["parcellation_opts"]["paths"][wildcards["parcellation"]]
+		"config": "results/{mouse}/SVD/conf.yaml"
+		"meta"	: config["parcellation_opts"]["paths"][wildcards["parcellation"]]
+	}
 	return input
 
 rule parcellation:
+	'''
+	decomposes data into different parcellations
+	'''
 	input:
 		unpack(parcellation_input)
 	output:
 		"results/{mouse}/{parcellation}/data.h5",
 		config = "results/{mouse}/{parcellation}/conf.yaml",
 	wildcard_constraints:
+		# exclude SVD as parcellation
 		parcellation = "(?!SVD).+"
 	log:
 		"results/{mouse}/{parcellation}/parcellation.log"
@@ -161,6 +171,9 @@ rule parcellation:
 		"scripts/parcellation.py"
 
 rule prefilters:
+	'''
+	can filter trials through predefined filters
+	'''
 	input:
 		"results/{mouse}/{parcellation}/data.h5",
 		config = "results/{mouse}/{parcellation}/conf.yaml",
@@ -184,6 +197,9 @@ def condition_params(wildcards):
 	return params
 
 rule condition:
+	'''
+	Filters trials into different configured conditions
+	'''
 	input:
 		"results/{mouse}/{parcellation}/{filter}/filtered_data.h5",
 		config = "results/{mouse}/{parcellation}/{filter}/conf.yaml",
