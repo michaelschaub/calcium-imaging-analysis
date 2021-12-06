@@ -60,6 +60,8 @@ def save_object_h5(h5_obj, label, attr):
         new_obj.attrs["vtype"] = "dictionary"
         h5_obj = new_obj[old_path]
     elif isinstance( attr, np.ndarray ):
+        if(attr.dtype.type is np.str_):
+            attr = np.array([str.encode('utf-8') for str in attr])
         h5_obj.create_dataset(label, data=attr)
         h5_obj[label].attrs["vtype"] = "numpy_array"
     elif isinstance( attr, pd.DataFrame ):

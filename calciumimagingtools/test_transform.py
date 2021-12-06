@@ -60,19 +60,31 @@ dorsal_path = data_path/"meta"/"legacy"/"allenDorsalMap.mat"
 mask_path = data_path/"meta"/"legacy"/"areaMasks.mat"
 
 trans_params = scipy.io.loadmat(opts_path,simplify_cells=True)  ['opts']['transParams']
-#dorsal_maps = scipy.io.loadmat(dorsal_path ,simplify_cells=True) ['dorsalMaps']
-#dorsal_labels = scipy.io.loadmat(dorsal_path ,simplify_cells=True) ['dorsalMaps']['labelsSplit']
-#dorsal_masks = np.asarray(scipy.io.loadmat(mask_path ,simplify_cells=True)['areaMasks'],dtype='bool')
+dorsal_maps = scipy.io.loadmat(dorsal_path ,simplify_cells=True) ['dorsalMaps']
+dorsal_labels = dorsal_maps['labelsSplit']
+dorsal_masks = np.asarray(scipy.io.loadmat(mask_path ,simplify_cells=True)['areaMasks'],dtype='bool')
+dorsal_side =  dorsal_maps['sidesSplit']
 
 
-#dorsal_masks = np.moveaxis(dorsal_masks,-1,0)
-#dorsal_dict = {
-#    'areaMasks': dorsal_masks,
-#    'areaLabels': dorsal_labels
-#}
+def get_super(x):
+    if(isinstance(x,str)):
+        normal = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-=()"
+        super_s = "ᴬᴮᶜᴰᴱᶠᴳᴴᴵᴶᴷᴸᴹᴺᴼᴾQᴿˢᵀᵁⱽᵂˣʸᶻᵃᵇᶜᵈᵉᶠᵍʰᶦʲᵏˡᵐⁿᵒᵖ۹ʳˢᵗᵘᵛʷˣʸᶻ⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾"
+        res = x.maketrans(''.join(normal), ''.join(super_s))
+        return x.translate(res)
+    else:
+        return ''
+
+dorsal_masks = np.moveaxis(dorsal_masks,-1,0)
+dorsal_dict = {
+    'areaMasks': dorsal_masks,
+    'areaLabels': dorsal_labels,
+    'areaSide': dorsal_side,
+    'areaLabels_wSide': np.asarray([f"{s}{get_super(m)}" for s, m in zip(dorsal_labels,dorsal_side)])
+}
 
 dict_path = data_path/"meta"/"anatomical.mat"
-#scipy.io.savemat(dict_path,dorsal_dict,do_compression=True)
+scipy.io.savemat(dict_path,dorsal_dict,do_compression=True)
 
 dorsal_labels = np.asarray(scipy.io.loadmat(dict_path ,simplify_cells=True) ['areaLabels'], dtype ='str')
 dorsal_masks = np.asarray(scipy.io.loadmat(dict_path ,simplify_cells=True)['areaMasks'], dtype='bool')
