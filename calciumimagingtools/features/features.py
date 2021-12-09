@@ -194,6 +194,9 @@ class Moup(Features):
     def _feature(self):
         return np.asarray([[mou_est.get_J()] for mou_est in self._mou_ests])  # ,other params]
 
+    @property
+    def ncomponents(self):
+        return self._mou_ests[0].get_J().shape[0]
 
     mou_attrs = ["n_nodes", "J", "mu", "Sigma", "d_fit"]
 
@@ -287,6 +290,10 @@ class Raws(Features):
         return DecompData.PixelSlice(np.reshape(self._feature, (-1, *self._feature[2:])),
                                      self.data._spats[:self._feature.shape[2]])
 
+    @property
+    def ncomponents(self):
+        return self._feature.shape[-1]
+
 
 def calc_means(temps):
     return np.mean(temps, axis=1)  # average over frames
@@ -317,6 +324,10 @@ class Means(Features):
         spats = self.data.spatials
         starts = self.data._starts
         return df, temps, spats, starts
+
+    @property
+    def ncomponents(self):
+        return self._feature.shape[-1]
 
 
 def calc_covs(temps, means):
@@ -385,6 +396,10 @@ class Covariances(Features):
             feat.data_hash = bytes.fromhex(h5_file.attrs["data_hash"])
             Features.LOADED_FEATURES[feat.hash.digest()] = feat
         return feat
+
+    @property
+    def ncomponents(self):
+        return self._feature.shape[-1]
 
 
 def calc_acovs(temps, means, covs, n_tau_range, label):
@@ -473,6 +488,10 @@ class AutoCovariances(Features):
             Features.LOADED_FEATURES[feat.hash.digest()] = feat
         return feat
 
+    @property
+    def ncomponents(self):
+        return self._feature.shape[-1]
+
 
 class FeatureMean(Features):
     def create(base):
@@ -510,3 +529,6 @@ class FeatureMean(Features):
         '''
         pass
 
+    @property
+    def ncomponents(self):
+        return self._feature.shape[-1]

@@ -71,7 +71,7 @@ c_MLR = RFE_pipeline([('std_scal',skprp.StandardScaler()),('clf',skllm.LogisticR
 _ , feats = data.shape
 if(rfe_n=="full"):
     rfe_n = feats
-if(int(rfe_n)>int(snakemake.params["n_comps"]) and feat_type == Feature_Type.NODE):
+if(int(rfe_n)>int(cond_feats[0].ncomponents) and feat_type == Feature_Type.NODE):
     rfe_n = feats
 
 RFE = skfs.RFE(c_MLR,n_features_to_select=int(rfe_n))
@@ -104,4 +104,4 @@ with open(snakemake.output["model"], 'wb') as f:
 ##Plots
 
 data = DecompData.load(snakemake.input["labels"])
-graph_circle_plot(list_best_feat,n_nodes= snakemake.params["n_comps"], title=feature, feature_type = feat_type, node_labels=data.spatial_labels, save_path=snakemake.output["plot"])
+graph_circle_plot(list_best_feat,n_nodes= cond_feats[0].ncomponents, title=feature, feature_type = feat_type, node_labels=data.spatial_labels, save_path=snakemake.output["plot"])

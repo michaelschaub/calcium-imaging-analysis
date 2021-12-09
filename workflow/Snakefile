@@ -35,7 +35,9 @@ if conditions is None:
 
 	trial_conditions	= { f"{side}_{modal}" : {"modality" : m, "target_side_left" : s}
 					for side,s in sides.items() for modal,m in modalities.items()}
-	phase_conditions	= dict.fromkeys(trial_conditions.keys(),"stimulus")
+	phase_condition		= config["phase_conditions"]
+	phase_conditions	= dict.fromkeys(trial_conditions.keys(), phase_condition["stimulus"] )
+	print(phase_conditions)
 else:
 	# create trial_conditions fitting for trial data by resolving column names and conditions from trial_conditions
 	trial_condition		= config["trial_conditions"]
@@ -51,8 +53,7 @@ else:
 feature_conf	= config["branch_opts"]["features"]
 features	= create_parameter_product( feature_conf )
 
-components = config["rule_conf"]["feature_calculation"]["max_components"]
-rfe_ns = config["rfe_opts"]["selected_features_n"]
+rfe_ns		= config["branch_opts"]["rfe"]["selected_features_n"]
 
 decoder_conf	= config["branch_opts"]["decoders"]
 decoders	= create_parameter_product( decoder_conf )
@@ -248,7 +249,6 @@ rule feature_elimination:
 	params:
 		conds = list(trial_conditions),
 		reps = 5, #used to be k_folds but was removed form config
-		n_comps = components
 	log:
 		"results/{mouse}/{parcellation}/{filter}/rfe/{rfe_n}/{feature}/feature_calculation.log"
 	conda:

@@ -26,7 +26,7 @@ feature = snakemake.wildcards["feature"].split("_")[0]
 params = snakemake.params["params"]
 data = DecompData.load(snakemake.input[0])
 
-feat = feature_dict[feature].create(data, max_comps=config["max_components"], **param_dict[feature](params))
+feat = feature_dict[feature].create(data, max_comps=params["max_components"], **param_dict[feature](params))
 
 
 feat.save(snakemake.output[0])

@@ -8,7 +8,7 @@ rule_conf:
   conditions:
     {}
   feature_calculation:
-    max_components : 65
+    {}
   decoder:
     {}
 
@@ -30,11 +30,15 @@ branch_opts:
       #modalities: visual
   features:
     mean:
+      max_components : [65]
     covariance:
+      max_components : [65]
     moup:
       timelags: [0,1]
+      max_components : 65
     #autocovariance:
-    #  timelags: [[0],[1]]
+      #timelags: [[0],[1]]
+      #max_components : 65
   decoders:
     MLR:
       reps: [5]
@@ -44,6 +48,12 @@ branch_opts:
       reps: [5]
     RF:
       reps: [5]
+  rfe:
+    selected_features_n:
+      - full
+      - 20
+      - 50
+      - 100
 
 parcellation_opts:
   paths:
@@ -80,12 +90,5 @@ phase_conditions:
   stimulus:
     start:  30
     stop:   75
-
-rfe_opts:
-  selected_features_n:
-    - full
-    - 20
-    - 50
-    - 100
 
 different_config_inputs: 1
