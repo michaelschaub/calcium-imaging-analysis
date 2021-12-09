@@ -114,7 +114,7 @@ def load_h5(file, labels=[] ):
     for label in labels:
         h5_file, attr = load_object_h5(h5_file, label)
 
-        if hasattr(h5_file,label):
+        if label in h5_file:
             if CHECK_HASH and ( "hash" in h5_file[label].attrs and
                 h5_file[label].attrs["hash"] != reproducable_hash(attr, vtype=h5_file[label].attrs["vtype"]).hexdigest()):
                 warnings.warn(f"{label} hashes do not match", Warning)
