@@ -11,8 +11,8 @@ def anatomical_parcellation(DecompDataObject, filter_labels=None, dict_path=None
     labels = np.asarray(scipy.io.loadmat(dict_path ,simplify_cells=True) ['areaLabels_wSide'],dtype=str)
 
     #Filter according to labels
-    if filter_labels is not None:
-
+    #if filter_labels is not None:
+    #    pass
 
     # Maps and Spats have slightly different dims
     frames, _ = DecompDataObject.temporals_flat.shape
