@@ -271,8 +271,10 @@ def recompose_mou_ests( attr_arrays, mou_ests=None ):
 
 
 class Raws(Features):
+    _type = Feature_Type.TIMESERIES
+
     def create(data, max_comps=None):
-        feat = Raws(data, data.temporals[:, :, :max_comps],type=Feature_Type.TIMESERIES)
+        feat = Raws(data, data.temporals[:, :, :max_comps])
         return feat
 
     def flatten(self, feat=None):
