@@ -1,6 +1,6 @@
 configfile: "config/config.yaml"
 
-ruleorder: pipeline_entry > parcellation
+ruleorder: pipeline_entry > parcellation > feature_calculation > feature_elimination
 
 
 from itertools import product as iterproduct
@@ -35,7 +35,9 @@ if conditions is None:
 
 	trial_conditions	= { f"{side}_{modal}" : {"modality" : m, "target_side_left" : s}
 					for side,s in sides.items() for modal,m in modalities.items()}
-	phase_conditions	= dict.fromkeys(trial_conditions.keys(),"stimulus")
+	phase_condition		= config["phase_conditions"]
+	phase_conditions	= dict.fromkeys(trial_conditions.keys(), phase_condition["stimulus"] )
+	print(phase_conditions)
 else:
 	# create trial_conditions fitting for trial data by resolving column names and conditions from trial_conditions
 	trial_condition		= config["trial_conditions"]
@@ -50,6 +52,8 @@ else:
 
 feature_conf	= config["branch_opts"]["features"]
 features	= create_parameter_product( feature_conf )
+
+rfe_ns		= config["branch_opts"]["rfe"]["selected_features_n"]
 
 decoder_conf	= config["branch_opts"]["decoders"]
 decoders	= create_parameter_product( decoder_conf )
@@ -107,6 +111,16 @@ rule all_features:
 				for filter in filters
 				for cond in trial_conditions
 				for feature in features ]
+
+rule all_rfe:
+	input:
+		 [ f"results/{mouse}/{parcellation}/{filter}/rfe/{rfe_n}/{feature}/circle_plot.png"
+		   for mouse in mouses
+		   for parcellation in parcellations
+		   for filter in filters
+		   for cond in trial_conditions
+		   for feature in features
+		   for rfe_n in rfe_ns]
 
 
 
@@ -215,6 +229,29 @@ rule feature_calculation:
 	script:
 		"scripts/feature.py"
 
+rule feature_elimination:
+	input:
+		feats = [f"results/{{mouse}}/{{parcellation}}/{{filter}}/{cond}/{{feature}}/feature_data.h5" for cond in trial_conditions],
+		labels = "results/{mouse}/{parcellation}/data.h5",
+		#config = "results/{mouse}/{parcellation}/{filter}/{cond}/{feature}/conf.yaml",
+	output:
+		best_feats = "results/{mouse}/{parcellation}/{filter}/rfe/{rfe_n}/{feature}/best_feats.pkl",
+		model = "results/{mouse}/{parcellation}/{filter}/rfe/{rfe_n}/{feature}/decoder_model.pkl",
+		perf = "results/{mouse}/{parcellation}/{filter}/rfe/{rfe_n}/{feature}/decoder_perf.pkl",
+		config = "results/{mouse}/{parcellation}/{filter}/rfe/{rfe_n}/{feature}/conf.yaml",
+		plot = "results/{mouse}/{parcellation}/{filter}/rfe/{rfe_n}/{feature}/circle_plot.png",
+	params:
+		conds = list(trial_conditions),
+		reps = 5, #used to be k_folds but was removed form config
+	log:
+		"results/{mouse}/{parcellation}/{filter}/rfe/{rfe_n}/{feature}/feature_calculation.log"
+	conda:
+		 "envs/environment.yaml"
+	resources:
+		memb_mb=1000
+	script:
+		  "scripts/recursive_feature_elimination.py"
+
 rule decoding:
 	input:
 		[f"results/{{mouse}}/{{parcellation}}/{{filter}}/{cond}/{{feature}}/feature_data.h5" for cond in trial_conditions],
@@ -291,20 +328,20 @@ rule debug:
 
 rule test_data:
 	input:
-		"results/GN06/SVD/data.h5"
+		 "results/GN06/SVD/data.h5"
 	log:
-		"results/GN06/SVD/test_data.log"
+	   "results/GN06/SVD/test_data.log"
 	conda:
-		"envs/environment.yaml"
+		 "envs/environment.yaml"
 	script:
-		"code/test_data.py"
+		  "code/test_data.py"
 
 rule test_analysis:
 	input:
-		"results/GN06/SVD/data.h5"
+		 "results/GN06/SVD/data.h5"
 	log:
-		"results/GN06/SVD/test_analysis.log"
+	   "results/GN06/SVD/test_analysis.log"
 	conda:
-		"envs/environment.yaml"
+		 "envs/environment.yaml"
 	script:
-		"code/test_analysis.py"
+		  "code/test_analysis.py"

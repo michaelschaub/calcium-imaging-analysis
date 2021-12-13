@@ -4,9 +4,16 @@ from loading import reproducable_hash, load_h5, save_h5
 
 from pymou import MOU
 import pathlib
+from enum import Enum
 
 #Progress Bar
 from tqdm.auto import tqdm
+
+class Feature_Type(Enum):
+    NODE = 0
+    UNDIRECTED = 1
+    DIRECTED = 2
+    TIMESERIES = 3
 
 class Features:
     def __init__(self, data, feature, file=None):
@@ -140,31 +147,39 @@ class Features:
 
     LOADED_FEATURES = {}
 
+    @property
+    def type(self):
+        return self._type
+
 
 class Moup(Features):
+    _type = Feature_Type.DIRECTED
+
     def __init__(self, data, mou_ests, label=None, file=None):
         self.data = data
         self._mou_ests = mou_ests
         self._label = label
         self._savefile = file
 
-    def create(data, max_comps=None, time_lag=None, label=None):
-        mou_ests = fit_moup(data.temporals[:, :, :max_comps], time_lag, label)
+
+    def create(data, max_comps=None, timelag=None, label=None):
+        mou_ests = fit_moup(data.temporals[:, :, :max_comps], timelag if timelag>0 else None, label)
         feat = Moup(data, mou_ests, label)
         return feat
 
     def flatten(self, feat=None):
-        n = len(self._mou_ests[0].get_tau_x()) #Number of Components
-        triu_entries= int(n * (n-1) / 2)
-        flat_params = np.empty((len(self._mou_ests),triu_entries+n )) #Tri Matrix +
+        #n = len(self._mou_ests[0].get_tau_x()) #Number of Components
+        #triu_entries= int(n * (n-1) / 2)
+        n, n = self._mou_ests[0].get_J().shape
+        flat_params = np.empty((len(self._mou_ests),n*n)) #Tri Matrix +
 
         for i,mou_est in enumerate(tqdm(self._mou_ests,desc=self._label,leave=False)):
-            covs = mou_est.get_C()
-            f_covs = covs[np.triu(np.ones(covs.shape, dtype=bool),1)] #diagonal redundant -> use tril instead of trid
+            #covs = mou_est.get_C()
+            #f_covs = covs[np.triu(np.ones(covs.shape, dtype=bool),1)] #diagonal redundant -> use tril instead of trid
 
-            tau_x = mou_est.get_tau_x()
+            #tau_x = mou_est.get_tau_x()
             # other params
-            flat_params[i] = np.concatenate((f_covs, tau_x))
+            flat_params[i,:] = mou_est.get_J().flatten()# np.concatenate((f_covs, tau_x))
 
         return flat_params
 
@@ -177,8 +192,11 @@ class Moup(Features):
     # also maybe numpy array
     @property
     def _feature(self):
-        return [[mou_est.get_tau_x, mou_est.get_C()] for mou_est in self._mou_ests]  # ,other params]
+        return np.asarray([[mou_est.get_J()] for mou_est in self._mou_ests])  # ,other params]
 
+    @property
+    def ncomponents(self):
+        return self._mou_ests[0].get_J().shape[0]
 
     mou_attrs = ["n_nodes", "J", "mu", "Sigma", "d_fit"]
 
@@ -256,6 +274,8 @@ def recompose_mou_ests( attr_arrays, mou_ests=None ):
 
 
 class Raws(Features):
+    _type = Feature_Type.TIMESERIES
+
     def create(data, max_comps=None):
         feat = Raws(data, data.temporals[:, :, :max_comps])
         return feat
@@ -270,12 +290,18 @@ class Raws(Features):
         return DecompData.PixelSlice(np.reshape(self._feature, (-1, *self._feature[2:])),
                                      self.data._spats[:self._feature.shape[2]])
 
+    @property
+    def ncomponents(self):
+        return self._feature.shape[-1]
+
 
 def calc_means(temps):
     return np.mean(temps, axis=1)  # average over frames
 
 
 class Means(Features):
+    _type = Feature_Type.NODE
+
     def create(data, max_comps=None):
         feat = Means(data, feature=calc_means(data.temporals[:, :, :max_comps]))
         return feat
@@ -299,6 +325,10 @@ class Means(Features):
         starts = self.data._starts
         return df, temps, spats, starts
 
+    @property
+    def ncomponents(self):
+        return self._feature.shape[-1]
+
 
 def calc_covs(temps, means):
     # TODO: Optimize, currently calculates off diagonals double
@@ -306,33 +336,36 @@ def calc_covs(temps, means):
     return np.einsum("itn,itm->inm", temps, temps) / temps.shape[1]
 
 
-def flat_covs(covs):
+def flat_covs(covs, diagonal):
     # true upper triangle matrix (same shape as covariance)
-    ind = np.triu(np.ones(covs.shape[1:], dtype=bool))
+    ind = np.triu(np.ones(covs.shape[1:], dtype=bool),k=int(not diagonal))
     # flattened upper triangle of covariances
     return covs[:, ind]
 
 
 class Covariances(Features):
-    def __init__(self, data, feature, means, file=None):
+    _type = Feature_Type.UNDIRECTED
+
+    def __init__(self, data, feature, means, file=None, include_diagonal=True):
         self.data = data
         self._feature = feature
         self._means = means
         self._savefile = file
+        self._include_diagonal = include_diagonal
 
-    def create(data, means=None, max_comps=None):
+    def create(data, means=None, max_comps=None, include_diagonal=True):
         if means is None:
             means = calc_means(data.temporals[:, :, :max_comps])
         elif isinstance(means, Means):
             means = means._feature
         feature = calc_covs(data.temporals[:, :, :max_comps], means)
-        feat = Covariances(data, feature, means )
+        feat = Covariances(data, feature, means, include_diagonal=include_diagonal)
         return feat
 
     def flatten(self, feat=None):
         if feat is None:
             feat = self._feature
-        return flat_covs(feat)
+        return flat_covs(feat, self._include_diagonal)
 
     def save(self, file, data_file=None):
         '''
@@ -364,6 +397,10 @@ class Covariances(Features):
             Features.LOADED_FEATURES[feat.hash.digest()] = feat
         return feat
 
+    @property
+    def ncomponents(self):
+        return self._feature.shape[-1]
+
 
 def calc_acovs(temps, means, covs, n_tau_range, label):
     temps = temps - means[:, None, :]
@@ -385,14 +422,17 @@ DEFAULT_TIMELAG = 10
 
 
 class AutoCovariances(Features):
-    def __init__(self, data, feature, means, covs, file=None):
+    _type=Feature_Type.DIRECTED
+
+    def __init__(self, data, feature, means, covs, file=None, include_diagonal=True):
         self.data = data
         self._feature = feature
         self._means = means
         self._covs = covs
         self._savefile = file
+        self._include_diagonal = include_diagonal
 
-    def create(data, means=None, covs=None, max_comps=None, max_time_lag=None, time_lag_range=None, label = None):
+    def create(data, means=None, covs=None, max_comps=None, max_time_lag=None, time_lag_range=None, label = None, include_diagonal=True):
         if means is None:
             means = calc_means(data.temporals[:, :, :max_comps])
         elif isinstance(means, Means):
@@ -409,13 +449,13 @@ class AutoCovariances(Features):
             time_lag_range = range(1, max_time_lag + 1)
 
         feature = calc_acovs(data.temporals[:, :, :max_comps], means, covs, time_lag_range, label)
-        feat = AutoCovariances(data, feature, means, covs )
+        feat = AutoCovariances(data, feature, means, covs, include_diagonal= include_diagonal)
         return feat
 
     def flatten(self, feat=None):
         if feat is None:
             feat = self._feature
-        return np.concatenate((flat_covs(feat[:, 0]), feat[:, 1:].reshape((feat.shape[0], -1))), axis=1)
+        return np.concatenate((flat_covs(feat[:, 0],diagonal=self._include_diagonal), feat[:, 1:].reshape((feat.shape[0], -1))), axis=1)
 
     def save(self, file, data_file=None):
         '''
@@ -447,6 +487,10 @@ class AutoCovariances(Features):
             feat.data_hash = bytes.fromhex(h5_file.attrs["data_hash"])
             Features.LOADED_FEATURES[feat.hash.digest()] = feat
         return feat
+
+    @property
+    def ncomponents(self):
+        return self._feature.shape[-1]
 
 
 class FeatureMean(Features):
@@ -485,3 +529,6 @@ class FeatureMean(Features):
         '''
         pass
 
+    @property
+    def ncomponents(self):
+        return self._feature.shape[-1]
