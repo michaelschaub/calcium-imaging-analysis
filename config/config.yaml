@@ -30,12 +30,12 @@ branch_opts:
       #modalities: visual
   features:
     mean:
-      max_components : [65]
+      max_components : [64]
     covariance:
-      max_components : [65]
+      max_components : [64]
     moup:
       timelags: [0,1]
-      max_components : 65
+      max_components : [64]
     #autocovariance:
       #timelags: [[0],[1]]
       #max_components : 65
