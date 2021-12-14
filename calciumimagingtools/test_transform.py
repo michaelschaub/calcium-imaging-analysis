@@ -10,6 +10,7 @@ import scipy.io, scipy.ndimage
 
 from data import DecompData
 from decomposition import anatomical_parcellation
+from loading import load_task_data_as_pandas_df
 
 import pickle as pkl
 import h5py
@@ -26,7 +27,7 @@ missing_task_data = []
 
 
 ### New data extraction
-data_path = Path(__file__).parent.parent / Path('data')
+data_path = Path(__file__).parent.parent / Path('resources/experiment')
 plot_path = Path(__file__).parent.parent / Path('plots')
 if not (data_path/'extracted_data.pkl').exists() :
     # load behavior data
@@ -39,7 +40,7 @@ else:
         sessions = pkl.load(handle)
     print("Loaded pickled data.")
 
-file_path = data_path / "input" / "GN06" / Path('2021-01-20_10-15-16/SVD_data/Vc.mat')
+file_path = data_path  / "GN06" / Path('2021-01-20_10-15-16/SVD_data/Vc.mat')
 f = h5py.File(file_path, 'r')
 
 frameCnt = np.array(f['frameCnt'])
@@ -53,22 +54,50 @@ trial_starts = trial_starts[mask]
 ###########################
 
 #include in loading df?
-opts_path = data_path / "input" / "GN06" / Path('2021-01-20_10-15-16/SVD_data/opts.mat')
-dorsal_path = data_path/"anatomical"/"allenDorsalMap.mat"
-mask_path = data_path/"anatomical"/"areaMasks.mat"
+opts_path = data_path/"GN06"/Path('2021-01-20_10-15-16/SVD_data/opts.mat')
+data_path = Path(__file__).parent.parent / Path('resources')
+dorsal_path = data_path/"meta"/"legacy"/"allenDorsalMap.mat"
+mask_path = data_path/"meta"/"legacy"/"areaMasks.mat"
 
-trans_params = scipy.io.loadmat(opts_path,simplify_cells=True)['opts']['transParams']
-dorsal_maps = scipy.io.loadmat(dorsal_path ,simplify_cells=True)['dorsalMaps']
-dorsal_masks = np.asarray(scipy.io.loadmat(mask_path ,simplify_cells=True)['areaMasks'], dtype=np.bool)
+trans_params = scipy.io.loadmat(opts_path,simplify_cells=True)  ['opts']['transParams']
+dorsal_maps = scipy.io.loadmat(dorsal_path ,simplify_cells=True) ['dorsalMaps']
+dorsal_labels = dorsal_maps['labelsSplit']
+dorsal_masks = np.asarray(scipy.io.loadmat(mask_path ,simplify_cells=True)['areaMasks'],dtype='bool')
+dorsal_side =  dorsal_maps['sidesSplit']
+
+
+def get_super(x):
+    if(isinstance(x,str)):
+        normal = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-=()"
+        super_s = "ᴬᴮᶜᴰᴱᶠᴳᴴᴵᴶᴷᴸᴹᴺᴼᴾQᴿˢᵀᵁⱽᵂˣʸᶻᵃᵇᶜᵈᵉᶠᵍʰᶦʲᵏˡᵐⁿᵒᵖ۹ʳˢᵗᵘᵛʷˣʸᶻ⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾"
+        res = x.maketrans(''.join(normal), ''.join(super_s))
+        return x.translate(res)
+    else:
+        return ''
+
+dorsal_masks = np.moveaxis(dorsal_masks,-1,0)
+dorsal_dict = {
+    'areaMasks': dorsal_masks,
+    'areaLabels': dorsal_labels,
+    'areaSide': dorsal_side,
+    'areaLabels_wSide': np.asarray([f"{s}{get_super(m)}" for s, m in zip(dorsal_labels,dorsal_side)])
+}
+
+dict_path = data_path/"meta"/"anatomical.mat"
+scipy.io.savemat(dict_path,dorsal_dict,do_compression=True)
+
+dorsal_labels = np.asarray(scipy.io.loadmat(dict_path ,simplify_cells=True) ['areaLabels'], dtype ='str')
+dorsal_masks = np.asarray(scipy.io.loadmat(dict_path ,simplify_cells=True)['areaMasks'], dtype='bool')
+
 print(dorsal_masks.shape)
 
 svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts))
 
 align_svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts), trans_params=trans_params)
 
-temps, spats = anatomical_parcellation(align_svd)
+anatomical = anatomical_parcellation(align_svd)
 
-anatomical = DecompData( sessions, temps, spats, np.array(trial_starts))
+#anatomical = DecompData( sessions, temps, spats, np.array(trial_starts))
 
 '''
 ###On reference image

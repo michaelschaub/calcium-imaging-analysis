@@ -8,7 +8,7 @@ rule_conf:
   conditions:
     {}
   feature_calculation:
-    max_components : 65
+    {}
   decoder:
     {}
 
@@ -33,9 +33,15 @@ branch_opts:
       sides:      right
   features:
     mean:
+      max_components : [64]
     covariance:
-    autocovariance:
-      timelags: [[2]]
+      max_components : [64]
+    moup:
+      timelags: [0,1]
+      max_components : [64]
+    #autocovariance:
+      #timelags: [[0],[1]]
+      #max_components : 65
   decoders:
     default:
       reps: [5]
@@ -43,10 +49,17 @@ branch_opts:
     1NN:
     LDA:
     RF:
+  rfe:
+    selected_features_n:
+      - full
+      - 20
+      - 50
+      - 100
 
 parcellation_opts:
   paths:
-    anatomical: resources/meta/areaMasks.mat
+    anatomical: resources/meta/anatomical.mat
+
 
 #Alternative manual conditions should be supported, currently having only left and right with unique modalities not possible e.g.
 # something like (or with strings and we put a corresponding dict in utils to resolve the actual values)
@@ -79,4 +92,4 @@ phase_conditions:
     start:  30
     stop:   75
 
-different_config_inputs: 0
+different_config_inputs: 1

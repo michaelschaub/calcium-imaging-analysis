@@ -20,26 +20,28 @@ class Data(ABC):
     def binary_operation( a, b ):
         notNone = lambda x,y : y if x is None else x
         try:
-            a_df, a_temps, a_spats, a_starts = a._op_data(b)
+            a_df, a_temps, a_spats, a_starts, a_labels = a._op_data(b)
         except AttributeError:
             a_df = None
             a_temps = a
             a_spats = None
             a_starts = None
+            a_labels = None
         try:
-            b_df, b_temps, b_spats, b_starts = b._op_data(a)
+            b_df, b_temps, b_spats, b_starts, b_labels = b._op_data(a)
         except AttributeError:
             b_df = None
             b_temps = b
             b_spats = None
             b_starts = None
-        return a_temps, b_temps, notNone(a_df,b_df), notNone(a_spats, b_spats), notNone(a_starts, b_starts)
+            b_labels = None
+        return a_temps, b_temps, notNone(a_df,b_df), notNone(a_spats, b_spats), notNone(a_starts, b_starts), notNone(a_labels,b_labels)
 
     LOADED_DATA = {}
 
 
 class DecompData(Data):
-    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, cond_filter=None, trans_params=None, savefile=None, read_only=True):
+    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, cond_filter=None, trans_params=None, savefile=None, read_only=True, spatial_labels=None):
         assert len(df) != trial_starts.shape[0]-1, (
             f"DataFrame df and trial_starts do not have matching length ({len(df)} != {len(trial_starts)})\n\t(maybe remove last entry?)")
         assert len(df) == trial_starts.shape[0], (
@@ -48,6 +50,8 @@ class DecompData(Data):
         self._temps = temporal_comps
         self._spats = spatial_comps if trans_params is None else self.align_spatials(spatial_comps, trans_params)
         self._starts = trial_starts
+        self._spat_labels = spatial_labels
+
 
         if cond_filter is None:
             cond_filter = []
@@ -60,9 +64,10 @@ class DecompData(Data):
             self._starts.flags.writeable = False
 
     #Used for parcellations
-    def update(self,temporal_comps, spatial_comps):
+    def update(self,temporal_comps, spatial_comps, spatial_labels=None):
         self._temps = temporal_comps
         self._spats = spatial_comps
+        self._spat_labels = spatial_labels
 
     #Auslagern
     def align_spatials(self, spatials, trans_params):
@@ -71,29 +76,17 @@ class DecompData(Data):
         #Attend bitmap as last frame
         spatials = np.append(spatials,np.ones((1,h,w)),axis=0)
 
-        #Offset instead of Nans as interpolation is used
-        min = np.nanmin(spatials)
-
-        eps = 0 #np.finfo(np.float32).eps
-        #offset = 2*eps # 10
-        #spatials = spatials - min #+ offset
-        print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
         #Rotation
         print("Rotation")
-        spatials = scipy.ndimage.rotate(spatials,trans_params['angleD'], axes=(2,1), reshape=True, cval= -eps)
-        print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
+        spatials = scipy.ndimage.rotate(spatials,trans_params['angleD'], axes=(2,1), reshape=True, cval= 0)
 
-        ### introduces weird aliasing along edges due to interpolation
         #Scale
         print("Scale/Zoom")
-        spatials = scipy.ndimage.zoom(spatials, (1,trans_params['scaleConst'],trans_params['scaleConst']),order=1,cval= -eps) #slow
-        print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
+        spatials = scipy.ndimage.zoom(spatials, (1,trans_params['scaleConst'],trans_params['scaleConst']),order=1,cval= 0) #slow
 
         #Translate
         print("Translate/Shift")
-        spatials = scipy.ndimage.shift(spatials, np.insert(np.flip(trans_params['tC']),0,0),cval= -eps, order=1, mode='constant') #slow
-        ### ---
-        print("Min/Max Value:",np.nanmin(spatials),np.nanmax(spatials))
+        spatials = scipy.ndimage.shift(spatials, np.insert(np.flip(trans_params['tC']),0,0),cval= 0, order=1, mode='constant') #slow
 
         #Remove offset
 
@@ -136,7 +129,8 @@ class DecompData(Data):
         h5_file = save_h5( self, file, {"df"    : self._df,
                                         "temps" : self._temps,
                                         "spats" : self._spats,
-                                        "starts" : self._starts})
+                                        "starts" : self._starts,
+                                        "labels":self._spat_labels})
         self._savefile = file
 
     @classmethod
@@ -144,10 +138,14 @@ class DecompData(Data):
         if try_loaded and data_hash is not None and data_hash in Data.LOADED_DATA:
             data = Data.LOADED_DATA[data_hash]
         else:
-            _, df, temps, spats, starts = load_h5( file, labels=["df", "temps", "spats", "starts"])
-            data = Class(df, temps, spats, starts, savefile=file)
+            _, df, temps, spats, starts, spat_labels = load_h5( file, labels=["df", "temps", "spats", "starts","labels"])
+            data = Class(df, temps, spats, starts, spatial_labels=spat_labels, savefile=file)
             Data.LOADED_DATA[data.hash.digest()] = data
         return data
+
+    @property
+    def spatial_labels(self):
+        return self._spat_labels
 
     @property
     def hash(self):
@@ -277,7 +275,7 @@ class DecompData(Data):
 
         temps = self._temps[selected_temps.flatten()]
         try:
-            data = DecompData(df, temps, spats, new_starts)
+            data = DecompData(df, temps, spats, new_starts, spatial_labels=self._spat_labels)
         except AssertionError:
                 print( starts.shape )
                 print( selected_temps.shape )
@@ -322,16 +320,16 @@ class DecompData(Data):
         return df, temps, spats, starts
 
     def __add__( a, b ):
-        a_temps, b_temps, df, spats, starts = Data.binary_operation( a, b )
-        return DecompData( df, a_temps+b_temps, spats, starts )
+        a_temps, b_temps, df, spats, starts, spat_labels = Data.binary_operation( a, b )
+        return DecompData( df, a_temps+b_temps, spats, starts, spatial_labels=spat_labels)
 
     def __sub__( a, b ):
-        a_temps, b_temps, df, spats, starts = Data.binary_operation( a, b )
-        return DecompData( df, a_temps-b_temps, spats, starts )
+        a_temps, b_temps, df, spats, starts, spat_labels = Data.binary_operation( a, b )
+        return DecompData( df, a_temps-b_temps, spats, starts, spatial_labels=spat_labels)
 
     def __mul__( a, b ):
-        a_temps, b_temps, df, spats, starts = Data.binary_operation( a, b )
-        return DecompData( df, a_temps*b_temps, spats, starts )
+        a_temps, b_temps, df, spats, starts, spat_labels = Data.binary_operation( a, b )
+        return DecompData( df, a_temps*b_temps, spats, starts, spatial_labels=spat_labels)
 
 class ConditionalData:
     def __init__( self, data, conditions ):

@@ -1,1 +1,1 @@
-from .features import Features, Raws, Means, Covariances, AutoCovariances, Moup
+from .features import Feature_Type, Features, Raws, Means, Covariances, AutoCovariances, Moup
