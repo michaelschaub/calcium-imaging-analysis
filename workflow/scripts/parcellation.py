@@ -4,7 +4,7 @@ import sys
 sys.path.append(str((Path(__file__).parent.parent.parent/"calciumimagingtools").absolute()))
 from utils import snakemake_tools
 from data import DecompData
-from decomposition import anatomical_parcellation
+from decomposition import anatomical_parcellation, fastICA
 
 # redirect std_out to log file
 snakemake_tools.redirect_to_log(snakemake)
@@ -20,7 +20,14 @@ def anatom():
 def locaNMF():
     pass
 
+def ICA():
+    svd = DecompData.load(snakemake.input[0])
+    ica = fastICA(svd, 64) #snakemake.config
+    ica.save(snakemake.output[0])
+
+
 parcellation = {'anatomical': anatom,
+                'ICA':ICA,
                'locaNMF': locaNMF}
 parcellation[snakemake.wildcards['parcellation']]()
 
