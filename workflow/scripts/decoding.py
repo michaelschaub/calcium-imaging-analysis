@@ -21,13 +21,13 @@ from loading import save_h5
 # redirect std_out to log file
 snakemake_tools.redirect_to_log(snakemake)
 snakemake_tools.save_conf(snakemake, sections=["entry","parcellation","prefilters","conditions","feature_calculation","decoder"],
-                                        params=['conds','reps'])
+                                        params=['conds','params'])
 start = snakemake_tools.start_timer()
 
 ### Load feature for all conditions
 cond_str = snakemake.params['conds']
 feature_dict = { "mean" : Means, "raw" : Raws, "covariance" : Covariances, "autocovariance" : AutoCovariances, "moup" :Moup }
-feature_class = feature_dict[snakemake.wildcards["feature"]]
+feature_class = feature_dict[snakemake.wildcards["feature"].split("_")[0]]
 
 cond_feats = []
 for path in snakemake.input:
@@ -37,7 +37,7 @@ for path in snakemake.input:
 ### Select decoder
 def MLR():
     return skppl.make_pipeline(skppc.StandardScaler(),
-                               skllm.LogisticRegression(C=1, penalty='l2', multi_class='multinomial',
+                               skllm.LogisticRegression(C=10, penalty='l2', multi_class='multinomial',
                                                          solver='lbfgs', max_iter=500))
 
 def NN():
@@ -54,10 +54,10 @@ decoders = {"MLR":MLR,
             "LDA":LDA,
             "RF":RF}
 
-decoder = decoders[snakemake.wildcards["decoder"]]()
+decoder = decoders[snakemake.wildcards["decoder"].split("_")[0]]()
 
 ### Split
-rep = snakemake.params['reps']
+rep = snakemake.params["params"]['reps']
 cv = StratifiedShuffleSplit(rep, test_size=0.2, random_state=420)
 
 data = np.concatenate([feat.flatten() for feat in cond_feats])

@@ -25,7 +25,7 @@ from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 plt_mode = "raw_z_score" # should be from ["mean", "z_score", "raw", "raw_z_score", None]
-plt_mode = "raw"
+plt_mode = "mean"
 raw_course_graining = 1
 animation_slowdown = 1
 
@@ -35,21 +35,22 @@ load_feat = True
 force_extraction = False
 
 
-data_path = pathlib.Path(__file__).parent.parent/'data'
-svd_path = data_path/'output/GN06/SVD/data.h5'
+resc_path = pathlib.Path(__file__).parent.parent/'resources'
+resl_path = pathlib.Path(__file__).parent.parent/'results'
+svd_path = resl_path/'GN06/SVD/data.h5'
 if (not svd_path.exists()) or force_extraction:
-    if (not (data_path/'input/extracted_data.pkl').exists()) or force_extraction:
+    if (not (resc_path/'extracted_data.pkl').exists()) or force_extraction:
         # load behavior data
-        sessions = load_task_data_as_pandas_df.extract_session_data_and_save(root_paths=[data_path/"input"], mouse_ids=["GN06"], reextract=False)
-        with open( data_path/'input/extracted_data.pkl', 'wb') as handle:
+        sessions = load_task_data_as_pandas_df.extract_session_data_and_save(root_paths=[resc_path/"experiments"], mouse_ids=["GN06"], reextract=False)
+        with open( resc_path/'extracted_data.pkl', 'wb') as handle:
             pkl.dump(sessions, handle)
     else:
         # load saved data
-        with open( data_path/'input/extracted_data.pkl', 'rb') as handle:
+        with open( resc_path/'extracted_data.pkl', 'rb') as handle:
             sessions = pkl.load(handle)
         print("Loaded pickled data.")
 
-    file_path = data_path/'input'/'GN06'/'2021-01-20_10-15-16'/'SVD_data'/'Vc.mat'
+    file_path = resc_path/'experiments'/'GN06'/'2021-01-20_10-15-16'/'SVD_data'/'Vc.mat'
     f = h5py.File(file_path, 'r')
 
     frameCnt = np.array(f['frameCnt'])
@@ -62,18 +63,18 @@ else:
 
 print(f"SVD is saved at {svd.savefile}")
 
-trial_preselection = ((svd.n_targets == 6) & (svd.n_distractors == 0) &
-                      (svd.auto_reward == 0) & (svd.both_spouts == 1))
+trial_preselection = ((svd._df.n_targets == 6) & (svd._df.n_distractors == 0) &
+                      (svd._df.auto_reward == 0) & (svd._df.both_spouts == 1))
 
 print(trial_preselection.shape)
-print(svd[:,:].shape)
+print(svd[:,:]._df.shape)
 svd_pre = svd[ trial_preselection ]
 
 modality_keys = ['visual', 'tactile', 'vistact']
 target_side_keys = ['right', 'left']
 
-save_files = [ [ data_path/f"output/{plt_mode}_{mod}_{side}.h5" for side in target_side_keys ] for mod in modality_keys ]
-data_save_file = data_path/f"output/data.h5"
+save_files = [ [ resl_path/f"{plt_mode}_{mod}_{side}.h5" for side in target_side_keys ] for mod in modality_keys ]
+data_save_file = resl_path/f"data.h5"
 
 if plt_mode in ["mean", "z_score"]:
 
@@ -82,7 +83,7 @@ if plt_mode in ["mean", "z_score"]:
     for modality_id in range(3):
         for target_side in range(2):
             # get the trials to use
-            selected_trials = ((svd_pre.modality == modality_id) & (svd_pre.target_side_left == target_side))
+            selected_trials = ((svd_pre._df.modality == modality_id) & (svd_pre._df.target_side_left == target_side))
 
             # stimulus frames
             selected_frames = svd_pre[ selected_trials, 30:75 ]
@@ -155,7 +156,7 @@ elif plt_mode in ["raw", "raw_z_score" ]:
         for target_side in range(2):
             print(f"{modality_keys[modality_id]}, {target_side_keys[target_side]}")
             # get the trials to use
-            selected_trials = ((svd_pre.modality == modality_id) & (svd_pre.target_side_left == target_side))
+            selected_trials = ((svd_pre._df.modality == modality_id) & (svd_pre._df.target_side_left == target_side))
 
             # stimulus frames
             selected_frames = svd_pre[ selected_trials, 30:75 ]

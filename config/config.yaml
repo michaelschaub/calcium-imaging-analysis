@@ -8,10 +8,7 @@ rule_conf:
   conditions:
     {}
   feature_calculation:
-    base_start : 15
-    stim_start : 30
-    stim_stop : 75
-    max_components : 65
+    {}
   decoder:
     {}
 
@@ -25,10 +22,43 @@ branch_opts:
     - SVD
   filters:
     - All
+  conditions:
+    null
+    #left_visual:
+      #phase:      stimulus
+      #sides:      left
+      #modalities: visual
+  features:
+    mean:
+      max_components : [64]
+    covariance:
+      max_components : [64]
+    moup:
+      timelags: [0,1]
+      max_components : [64]
+    #autocovariance:
+      #timelags: [[0],[1]]
+      #max_components : 65
+  decoders:
+    MLR:
+      reps: [5]
+    1NN:
+      reps: [5]
+    LDA:
+      reps: [5]
+    RF:
+      reps: [5]
+  rfe:
+    selected_features_n:
+      - full
+      - 20
+      - 50
+      - 100
 
 parcellation_opts:
   paths:
-    anatomical: resources/meta/areaMasks.mat
+    anatomical: resources/meta/anatomical.mat
+
 
 #Alternative manual conditions should be supported, currently having only left and right with unique modalities not possible e.g.
 # something like (or with strings and we put a corresponding dict in utils to resolve the actual values)
@@ -40,26 +70,25 @@ parcellation_opts:
 #     target_side_left:1
 #     modality: 0
 
-conditional_opts:
+trial_conditions:
   sides:
-    - left
-    - right
+    column: target_side_left
+    conds:
+      left:   0
+      right:  1
   modalities:
-    - visual
-    - tactile
-    - vistact
+    column: modality
+    conds:
+      visual:   0
+      tactile:  1
+      vistact:  2
 
-features:
-  - mean
-  - covariance
-
-
-decode_opts:
-  k_folds: 5
-  decoders:
-    - MLR
-    - 1NN
-    - LDA
-    - RF
+phase_conditions:
+  pretrial:
+    start:  15
+    stop:   30
+  stimulus:
+    start:  30
+    stop:   75
 
 different_config_inputs: 1

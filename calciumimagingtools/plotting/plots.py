@@ -1,5 +1,11 @@
 import matplotlib.pyplot as plt
+import networkx as nx
 import numpy as np
+
+import sys
+from pathlib import Path
+sys.path.append(Path(__file__).parent)
+from features import Feature_Type
 
 
 def colored_violinplot(*args, color=None, facecolor=None, edgecolor=None, **kwargs):
@@ -40,3 +46,71 @@ def plot_frame(temps, spatial, titles, plt_title):
 
     plt.savefig(plt_title, format='png')
     print("plotted")
+
+
+def graph_circle_plot(list_best_feat, n_nodes, title, feature_type, save_path=False,  node_labels=None):
+    #%% network and plot properties
+    N = n_nodes #20 # number of nodes
+    print(N)
+    # positions for circular layout with origin at bottoms
+    pos_circ = dict()
+    for i in range(N):
+        pos_circ[i] = np.array([np.sin(2*np.pi*(i/N+0.5/N)), np.cos(2*np.pi*(i/N+0.5/N))])
+
+    # channel labels need to be dict for nx
+    if node_labels is None:
+        node_labels = dict()
+        for i in range(N):
+            node_labels[i] = i+1
+    else:
+        node_labels = dict(enumerate(node_labels))
+
+    # matrices to retrieve input/output channels from connections in support network
+    mask = np.tri(N,N,0, dtype=bool) if feature_type == Feature_Type.UNDIRECTED else np.ones((N,N), dtype=bool)
+
+    print(mask.shape)
+    row_ind = np.repeat(np.arange(N).reshape([N,-1]),N,axis=1)
+    col_ind = np.repeat(np.arange(N).reshape([-1,N]),N,axis=0)
+    row_ind = row_ind[mask]
+    col_ind = col_ind[mask]
+    print(col_ind.shape)
+    print(row_ind.shape)
+    # plot RFE support network
+    plt.figure(figsize=[10,10])
+    plt.axes([0.05,0.05,0.95,0.95])
+    plt.axis('off')
+    plt.title=title
+    if feature_type == Feature_Type.NODE: # nodal
+        #list_best_feat = np.argsort(class_perfs.mean(0))[:n_edges] # select n best features
+        node_color_aff = []
+        g = nx.Graph()
+        for i in range(N):
+            g.add_node(i)
+            if i in list_best_feat:
+                node_color_aff += ['#71DFE7']
+            else:
+                node_color_aff += ['#E8F0F2']
+        nx.draw_networkx_nodes(g,pos=pos_circ,node_color=node_color_aff)
+        nx.draw_networkx_labels(g,pos=pos_circ,labels=node_labels)
+
+    if feature_type == Feature_Type.DIRECTED or feature_type == Feature_Type.UNDIRECTED:
+        #list_best_feat = np.argsort(class_perfs.mean(0))[:n_edges] # select n best features
+        g = nx.Graph() if feature_type == Feature_Type.UNDIRECTED else nx.MultiDiGraph()
+        for i in range(N):
+            g.add_node(i)
+        node_color_aff = ['#E8F0F2']*N
+        list_ROI_from_to = [] # list of input/output ROIs involved in connections of support network
+        for ij in list_best_feat:
+            if(col_ind[ij] == row_ind[ij]): #checks for loops
+                node_color_aff[col_ind[ij]]='#71DFE7' #colors node red
+                print(ij)
+            else:
+                g.add_edge(col_ind[ij],row_ind[ij])
+        print(g)
+        nx.draw_networkx_nodes(g,pos=pos_circ,node_color=node_color_aff)
+        nx.draw_networkx_labels(g,pos=pos_circ,labels=node_labels)
+        nx.draw_networkx_edges(g,pos=pos_circ,edgelist=g.edges(),edge_color='#009DAE')
+    if (not save_path):
+        plt.show()
+    else:
+        plt.savefig(save_path)
