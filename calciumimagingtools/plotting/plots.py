@@ -2,10 +2,112 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 
+from pathlib import Path
+import scipy.io
+import cv2
+
+from bokeh.plotting import figure, output_file, show, from_networkx
+from bokeh.models import (Label, LabelSet, HoverTool, BoxSelectTool,  TapTool, ColumnDataSource, LinearColorMapper,
+                          Circle, EdgesAndLinkedNodes, NodesAndLinkedEdges, MultiLine)
+from bokeh.palettes import Viridis, Viridis256, Spectral4
+
+from shapely.geometry import Polygon
+
 import sys
 from pathlib import Path
 sys.path.append(Path(__file__).parent)
 from features import Feature_Type
+
+
+
+def plot_glassbrain(DecompDataObject=None, frame=None,title='',dict_path=None,hl_areas=None,hl_edges=None):
+    if dict_path is None:
+        data_path = Path(__file__).parent.parent.parent/"resources"
+        dict_path = data_path/"meta"/"anatomical.mat"
+    areaDict = scipy.io.loadmat(dict_path ,simplify_cells=True)
+    bitMasks = areaDict['areaMasks']
+    labels = areaDict['areaLabels_wSide']
+
+    polygons = []
+    centers = np.empty((len(bitMasks),2))
+
+    for c,mask in enumerate(bitMasks):
+        contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE) #Saves all contour points
+        polygons.append(contours)
+
+        centers[c,:] = Polygon(contours[0][:,0,:]).centroid.coords
+
+        '''
+        for i in contours:
+            M = cv2.moments(i)
+            if M['m00'] != 0:
+                if(cx[c]>0): print(labels[c])
+                cx[c] = (int(M['m10']/M['m00']))
+                cy[c] = (int(M['m01']/M['m00']))
+        '''
+
+    #Weird nested list thats required for bokeh
+    xs = [[[poly[0][:,:,0].flatten()]] for poly in polygons]
+    ys = [[[poly[0][:,:,1].flatten()]] for poly in polygons]
+
+    #Labels
+    source = ColumnDataSource(data=dict(x=centers[:,0],y=centers[:,1],names=labels))
+    labels = LabelSet(x='x',y='y', text='names', source=source,text_align='center',text_color='black')
+
+    output_file("gfg.html")
+
+    #Plotting
+    mask_h , mask_w = bitMasks[0].shape
+    frame_h, frame_w = frame.shape
+
+
+    graph = figure(title = title,plot_width=frame_w*2, plot_height=mask_h*2 , y_range=[mask_h,0])
+
+    # color values of the poloygons
+    #color = ["red", "purple", "yellow"]
+
+    # fill alpha values of the polygons
+    fill_alpha = 0.1
+
+    # plotting the graph and add labels
+    colors= LinearColorMapper(palette=Viridis256,nan_color='white')
+
+
+    graph.image(image=[np.flipud(frame[:,:mask_w])],x=0,y=frame_h,dw=frame_w,dh=frame_h,color_mapper=colors)
+    graph.multi_polygons(xs, ys, line_color='black', line_width=2, line_alpha=0.5, fill_alpha=0.05)
+    graph.add_layout(labels)
+
+    #Create Graph
+    if DecompDataObject is None:
+        node_labels = dict()
+        for i in range(64):  #N
+            node_labels[i] = i+1
+    else:
+        node_labels = dict(enumerate(DecompDataObject.spatial_labels))
+
+    graph.add_tools(HoverTool(tooltips=None), TapTool(), BoxSelectTool())
+
+    G=nx.karate_club_graph()
+    G=nx.random_powerlaw_tree(len(centers),tries=10000)
+    layout_nodes = dict(zip(range(len(centers)),centers))
+    graph_renderer = from_networkx(G, layout_nodes, scale=1)
+
+    graph_renderer.node_renderer.glyph = Circle(size=15, fill_color=Spectral4[0])
+    graph_renderer.node_renderer.selection_glyph = Circle(size=15, fill_color=Spectral4[2])
+    graph_renderer.node_renderer.hover_glyph = Circle(size=15, fill_color=Spectral4[1])
+
+    graph_renderer.edge_renderer.glyph = MultiLine(line_color="#CCCCCC", line_alpha=0.8, line_width=5)
+    graph_renderer.edge_renderer.selection_glyph = MultiLine(line_color=Spectral4[2], line_width=5)
+    graph_renderer.edge_renderer.hover_glyph = MultiLine(line_color=Spectral4[1], line_width=5)
+
+    graph_renderer.selection_policy = NodesAndLinkedEdges()
+    graph_renderer.inspection_policy = EdgesAndLinkedNodes()
+
+    graph.renderers.append(graph_renderer)
+
+    # displaying the model
+    show(graph)
+
 
 
 def colored_violinplot(*args, color=None, facecolor=None, edgecolor=None, **kwargs):
@@ -46,6 +148,32 @@ def plot_frame(temps, spatial, titles, plt_title):
 
     plt.savefig(plt_title, format='png')
     print("plotted")
+
+
+def get_polygons():
+    pass
+
+def create_node_labels(DecompDataObject):
+    pass
+
+def get_nodes_pos(n_nodes,positions=None):
+    pos = dict()
+    if positions is None:
+        for i in range(N):
+            pos_circ[i] = np.array([np.sin(2*np.pi*(i/N+0.5/N)), np.cos(2*np.pi*(i/N+0.5/N))])
+        return pos_circ
+    else:
+        pos = Positions
+
+def get_edges():
+    pass
+
+def set_node_color():
+    pass
+
+
+def circle_rfe(selected_feats,DecompDataObject=None,title='RFE',n_nodes=None):
+    pos_nodes = get_nodes_pos()
 
 
 def graph_circle_plot(list_best_feat, n_nodes, title, feature_type, save_path=False,  node_labels=None):
@@ -114,3 +242,5 @@ def graph_circle_plot(list_best_feat, n_nodes, title, feature_type, save_path=Fa
         plt.show()
     else:
         plt.savefig(save_path)
+
+    return g
