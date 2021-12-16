@@ -17,6 +17,7 @@ dependencies:
   - hdf5
   - pyyaml
   - pytables
+  - opencv
   - pip:
       - h5py # conda h5py doesn't work for me
       #- tables>=3.6 #doesn't work on win
