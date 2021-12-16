@@ -148,23 +148,33 @@ class Moup(Features):
         self._label = label
         self._savefile = file
 
-    def create(data, max_comps=None, time_lag=None, label=None):
+    def create(data, max_comps=None, time_lag, label=None):
         mou_ests = fit_moup(data.temporals[:, :, :max_comps], time_lag, label)
         feat = Moup(data, mou_ests, label)
         return feat
 
     def flatten(self, feat=None):
-        n = len(self._mou_ests[0].get_tau_x()) #Number of Components
-        triu_entries= int(n * (n-1) / 2)
-        flat_params = np.empty((len(self._mou_ests),triu_entries+n )) #Tri Matrix +
+# MG: TO DELETE, KEPT FOR REF
+#        n = len(self._mou_ests[0].get_tau_x()) #Number of Components
+#        triu_entries= int(n * (n-1) / 2)
+#        flat_params = np.empty((len(self._mou_ests),triu_entries+n )) #Tri Matrix +
+#
+#        for i,mou_est in enumerate(tqdm(self._mou_ests,desc=self._label,leave=False)):
+#            covs = mou_est.get_C()
+#            f_covs = covs[np.triu(np.ones(covs.shape, dtype=bool),1)] #diagonal redundant -> use tril instead of trid
+#
+#            tau_x = mou_est.get_tau_x()
+#            # other params
+#            flat_params[i] = np.concatenate((f_covs, tau_x))
 
+        n = self._mou_ests[0].J.shape[0] #Number of Components
+        mask_jac = np.logical_not(np.eye(n, dtype=bool)) # TODO: ADAPT WHEN MASK AVAILABLE
+        flat_params = np.empty((len(self._mou_ests), mask_jac.sum() )) 
+            
         for i,mou_est in enumerate(tqdm(self._mou_ests,desc=self._label,leave=False)):
-            covs = mou_est.get_C()
-            f_covs = covs[np.triu(np.ones(covs.shape, dtype=bool),1)] #diagonal redundant -> use tril instead of trid
-
-            tau_x = mou_est.get_tau_x()
-            # other params
-            flat_params[i] = np.concatenate((f_covs, tau_x))
+            jac = mou_est.get_J()
+            f_jac = jac[mask_jac] 
+            flat_params[i] = f_jac
 
         return flat_params
 
@@ -225,10 +235,12 @@ def fit_moup(temps, tau, label):
     for i,trial in enumerate(tqdm(temps,desc=label,leave=False)):
         mou_est = MOU()
         if tau is None:
-            mou_ests[i] = mou_est.fit(trial) #, regul_C=0.1
+            raise RuntimeWarning("Moup without lag (integer) given; set i_opt_tau to 1")
+            mou_ests[i] = mou_est.fit(trial, i_tau_opt=1, epsilon_C=0.01, epsilon_Sigma=0.01)
         else:
-            mou_ests[i] = mou_est.fit(trial, i_tau_opt=tau) #, regul_C=0.1
-
+            mou_ests[i] = mou_est.fit(trial, i_tau_opt=tau, epsilon_C=0.01, epsilon_Sigma=0.01) #, regul_C=0.1
+            # print number of iterations and model error in log
+            print('iter', mou_est.d_fit['iterations'], 'err', mou_est.d_fit['distance'])
 
         # regularization may be helpful here to "push" small weights to zero here
 
