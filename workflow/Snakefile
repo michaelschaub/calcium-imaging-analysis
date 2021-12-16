@@ -147,7 +147,9 @@ def parcellation_input(wildcards):
 	input = {
 		"data"	: "results/{mouse}/SVD/data.h5",
 		"config": "results/{mouse}/SVD/conf.yaml" }
-	input["meta"]	= config["parcellation_opts"]["paths"][wildcards["parcellation"]]
+	#if wildcards["parcellation"] in config["parcellation_opts"]["paths"].keys(): <- leads to such a weird error
+	if wildcards["parcellation"]!='ICA':
+		input["meta"]	= config["parcellation_opts"]["paths"][wildcards["parcellation"]]
 	return input
 
 rule parcellation:
