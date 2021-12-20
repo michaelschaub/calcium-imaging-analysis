@@ -35,6 +35,9 @@ class Data(ABC):
             b_starts = None
         return a_temps, b_temps, notNone(a_df,b_df), notNone(a_spats, b_spats), notNone(a_starts, b_starts)
 
+    '''
+    Data objects loaded from files should be stored here by their hash digests
+    '''
     LOADED_DATA = {}
 
 
@@ -51,7 +54,7 @@ class DecompData(Data):
 
         if cond_filter is None:
             cond_filter = []
-        self.conditions = cond_filter  # DecompData.Conditions(self, cond_filter)
+        self.conditions = cond_filter
         self._savefile = savefile
 
         if read_only:
@@ -141,6 +144,7 @@ class DecompData(Data):
 
     @classmethod
     def load(Class, file, data_hash=None, try_loaded=False):
+        # use already loaded data object if possible, may save a lot of memory
         if try_loaded and data_hash is not None and data_hash in Data.LOADED_DATA:
             data = Data.LOADED_DATA[data_hash]
         else:
@@ -185,6 +189,10 @@ class DecompData(Data):
 
     @property
     def savefile(self):
+        '''
+        Get path of the file, this DecompData object was last saved into or loaded from.
+        returns None if object was never saved and not loaded or if attribute hashes in file do not match attribute hashes of object
+        '''
         if (not self._savefile is None and pathlib.Path(self._savefile).is_file()):
             h5_file = h5py.File(self._savefile, "r")
             if self.check_hashes([ bytes.fromhex(h5_file[a].attrs["hash"]) for a in ["df","temps","spats","starts"] ]):
@@ -209,6 +217,9 @@ class DecompData(Data):
 
     @property
     def temporals(self):
+        '''
+        Get temporal components of DecompData object, reshaped into trials
+        '''
         try:
             return np.reshape(self._temps, (len(self), -1, self.n_components))
         except ValueError as err:
@@ -219,6 +230,9 @@ class DecompData(Data):
 
     @property
     def temporals_flat(self):
+        '''
+        Get temporal components of DecompData object, kept as one timeseries
+        '''
         return self._temps
 
     @property
@@ -226,6 +240,9 @@ class DecompData(Data):
         return self._spats
 
     class PixelSlice:
+        '''
+        A helper class, designed to enable lazy slicing and accessing of recomposed pixel data by slicing spatials and temporals
+        '''
         def __init__(self, temps, spats):
             self._temps = temps
             self._spats = spats
@@ -245,9 +262,17 @@ class DecompData(Data):
 
     @property
     def pixel(self):
+        '''
+        Creates PixelSlice object, from which slices of recomposed pixel data can be accessed
+        the first key is applied to the temporals, the second and third to the horizontal and vertical dimension of the spatials
+        '''
         return DecompData.PixelSlice(self._temps, self._spats)
 
     def __getitem__(self, keys):
+        '''
+        Slices the DecompData object into a new DecompData object
+        the first key is applied to the trial dimension, the second to the temporals by trial
+        '''
         if not isinstance(keys, tuple):
             keys = (keys, slice(None, None, None))
         elif len(keys) < 2:
@@ -255,10 +280,12 @@ class DecompData(Data):
         df = self._df[keys[0]]
         spats = self._spats
         try:
+            # if keys[1] is bool us it as mask on aranged array to create array of frames to keep
             assert np.array(keys[1]).dtype == bool
             trial_frames = np.array(np.arange(len(keys[1]))[keys[1]])
         except:
             try:
+                # else use it to slice from aranged array
                 trial_frames = np.array(np.arange(np.max(np.diff(self._starts)))[keys[1]])
             except ValueError as err:
                 if "zero-size array to reduction operation maximum" in err.args[0]:
@@ -296,6 +323,10 @@ class DecompData(Data):
 
     @conditions.setter
     def conditions(self, conditions):
+        '''
+        Get ConditionalData object created from self with conditions
+        conditions can either be a list or dictionary of condition dictionaries
+        '''
         self._cond_filters = conditions
         self._conditional = ConditionalData( self, conditions )
 
@@ -309,6 +340,9 @@ class DecompData(Data):
         self.conditions = cond_filters
 
     def get_conditional(self, conditions):
+        '''
+        returns slice of self, containing all trials, where the trial data given by the keys of conditions match their corresponding values
+        '''
         select = True
         for attr, val in conditions.items():
             select = select & (getattr( self._df, attr ) == val)
