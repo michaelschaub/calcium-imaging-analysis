@@ -255,7 +255,7 @@ rule decoding:
 	output:
 		f"results/{{mouse}}/{{parcellation}}/{{filter}}/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/decoder_model.pkl",
 		f"results/{{mouse}}/{{parcellation}}/{{filter}}/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/decoder_perf.pkl",
-		config = f"results/{{mouse}}/{{parcellation}}/{{filter}}/decoder/{{feature}}/{{decoder}}/{'.'.join(trial_conditions)}/conf.yaml",
+		config = f"results/{{mouse}}/{{parcellation}}/{{filter}}/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/{'.'.join(trial_conditions)}/conf.yaml",
 	params:
 		conds = list(trial_conditions),
 		params = lambda wildcards: decoders[wildcards["decoder"]]
