@@ -34,7 +34,7 @@ branch_opts:
     covariance:
       max_components : [64]
     moup:
-      timelags: [0,1]
+      timelags: [1]
       max_components : [64]
     #autocovariance:
       #timelags: [[0],[1]]

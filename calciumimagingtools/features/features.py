@@ -172,7 +172,7 @@ class Moup(Features):
         flat_params = np.empty((len(self._mou_ests), mask_jac.sum()))
 
         for i,mou_est in enumerate(tqdm(self._mou_ests,desc=self._label,leave=False)):
-            flat_params[i,:] = mou_est.get_J().[mask_jac]
+            flat_params[i,:] = mou_est.get_J()[mask_jac]
 
         return flat_params
 
