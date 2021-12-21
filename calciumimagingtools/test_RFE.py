@@ -33,10 +33,10 @@ from data import DecompData
 ##better solution?
 import sys
 sys.path.append(Path(__file__).parent)
-
+import pathlib
 
 from features import Raws,Means, Moup, Covariances, AutoCovariances, Feature_Type
-from plotting import graph_circle_plot, plots
+from plotting import graph_circle_plot, plots, plot_glassbrain,  construct_rfe_graph, plt_glassbrain
 from loading import load_task_data_as_pandas_df
 from decomposition import anatomical_parcellation
 
@@ -85,9 +85,17 @@ opts_path = data_path/"GN06"/Path('2021-01-20_10-15-16/SVD_data/opts.mat')
 trans_params = scipy.io.loadmat(opts_path,simplify_cells=True)['opts']['transParams']
 
 #align_
-align_svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts), trans_params=trans_params)
-svd = anatomical_parcellation(align_svd)
-print(svd.spatial_labels)
+resl_path = pathlib.Path(__file__).parent.parent/'results'
+svd_path = resl_path/'GN06/SVD/data.h5'
+ana_path = resl_path/'GN06/anatomical/data.h5'
+
+svd = DecompData.load(svd_path)
+ana = DecompData.load(ana_path)
+
+
+#align_svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts), trans_params=trans_params)
+#svd = anatomical_parcellation(align_svd)
+#print(svd.spatial_labels)
 
 
 #define different conds
@@ -98,18 +106,17 @@ side_keys = ['right', 'left']
 side_range = range(2)
 
 #filter for all conds
-trial_preselection = ((svd.n_targets == 6) & (svd.n_distractors == 0) & (svd.auto_reward == 0) & (svd.both_spouts == 1))
+#trial_preselection = ((svd.n_targets == 6) & (svd.n_distractors == 0) & (svd.auto_reward == 0) & (svd.both_spouts == 1))
+#svd = svd[trial_preselection]
 
 #set condition filter
 cond_keys =  itertools.product(side_keys,modal_keys)
 cond_keys_str = [f"{s}_{m}" for s, m in list(cond_keys)]
 
-svd = svd[trial_preselection]
 
-print(svd.spatial_labels)
-svd.conditions = [ {"modality" : modal, "target_side_left" : side} for side in side_range for modal in modal_range]
 
-print(svd.spatial_labels)
+ana.conditions = [ {"modality" : modal, "target_side_left" : side} for side in side_range for modal in modal_range]
+
 
 
 #Hardcoded 'vis_left','tact_right'
@@ -125,7 +132,7 @@ print(svd.spatial_labels)
 #####
 save_outputs = True
 baseline_mode = None  #### basline mode ('mean' / 'zscore' / None)
-comp = 65 ### number componants to use
+comp = 64 ### number componants to use
 n_rep = 1  ### number of repetition
 n_comp_LDA = None #5  ### number of LDA componants (conds -1)
 RFE_edges = 20
@@ -135,10 +142,10 @@ RFE_edges = 20
 #features  = ['mean',"mean(-base)","raw","mou"]
 feature_data = {
 
-    "mean": [Means.create(svd.conditions[i,:,30:75],max_comps=comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond
+    "mean": [Means.create(ana.conditions[i,:,30:75],max_comps=comp) for i in range(len(ana.conditions))], #mean of stimulusframes for first cond
     #"mean(-base)": [Means(svd.conditions[i,:,30:75]-Means(svd.conditions[i,:,15:30]),comp) for i in range(len(svd.conditions))],
     #"raw": [Raws(svd.conditions[i,:,30:75],comp) for i in range(len(svd.conditions))], #mean of stimulusframes for first cond,
-    "Cov w/o_Diagonal": [Covariances.create(svd.conditions[i,:,30:75],max_comps=comp, include_diagonal= True) for i in tqdm(range(len(svd.conditions)),desc='Conditions')], #mean of stimulusframes for first cond
+    "Cov": [Covariances.create(ana.conditions[i,:,30:75],max_comps=comp, include_diagonal= True) for i in tqdm(range(len(ana.conditions)),desc='Conditions')], #mean of stimulusframes for first cond
     #"Cov w/Diagonal": [Covariances(svd.conditions[i,:,30:75],max_comps=comp, include_diagonal= True) for i in tqdm(range(len(svd.conditions)),desc='Conditions')],
     #r"Cov($\tau$=0)": [AutoCovariances(svd.conditions[i,:,30:75],max_comps=comp,time_lag_range=[0]) for i in tqdm(range(len(svd.conditions)),desc='Conditions')],
     #"mou1": [Moup.create(svd.conditions[i,:,30:75],max_comps=comp,time_lag=3) for i in range(len(svd.conditions))],
@@ -245,7 +252,16 @@ for i_feat, feat in enumerate(tqdm(features,desc="Training classifiers for each 
     dict_path = data_path/"meta"/"anatomical.mat"
     dorsal_labels = np.asarray(scipy.io.loadmat(dict_path ,simplify_cells=True) ['areaLabels'], dtype ='str')
 
-    graph_circle_plot(list_best_feat,n_nodes= comp, title=feature_label[i_feat],feature_type = feature_data[feat][0].type,node_labels=svd.spatial_labels)
+    #g = graph_circle_plot(list_best_feat,n_nodes= comp, title=feature_label[i_feat],feature_type = feature_data[feat][0].type,node_labels=svd.spatial_labels)
+    #frame = np.tensordot(Means.create(svd[])[:], svd.spatials[:,:,:], 1) #classifiers[feat][classifier].coef_,
+    #print(Means.create(svd[:,30:75])[:].shape)
+    #print(svd.spatials[:,:,:].shape)
+    #align_svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts), trans_params=trans_params)
+    frame = Means.create(svd[:,30:75]).mean.pixel[0,:,:] #np.tensordot(Means.create(svd[:,30:75]),svd.spatials[:,:,:], 1)
+
+    g = construct_rfe_graph(list_best_feat, comp,feature_data[feat][0].type,labels=ana.spatial_labels)
+    plt_glassbrain(bg_img=frame,graph=g, title=f"{feat}_RFE")
+
     #print(f'\tRepetition {n_rep:>3}/{n_rep}' )
 
 '''

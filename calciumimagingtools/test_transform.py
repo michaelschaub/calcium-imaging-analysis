@@ -95,7 +95,7 @@ svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_
 
 align_svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts), trans_params=trans_params)
 
-anatomical = anatomical_parcellation(align_svd)
+#anatomical = anatomical_parcellation(align_svd)
 
 #anatomical = DecompData( sessions, temps, spats, np.array(trial_starts))
 
@@ -187,13 +187,13 @@ plt.show()
 
 
 
-_ , dorsal_w = dorsal_maps['edgeMapScaled'].shape
-spatials_h , _ = align_svd.spatials[0,:,:].shape
+dorsal_h , dorsal_w = dorsal_maps['edgeMapScaled'].shape
+spatials_h , spatial_w = align_svd.spatials[0,:,:].shape
 
 print((spatials_h, dorsal_w))
 
 f, axs = plt.subplots(2)
-axs[0].imshow(anatomical.pixel[0,:,:dorsal_w], interpolation='none')
+#axs[0].imshow(anatomical.pixel[0,:,:dorsal_w], interpolation='none')
 
 edges = dorsal_maps['edgeMapScaled']
 
@@ -201,7 +201,7 @@ edges = dorsal_maps['edgeMapScaled']
 masked_data = np.ma.masked_where(edges < 1, edges)
 
 
-axs[0].imshow(masked_data[:spatials_h,:], interpolation='none')
+#axs[0].imshow(masked_data[:spatials_h,:], interpolation='none')
 
 imgs = axs[0].get_images()
 if len(imgs) > 0:
@@ -219,6 +219,7 @@ if len(imgs) > 0:
 ######
 #axs[1].imshow(svd.pixel[0,:,:], vmin=-0.003, vmax=0.003)
 
+plt.show()
 
 ### create mask
 
