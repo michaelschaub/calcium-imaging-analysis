@@ -25,17 +25,22 @@ branch_opts:
     - All
   conditions:
     null
-    #left_visual:
-      #phase:      stimulus
-      #sides:      left
-      #modalities: visual
+    #left_tac:
+    #  phase:      stimulus
+    #  sides:      left
+    #  modalities: tactile
+    #right_tac:
+    #  phase: stimulus
+    #  sides: right
+    #  modalities: tactile
+
   features:
     mean:
       max_components : [64]
     covariance:
       max_components : [64]
     moup:
-      timelags: [1]
+      timelags: [3]
       max_components : [64]
     #autocovariance:
       #timelags: [[0],[1]]

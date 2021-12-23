@@ -229,7 +229,7 @@ rule feature_calculation:
 rule feature_elimination:
 	input:
 		feats = [f"results/{{mouse}}/{{parcellation}}/{{filter}}/{cond}/{{feature}}/feature_data.h5" for cond in trial_conditions],
-		labels = "results/{mouse}/{parcellation}/data.h5",
+		parcellation  = "results/{mouse}/{parcellation}/data.h5",
 		#config = "results/{mouse}/{parcellation}/{filter}/{cond}/{feature}/conf.yaml",
 	output:
 		best_feats = f"results/{{mouse}}/{{parcellation}}/{{filter}}/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/best_feats.pkl",
@@ -237,6 +237,7 @@ rule feature_elimination:
 		perf = f"results/{{mouse}}/{{parcellation}}/{{filter}}/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/decoder_perf.pkl",
 		config = f"results/{{mouse}}/{{parcellation}}/{{filter}}/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/conf.yaml",
 		plot = f"results/{{mouse}}/{{parcellation}}/{{filter}}/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/circle_plot.png",
+		glassbrain = f"results/{{mouse}}/{{parcellation}}/{{filter}}/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/glassbrain.html",
 	params:
 		conds = list(trial_conditions),
 		reps = 5, #used to be k_folds but was removed form config
@@ -305,6 +306,16 @@ rule plot_performances:
 		 "envs/environment.yaml"
 	script:
 		  "scripts/plot_performances.py"
+
+
+rule plot_glassbrain:
+	input:
+		best_feats = f"results/{{mouse}}/{{parcellation}}/{{filter}}/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/best_feats.pkl",
+		parcellation = f"results/{{mouse}}/{{parcellation}}/data.h5",
+		feature = f"results/{{mouse}}/{{parcellation}}/{{filter}}/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/best_feats.pkl",
+
+	output:
+		interactive_plot = f"results/{{mouse}}/{{parcellation}}/{{filter}}/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/glassbrain.html",
 
 
 

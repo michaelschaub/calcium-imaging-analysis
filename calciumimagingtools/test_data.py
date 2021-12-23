@@ -14,7 +14,7 @@ from plotting import plot_glassbrain,plt_glassbrain
 
 import sys
 from pathlib import Path
-sys.path.append(Path(__file__).parent)
+sys.path.append(str(Path(__file__).parent))
 '''
 folders = ['features','loading']
 file_paths =  [Path(__file__).parent / Path(folder) for folder in folders]
@@ -41,7 +41,7 @@ force_extraction = False
 
 resc_path = pathlib.Path(__file__).parent.parent/'resources'
 resl_path = pathlib.Path(__file__).parent.parent/'results'
-svd_path = resl_path/'GN06/SVD/data.h5'
+svd_path = pathlib.Path(resl_path/'GN06/SVD/data.h5')
 if (not svd_path.exists()) or force_extraction:
     if (not (resc_path/'extracted_data.pkl').exists()) or force_extraction:
         # load behavior data
@@ -62,7 +62,7 @@ if (not svd_path.exists()) or force_extraction:
     svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts) )
     svd.save(str(svd_path))
 else:
-    svd = DecompData.load(svd_path)
+    svd = DecompData.load(str(svd_path))
     print(f"Loaded DecompData object from '{str(svd_path)}'.")
 
 print(f"SVD is saved at {svd.savefile}")

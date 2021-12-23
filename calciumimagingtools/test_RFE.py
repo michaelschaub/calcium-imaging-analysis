@@ -1,18 +1,9 @@
 import h5py
-import numpy
 import numpy as np
-import pandas as pd
 import pickle as pkl
-from pathlib import Path
 from matplotlib import pyplot as plt
 import itertools
 
-import sklearn.linear_model as skllm
-import sklearn.neighbors as sklnn
-import sklearn.discriminant_analysis as skda
-import sklearn.preprocessing as skppc
-import sklearn.pipeline as skppl
-import sklearn.ensemble as skens
 from sklearn import preprocessing
 from sklearn.model_selection import StratifiedShuffleSplit
 
@@ -21,19 +12,15 @@ import sklearn.linear_model as skllm
 import sklearn.preprocessing as skprp
 import sklearn.pipeline as skppl
 import sklearn.feature_selection as skfs
-import sklearn.model_selection as skms
 
-#Progress Bar
-#from tqdm.auto import tqdm
-#from tqdm.notebook import tqdm
 from tqdm import tqdm
 
 from data import DecompData
 
 ##better solution?
 import sys
+from pathlib import Path
 sys.path.append(Path(__file__).parent)
-import pathlib
 
 from features import Raws,Means, Moup, Covariances, AutoCovariances, Feature_Type
 from plotting import graph_circle_plot, plots, plot_glassbrain,  construct_rfe_graph, plt_glassbrain
@@ -78,17 +65,15 @@ mask = np.ones( len(trial_starts), dtype=bool )
 mask[missing_task_data] = False
 trial_starts = trial_starts[mask]
 
-
-#print(sessions)
-#print(frameCnt.shape)
 opts_path = data_path/"GN06"/Path('2021-01-20_10-15-16/SVD_data/opts.mat')
 trans_params = scipy.io.loadmat(opts_path,simplify_cells=True)['opts']['transParams']
 
 #align_
-resl_path = pathlib.Path(__file__).parent.parent/'results'
-svd_path = resl_path/'GN06/SVD/data.h5'
-ana_path = resl_path/'GN06/anatomical/data.h5'
+resl_path = Path(__file__).parent.parent/Path('results')
+svd_path = str(resl_path/Path('GN06/SVD/data.h5'))
+ana_path = str(resl_path/Path('GN06/anatomical/data.h5'))
 
+print(svd_path)
 svd = DecompData.load(svd_path)
 ana = DecompData.load(ana_path)
 
@@ -148,7 +133,7 @@ feature_data = {
     "Cov": [Covariances.create(ana.conditions[i,:,30:75],max_comps=comp, include_diagonal= True) for i in tqdm(range(len(ana.conditions)),desc='Conditions')], #mean of stimulusframes for first cond
     #"Cov w/Diagonal": [Covariances(svd.conditions[i,:,30:75],max_comps=comp, include_diagonal= True) for i in tqdm(range(len(svd.conditions)),desc='Conditions')],
     #r"Cov($\tau$=0)": [AutoCovariances(svd.conditions[i,:,30:75],max_comps=comp,time_lag_range=[0]) for i in tqdm(range(len(svd.conditions)),desc='Conditions')],
-    #"mou1": [Moup.create(svd.conditions[i,:,30:75],max_comps=comp,time_lag=3) for i in range(len(svd.conditions))],
+    "mou1": [Moup.create(ana.conditions[i,:,30:75],max_comps=comp,timelag=3) for i in range(len(ana.conditions))],
 }
 
 
@@ -172,7 +157,7 @@ classifiers = {}
 ######
 
 for i_feat, feat in enumerate(tqdm(features,desc="Training classifiers for each features")):
-    print(feature_data[feat][0].type)
+    #print(feature_data[feat][0].type)
 
 
     data = np.concatenate([feat.flatten() for feat in feature_data[feat]])
@@ -260,7 +245,7 @@ for i_feat, feat in enumerate(tqdm(features,desc="Training classifiers for each 
     frame = Means.create(svd[:,30:75]).mean.pixel[0,:,:] #np.tensordot(Means.create(svd[:,30:75]),svd.spatials[:,:,:], 1)
 
     g = construct_rfe_graph(list_best_feat, comp,feature_data[feat][0].type,labels=ana.spatial_labels)
-    plt_glassbrain(bg_img=frame,graph=g, title=f"{feat}_RFE")
+    plt_glassbrain(img=frame,graph=g, title=f"{feat}_RFE", components_spatials=ana.spatials)
 
     #print(f'\tRepetition {n_rep:>3}/{n_rep}' )
 
