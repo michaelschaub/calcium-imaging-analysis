@@ -20,14 +20,20 @@ branch_opts:
   parcellations:
     - anatomical
     - SVD
+    - ICA
   filters:
     - All
   conditions:
     null
-    #left_visual:
-      #phase:      stimulus
-      #sides:      left
-      #modalities: visual
+    #left_tac:
+    #  phase:      stimulus
+    #  sides:      left
+    #  modalities: tactile
+    #right_tac:
+    #  phase: stimulus
+    #  sides: right
+    #  modalities: tactile
+
   features:
     mean:
       max_components : [64]
