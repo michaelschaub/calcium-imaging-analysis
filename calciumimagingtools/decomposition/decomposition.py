@@ -1,7 +1,8 @@
 from pathlib import Path
 import scipy.io
 import numpy as np
-from tqdm import tqdm
+from sklearn.decomposition import FastICA
+
 
 def anatomical_parcellation(DecompDataObject, filter_labels=None, dict_path=None):
     ### Loading meta data for parcellation, masks and labels for each area
@@ -29,5 +30,31 @@ def anatomical_parcellation(DecompDataObject, filter_labels=None, dict_path=None
     new_temporals = np.tensordot(DecompDataObject.temporals_flat, svd_segment_mean, 1)
     new_spatials = spatials
     DecompDataObject.update(new_temporals,new_spatials, spatial_labels=labels)
+
+    return DecompDataObject
+
+
+def fastICA(DecompDataObject, n_comps):
+    #Eventually add mask
+
+    #canica = CanICA(n_components=n_comps,
+    #                verbose=10,
+    #                mask_strategy='background',
+    #                random_state=0)
+    ica = FastICA(n_components=n_comps,
+                  random_state=0)
+
+    new_temporals = ica.fit_transform(DecompDataObject.temporals_flat)
+
+
+
+    inverse = ica.mixing_.T #    inverse = ica.mixing_
+
+    #print("inverse",ica.mixing_.shape)
+    #print("Transform ",ica.components_.shape)
+
+    new_spatials = np.tensordot(inverse, DecompDataObject.spatials, axes=1)
+
+    DecompDataObject.update(new_temporals, new_spatials)
 
     return DecompDataObject

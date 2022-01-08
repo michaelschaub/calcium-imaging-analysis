@@ -1,1 +1,1 @@
-from .decomposition import anatomical_parcellation
+from .decomposition import anatomical_parcellation, fastICA

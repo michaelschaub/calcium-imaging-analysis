@@ -20,6 +20,7 @@ branch_opts:
   parcellations:
     - anatomical
     - SVD
+    - ICA
   filters:
     - All
   conditions:
@@ -31,13 +32,14 @@ branch_opts:
       sides:      left
     right_vistact:
       sides:      right
+
   features:
     mean:
       max_components : [64]
     covariance:
       max_components : [64]
     moup:
-      timelags: [0,1]
+      timelags: [1]
       max_components : [64]
     #autocovariance:
       #timelags: [[0],[1]]

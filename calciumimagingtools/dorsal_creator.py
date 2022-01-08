@@ -18,13 +18,10 @@ sys.path.append(Path(__file__).parent)
 # add missing h5 files here
 missing_task_data = []
 
-
-opts_path = data_path/"GN06"/Path('2021-01-20_10-15-16/SVD_data/opts.mat')
 data_path = Path(__file__).parent.parent / Path('resources')
 dorsal_path = data_path/"meta"/"legacy"/"allenDorsalMap.mat"
 mask_path = data_path/"meta"/"legacy"/"areaMasks.mat"
 
-trans_params = scipy.io.loadmat(opts_path,simplify_cells=True)  ['opts']['transParams']
 dorsal_maps = scipy.io.loadmat(dorsal_path ,simplify_cells=True) ['dorsalMaps']
 dorsal_labels = dorsal_maps['labelsSplit']
 dorsal_masks = np.asarray(scipy.io.loadmat(mask_path ,simplify_cells=True)['areaMasks'],dtype='bool')
@@ -49,6 +46,7 @@ right_mask = np.nonzero([dorsal_side == 'R'])[1]
 reordered_mask = np.concatenate((right_mask,left_mask))
 
 dorsal_dict = {
+    'cortexMask': dorsal_masks[-1],
     'areaMasks': dorsal_masks[reordered_mask],
     'areaLabels': dorsal_labels[reordered_mask],
     'areaSide': dorsal_side[reordered_mask],

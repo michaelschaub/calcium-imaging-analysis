@@ -153,7 +153,9 @@ def parcellation_input(wildcards):
 	input = {
 		"data"	: "results/{mouse}/SVD/data.h5",
 		"config": "results/{mouse}/SVD/conf.yaml" }
-	input["meta"]	= config["parcellation_opts"]["paths"][wildcards["parcellation"]]
+	#if wildcards["parcellation"] in config["parcellation_opts"]["paths"].keys(): <- leads to such a weird error
+	if wildcards["parcellation"]!='ICA':
+		input["meta"]	= config["parcellation_opts"]["paths"][wildcards["parcellation"]]
 	return input
 
 rule parcellation:
@@ -259,7 +261,7 @@ rule decoding:
 	output:
 		f"results/{{mouse}}/{{parcellation}}/{{filter}}/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/decoder_model.pkl",
 		f"results/{{mouse}}/{{parcellation}}/{{filter}}/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/decoder_perf.pkl",
-		config = f"results/{{mouse}}/{{parcellation}}/{{filter}}/decoder/{{feature}}/{{decoder}}/{'.'.join(trial_conditions)}/conf.yaml",
+		config = f"results/{{mouse}}/{{parcellation}}/{{filter}}/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/{'.'.join(trial_conditions)}/conf.yaml",
 	params:
 		conds = list(trial_conditions),
 		params = lambda wildcards: decoders[wildcards["decoder"]]
