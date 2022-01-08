@@ -1,8 +1,12 @@
-# add code library to path
 from pathlib import Path
 import sys
-sys.path.append(str((Path(__file__).parent.parent.parent/"calciumimagingtools").absolute()))
-from utils import snakemake_tools
+sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
+
+
+from ci_lib.utils import snakemake_tools
+from ci_lib import DecompData
+from ci_lib.features import Means, Raws, Covariances, AutoCovariances, Moup
+
 # redirect std_out to log file
 snakemake_tools.redirect_to_log(snakemake)
 snakemake_tools.check_conf(snakemake, sections=["entry","parcellation","prefilters","conditions"])
@@ -10,8 +14,7 @@ snakemake_tools.save_conf(snakemake, sections=["entry","parcellation","prefilter
 start = snakemake_tools.start_timer()
 
 config = snakemake.config["rule_conf"]["feature_calculation"]
-from data import DecompData
-from features import Means, Raws, Covariances, AutoCovariances, Moup
+
 
 feature_dict = { "mean" : Means, "raw" : Raws, "covariance" : Covariances, "autocovariance" : AutoCovariances, "moup" :Moup }
 

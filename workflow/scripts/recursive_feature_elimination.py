@@ -3,23 +3,20 @@ import pickle
 
 from sklearn import preprocessing
 from sklearn.model_selection import StratifiedShuffleSplit
-
-import scipy
 import sklearn.linear_model as skllm
 import sklearn.preprocessing as skprp
 import sklearn.pipeline as skppl
 import sklearn.feature_selection as skfs
-import sklearn.model_selection as skms
-import warnings
+
 
 from pathlib import Path
 import sys
-sys.path.append(str((Path(__file__).parent.parent.parent/"calciumimagingtools").absolute()))
+sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
-from utils import snakemake_tools
-from features import Features, Means, Raws, Covariances, AutoCovariances, Moup, Feature_Type
-from plotting import graph_circle_plot
-from data import DecompData
+from ci_lib.utils import snakemake_tools
+from ci_lib.features import Features, Means, Raws, Covariances, AutoCovariances, Moup, Feature_Type
+from ci_lib.plotting import graph_circle_plot
+from ci_lib import DecompData
 
 
 

@@ -9,14 +9,13 @@ from sklearn.model_selection import StratifiedShuffleSplit
 import numpy as np
 import pickle
 
-
 from pathlib import Path
 import sys
-sys.path.append(str((Path(__file__).parent.parent.parent/"calciumimagingtools").absolute()))
+sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
-from utils import snakemake_tools
-from features import Features, Means, Raws, Covariances, AutoCovariances, Moup
-from loading import save_h5
+from ci_lib.utils import snakemake_tools
+from ci_lib.features import Features, Means, Raws, Covariances, AutoCovariances, Moup
+
 
 # redirect std_out to log file
 snakemake_tools.redirect_to_log(snakemake)

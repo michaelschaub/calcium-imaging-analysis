@@ -1,15 +1,17 @@
-# add code library to path
 from pathlib import Path
 import sys
-sys.path.append(str((Path(__file__).parent.parent.parent/"calciumimagingtools").absolute()))
-from utils import snakemake_tools
+sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
+
+from ci_lib.utils import snakemake_tools
+from ci_lib import DecompData
+
+
 # redirect std_out to log file
 snakemake_tools.redirect_to_log(snakemake)
 snakemake_tools.check_conf(snakemake, sections=["entry","parcellation","prefilters"])
 snakemake_tools.save_conf(snakemake, sections=["entry","parcellation","prefilters","conditions"])
 timer_start = snakemake_tools.start_timer()
 
-from data import DecompData
 
 data = DecompData.load(snakemake.input[0])
 data.conditions = snakemake.params[0]["trial_conditions"]

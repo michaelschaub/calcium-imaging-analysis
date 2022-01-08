@@ -6,8 +6,10 @@ from matplotlib import cm
 from pathlib import Path
 import sys
 sys.path.append(str((Path(__file__).parent.parent.parent/"calciumimagingtools").absolute()))
-from plotting import plots
-from utils import snakemake_tools
+
+from ci_lib.plotting import plots
+from ci_lib.utils import snakemake_tools
+
 snakemake_tools.redirect_to_log(snakemake)
 timer_start = snakemake_tools.start_timer()
 

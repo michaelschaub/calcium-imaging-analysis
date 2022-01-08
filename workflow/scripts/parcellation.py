@@ -1,10 +1,6 @@
-# add code library to path
-from pathlib import Path
-import sys
-sys.path.append(str((Path(__file__).parent.parent.parent/"calciumimagingtools").absolute()))
-from utils import snakemake_tools
-from data import DecompData
-from decomposition import anatomical_parcellation, fastICA
+from ci_lib.utils import snakemake_tools
+from ci_lib import DecompData
+from ci_lib.decomposition import anatomical_parcellation, fastICA
 
 # redirect std_out to log file
 snakemake_tools.redirect_to_log(snakemake)
