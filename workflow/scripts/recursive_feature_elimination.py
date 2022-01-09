@@ -88,5 +88,11 @@ with open(snakemake.output["model"], 'wb') as f:
 
 ##Plots
 
-data = DecompData.load(snakemake.input["labels"])
-graph_circle_plot(list_best_feat,n_nodes= cond_feats[0].ncomponents, title=feature, feature_type = feat_type, node_labels=data.spatial_labels, save_path=snakemake.output["plot"])
+parcellation = DecompData.load(snakemake.input["parcellation"])
+n_comps = cond_feats[0].ncomponents
+
+graph_circle_plot(list_best_feat,n_nodes= n_comps, title=feature, feature_type = feat_type, node_labels=parcellation.spatial_labels, save_path=snakemake.output["plot"])
+
+#Glassbrain Plot
+rfe_graph = construct_rfe_graph(list_best_feat, n_nodes = n_comps, feat_type = feat_type)
+plot_glassbrain_bokeh(graph=rfe_graph,components_spatials=parcellation.spatials,components_labels=parcellation.spatial_labels,save_path=snakemake.output["glassbrain"])
