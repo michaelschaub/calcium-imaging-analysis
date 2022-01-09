@@ -54,10 +54,11 @@ branch_opts:
     RF:
   rfe:
     selected_features_n:
-      - full
+      - 5
+      - 10
+      - 15
       - 20
-      - 50
-      - 100
+
 
 parcellation_opts:
   paths:

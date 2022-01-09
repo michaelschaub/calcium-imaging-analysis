@@ -14,7 +14,7 @@ sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 from ci_lib.utils import snakemake_tools
 from ci_lib.features import Features, Means, Raws, Covariances, AutoCovariances, Moup, Feature_Type
-from ci_lib.plotting import graph_circle_plot
+from ci_lib.plotting import graph_circle_plot, construct_rfe_graph, plot_glassbrain_bokeh
 from ci_lib import DecompData
 from ci_lib.rfe import RFE_pipeline
 

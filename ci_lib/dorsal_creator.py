@@ -5,10 +5,6 @@ from pathlib import Path
 import sys
 sys.path.append(Path(__file__).parent)
 
-
-
-
-
 ######################
 # add missing h5 files here
 missing_task_data = []
