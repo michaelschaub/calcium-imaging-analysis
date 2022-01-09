@@ -8,7 +8,7 @@ from ci_lib.utils import snakemake_tools
 # redirect std_out to log file
 snakemake_tools.redirect_to_log(snakemake)
 snakemake_tools.check_conf(snakemake, sections=["entry","parcellation"])
-snakemake_tools.save_conf(snakemake, sections=["entry","parcellation","prefilters"])
+snakemake_tools.save_conf(snakemake, sections=["entry","parcellation","trial_selection"])
 timer_start = snakemake_tools.start_timer()
 
 import shutil

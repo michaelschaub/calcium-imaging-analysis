@@ -13,6 +13,7 @@ from bokeh.palettes import Viridis, Viridis256, Spectral4
 from shapely.geometry import Polygon
 from scipy.ndimage import center_of_mass
 
+from pathlib import Path
 from ci_lib.features import Feature_Type
 
 #Needs to be restructured badly

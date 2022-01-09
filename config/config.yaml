@@ -3,7 +3,7 @@ rule_conf:
     {}
   parcellation:
     {}
-  prefilters:
+  trial_selection:
     {}
   conditions:
     {}
@@ -21,7 +21,7 @@ branch_opts:
     - anatomical
     - SVD
     - ICA
-  filters:
+  selected_trials:
     - All
   conditions:
     #null

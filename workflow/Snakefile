@@ -29,7 +29,7 @@ def create_parameter_product( conf ):
 mouses 		= config["branch_opts"]["mouses"]
 dates		= config["branch_opts"]["dates"]
 parcellations	= config["branch_opts"]["parcellations"]
-filters		= config["branch_opts"]["filters"]
+trial_filters		= config["branch_opts"]["selected_trials"]
 
 conditions	= config["branch_opts"]["conditions"]
 if conditions is None:
@@ -82,11 +82,11 @@ rule all:
 		[ f"results/{mouse}/{parcellation}/{filter}/decoder/{'.'.join(trial_conditions)}/performances.png"
 			for mouse in mouses
 			for parcellation in parcellations
-		  	for filter in filters],
+		  	for filter in trial_filters],
 		[ f"results/{mouse}/{parcellation}/{filter}/decoder/{'.'.join(trial_conditions)}/{feature}/plots/performance.png"
 			for mouse in mouses
 		   	for parcellation in parcellations
-		   	for filter in filters
+		   	for filter in trial_filters
 		   	for cond in trial_conditions
 		   	for feature in features],
 rule all_plots:
@@ -94,7 +94,7 @@ rule all_plots:
 		 [ f"results/{mouse}/{parcellation}/{filter}/decoder/{'.'.join(trial_conditions)}/{feature}/plots/performance.png"
 			   for mouse in mouses
 			   for parcellation in parcellations
-			   for filter in filters
+			   for filter in trial_filters
 			   for cond in trial_conditions
 			   for feature in features]
 
@@ -103,7 +103,7 @@ rule all_decode:
 		[ f"results/{mouse}/{parcellation}/{filter}/decoder/{'.'.join(trial_conditions)}/{feature}/{decoder}/decoder_model.pkl"
 				for mouse in mouses
 				for parcellation in parcellations
-				for filter in filters
+				for filter in trial_filters
 				for feature in features
 				for decoder in decoders]
 
@@ -112,7 +112,7 @@ rule all_features:
 		[ f"results/{mouse}/{parcellation}/{filter}/{cond}/{feature}/feature_data.h5"
 				for mouse in mouses
 				for parcellation in parcellations
-				for filter in filters
+				for filter in trial_filters
 				for cond in trial_conditions
 				for feature in features ]
 
@@ -121,7 +121,7 @@ rule all_rfe:
 		 [ f"results/{mouse}/{parcellation}/{filter}/rfe/{'.'.join(trial_conditions)}/{rfe_n}/{feature}/circle_plot.png"
 		   for mouse in mouses
 		   for parcellation in parcellations
-		   for filter in filters
+		   for filter in trial_filters
 		   for feature in features
 		   for rfe_n in rfe_ns]
 
@@ -173,7 +173,7 @@ rule parcellation:
 	script:
 		"scripts/parcellation.py"
 
-rule prefilters:
+rule trial_selection:
 	input:
 		"results/{mouse}/{parcellation}/data.h5",
 		config = "results/{mouse}/{parcellation}/conf.yaml",
@@ -181,13 +181,13 @@ rule prefilters:
 		"results/{mouse}/{parcellation}/{filter}/filtered_data.h5",
 		config = "results/{mouse}/{parcellation}/{filter}/conf.yaml",
 	log:
-		"results/{mouse}/{parcellation}/{filter}/prefilters.log"
+		"results/{mouse}/{parcellation}/{filter}/trial_selection.log"
 	conda:
 		"envs/environment.yaml"
 	resources:
 		memb_mb=1000
 	script:
-		"scripts/prefilter.py"
+		"scripts/trial_selection.py"
 
 def condition_params(wildcards):
 	params = {
