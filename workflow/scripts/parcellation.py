@@ -1,3 +1,7 @@
+from pathlib import Path
+import sys
+sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
+
 from ci_lib.utils import snakemake_tools
 from ci_lib import DecompData
 from ci_lib.decomposition import anatomical_parcellation, fastICA

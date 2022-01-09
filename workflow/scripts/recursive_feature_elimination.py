@@ -5,7 +5,6 @@ from sklearn import preprocessing
 from sklearn.model_selection import StratifiedShuffleSplit
 import sklearn.linear_model as skllm
 import sklearn.preprocessing as skprp
-import sklearn.pipeline as skppl
 import sklearn.feature_selection as skfs
 
 
@@ -17,18 +16,7 @@ from ci_lib.utils import snakemake_tools
 from ci_lib.features import Features, Means, Raws, Covariances, AutoCovariances, Moup, Feature_Type
 from ci_lib.plotting import graph_circle_plot
 from ci_lib import DecompData
-
-
-
-# MLR adapted for recursive feature elimination (RFE)
-class RFE_pipeline(skppl.Pipeline):
-    def fit(self, X, y=None, **fit_params):
-        """simply extends the pipeline to recover the coefficients (used by RFE) from the last element (the classifier)
-        """
-        super(RFE_pipeline, self).fit(X, y, **fit_params)
-        self.coef_ = self.steps[-1][-1].coef_
-        return self
-
+from ci_lib.rfe import RFE_pipeline
 
 # redirect std_out to log file
 snakemake_tools.redirect_to_log(snakemake)
@@ -48,7 +36,7 @@ for path in snakemake.input["feats"]:
 
 feat_type = cond_feats[0].type
 rfe_n = snakemake.wildcards["rfe_n"]
-n_rep = 1 #snakemake.params['reps']
+n_rep = 1 #snakemake.params['reps'] #TODO
 
 ### Scale & Split
 cv = StratifiedShuffleSplit(n_rep, test_size=0.2, random_state=420)

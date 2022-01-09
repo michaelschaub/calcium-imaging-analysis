@@ -44,6 +44,7 @@ branch_opts:
     #autocovariance:
       #timelags: [[0],[1]]
       #max_components : 65
+
   decoders:
     default:
       reps: [5]

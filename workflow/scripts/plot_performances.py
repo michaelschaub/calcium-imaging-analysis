@@ -5,7 +5,7 @@ from matplotlib import cm
 
 from pathlib import Path
 import sys
-sys.path.append(str((Path(__file__).parent.parent.parent/"calciumimagingtools").absolute()))
+sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 from ci_lib.plotting import plots
 from ci_lib.utils import snakemake_tools

@@ -2,15 +2,12 @@ import numpy as np
 
 from ci_lib import Data, DecompData
 from ci_lib.loading import reproducable_hash, load_h5, save_h5
-
-#from pymou import MOU
-from ci_lib.networks import MOU
+from ci_lib.networks import MOU #from pymou import MOU
 
 import pathlib
 from enum import Enum
 
 #Progress Bar
-from tqdm.auto import tqdm
 
 class Feature_Type(Enum):
     NODE = 0
@@ -174,7 +171,7 @@ class Moup(Features):
         mask_jac = np.logical_not(np.eye(n, dtype=bool)) # TODO: ADAPT WHEN MASK AVAILABLE
         flat_params = np.empty((len(self._mou_ests), mask_jac.sum()))
 
-        for i,mou_est in enumerate(tqdm(self._mou_ests,desc=self._label,leave=False)):
+        for i,mou_est in enumerate(self._mou_ests):
             flat_params[i,:] = mou_est.get_J()[mask_jac]
 
         return flat_params
@@ -236,7 +233,7 @@ class Moup(Features):
 def fit_moup(temps, tau, label):
     mou_ests = np.empty((len(temps)),dtype=np.object_)
 
-    for i,trial in enumerate(tqdm(temps,desc=label,leave=False)):
+    for i,trial in enumerate(temps):
         mou_est = MOU()
         if tau is None:
             raise RuntimeWarning("Moup without lag (integer) given; set i_opt_tau to 1")
@@ -407,7 +404,7 @@ def calc_acovs(temps, means, covs, n_tau_range, label):
 
     cov_m[:, 0] = covs
 
-    for trial in tqdm(range(trials),desc=label,leave=False):
+    for trial in range(trials):
 
         for i,i_tau in enumerate(n_tau_range,1): #range(1, n_tau + 1):
             cov_m[trial, i, :, :] = np.tensordot(temps[trial, 0:n_frames - i_tau],
