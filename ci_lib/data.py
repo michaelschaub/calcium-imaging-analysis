@@ -43,7 +43,7 @@ class DecompData(Data):
             f"DataFrame df and trial_starts do not have matching length ({len(df)} != {len(trial_starts)})")
         self._df = df
         self._temps = temporal_comps
-        self._spats = spatial_comps if trans_params is None else align_spatials(spatials,trans_params)
+        self._spats = spatial_comps if trans_params is None else align_spatials(spatial_comps,trans_params)
         self._starts = trial_starts
         self._spat_labels = spatial_labels
 
@@ -235,7 +235,7 @@ class DecompData(Data):
     @conditions.setter
     def conditions(self, conditions):
         self._cond_filters = conditions
-        self._conditional = ConditionalData( self, conditions )
+        self._conditional = ConditionalData( self, conditions)
 
     @property
     def condition_filters(self):
@@ -249,7 +249,14 @@ class DecompData(Data):
     def get_conditional(self, conditions):
         select = True
         for attr, val in conditions.items():
-            select = select & (getattr( self._df, attr ) == val)
+            if isinstance(val,list):
+                any = False
+                for v in val:
+                     any = any | (getattr( self._df, attr ) == v)
+                select = select & any
+            else:
+                select = select & (getattr( self._df, attr ) == val)
+        print("Select",select)
         return self[select]
 
     def _op_data(self, a):

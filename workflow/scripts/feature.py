@@ -9,8 +9,8 @@ from ci_lib.features import Means, Raws, Covariances, AutoCovariances, Moup
 
 # redirect std_out to log file
 snakemake_tools.redirect_to_log(snakemake)
-snakemake_tools.check_conf(snakemake, sections=["entry","parcellation","prefilters","conditions"])
-snakemake_tools.save_conf(snakemake, sections=["entry","parcellation","prefilters","conditions","feature_calculation"])
+snakemake_tools.check_conf(snakemake, sections=["entry","parcellation","trial_selection","conditions"])
+snakemake_tools.save_conf(snakemake, sections=["entry","parcellation","trial_selection","conditions","feature_calculation"])
 start = snakemake_tools.start_timer()
 
 config = snakemake.config["rule_conf"]["feature_calculation"]

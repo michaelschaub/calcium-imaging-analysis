@@ -48,9 +48,12 @@ else:
 	# create trial_conditions fitting for trial data by resolving column names and conditions from trial_conditions
 	trial_condition		= config["trial_conditions"]
 	trial_conditions	= { label :
-					{ trial_condition[condition]["column"] : trial_condition[condition]["conds"][key]
-						for condition, key in (defaults | conds).items() if condition != "phase" }
-					for label, conds in conditions.items() if label != "default" }
+								{
+										trial_condition[condition]["column"] : [trial_condition[condition]["conds"][vals] for vals in value] if isinstance(value,list) else trial_condition[condition]["conds"][value]
+								for condition, value in (defaults | conds).items() if condition != "phase"}
+							for label, conds in conditions.items() if label != "default" }
+
+
 	# lookup specified phases in phase_conditions
 	phase_condition		= config["phase_conditions"]
 	phase_conditions	= { label : phase_condition[(defaults | conds)["phase"]] if "phase" in (defaults | conds) else None

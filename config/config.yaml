@@ -27,10 +27,13 @@ branch_opts:
     #null
     default:
       phase:      stimulus
-      modalities: vistact
-    left_vistact:
+      modalities:
+        - tactile
+        - visual
+        - vistact
+    left_all:
       sides:      left
-    right_vistact:
+    right_all:
       sides:      right
 
   features:

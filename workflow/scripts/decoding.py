@@ -19,7 +19,7 @@ from ci_lib.features import Features, Means, Raws, Covariances, AutoCovariances,
 
 # redirect std_out to log file
 snakemake_tools.redirect_to_log(snakemake)
-snakemake_tools.save_conf(snakemake, sections=["entry","parcellation","prefilters","conditions","feature_calculation","decoder"],
+snakemake_tools.save_conf(snakemake, sections=["entry","parcellation","trial_selection","conditions","feature_calculation","decoder"],
                                         params=['conds','params'])
 start = snakemake_tools.start_timer()
 
