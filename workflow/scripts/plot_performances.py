@@ -7,7 +7,7 @@ from pathlib import Path
 import sys
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
-from ci_lib.plotting import plots
+import ci_lib.plotting as plots
 from ci_lib.utils import snakemake_tools
 
 snakemake_tools.redirect_to_log(snakemake)

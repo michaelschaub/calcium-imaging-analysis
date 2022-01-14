@@ -19,16 +19,23 @@ timer_start = snakemake_tools.start_timer()
 
 
 files_Vc = snakemake.input["Vc"]
-task_files = snakemake.input["tasks"]
+task_files = snakemake.params["task_structured"] #snakemake.input["tasks"]
 trans_paths = snakemake.input["trans_params"]
+
+
+mouse_dates_str = snakemake.params["mouse_dates_str"]
 
 ### should definitly be reworked ###
 
-task_files_split = task_files[0].split("/")
-data_path = "/".join(task_files_split[:-3])
-mouse_id = task_files_split[-3]
+#task_files_split = task_files[0].split("/")
+#print("task_files_split",task_files_split)
+#data_path = "/".join(task_files_split[:-3])
+#print("entry data path",data_path)
+#mouse_id = task_files_split[-3]
+#dates
+
 sessions = load_task_data_as_pandas_df.extract_session_data_and_save(
-        root_paths=[Path(data_path)], mouse_ids=[mouse_id], reextract=False)
+        root_paths=task_files, mouse_dates_str = mouse_dates_str ,reextract=True) #reextraction needs to be done for different set of dates otherwise session will have wrong dims
 print("Loaded task data")
 ###   ###
 

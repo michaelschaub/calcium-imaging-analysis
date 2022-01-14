@@ -1,5 +1,5 @@
 import numpy as np
-import scipy
+import scipy.io , scipy.ndimage
 
 
 def align_spatials_path(spatials,trans_path):
