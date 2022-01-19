@@ -187,6 +187,8 @@ class DecompData(Data):
         return DecompData.PixelSlice(self._temps, self._spats)
 
     def __getitem__(self, keys):
+        print("keys")
+        print(keys)
         if not isinstance(keys, tuple):
             keys = (keys, slice(None, None, None))
         elif len(keys) < 2:
@@ -196,9 +198,21 @@ class DecompData(Data):
         try:
             assert np.array(keys[1]).dtype == bool
             trial_frames = np.array(np.arange(len(keys[1]))[keys[1]])
+            print("frames")
+            print(trial_frames)
         except:
             try:
-                trial_frames = np.array(np.arange(np.max(np.diff(self._starts)))[keys[1]])
+                print("self starts")
+                print(self._starts)
+                print(np.diff(self._starts))
+                print("max",np.max(np.diff(self._starts)))
+                print("min",np.min(np.diff(self._starts)))
+
+                #trial_frames = np.array(np.arange(np.max(np.diff(self._starts)))[keys[1]]) <- max can't work if we have some outliers in the frame length
+                trial_frames = np.array(np.arange(np.min(np.diff(self._starts)))[keys[1]])
+
+                print("frames")
+                print(trial_frames)
             except ValueError as err:
                 if "zero-size array to reduction operation maximum" in err.args[0]:
                     logger.info("Warning: Data has size zero")
@@ -207,13 +221,18 @@ class DecompData(Data):
                     raise
         # starts of selected frames in old temps
         starts = np.array(self._starts[keys[0]])
+        print("starts")
+        print(starts)
 
         # indices of temps in all selected frames (2d)
         selected_temps = np.array(trial_frames[np.newaxis, :] + starts[:, np.newaxis], dtype=int)
+        print("frames + starts")
+        print(selected_temps)
 
         # starts of selected frames in new temps
         new_starts = np.insert(np.cumsum(np.diff(selected_temps[:-1, (0, -1)]) + 1), 0, 0)
 
+        print(self._temps.shape)
         temps = self._temps[selected_temps.flatten()]
         try:
             data = DecompData(df, temps, spats, new_starts, spatial_labels=self._spat_labels)
@@ -257,6 +276,7 @@ class DecompData(Data):
                 select = select & any
             else:
                 select = select & (getattr( self._df, attr ) == val)
+
         return self[select]
 
     def _op_data(self, a):
