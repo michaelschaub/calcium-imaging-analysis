@@ -16,6 +16,7 @@ import numpy as np
 import scipy.linalg as spl
 import scipy.stats as stt
 from sklearn.base import BaseEstimator
+from snakemake.logging import logger
 
 
 ###############################################################################
@@ -100,7 +101,7 @@ class MOU(BaseEstimator):
 
         self.J = -np.eye(self.n_nodes) / tau_x_tmp + C_tmp
         if np.any(np.linalg.eigvals(self.J)>0):
-            print("""The constructed MOU process has a Jacobian with negative 
+            logger.info("""The constructed MOU process has a Jacobian with negative 
                   eigenvalues, corresponding to unstable dynamics.""")
 
         # Inputs
@@ -421,7 +422,7 @@ class MOU(BaseEstimator):
             # Check if max allowed number of iterations have been reached
             if i_iter >= max_iter-1:
                 stop_opt = True
-                print("Optimization did not converge. Maximum number of iterations arrived.")
+                logger.info("Optimization did not converge. Maximum number of iterations arrived.")
             # Check if iteration has finished or still continues
             if stop_opt:
                 self.d_fit['iterations'] = i_iter+1
@@ -478,11 +479,11 @@ class MOU(BaseEstimator):
             
         # cast to real matrices
         if np.any(np.iscomplex(J)):
-            print("Warning: complex values in J; casting to real!")
+            logger.info("Warning: complex values in J; casting to real!")
         J_best = np.real(J)
         J_best[np.logical_not(np.logical_or(mask_C,mask_diag))] = 0
         if np.any(np.iscomplex(Sigma)):
-            print("Warning: complex values in Sigma; casting to real!")
+            logger.info("Warning: complex values in Sigma; casting to real!")
         Sigma_best = np.real(Sigma)
 
         # model theoretical covariances with real J and Sigma
@@ -515,7 +516,7 @@ class MOU(BaseEstimator):
         try:
             return self.d_fit['correlation']
         except:
-            print('The model should be fitted first.')
+            logger.info('The model should be fitted first.')
             return np.nan
             ## GORKA: Shall this raise a RunTimeWarning or other type of warning?
 

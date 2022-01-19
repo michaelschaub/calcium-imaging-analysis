@@ -1,6 +1,8 @@
 import numpy as np
 import scipy.ndimage
 
+from snakemake.logging import logger
+
 from pathlib import Path
 import sys
 sys.path.append(Path(__file__).parent)
@@ -49,5 +51,3 @@ scipy.io.savemat(dict_path,dorsal_dict,do_compression=True)
 
 dorsal_labels = np.asarray(scipy.io.loadmat(dict_path ,simplify_cells=True) ['areaLabels'], dtype ='str')
 dorsal_masks = np.asarray(scipy.io.loadmat(dict_path ,simplify_cells=True)['areaMasks'], dtype='bool')
-
-print(dorsal_masks.shape)

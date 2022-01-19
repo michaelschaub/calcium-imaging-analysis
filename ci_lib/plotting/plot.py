@@ -3,6 +3,7 @@ import networkx as nx
 import numpy as np
 
 from ci_lib.features import Feature_Type
+from snakemake.logging import logger
 
 def construct_rfe_graph(selected_feats, n_nodes, feat_type, labels=None):
     
@@ -86,14 +87,12 @@ def plot_frame(temps, spatial, titles, plt_title):
                 #plt.draw()
                 #plt.pause(0.1)
     #plt.show()
-
     plt.savefig(plt_title, format='png')
-    print("plotted")
+
 
 def graph_circle_plot(list_best_feat, n_nodes, title, feature_type, save_path=False,  node_labels=None):
     #%% network and plot properties
     N = n_nodes #20 # number of nodes
-    print(N)
     # positions for circular layout with origin at bottoms
     pos_circ = dict()
     for i in range(N):
@@ -110,13 +109,11 @@ def graph_circle_plot(list_best_feat, n_nodes, title, feature_type, save_path=Fa
     # matrices to retrieve input/output channels from connections in support network
     mask = np.tri(N,N,0, dtype=bool) if feature_type == Feature_Type.UNDIRECTED else np.ones((N,N), dtype=bool)
 
-    print(mask.shape)
     row_ind = np.repeat(np.arange(N).reshape([N,-1]),N,axis=1)
     col_ind = np.repeat(np.arange(N).reshape([-1,N]),N,axis=0)
     row_ind = row_ind[mask]
     col_ind = col_ind[mask]
-    print(col_ind.shape)
-    print(row_ind.shape)
+
     # plot RFE support network
     plt.figure(figsize=[10,10])
     plt.axes([0.05,0.05,0.95,0.95])
@@ -145,10 +142,9 @@ def graph_circle_plot(list_best_feat, n_nodes, title, feature_type, save_path=Fa
         for ij in list_best_feat:
             if(col_ind[ij] == row_ind[ij]): #checks for loops
                 node_color_aff[col_ind[ij]]='#71DFE7' #colors node red
-                print(ij)
             else:
                 g.add_edge(col_ind[ij],row_ind[ij])
-        print(g)
+
         nx.draw_networkx_nodes(g,pos=pos_circ,node_color=node_color_aff)
         nx.draw_networkx_labels(g,pos=pos_circ,labels=node_labels)
         nx.draw_networkx_edges(g,pos=pos_circ,edgelist=g.edges(),edge_color='#009DAE')

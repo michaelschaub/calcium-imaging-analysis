@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod, abstractproperty
 import numpy as np
 import h5py
 import pathlib
+from snakemake.logging import logger
 
 from ci_lib.loading import reproducable_hash, load_h5, save_h5
 from ci_lib.loading.alignment import align_spatials
@@ -200,7 +201,7 @@ class DecompData(Data):
                 trial_frames = np.array(np.arange(np.max(np.diff(self._starts)))[keys[1]])
             except ValueError as err:
                 if "zero-size array to reduction operation maximum" in err.args[0]:
-                    print("Warning: Data has size zero")
+                    logger.info("Warning: Data has size zero")
                     trial_frames = np.array([])
                 else:
                     raise
@@ -217,10 +218,10 @@ class DecompData(Data):
         try:
             data = DecompData(df, temps, spats, new_starts, spatial_labels=self._spat_labels)
         except AssertionError:
-                print( starts.shape )
-                print( selected_temps.shape )
-                print( new_starts.shape )
-                print( df )
+                logger.info( starts.shape )
+                logger.info( selected_temps.shape )
+                logger.info( new_starts.shape )
+                logger.info( df )
                 raise
         return data
 
@@ -256,7 +257,6 @@ class DecompData(Data):
                 select = select & any
             else:
                 select = select & (getattr( self._df, attr ) == val)
-        print("Select",select)
         return self[select]
 
     def _op_data(self, a):

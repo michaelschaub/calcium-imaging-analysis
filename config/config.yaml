@@ -34,17 +34,17 @@ branch_opts:
   selected_trials:
     - All
   conditions:
-    null
-    #default:
-      #phase:      stimulus
-      #modalities:
-        #- tactile
-        #- visual
-        #- vistact
-    #left_all:
-      #sides:      left
-    #right_all:
-      #sides:      right
+    #null
+    default:
+      phase:      stimulus
+      modalities:
+        - tactile
+        - visual
+        - vistact
+    left_all:
+      sides:      left
+    right_all:
+      sides:      right
 
   features:
     mean:

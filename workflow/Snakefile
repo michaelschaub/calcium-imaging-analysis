@@ -45,7 +45,6 @@ if conditions is None:
 					for side,s in sides.items() for modal,m in modalities.items()}
 	phase_condition		= config["phase_conditions"]
 	phase_conditions	= dict.fromkeys(trial_conditions.keys(), phase_condition["stimulus"] )
-	print(phase_conditions)
 else:
 	defaults		= conditions["default"] if "default" in conditions else {}
 
@@ -257,8 +256,8 @@ rule feature_elimination:
 	   f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/feature_calculation.log"
 	conda:
 		 "envs/environment.yaml"
-	resources:
-		memb_mb=1000
+	#resources:
+	#	memb_mb=1000
 	script:
 		  "scripts/recursive_feature_elimination.py"
 

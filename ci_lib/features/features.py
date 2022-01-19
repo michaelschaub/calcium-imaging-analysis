@@ -7,8 +7,6 @@ from ci_lib.networks import MOU #from pymou import MOU
 import pathlib
 from enum import Enum
 
-#Progress Bar
-
 class Feature_Type(Enum):
     NODE = 0
     UNDIRECTED = 1
@@ -240,8 +238,8 @@ def fit_moup(temps, tau, label):
             mou_ests[i] = mou_est.fit(trial, i_tau_opt=1, epsilon_C=0.01, epsilon_Sigma=0.01)
         else:
             mou_ests[i] = mou_est.fit(trial, i_tau_opt=tau, epsilon_C=0.01, epsilon_Sigma=0.01) #, regul_C=0.1
-            # print number of iterations and model error in log
-            print('iter', mou_est.d_fit['iterations'], 'err', mou_est.d_fit['distance'])
+            # logger.info number of iterations and model error in log
+            # logger.info(f"iter {mou_est.d_fit['iterations']} err {mou_est.d_fit['distance']}")
 
         # regularization may be helpful here to "push" small weights to zero here
 

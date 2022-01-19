@@ -6,6 +6,7 @@ import copy
 from os import path
 import pickle as pkl
 from pathlib import Path
+from snakemake.logging import logger
 
 
 def load_individual_session_data(date_folder, mouse_id):
@@ -35,7 +36,7 @@ def load_individual_session_data(date_folder, mouse_id):
             'control_condition_id': list()}
 
     for trial_file in file_paths:
-        #print(f"trial file: \"{trial_file}\"")
+        #logger.info(f"trial file: \"{trial_file}\"")
         # in case a file wasn't saved correctly.
         # e.g.: software was stopped in the middle of a trial no using the stop button
         # I'm first trying to read all the data and put it into a temporary dictionary and only if everything could be
@@ -117,7 +118,7 @@ def load_individual_session_data(date_folder, mouse_id):
             # this occurs when the session was interrupted during a trial. Usually the last trial in a session.
             pass
         except Exception as e:
-            print(e)
+            logger.info(e)
             break
         #
     #
@@ -136,19 +137,19 @@ def extract_session_data_and_save(root_paths,  mouse_dates_str , reextract=False
     # if type(root_paths) is str:
     #     root_paths = [root_paths]
     # #
-    print(root_paths)
+    logger.info(root_paths)
     initial_call = True
     save_individually = False
     for mouse_id, date_paths  in root_paths.items():
-        print("Mouse",mouse_id)
+        logger.info(f"Mouse {mouse_id}")
         #date_paths = sorted((root_path / str(mouse_id)).glob( "*" )) ###
-        print("Path",date_paths)
+        logger.info(f"Path {date_paths}")
         # sessions = list()
 
         n_paths = len(date_paths)
         for n, date_folder in enumerate(date_paths):
             date_folder = Path(date_folder)
-            print(f"Processed {date_folder} ({n}/{n_paths})", end='\r')
+            logger.info(f"Processed {date_folder} ({n}/{n_paths})")
             # mouse_id = 'AB24'
             session_pkl = date_folder / 'performance_data_extracted.pkl'
             if (not reextract) and path.isfile(session_pkl):
@@ -157,7 +158,7 @@ def extract_session_data_and_save(root_paths,  mouse_dates_str , reextract=False
                 #
             else:
 
-                #print(f"date_folder: \"{root_path}\"")
+                #logger.info(f"date_folder: \"{root_path}\"")
                 data = load_individual_session_data(date_folder=date_folder, mouse_id=mouse_id)
                 if save_individually:
                     with open(session_pkl, 'wb') as handle:
@@ -168,11 +169,10 @@ def extract_session_data_and_save(root_paths,  mouse_dates_str , reextract=False
             else:
                 sessions = sessions.append(pd.DataFrame.from_dict(data), ignore_index=True)
             #
-        print(f"Processed {date_paths[-1]} ({n_paths}/{n_paths})")
+        logger.info(f"Processed {date_paths[-1]} ({n_paths}/{n_paths})")
         #
 
     # Some of the old files have a mixup of "_" and "-"
-    print(sessions)
     #sessions = fix_dates(sessions)
 
 
@@ -186,7 +186,7 @@ def fix_dates(sessions):
     new_dates = unique_dates.copy()
     for i, date in enumerate(unique_dates):
         date_parts = date.replace('-', '_').split('_')
-        # print(date_parts)
+        # logger.info(date_parts)
         new_dates[i] = date_parts[0] + '-' + date_parts[1] + '-' + date_parts[2] + '_' + \
                        date_parts[3] + '-' + date_parts[4] + '-' + date_parts[5]
     #
