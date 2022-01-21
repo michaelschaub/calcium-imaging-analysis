@@ -83,27 +83,21 @@ wildcard_constraints:
 ###   Output accumulation rules   ###
 
 # The first rule is default
-rule all:
+rule decoding_performances:
 	input:
-		[ f"results/{'_'.join(mouse_dates)}/{parcellation}/{filter}/decoder/{'.'.join(trial_conditions)}/performances.png"
+		[ f"results/{'_'.join(mouse_dates)}/{parcellation}/{filter}/Decoding/decoder/{'.'.join(trial_conditions)}/performances.png"
 			for parcellation in parcellations
 		  	for filter in trial_filters],
-		[ f"results/{'_'.join(mouse_dates)}/{parcellation}/{filter}/decoder/{'.'.join(trial_conditions)}/{feature}/plots/performance.png"
+		[ f"results/{'_'.join(mouse_dates)}/{parcellation}/{filter}/Decoding/decoder/{'.'.join(trial_conditions)}/{feature}/plots/performance.png"
 		   	for parcellation in parcellations
 		   	for filter in trial_filters
 		   	for cond in trial_conditions
 		   	for feature in features],
-rule all_plots:
-	input:
-		 [ f"results/{'_'.join(mouse_dates)}/{parcellation}/{filter}/decoder/{'.'.join(trial_conditions)}/{feature}/plots/performance.png"
-			   for parcellation in parcellations
-			   for filter in trial_filters
-			   for cond in trial_conditions
-			   for feature in features]
+
 
 rule all_decode:
 	input:
-		[ f"results/{'_'.join(mouse_dates)}/{parcellation}/{filter}/decoder/{'.'.join(trial_conditions)}/{feature}/{decoder}/decoder_model.pkl"
+		[ f"results/{'_'.join(mouse_dates)}/{parcellation}/{filter}/Decoding/decoder/{'.'.join(trial_conditions)}/{feature}/{decoder}/decoder_model.pkl"
 				for parcellation in parcellations
 				for filter in trial_filters
 				for feature in features
@@ -111,15 +105,15 @@ rule all_decode:
 
 rule all_features:
 	input:
-		[ f"results/{'_'.join(mouse_dates)}/{parcellation}/{filter}/{cond}/{feature}/feature_data.h5"
+		[ f"results/{'_'.join(mouse_dates)}/{parcellation}/{filter}/Features/{cond}/{feature}/feature_data.h5"
 				for parcellation in parcellations
 				for filter in trial_filters
 				for cond in trial_conditions
 				for feature in features ]
 
-rule all_rfe:
+rule best_features:
 	input:
-		 [ f"results/{'_'.join(mouse_dates)}/{parcellation}/{filter}/rfe/{'.'.join(trial_conditions)}/{rfe_n}/{feature}/circle_plot.png"
+		 [ f"results/{'_'.join(mouse_dates)}/{parcellation}/{filter}/Decoding/rfe/{'.'.join(trial_conditions)}/{rfe_n}/{feature}/circle_plot.png"
 		   for parcellation in parcellations
 		   for filter in trial_filters
 		   for feature in features
@@ -206,12 +200,12 @@ rule condition:
 		"results/{mouse_dates}/{parcellation}/{filter}/filtered_data.h5",
 		config = "results/{mouse_dates}/{parcellation}/{filter}/conf.yaml",
 	output:
-		"results/{mouse_dates}/{parcellation}/{filter}/{cond}/conditional_data.h5",
-		config = "results/{mouse_dates}/{parcellation}/{filter}/{cond}/conf.yaml",
+		"results/{mouse_dates}/{parcellation}/{filter}/Features/{cond}/conditional_data.h5",
+		config = "results/{mouse_dates}/{parcellation}/{filter}/Features/{cond}/conf.yaml",
 	params:
 		condition_params
 	log:
-		"results/{mouse_dates}/{parcellation}/{filter}/{cond}/conditionals.log"
+		"results/{mouse_dates}/{parcellation}/{filter}/Features/{cond}/conditionals.log"
 	conda:
 		"envs/environment.yaml"
 	resources:
@@ -221,15 +215,15 @@ rule condition:
 
 rule feature_calculation:
 	input:
-		"results/{mouse_dates}/{parcellation}/{filter}/{cond}/conditional_data.h5",
-		config = "results/{mouse_dates}/{parcellation}/{filter}/{cond}/conf.yaml",
+		"results/{mouse_dates}/{parcellation}/{filter}/Features/{cond}/conditional_data.h5",
+		config = "results/{mouse_dates}/{parcellation}/{filter}/Features/{cond}/conf.yaml",
 	output:
-		"results/{mouse_dates}/{parcellation}/{filter}/{cond}/{feature}/feature_data.h5",
-		config = "results/{mouse_dates}/{parcellation}/{filter}/{cond}/{feature}/conf.yaml",
+		"results/{mouse_dates}/{parcellation}/{filter}/Features/{cond}/{feature}/feature_data.h5",
+		config = "results/{mouse_dates}/{parcellation}/{filter}/Features/{cond}/{feature}/conf.yaml",
 	params:
 		params = lambda wildcards: features[wildcards["feature"]]
 	log:
-		"results/{mouse_dates}/{parcellation}/{filter}/{cond}/{feature}/feature_calculation.log"
+		"results/{mouse_dates}/{parcellation}/{filter}/Features/{cond}/{feature}/feature_calculation.log"
 	conda:
 		"envs/environment.yaml"
 	resources:
@@ -239,21 +233,21 @@ rule feature_calculation:
 
 rule feature_elimination:
 	input:
-		feats = [f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/{cond}/{{feature}}/feature_data.h5" for cond in trial_conditions],
+		feats = [f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/Features/{cond}/{{feature}}/feature_data.h5" for cond in trial_conditions],
 		parcellation  = "results/{mouse_dates}/{parcellation}/data.h5",
 		#config = "results/{mouse_dates}/{parcellation}/{filter}/{cond}/{feature}/conf.yaml",
 	output:
-		best_feats = f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/best_feats.pkl",
-		model = f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/decoder_model.pkl",
-		perf = f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/decoder_perf.pkl",
-		config = f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/conf.yaml",
-		plot = f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/circle_plot.png",
-		glassbrain = f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/glassbrain.html",
+		best_feats = f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/best_feats.pkl",
+		model = f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/decoder_model.pkl",
+		perf = f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/decoder_perf.pkl",
+		config = f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/conf.yaml",
+		plot = f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/circle_plot.png",
+		glassbrain = f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/glassbrain.html",
 	params:
 		conds = list(trial_conditions),
 		reps = 5, #used to be k_folds but was removed form config
 	log:
-	   f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/feature_calculation.log"
+	   f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/feature_calculation.log"
 	conda:
 		 "envs/environment.yaml"
 	#resources:
@@ -263,16 +257,16 @@ rule feature_elimination:
 
 rule decoding:
 	input:
-		[f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/{cond}/{{feature}}/feature_data.h5" for cond in trial_conditions],
+		[f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/Features/{cond}/{{feature}}/feature_data.h5" for cond in trial_conditions],
 	output:
-		f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/decoder_model.pkl",
-		f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/decoder_perf.pkl",
-		config = f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/{'.'.join(trial_conditions)}/conf.yaml",
+		f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/decoder_model.pkl",
+		f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/decoder_perf.pkl",
+		config = f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/conf.yaml",
 	params:
 		conds = list(trial_conditions),
 		params = lambda wildcards: decoders[wildcards["decoder"]]
 	log:
-	   f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/decoding.log",
+	   f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/decoding.log",
 	conda:
 		"envs/environment.yaml"
 	resources:
@@ -286,15 +280,15 @@ rule decoding:
 
 rule plot_performance:
 	input:
-		[f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/decoder/{'.'.join(trial_conditions)}/{{feature}}/{decoder}/decoder_perf.pkl" for decoder in decoders],
+		[f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/{decoder}/decoder_perf.pkl" for decoder in decoders],
 	output:
-		f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/performance.png",
-		f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/performance.pkl",
+		f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/performance.png",
+		f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/performance.pkl",
 	params:
 		conds=list(trial_conditions),
 		decoders=decoders,
 	log:
-		f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/plot_performance.log",
+		f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/plot_performance.log",
 	conda:
 		 "envs/environment.yaml"
 	script:
@@ -302,17 +296,17 @@ rule plot_performance:
 
 rule plot_performances:
 	input:
-		[f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/decoder/{'.'.join(trial_conditions)}/{feature}/{decoder}/decoder_perf.pkl"
+		[f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/Decoding/decoder/{'.'.join(trial_conditions)}/{feature}/{decoder}/decoder_perf.pkl"
 				for feature in features
 				for decoder in decoders],
 	output:
-		  f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/decoder/{'.'.join(trial_conditions)}/performances.png",
+		  f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/Decoding/decoder/{'.'.join(trial_conditions)}/performances.png",
 	params:
 		conds=list(trial_conditions),
 		decoders=decoders,
 		features=features,
 	log:
-		f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/decoder/{'.'.join(trial_conditions)}/plot_performances.log",
+		f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/Decoding/decoder/{'.'.join(trial_conditions)}/plot_performances.log",
 	conda:
 		 "envs/environment.yaml"
 	script:
@@ -321,12 +315,12 @@ rule plot_performances:
 
 rule plot_glassbrain:
 	input:
-		best_feats = f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/best_feats.pkl",
+		best_feats = f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/best_feats.pkl",
 		parcellation = f"results/{{mouse_dates}}/{{parcellation}}/data.h5",
-		feature = f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/best_feats.pkl",
+		feature = f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/best_feats.pkl",
 
 	output:
-		interactive_plot = f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/glassbrain.html",
+		interactive_plot = f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/glassbrain.html",
 
 
 
