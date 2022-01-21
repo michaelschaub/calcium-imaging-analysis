@@ -24,8 +24,8 @@ branch_opts:
 
   parcellations:
     - anatomical
-    - SVD
-    - ICA
+    #- SVD
+    #- ICA
   selected_trials:
     - All
   conditions:
@@ -42,10 +42,10 @@ branch_opts:
       sides:      right
 
   features:
-    mean:
-      max_components : [64]
-    covariance:
-      max_components : [64]
+    #mean:
+    #  max_components : [64]
+    #covariance:
+    #  max_components : [64]
     moup:
       timelags: [3]
       max_components : [64]
@@ -57,15 +57,15 @@ branch_opts:
     default:
       reps: [5]
     MLR:
-    1NN:
-    LDA:
-    RF:
+    #1NN:
+    #LDA:
+    #RF:
   rfe:
     selected_features_n:
       - 5
-      - 10
-      - 15
-      - 20
+      #- 10
+      #- 15
+      #- 20
 
 
 parcellation_opts:
