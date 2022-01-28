@@ -58,7 +58,6 @@ def check_conf(snakemake, sections, logger=None):
 def start_timer():
     return datetime.datetime.now()
 
-def stop_timer(start, name="Timer", logger=None):
-    stop = datetime.datetime.now()
-    delta = stop - start
-    (logging.getLogger(__name__) if logger is None else logger).info(f"[{stop}] {name} finished after {delta}")
+def stop_timer(start, logger=None):
+    delta = datetime.datetime.now() - start
+    (logging.getLogger(__name__) if logger is None else logger).info(f"Finished after {delta}")

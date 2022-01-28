@@ -3,6 +3,7 @@ import numpy as np
 import h5py
 import pathlib
 import logging
+LOGGER = logging.getLogger(__name__)
 
 from ci_lib.loading import reproducable_hash, load_h5, save_h5
 from ci_lib.loading.alignment import align_spatials
@@ -58,7 +59,7 @@ class DecompData(Data):
             self._spats.flags.writeable = False
             self._starts.flags.writeable = False
 
-        self.logger = logging.getLogger(__name__) if logger is None else logger
+        self.logger = LOGGER if logger is None else logger
 
     #Used for parcellations
     def update(self,temporal_comps, spatial_comps, spatial_labels=None):
@@ -71,16 +72,16 @@ class DecompData(Data):
                                         "temps" : self._temps,
                                         "spats" : self._spats,
                                         "starts" : self._starts,
-                                        "labels":self._spat_labels})
+                                        "labels":self._spat_labels}, logger=self.logger)
         self._savefile = file
 
     @classmethod
-    def load(Class, file, data_hash=None, try_loaded=False):
+    def load(Class, file, data_hash=None, try_loaded=False, logger=LOGGER):
         if try_loaded and data_hash is not None and data_hash in Data.LOADED_DATA:
             data = Data.LOADED_DATA[data_hash]
         else:
-            _, df, temps, spats, starts, spat_labels = load_h5( file, labels=["df", "temps", "spats", "starts","labels"])
-            data = Class(df, temps, spats, starts, spatial_labels=spat_labels, savefile=file)
+            _, df, temps, spats, starts, spat_labels = load_h5( file, labels=["df", "temps", "spats", "starts","labels"], logger=logger)
+            data = Class(df, temps, spats, starts, spatial_labels=spat_labels, savefile=file, logger=logger)
             Data.LOADED_DATA[data.hash.digest()] = data
         return data
 
@@ -108,7 +109,7 @@ class DecompData(Data):
     def starts_hash(self):
         return reproducable_hash(self._starts)
 
-    def check_hashes(self, hashes, warn=True, logger=None):
+    def check_hashes(self, hashes, warn=True ):
         if reproducable_hash(tuple( hsh for hsh in hashes)).digest() == self.hash.digest():
             return True
         elif warn:

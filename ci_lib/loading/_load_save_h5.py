@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import h5py
 import logging
+LOGGER = logging.getLogger(__name__)
 
 from hashlib import sha1
 
@@ -97,7 +98,7 @@ def load_object_h5(h5_obj, label):
     else:
         return h5_obj, None
 
-def save_h5(data, file, attributes={}, logger=None ):
+def save_h5(data, file, attributes={}, logger=LOGGER ):
     h5_file = h5py.File(file, "w")
 
     for label, attr in attributes.items():
@@ -107,7 +108,7 @@ def save_h5(data, file, attributes={}, logger=None ):
 
     return h5_file
 
-def load_h5(file, labels=[], logger=None ):
+def load_h5(file, labels=[], logger=LOGGER):
     h5_file = h5py.File(file, "r")
 
     attributes = []
@@ -117,7 +118,7 @@ def load_h5(file, labels=[], logger=None ):
         if label in h5_file:
             if CHECK_HASH and ( "hash" in h5_file[label].attrs and
                 h5_file[label].attrs["hash"] != reproducable_hash(attr, vtype=h5_file[label].attrs["vtype"]).hexdigest()):
-                (logging if logger is None else logger).warn(f"{label} hashes do not match" )
+                logger.warn(f"{label} hashes do not match" )
 
         attributes.append(attr)
     return h5_file, *attributes
