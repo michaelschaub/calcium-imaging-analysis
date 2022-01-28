@@ -1,24 +1,22 @@
-# add code library to path
+import numpy as np
+import h5py
+import warnings
+
 from pathlib import Path
 import sys
-sys.path.append(str((Path(__file__).parent.parent.parent/"calciumimagingtools").absolute()))
-from utils import snakemake_tools
+sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
+
+from ci_lib.utils import snakemake_tools
+from ci_lib.loading import load_task_data_as_pandas_df, alignment #import extract_session_data_and_save
+from ci_lib import DecompData
+
 # redirect std_out to log file
 logger = snakemake_tools.start_log(snakemake)
 
 snakemake_tools.save_conf(snakemake, sections=["entry","parcellation"]) #fixed a bug as we dont apply parcellation to SVD and then prefilter fails to compare config as it won't contain parcellation
 timer_start = snakemake_tools.start_timer()
 
-import tables
-import numpy as np
-import h5py
-from pathlib import Path
-import warnings
-import sys
-sys.path.append(str((Path(__file__).parent.parent.parent/"calciumimagingtools").absolute()))
 
-from loading import load_task_data_as_pandas_df, alignment #import extract_session_data_and_save
-from data import DecompData
 
 
 files_Vc = snakemake.input["Vc"]
