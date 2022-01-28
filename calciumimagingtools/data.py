@@ -1,9 +1,9 @@
-import warnings
 from abc import ABC, abstractmethod, abstractproperty
 import numpy as np
 import pandas as pd
 import h5py
 import pathlib
+import logging
 
 #For BrainAlignment
 import scipy.io, scipy.ndimage
@@ -41,7 +41,7 @@ class Data(ABC):
 
 
 class DecompData(Data):
-    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, cond_filter=None, trans_params=None, savefile=None, read_only=True, spatial_labels=None):
+    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, cond_filter=None, trans_params=None, savefile=None, read_only=True, spatial_labels=None, logger=None):
         assert len(df) != trial_starts.shape[0]-1, (
             f"DataFrame df and trial_starts do not have matching length ({len(df)} != {len(trial_starts)})\n\t(maybe remove last entry?)")
         assert len(df) == trial_starts.shape[0], (
@@ -63,6 +63,8 @@ class DecompData(Data):
             self._spats.flags.writeable = False
             self._starts.flags.writeable = False
 
+        self.logger = logging.root if logger is None else logger
+
     #Used for parcellations
     def update(self,temporal_comps, spatial_comps, spatial_labels=None):
         self._temps = temporal_comps
@@ -77,15 +79,15 @@ class DecompData(Data):
         spatials = np.append(spatials,np.ones((1,h,w)),axis=0)
 
         #Rotation
-        print("Rotation")
+        self.logger.info("Rotation")
         spatials = scipy.ndimage.rotate(spatials,trans_params['angleD'], axes=(2,1), reshape=True, cval= 0)
 
         #Scale
-        print("Scale/Zoom")
+        self.logger.info("Scale/Zoom")
         spatials = scipy.ndimage.zoom(spatials, (1,trans_params['scaleConst'],trans_params['scaleConst']),order=1,cval= 0) #slow
 
         #Translate
-        print("Translate/Shift")
+        self.logger.info("Translate/Shift")
         spatials = scipy.ndimage.shift(spatials, np.insert(np.flip(trans_params['tC']),0,0),cval= 0, order=1, mode='constant') #slow
 
         #Remove offset
@@ -98,7 +100,7 @@ class DecompData(Data):
 
 
         #Crop
-        print("Crop")
+        self.logger.info("Crop")
         n_spatials , h_new , w_new = spatials.shape
         trim_h = int(np.floor((h_new - h) / 2 ))
         trim_w = int(np.floor((w_new - w) / 2 ))
@@ -167,18 +169,18 @@ class DecompData(Data):
     def starts_hash(self):
         return reproducable_hash(self._starts)
 
-    def check_hashes(self, hashes, warn=True):
+    def check_hashes(self, hashes, warn=True, logger=None):
         if reproducable_hash(tuple( hsh for hsh in hashes)).digest() == self.hash.digest():
             return True
         elif warn:
             if hashes[0] is not None and hashes[0] != self.df_hash:
-                warnings.warn("df hashes do not match", Warning)
+                self.logger.warn("df hashes do not match")
             if hashes[1] is not None and hashes[1] != self.temps_hash:
-                warnings.warn("temps hashes do not match", Warning)
+                self.logger.warn("temps hashes do not match")
             if hashes[2] is not None and hashes[2] != self.spats_hash:
-                warnings.warn("spats hashes do not match", Warning)
+                self.logger.warn("spats hashes do not match")
             if hashes[3] is not None and hashes[3] != self.starts_hash:
-                warnings.warn("starts hashes do not match", Warning)
+                self.logger.warn("starts hashes do not match")
         return False
 
     @property
@@ -260,7 +262,7 @@ class DecompData(Data):
                 trial_frames = np.array(np.arange(np.max(np.diff(self._starts)))[keys[1]])
             except ValueError as err:
                 if "zero-size array to reduction operation maximum" in err.args[0]:
-                    print("Warning: Data has size zero")
+                    self.logger.warn("Data has size zero")
                     trial_frames = np.array([])
                 else:
                     raise
@@ -277,10 +279,11 @@ class DecompData(Data):
         try:
             data = DecompData(df, temps, spats, new_starts, spatial_labels=self._spat_labels)
         except AssertionError:
-                print( starts.shape )
-                print( selected_temps.shape )
-                print( new_starts.shape )
-                print( df )
+                self.logger.debug( starts.shape )
+                self.logger.debug( selected_temps.shape )
+                self.logger.debug( new_starts.shape )
+                self.logger.debug( df )
+                self.logger.exception("Error in data.py")
                 raise
         return data
 

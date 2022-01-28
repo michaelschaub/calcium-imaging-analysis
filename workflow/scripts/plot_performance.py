@@ -8,7 +8,7 @@ import sys
 sys.path.append(str((Path(__file__).parent.parent.parent/"calciumimagingtools").absolute()))
 from plotting import plots
 from utils import snakemake_tools
-snakemake_tools.redirect_to_log(snakemake)
+logger = snakemake_tools.start_log(snakemake)
 timer_start = snakemake_tools.start_timer()
 
 

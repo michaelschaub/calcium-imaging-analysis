@@ -7,7 +7,7 @@ from data import DecompData
 from decomposition import anatomical_parcellation, fastICA
 
 # redirect std_out to log file
-snakemake_tools.redirect_to_log(snakemake)
+logger = snakemake_tools.start_log(snakemake)
 snakemake_tools.check_conf(snakemake, sections=["entry"])
 snakemake_tools.save_conf(snakemake, sections=["entry","parcellation"])
 start = snakemake_tools.start_timer()

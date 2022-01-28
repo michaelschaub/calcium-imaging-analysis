@@ -34,7 +34,7 @@ class RFE_pipeline(skppl.Pipeline):
 
 
 # redirect std_out to log file
-snakemake_tools.redirect_to_log(snakemake)
+logger = snakemake_tools.start_log(snakemake)
 snakemake_tools.save_conf(snakemake, sections=["entry","parcellation","prefilters","conditions","feature_calculation","decoder"],
                           params=['conds','reps'])
 start = snakemake_tools.start_timer()

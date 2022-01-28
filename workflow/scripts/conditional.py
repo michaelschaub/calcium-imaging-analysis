@@ -4,7 +4,7 @@ import sys
 sys.path.append(str((Path(__file__).parent.parent.parent/"calciumimagingtools").absolute()))
 from utils import snakemake_tools
 # redirect std_out to log file
-snakemake_tools.redirect_to_log(snakemake)
+logger = snakemake_tools.start_log(snakemake)
 snakemake_tools.check_conf(snakemake, sections=["entry","parcellation","prefilters"])
 snakemake_tools.save_conf(snakemake, sections=["entry","parcellation","prefilters","conditions"])
 timer_start = snakemake_tools.start_timer()
