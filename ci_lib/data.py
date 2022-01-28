@@ -58,7 +58,7 @@ class DecompData(Data):
             self._spats.flags.writeable = False
             self._starts.flags.writeable = False
 
-        self.logger = logging.root if logger is None else logger
+        self.logger = logging.getLogger(__name__) if logger is None else logger
 
     #Used for parcellations
     def update(self,temporal_comps, spatial_comps, spatial_labels=None):
@@ -258,7 +258,6 @@ class DecompData(Data):
                 select = select & any
             else:
                 select = select & (getattr( self._df, attr ) == val)
-        print("Select",select)
         return self[select]
 
     def _op_data(self, a):

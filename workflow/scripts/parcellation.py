@@ -31,4 +31,4 @@ parcellation = {'anatomical': anatom,
                'locaNMF': locaNMF}
 parcellation[snakemake.wildcards['parcellation']]()
 
-snakemake_tools.stop_timer(start, f"{snakemake.rule}")
+snakemake_tools.stop_timer(start, f"{snakemake.rule}", logger=logger)

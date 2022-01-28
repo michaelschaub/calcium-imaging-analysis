@@ -43,4 +43,4 @@ plt.savefig( snakemake.output[0] )
 with open(snakemake.output[1], 'wb') as f:
     pickle.dump(fig, f)
 
-snakemake_tools.stop_timer(timer_start, f"{snakemake.rule}")
+snakemake_tools.stop_timer(timer_start, f"{snakemake.rule}", logger=logger)

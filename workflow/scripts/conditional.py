@@ -14,7 +14,6 @@ timer_start = snakemake_tools.start_timer()
 
 
 data = DecompData.load(snakemake.input[0])
-print(snakemake.params[0]["trial_conditions"])
 data.conditions = snakemake.params[0]["trial_conditions"]
 
 for cond, file in zip(data.conditions.keys(), snakemake.output[:-1]):
@@ -27,4 +26,4 @@ for cond, file in zip(data.conditions.keys(), snakemake.output[:-1]):
         stop = phase["stop"] if "stop" in phase else None
     data.conditions[cond, :, start:stop].save(file)
 
-snakemake_tools.stop_timer(timer_start, f"{snakemake.rule}")
+snakemake_tools.stop_timer(timer_start, f"{snakemake.rule}", logger=logger)

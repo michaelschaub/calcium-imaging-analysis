@@ -7,7 +7,7 @@ from pathlib import Path
 import sys
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
-from ci_lib.plotting import plots
+from ci_lib.plotting import plot
 from ci_lib.utils import snakemake_tools
 
 logger = snakemake_tools.start_log(snakemake)
@@ -29,7 +29,7 @@ for f, feature in enumerate(features):
     for d,decoder in enumerate(decoders):
         with open(snakemake.input[d+f*dec_n], "rb") as file:
             perf = pickle.load(file)
-            violin_plts[f,d]=plots.colored_violinplot(perf, positions=f + np.arange(1) + ((d+1)*1/(dec_n+1))-0.5, widths=[1/(dec_n+2)], color=colors(d/dec_n))
+            violin_plts[f,d]=plot.colored_violinplot(perf, positions=f + np.arange(1) + ((d+1)*1/(dec_n+1))-0.5, widths=[1/(dec_n+2)], color=colors(d/dec_n))
 
 #plt.legend( [colors(i/len(decoders)) for i in range(len(decoders))], decoders )
 plt.legend( [ v['bodies'][0] for v in violin_plts[0]], decoders )
@@ -41,4 +41,4 @@ plt.xticks(range(len(features)), features)
 
 plt.savefig( snakemake.output[0] )
 
-snakemake_tools.stop_timer(timer_start, f"{snakemake.rule}")
+snakemake_tools.stop_timer(timer_start, f"{snakemake.rule}", logger=logger)

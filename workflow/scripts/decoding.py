@@ -85,4 +85,4 @@ with open(snakemake.output[1], 'wb') as f:
 with open(snakemake.output[0], 'wb') as f:
     pickle.dump(decoders, f)
 
-snakemake_tools.stop_timer(start, f"{snakemake.rule}")
+snakemake_tools.stop_timer(start, f"{snakemake.rule}", logger=logger)

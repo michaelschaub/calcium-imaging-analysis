@@ -11,12 +11,20 @@ def redirect_to_log(snakemake):
     print(f"[{datetime.datetime.now()}] Log of rule {snakemake.rule}")
     return std_out
 
+LOGLEVELS = {
+            "DEBUG":logging.DEBUG,
+            "INFO":logging.INFO,
+            "WARNING":logging.WARNING,
+            "ERROR":logging.ERROR,
+            "CRITICAL":logging.CRITICAL, }
+
 def start_log(snakemake):
     logging.basicConfig(filename=str(snakemake.log), encoding='utf-8', style="{",
-            format="{asctime} {name}: {levelname}: {message}", datefmt="%b %d %H:%M:%S")
+            format="{asctime} {name}: {levelname}: {message}", datefmt="%b %d %H:%M:%S",
+            level=LOGLEVELS[snakemake.config["loglevel"]])
     logger = logging.getLogger(f"{snakemake.rule}")
-    logger.setLevel(logging.INFO)
     logger.info(f"Start of rule")
+    logger.info(f"Loglevel: {logger.getEffectiveLevel()}")
     return logger
 
 def save_conf(snakemake, sections, params=[], additional_config=None):
@@ -45,7 +53,7 @@ def check_conf(snakemake, sections, logger=None):
         if snakemake.config["different_config_inputs"] == 0:
             raise ValueError("Config used to generate input does not match current config!")
         else:
-            (logging if logger is None else logger).warn("Config used to generate input does not match current config!")
+            logger.warn("Config used to generate input does not match current config!") if logger is not None else None
 
 def start_timer():
     return datetime.datetime.now()
@@ -53,4 +61,4 @@ def start_timer():
 def stop_timer(start, name="Timer", logger=None):
     stop = datetime.datetime.now()
     delta = stop - start
-    (logging if logger is None else logger).info(f"[{stop}] {name} finished after {delta}")
+    (logging.getLogger(__name__) if logger is None else logger).info(f"[{stop}] {name} finished after {delta}")

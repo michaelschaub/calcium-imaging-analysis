@@ -34,4 +34,4 @@ feat = feature_dict[feature].create(data, max_comps=params["max_components"], **
 
 feat.save(snakemake.output[0])
 
-snakemake_tools.stop_timer(start, f"{snakemake.rule}")
+snakemake_tools.stop_timer(start, f"{snakemake.rule}", logger=logger)

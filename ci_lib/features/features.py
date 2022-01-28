@@ -161,8 +161,8 @@ class Moup(Features):
         self._label = label
         self._savefile = file
 
-    def create(data, max_comps=None, timelag=None, label=None):
-        mou_ests = fit_moup(data.temporals[:, :, :max_comps], timelag if timelag>0 else None, label)
+    def create(data, max_comps=None, timelag=None, label=None, logger=None):
+        mou_ests = fit_moup(data.temporals[:, :, :max_comps], timelag if timelag>0 else None, label, logger=logger)
         feat = Moup(data, mou_ests, label)
         return feat
 
@@ -230,7 +230,7 @@ class Moup(Features):
         return feat
 
 
-def fit_moup(temps, tau, label):
+def fit_moup(temps, tau, label, logger=None):
     mou_ests = np.empty((len(temps)),dtype=np.object_)
 
     for i,trial in enumerate(temps):
@@ -241,7 +241,7 @@ def fit_moup(temps, tau, label):
         else:
             mou_ests[i] = mou_est.fit(trial, i_tau_opt=tau, epsilon_C=0.01, epsilon_Sigma=0.01) #, regul_C=0.1
             # print number of iterations and model error in log
-            print('iter', mou_est.d_fit['iterations'], 'err', mou_est.d_fit['distance'])
+            logger.info('iter', mou_est.d_fit['iterations'], 'err', mou_est.d_fit['distance']) if logger is not None else None
 
         # regularization may be helpful here to "push" small weights to zero here
 
@@ -271,7 +271,7 @@ def recompose_mou_ests( attr_arrays, mou_ests=None ):
 class Raws(Features):
     _type = Feature_Type.TIMESERIES
 
-    def create(data, max_comps=None):
+    def create(data, max_comps=None, logger=None):
         feat = Raws(data, data.temporals[:, :, :max_comps])
         return feat
 
@@ -297,7 +297,7 @@ def calc_means(temps):
 class Means(Features):
     _type = Feature_Type.NODE
 
-    def create(data, max_comps=None):
+    def create(data, max_comps=None, logger=None):
         feat = Means(data, feature=calc_means(data.temporals[:, :, :max_comps]))
         return feat
 
@@ -348,7 +348,7 @@ class Covariances(Features):
         self._savefile = file
         self._include_diagonal = include_diagonal
 
-    def create(data, means=None, max_comps=None, include_diagonal=True):
+    def create(data, means=None, max_comps=None, include_diagonal=True, logger=None):
         if means is None:
             means = calc_means(data.temporals[:, :, :max_comps])
         elif isinstance(means, Means):
@@ -427,7 +427,7 @@ class AutoCovariances(Features):
         self._savefile = file
         self._include_diagonal = include_diagonal
 
-    def create(data, means=None, covs=None, max_comps=None, max_time_lag=None, time_lag_range=None, label = None, include_diagonal=True):
+    def create(data, means=None, covs=None, max_comps=None, max_time_lag=None, time_lag_range=None, label = None, include_diagonal=True, logger=None):
         if means is None:
             means = calc_means(data.temporals[:, :, :max_comps])
         elif isinstance(means, Means):
@@ -489,7 +489,7 @@ class AutoCovariances(Features):
 
 
 class FeatureMean(Features):
-    def create(base):
+    def create(base, logger=None):
         feature = np.mean(base._feature, axis=0).reshape((1, *base._feature.shape[1:]))
         feat = FeatureMean(base.data, feature )
         feat._base_feature = base

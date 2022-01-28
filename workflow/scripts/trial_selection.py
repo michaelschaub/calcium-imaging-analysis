@@ -17,6 +17,6 @@ if snakemake.wildcards['filter'] == 'All':
     shutil.copyfile( snakemake.input[0], snakemake.output[0] )
 else:
     raise ValueError(f"Filter f{snakemake.wildcards['filter']} not recognized")
-print(f"Applied filter {snakemake.wildcards['filter']}")
+logger.info(f"Applied filter {snakemake.wildcards['filter']}")
 
-snakemake_tools.stop_timer(timer_start, f"{snakemake.rule}")
+snakemake_tools.stop_timer(timer_start, f"{snakemake.rule}", logger=logger)

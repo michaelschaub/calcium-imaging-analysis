@@ -30,7 +30,7 @@ data_path = "/".join(task_files_split[:-3])
 mouse_id = task_files_split[-3]
 sessions = load_task_data_as_pandas_df.extract_session_data_and_save(
         root_paths=[Path(data_path)], mouse_ids=[mouse_id], reextract=False)
-print("Loaded task data")
+logger.info("Loaded task data")
 ###   ###
 
 if len(files_Vc) > 1:
@@ -53,7 +53,7 @@ for file_Vc,trans_path in zip(files_Vc,trans_paths):
     #assert (U[-1] == U[0]).all(), "Combining different dates with different Compositions is not yet supported"
     trial_starts.append(np.cumsum(frameCnt[:-1, 1]) + start)
     start += Vc[-1].shape[0]
-print("Loaded SVD data")
+logger.info("Loaded SVD data")
 
 trial_starts = np.concatenate( trial_starts )
 Vc = np.concatenate( Vc )
@@ -64,4 +64,4 @@ U = U[0]
 svd = DecompData( sessions, Vc, U, trial_starts)
 svd.save( snakemake.output[0] )
 
-snakemake_tools.stop_timer(timer_start, f"{snakemake.rule}")
+snakemake_tools.stop_timer(timer_start, f"{snakemake.rule}", logger=logger)
