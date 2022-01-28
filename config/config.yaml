@@ -14,40 +14,37 @@ rule_conf:
 
 branch_opts:
   mouses:
-    #GN06:
-      #- 2021-01-20_10-15-16
-    GN08:
-      - 2021-03-26_13-37-18
-      - 2021-03-29_13-37-29
-      - 2021-03-29_16-33-41
-    GN09:
-      -2021-03-26_10-13-36
-      -2021-04-14_16-01-37
-      -2021-04-20_13-07-10
-    GN10:
-      -2021-03-29_15-41-22
-      -2021-03-29_15-41-22
-      -2021-04-21_11-00-51
+    GN06:
+      - 2021-01-20_10-15-16
+    #GN08:
+    #  - 2021-03-26_13-37-18
+    #  - 2021-03-29_13-37-29
+    #  - 2021-03-29_16-33-41
+    #GN09:
+    #  -2021-03-26_10-13-36
+    #  -2021-04-14_16-01-37
+    #  -2021-04-20_13-07-10
+    #GN10:
+    #  -2021-03-29_15-41-22
+    #  -2021-03-29_15-41-22
+    #  -2021-04-21_11-00-51
 
 
   parcellations:
     - anatomical
-    #- SVD
-    #- ICA
+    - SVD
+    - ICA
+
   selected_trials:
     - All
   conditions:
     #null
-    default:
-      phase:      stimulus
-      modalities:
-        - tactile
-        - visual
-        - vistact
-    left_all:
-      sides:      left
-    right_all:
-      sides:      right
+    left_response:
+      responses: left
+    right_response:
+      responses: right
+    no_response:
+      responses: no
 
   features:
     #mean:
@@ -103,6 +100,12 @@ trial_conditions:
       visual:   0
       tactile:  1
       vistact:  2
+  responses:
+    column: response_left
+    conds:
+      left: 1
+      right: 0
+      no: -1
 
 phase_conditions:
   pretrial:
