@@ -37,7 +37,6 @@ def plot_glassbrain_plotly(anatomical_file=None,img=None,graph=None,
     #Graph
     if components_pos is None:
         components_pos = calc_center(components_spatials)
-    print(components_pos)
 
     nodes, edges = plt_graph(fig,graph,components_pos)
 

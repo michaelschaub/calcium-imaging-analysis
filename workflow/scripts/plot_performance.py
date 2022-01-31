@@ -7,7 +7,7 @@ from pathlib import Path
 import sys
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
-from ci_lib.plotting import plot
+import ci_lib.plotting as plots
 from ci_lib.utils import snakemake_tools
 
 logger = snakemake_tools.start_log(snakemake)
@@ -28,7 +28,7 @@ try:
     colors = cm.get_cmap('Accent',len(decoders)) #[np.arange(0,len(decoders),1)]
 
     for i,decoder in enumerate(decoders):
-        violin_plts.append(plot.colored_violinplot(perf[i], positions=np.arange(1) + ((i+1)*1/(len(decoders)+1))-0.5, widths=[1/(len(decoders)+2)], color=colors(i/len(decoders))))
+        violin_plts.append(plots.colored_violinplot(perf[i], positions=np.arange(1) + ((i+1)*1/(len(decoders)+1))-0.5, widths=[1/(len(decoders)+2)], color=colors(i/len(decoders))))
 
 
     plt.legend( [ v['bodies'][0] for v in violin_plts], decoders )

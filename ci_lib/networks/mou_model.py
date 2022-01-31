@@ -16,6 +16,8 @@ import numpy as np
 import scipy.linalg as spl
 import scipy.stats as stt
 from sklearn.base import BaseEstimator
+import logging
+LOGGER = logging.getLogger(__name__)
 
 
 ###############################################################################
@@ -60,11 +62,13 @@ class MOU(BaseEstimator):
     """
 
     def __init__(self, C=None, tau_x=1.0, mu=0.0, Sigma=None,
-                random_state=None):
+                random_state=None, logger=None):
         """Initialize self. See help(MOU) for further information.
         The reason for separating the diagonal and off-diagonal elements in
         the Jacobian comes from focusing on the connectivity matrix as a graph.
         """
+
+        self.logger = LOGGER if logger is None else logger.getChild(__name__)
 
         # SECURITY CHECKS AND ARRANGEMENTS FOR THE PARAMETERS
         # Construct Jacobian
@@ -100,7 +104,7 @@ class MOU(BaseEstimator):
 
         self.J = -np.eye(self.n_nodes) / tau_x_tmp + C_tmp
         if np.any(np.linalg.eigvals(self.J)>0):
-            print("""The constructed MOU process has a Jacobian with negative 
+            self.logger.info("""The constructed MOU process has a Jacobian with negative 
                   eigenvalues, corresponding to unstable dynamics.""")
 
         # Inputs
@@ -421,7 +425,7 @@ class MOU(BaseEstimator):
             # Check if max allowed number of iterations have been reached
             if i_iter >= max_iter-1:
                 stop_opt = True
-                print("Optimization did not converge. Maximum number of iterations arrived.")
+                self.logger.info("Optimization did not converge. Maximum number of iterations arrived.")
             # Check if iteration has finished or still continues
             if stop_opt:
                 self.d_fit['iterations'] = i_iter+1
@@ -478,11 +482,11 @@ class MOU(BaseEstimator):
             
         # cast to real matrices
         if np.any(np.iscomplex(J)):
-            print("Warning: complex values in J; casting to real!")
+            self.logger.info("Warning: complex values in J; casting to real!")
         J_best = np.real(J)
         J_best[np.logical_not(np.logical_or(mask_C,mask_diag))] = 0
         if np.any(np.iscomplex(Sigma)):
-            print("Warning: complex values in Sigma; casting to real!")
+            self.logger.info("Warning: complex values in Sigma; casting to real!")
         Sigma_best = np.real(Sigma)
 
         # model theoretical covariances with real J and Sigma
@@ -515,7 +519,7 @@ class MOU(BaseEstimator):
         try:
             return self.d_fit['correlation']
         except:
-            print('The model should be fitted first.')
+            self.logger.info('The model should be fitted first.')
             return np.nan
             ## GORKA: Shall this raise a RunTimeWarning or other type of warning?
 

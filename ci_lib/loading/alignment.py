@@ -1,5 +1,5 @@
 import numpy as np
-import scipy
+import scipy.io , scipy.ndimage
 import logging
 LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +59,9 @@ def align_spatials_params(spatials, trans_params):
     return np.array(spatials)
 '''
 
-def align_spatials(spatials,trans_params, logger=LOGGER):
+def align_spatials(spatials,trans_params, logger=None):
+    logger = LOGGER if logger is None else logger.getChild(__name__)
+
     f , h , w = spatials.shape #org shape
 
     #Attend bitmap as last frame

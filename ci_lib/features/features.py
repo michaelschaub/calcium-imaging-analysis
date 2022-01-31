@@ -10,8 +10,6 @@ from enum import Enum
 import logging
 LOGGER = logging.getLogger(__name__)
 
-#Progress Bar
-
 class Feature_Type(Enum):
     NODE = 0
     UNDIRECTED = 1

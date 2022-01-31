@@ -218,7 +218,7 @@ def draw_glassbrain(polygons=None,labelset=None,graph=None,bg_img=None,
 
         ''''''
         #def callback(attr,old,new):
-        #    print("hello")
+        #    logger.info("hello")
 
         #graph_renderer.node_renderer.selected.on_change('indices', change_bg_callback)
 

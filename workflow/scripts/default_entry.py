@@ -1,6 +1,7 @@
 import numpy as np
 import h5py
 import warnings
+from snakemake.logging import logger
 
 from pathlib import Path
 import sys
@@ -16,22 +17,15 @@ try:
     snakemake_tools.save_conf(snakemake, sections=["entry","parcellation"]) #fixed a bug as we dont apply parcellation to SVD and then prefilter fails to compare config as it won't contain parcellation
     timer_start = snakemake_tools.start_timer()
 
-
-
-
     files_Vc = snakemake.input["Vc"]
-    task_files = snakemake.input["tasks"]
+    task_files = snakemake.params["task_structured"] #snakemake.input["tasks"]
     trans_paths = snakemake.input["trans_params"]
+    mouse_dates_str = snakemake.params["mouse_dates_str"]
 
-    ### should definitly be reworked ###
-
-    task_files_split = task_files[0].split("/")
-    data_path = "/".join(task_files_split[:-3])
-    mouse_id = task_files_split[-3]
     sessions = load_task_data_as_pandas_df.extract_session_data_and_save(
-            root_paths=[Path(data_path)], mouse_ids=[mouse_id], reextract=False)
+            root_paths=task_files, mouse_dates_str = mouse_dates_str, reextract=True, logger=logger) #reextraction needs to be done for different set of dates otherwise session will have wrong dims
     logger.info("Loaded task data")
-    ###   ###
+
 
     if len(files_Vc) > 1:
         warnings.warn("Combining different dates may still be buggy!")
@@ -47,13 +41,11 @@ try:
         alignend_U = alignment.align_spatials_path(np.array(f["U"]),trans_path)
         U.append(alignend_U)
 
-
         frameCnt = np.array(f['frameCnt'])
         Vc.append(np.array(f["Vc"]))
         #assert (U[-1] == U[0]).all(), "Combining different dates with different Compositions is not yet supported"
         trial_starts.append(np.cumsum(frameCnt[:-1, 1]) + start)
         start += Vc[-1].shape[0]
-    logger.info("Loaded SVD data")
 
     trial_starts = np.concatenate( trial_starts )
     Vc = np.concatenate( Vc )

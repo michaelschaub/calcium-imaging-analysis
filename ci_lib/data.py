@@ -38,13 +38,14 @@ class Data(ABC):
 
 class DecompData(Data):
     def __init__(self, df, temporal_comps, spatial_comps, trial_starts, cond_filter=None, trans_params=None, savefile=None, read_only=True, spatial_labels=None, logger=None):
+        self.logger = LOGGER if logger is None else logger
         assert len(df) != trial_starts.shape[0]-1, (
             f"DataFrame df and trial_starts do not have matching length ({len(df)} != {len(trial_starts)})\n\t(maybe remove last entry?)")
         assert len(df) == trial_starts.shape[0], (
             f"DataFrame df and trial_starts do not have matching length ({len(df)} != {len(trial_starts)})")
         self._df = df
         self._temps = temporal_comps
-        self._spats = spatial_comps if trans_params is None else align_spatials(spatial_comps,trans_params)
+        self._spats = spatial_comps if trans_params is None else align_spatials(spatial_comps,trans_params, logger=self.logger)
         self._starts = trial_starts
         self._spat_labels = spatial_labels
 
@@ -59,7 +60,6 @@ class DecompData(Data):
             self._spats.flags.writeable = False
             self._starts.flags.writeable = False
 
-        self.logger = LOGGER if logger is None else logger
 
     #Used for parcellations
     def update(self,temporal_comps, spatial_comps, spatial_labels=None):
@@ -188,6 +188,8 @@ class DecompData(Data):
         return DecompData.PixelSlice(self._temps, self._spats)
 
     def __getitem__(self, keys):
+        print("keys")
+        print(keys)
         if not isinstance(keys, tuple):
             keys = (keys, slice(None, None, None))
         elif len(keys) < 2:
@@ -197,9 +199,21 @@ class DecompData(Data):
         try:
             assert np.array(keys[1]).dtype == bool
             trial_frames = np.array(np.arange(len(keys[1]))[keys[1]])
+            print("frames")
+            print(trial_frames)
         except:
             try:
-                trial_frames = np.array(np.arange(np.max(np.diff(self._starts)))[keys[1]])
+                print("self starts")
+                print(self._starts)
+                print(np.diff(self._starts))
+                print("max",np.max(np.diff(self._starts)))
+                print("min",np.min(np.diff(self._starts)))
+
+                #trial_frames = np.array(np.arange(np.max(np.diff(self._starts)))[keys[1]]) <- max can't work if we have some outliers in the frame length
+                trial_frames = np.array(np.arange(np.min(np.diff(self._starts)))[keys[1]])
+
+                print("frames")
+                print(trial_frames)
             except ValueError as err:
                 if "zero-size array to reduction operation maximum" in err.args[0]:
                     self.logger.warn("Data has size zero")
@@ -208,13 +222,18 @@ class DecompData(Data):
                     raise
         # starts of selected frames in old temps
         starts = np.array(self._starts[keys[0]])
+        print("starts")
+        print(starts)
 
         # indices of temps in all selected frames (2d)
         selected_temps = np.array(trial_frames[np.newaxis, :] + starts[:, np.newaxis], dtype=int)
+        print("frames + starts")
+        print(selected_temps)
 
         # starts of selected frames in new temps
         new_starts = np.insert(np.cumsum(np.diff(selected_temps[:-1, (0, -1)]) + 1), 0, 0)
 
+        print(self._temps.shape)
         temps = self._temps[selected_temps.flatten()]
         try:
             data = DecompData(df, temps, spats, new_starts, spatial_labels=self._spat_labels)
