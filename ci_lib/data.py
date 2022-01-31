@@ -38,13 +38,14 @@ class Data(ABC):
 
 class DecompData(Data):
     def __init__(self, df, temporal_comps, spatial_comps, trial_starts, cond_filter=None, trans_params=None, savefile=None, read_only=True, spatial_labels=None, logger=None):
+        self.logger = LOGGER if logger is None else logger
         assert len(df) != trial_starts.shape[0]-1, (
             f"DataFrame df and trial_starts do not have matching length ({len(df)} != {len(trial_starts)})\n\t(maybe remove last entry?)")
         assert len(df) == trial_starts.shape[0], (
             f"DataFrame df and trial_starts do not have matching length ({len(df)} != {len(trial_starts)})")
         self._df = df
         self._temps = temporal_comps
-        self._spats = spatial_comps if trans_params is None else align_spatials(spatial_comps,trans_params)
+        self._spats = spatial_comps if trans_params is None else align_spatials(spatial_comps,trans_params, logger=self.logger)
         self._starts = trial_starts
         self._spat_labels = spatial_labels
 
@@ -59,7 +60,6 @@ class DecompData(Data):
             self._spats.flags.writeable = False
             self._starts.flags.writeable = False
 
-        self.logger = LOGGER if logger is None else logger
 
     #Used for parcellations
     def update(self,temporal_comps, spatial_comps, spatial_labels=None):

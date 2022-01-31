@@ -6,10 +6,12 @@ import copy
 from os import path
 import pickle as pkl
 from pathlib import Path
-from snakemake.logging import logger
+import logging
+LOGGER = logging.getLogger(__name__)
 
 
-def load_individual_session_data(date_folder, mouse_id):
+def load_individual_session_data(date_folder, mouse_id, logger=None):
+    logger = LOGGER if logger is None else logger.getChild(__name__)
     file_paths = list(date_folder.glob('*.h5'))
     if len(file_paths) == 0:
         file_paths = list((date_folder / r'task_data').glob('*.h5'))
@@ -133,10 +135,11 @@ def load_individual_session_data(date_folder, mouse_id):
 #
 
 
-def extract_session_data_and_save(root_paths,  mouse_dates_str , reextract=False):
+def extract_session_data_and_save(root_paths,  mouse_dates_str , reextract=False, logger=None):
     # if type(root_paths) is str:
     #     root_paths = [root_paths]
     # #
+    logger = LOGGER if logger is None else logger.getChild(__name__)
     logger.info(root_paths)
     initial_call = True
     save_individually = False
@@ -159,7 +162,7 @@ def extract_session_data_and_save(root_paths,  mouse_dates_str , reextract=False
             else:
 
                 #logger.info(f"date_folder: \"{root_path}\"")
-                data = load_individual_session_data(date_folder=date_folder, mouse_id=mouse_id)
+                data = load_individual_session_data(date_folder=date_folder, mouse_id=mouse_id, logger=logger)
                 if save_individually:
                     with open(session_pkl, 'wb') as handle:
                         pkl.dump(data, handle, protocol=pkl.HIGHEST_PROTOCOL)
@@ -181,7 +184,8 @@ def extract_session_data_and_save(root_paths,  mouse_dates_str , reextract=False
     return sessions
 
 
-def fix_dates(sessions):
+def fix_dates(sessions, logger=None):
+    logger = LOGGER if logger is None else logger.getChild(__name__)
     unique_dates = sessions['date_time'].unique()
     new_dates = unique_dates.copy()
     for i, date in enumerate(unique_dates):

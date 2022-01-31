@@ -23,7 +23,7 @@ try:
     mouse_dates_str = snakemake.params["mouse_dates_str"]
 
     sessions = load_task_data_as_pandas_df.extract_session_data_and_save(
-            root_paths=task_files, mouse_dates_str = mouse_dates_str ,reextract=True) #reextraction needs to be done for different set of dates otherwise session will have wrong dims
+            root_paths=task_files, mouse_dates_str = mouse_dates_str, reextract=True, logger=logger) #reextraction needs to be done for different set of dates otherwise session will have wrong dims
     logger.info("Loaded task data")
 
 
