@@ -3,7 +3,7 @@ rule_conf:
     {}
   parcellation:
     {}
-  prefilters:
+  trial_selection:
     {}
   conditions:
     {}
@@ -21,16 +21,19 @@ branch_opts:
     - anatomical
     - SVD
     - ICA
-  filters:
+  selected_trials:
     - All
   conditions:
     #null
     default:
       phase:      stimulus
-      modalities: vistact
-    left_vistact:
+      modalities:
+        - tactile
+        - visual
+        - vistact
+    left_all:
       sides:      left
-    right_vistact:
+    right_all:
       sides:      right
 
   features:
@@ -44,6 +47,7 @@ branch_opts:
     #autocovariance:
       #timelags: [[0],[1]]
       #max_components : 65
+
   decoders:
     default:
       reps: [5]
@@ -53,10 +57,11 @@ branch_opts:
     RF:
   rfe:
     selected_features_n:
-      - full
+      - 5
+      - 10
+      - 15
       - 20
-      - 50
-      - 100
+
 
 parcellation_opts:
   paths:

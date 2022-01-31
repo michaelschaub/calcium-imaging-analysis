@@ -10,10 +10,10 @@ dependencies:
   - pandas>=1.3
   #- h5py=2.8 #doesn't work on win
   # Learning
-  - scikit-learn>=1.0
+  - scikit-learn
   # Plotting and visualization
   - matplotlib>=3.4
-  - tqdm>=4.62
+  - bokeh
   - hdf5
   - pyyaml
   - pytables
@@ -24,4 +24,8 @@ dependencies:
       # Models
       - pyMou@git+https://github.com/mb-BCA/pyMOU.git@master
       - scipy
+
+      #Plotting
       - networkx
+      - opencv-python
+      - Shapely

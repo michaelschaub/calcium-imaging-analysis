@@ -3,39 +3,24 @@ import pickle
 
 from sklearn import preprocessing
 from sklearn.model_selection import StratifiedShuffleSplit
-
-import scipy
 import sklearn.linear_model as skllm
 import sklearn.preprocessing as skprp
-import sklearn.pipeline as skppl
 import sklearn.feature_selection as skfs
-import sklearn.model_selection as skms
-import warnings
+
 
 from pathlib import Path
 import sys
-sys.path.append(str((Path(__file__).parent.parent.parent/"calciumimagingtools").absolute()))
+sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
-from utils import snakemake_tools
-from features import Features, Means, Raws, Covariances, AutoCovariances, Moup, Feature_Type
-from plotting import graph_circle_plot, construct_rfe_graph, plot_glassbrain_bokeh
-from data import DecompData
-
-
-
-# MLR adapted for recursive feature elimination (RFE)
-class RFE_pipeline(skppl.Pipeline):
-    def fit(self, X, y=None, **fit_params):
-        """simply extends the pipeline to recover the coefficients (used by RFE) from the last element (the classifier)
-        """
-        super(RFE_pipeline, self).fit(X, y, **fit_params)
-        self.coef_ = self.steps[-1][-1].coef_
-        return self
-
+from ci_lib.utils import snakemake_tools
+from ci_lib.features import Features, Means, Raws, Covariances, AutoCovariances, Moup, Feature_Type
+from ci_lib.plotting import graph_circle_plot, construct_rfe_graph, plot_glassbrain_bokeh
+from ci_lib import DecompData
+from ci_lib.rfe import RFE_pipeline
 
 # redirect std_out to log file
 snakemake_tools.redirect_to_log(snakemake)
-snakemake_tools.save_conf(snakemake, sections=["entry","parcellation","prefilters","conditions","feature_calculation","decoder"],
+snakemake_tools.save_conf(snakemake, sections=["entry","parcellation","trial_selection","conditions","feature_calculation","decoder"],
                           params=['conds','reps'])
 start = snakemake_tools.start_timer()
 
@@ -51,7 +36,7 @@ for path in snakemake.input["feats"]:
 
 feat_type = cond_feats[0].type
 rfe_n = snakemake.wildcards["rfe_n"]
-n_rep = 1 #snakemake.params['reps']
+n_rep = 1 #snakemake.params['reps'] #TODO
 
 ### Scale & Split
 cv = StratifiedShuffleSplit(n_rep, test_size=0.2, random_state=420)
@@ -69,7 +54,6 @@ cv_split = cv.split(data, labels)
 c_MLR = RFE_pipeline([('std_scal',skprp.StandardScaler()),('clf',skllm.LogisticRegression(C=0.00001, penalty='l2', multi_class='multinomial', solver='lbfgs', max_iter=500))])
 
 _ , feats = data.shape
-print("feat size",data.shape)
 if(rfe_n=="full"):
     rfe_n = feats
 if(int(rfe_n)>int(cond_feats[0].ncomponents) and feat_type == Feature_Type.NODE):
