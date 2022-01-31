@@ -317,7 +317,8 @@ class DecompData(Data):
         temps = self.temporals_flat
         spats = self.spatials
         starts = self._starts
-        return df, temps, spats, starts
+        labels = self._spat_labels
+        return df, temps, spats, starts, labels
 
     def __add__( a, b ):
         a_temps, b_temps, df, spats, starts, spat_labels = Data.binary_operation( a, b )
