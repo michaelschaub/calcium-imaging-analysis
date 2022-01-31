@@ -116,3 +116,5 @@ phase_conditions:
     stop:   75
 
 different_config_inputs: 1
+
+loglevel: DEBUG

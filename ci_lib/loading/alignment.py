@@ -1,5 +1,7 @@
 import numpy as np
 import scipy.io , scipy.ndimage
+import logging
+LOGGER = logging.getLogger(__name__)
 
 
 def align_spatials_path(spatials,trans_path):
@@ -57,19 +59,22 @@ def align_spatials_params(spatials, trans_params):
     return np.array(spatials)
 '''
 
-def align_spatials(spatials,trans_params):
+def align_spatials(spatials,trans_params, logger=LOGGER):
     f , h , w = spatials.shape #org shape
 
     #Attend bitmap as last frame
     spatials = np.append(spatials,np.ones((1,h,w)),axis=0)
 
     #Rotation
+    logger.info("Rotation")
     spatials = scipy.ndimage.rotate(spatials,trans_params['angleD'], axes=(2,1), reshape=True, cval= 0)
 
     #Scale
+    logger.info("Scale/Zoom")
     spatials = scipy.ndimage.zoom(spatials, (1,trans_params['scaleConst'],trans_params['scaleConst']),order=1,cval= 0) #slow
 
     #Translate
+    logger.info("Translate/Shift")
     spatials = scipy.ndimage.shift(spatials, np.insert(np.flip(trans_params['tC']),0,0),cval= 0, order=1, mode='constant') #slow
 
     #Remove offset
@@ -80,6 +85,7 @@ def align_spatials(spatials,trans_params):
     np.putmask(spatials,bitmask,np.NAN) #set all elements of bitmap to NAN
 
     #Crop
+    logger.info("Crop")
     n_spatials , h_new , w_new = spatials.shape
     trim_h = int(np.floor((h_new - h) / 2 ))
     trim_w = int(np.floor((w_new - w) / 2 ))

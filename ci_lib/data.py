@@ -1,9 +1,9 @@
-import warnings
 from abc import ABC, abstractmethod, abstractproperty
 import numpy as np
 import h5py
 import pathlib
-from snakemake.logging import logger
+import logging
+LOGGER = logging.getLogger(__name__)
 
 from ci_lib.loading import reproducable_hash, load_h5, save_h5
 from ci_lib.loading.alignment import align_spatials
@@ -37,7 +37,7 @@ class Data(ABC):
 
 
 class DecompData(Data):
-    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, cond_filter=None, trans_params=None, savefile=None, read_only=True, spatial_labels=None):
+    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, cond_filter=None, trans_params=None, savefile=None, read_only=True, spatial_labels=None, logger=None):
         assert len(df) != trial_starts.shape[0]-1, (
             f"DataFrame df and trial_starts do not have matching length ({len(df)} != {len(trial_starts)})\n\t(maybe remove last entry?)")
         assert len(df) == trial_starts.shape[0], (
@@ -59,28 +59,29 @@ class DecompData(Data):
             self._spats.flags.writeable = False
             self._starts.flags.writeable = False
 
+        self.logger = LOGGER if logger is None else logger
+
     #Used for parcellations
     def update(self,temporal_comps, spatial_comps, spatial_labels=None):
         self._temps = temporal_comps
         self._spats = spatial_comps
         self._spat_labels = spatial_labels
 
-
     def save(self, file ):
         h5_file = save_h5( self, file, {"df"    : self._df,
                                         "temps" : self._temps,
                                         "spats" : self._spats,
                                         "starts" : self._starts,
-                                        "labels":self._spat_labels})
+                                        "labels":self._spat_labels}, logger=self.logger)
         self._savefile = file
 
     @classmethod
-    def load(Class, file, data_hash=None, try_loaded=False):
+    def load(Class, file, data_hash=None, try_loaded=False, logger=LOGGER):
         if try_loaded and data_hash is not None and data_hash in Data.LOADED_DATA:
             data = Data.LOADED_DATA[data_hash]
         else:
-            _, df, temps, spats, starts, spat_labels = load_h5( file, labels=["df", "temps", "spats", "starts","labels"])
-            data = Class(df, temps, spats, starts, spatial_labels=spat_labels, savefile=file)
+            _, df, temps, spats, starts, spat_labels = load_h5( file, labels=["df", "temps", "spats", "starts","labels"], logger=logger)
+            data = Class(df, temps, spats, starts, spatial_labels=spat_labels, savefile=file, logger=logger)
             Data.LOADED_DATA[data.hash.digest()] = data
         return data
 
@@ -108,18 +109,18 @@ class DecompData(Data):
     def starts_hash(self):
         return reproducable_hash(self._starts)
 
-    def check_hashes(self, hashes, warn=True):
+    def check_hashes(self, hashes, warn=True ):
         if reproducable_hash(tuple( hsh for hsh in hashes)).digest() == self.hash.digest():
             return True
         elif warn:
             if hashes[0] is not None and hashes[0] != self.df_hash:
-                warnings.warn("df hashes do not match", Warning)
+                self.logger.warn("df hashes do not match")
             if hashes[1] is not None and hashes[1] != self.temps_hash:
-                warnings.warn("temps hashes do not match", Warning)
+                self.logger.warn("temps hashes do not match")
             if hashes[2] is not None and hashes[2] != self.spats_hash:
-                warnings.warn("spats hashes do not match", Warning)
+                self.logger.warn("spats hashes do not match")
             if hashes[3] is not None and hashes[3] != self.starts_hash:
-                warnings.warn("starts hashes do not match", Warning)
+                self.logger.warn("starts hashes do not match")
         return False
 
     @property
@@ -215,7 +216,7 @@ class DecompData(Data):
                 print(trial_frames)
             except ValueError as err:
                 if "zero-size array to reduction operation maximum" in err.args[0]:
-                    logger.info("Warning: Data has size zero")
+                    self.logger.warn("Data has size zero")
                     trial_frames = np.array([])
                 else:
                     raise
@@ -237,10 +238,11 @@ class DecompData(Data):
         try:
             data = DecompData(df, temps, spats, new_starts, spatial_labels=self._spat_labels)
         except AssertionError:
-                logger.info( starts.shape )
-                logger.info( selected_temps.shape )
-                logger.info( new_starts.shape )
-                logger.info( df )
+                self.logger.debug( starts.shape )
+                self.logger.debug( selected_temps.shape )
+                self.logger.debug( new_starts.shape )
+                self.logger.debug( df )
+                self.logger.exception("Error in data.py")
                 raise
         return data
 
@@ -276,7 +278,6 @@ class DecompData(Data):
                 select = select & any
             else:
                 select = select & (getattr( self._df, attr ) == val)
-
         return self[select]
 
     def _op_data(self, a):

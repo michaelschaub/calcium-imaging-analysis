@@ -9,7 +9,7 @@ from snakemake.logging import logger
 from ci_lib.utils import snakemake_tools
 
 # redirect std_out to log file
-snakemake_tools.redirect_to_log(snakemake)
+logger = snakemake_tools.start_log(snakemake)
 #snakemake_tools.save_conf(snakemake, sections=[])
 
 logger.info("snakemake:", dir(snakemake))
