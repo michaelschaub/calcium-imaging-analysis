@@ -1,6 +1,6 @@
 configfile: "config/config.yaml"
 
-ruleorder: pipeline_entry > parcellation > feature_calculation > feature_elimination
+ruleorder: pipeline_entry > locaNMF > parcellation > feature_calculation > feature_elimination
 
 
 from itertools import product as iterproduct
@@ -152,9 +152,8 @@ def parcellation_input(wildcards):
 	input = {
 		"data"	: "results/{mouse_dates}/SVD/data.h5",
 		"config": "results/{mouse_dates}/SVD/conf.yaml" }
-	#if wildcards["parcellation"] in config["parcellation_opts"]["paths"].keys(): <- leads to such a weird error
-	if wildcards["parcellation"]!='ICA':
-		input["meta"]	= config["parcellation_opts"]["paths"][wildcards["parcellation"]]
+	#if wildcards["parcellation"] in config["parcellation_opts"]["paths"].keys(): #<- leads to such a weird error
+	input.update( config["parcellation_opts"]["paths"][wildcards["parcellation"]] )
 	return input
 
 rule parcellation:
@@ -171,6 +170,12 @@ rule parcellation:
 		"envs/environment.yaml"
 	script:
 		"scripts/parcellation.py"
+
+use rule parcellation as locaNMF with:
+	wildcard_constraints:
+		parcellation = "LocaNMF"
+	conda:
+		"envs/locaNMF_environment.yaml"
 
 rule trial_selection:
 	input:

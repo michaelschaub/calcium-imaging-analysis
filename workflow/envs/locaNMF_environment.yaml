@@ -1,0 +1,24 @@
+name: locanmf
+channels:
+  - conda-forge
+  - defaults
+  - ss5513
+  - pytorch
+dependencies:
+  - python=3.6
+  - pip
+  # Data handling
+  - numpy
+  - pandas
+  #- h5py=2.8 #doesn't work on win
+  # Learning
+  - scikit-learn
+  # Plotting and visualization
+  - matplotlib
+  - bokeh
+  - hdf5
+  - pyyaml
+  - pytables
+  - opencv
+  - locanmf
+  - h5py # conda h5py doesn't work for me
