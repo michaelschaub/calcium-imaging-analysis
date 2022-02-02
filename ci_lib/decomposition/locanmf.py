@@ -22,7 +22,7 @@ def locaNMF(data, atlas_path):
     nonnegative_temporal = False # Do you want nonnegative temporal components? The data itself should also be nonnegative in this case.
 
     atlas_file = sio.loadmat(atlas_path,simplify_cells=True)
-    brainmask = np.asarray(atlas_file['cotexMask'], dtype='bool')
+    brainmask = np.asarray(atlas_file['cortexMask'], dtype='bool')
     atlas_msk = np.asarray(atlas_file['areaMasks'], dtype='bool')
     labels = np.asarray(atlas_file['areaLabels_wSide'],dtype=str)
 
@@ -67,7 +67,7 @@ def locaNMF(data, atlas_path):
                                                 device=DEVICE)
 
     low_rank_video = LocaNMF.LowRankVideo( (int(np.sum(brainmask)),) + video_mats[1].shape,
-                                            device=device )
+                                            device=DEVICE )
 
     low_rank_video.set(torch.from_numpy(video_mats[0].T),
                         torch.from_numpy(video_mats[1]))
@@ -86,7 +86,7 @@ def locaNMF(data, atlas_path):
                                             nnt=nonnegative_temporal,
                                             verbose=[True, False, False],
                                             sample_prop=(1,1),
-                                            device=device
+                                            device=DEVICE
                                             )
     # Evaluate R^2
     #_, r2_fit = LocaNMF.evaluate_fit_to_region(low_rank_video,
