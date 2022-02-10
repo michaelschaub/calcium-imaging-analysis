@@ -3,49 +3,80 @@ rule_conf:
     {}
   parcellation:
     {}
-  prefilters:
+  trial_selection:
     {}
   conditions:
     {}
   feature_calculation:
-    max_components : 65
+    {}
   decoder:
     {}
 
 branch_opts:
   mouses:
-    - GN06
-  dates:
-    - 2021-01-20_10-15-16
+    GN06:
+      - 2021-01-20_10-15-16
+    #GN08:
+    #  - 2021-03-26_13-37-18
+    #  - 2021-03-29_13-37-29
+    #  - 2021-03-29_16-33-41
+    #GN09:
+    #  -2021-03-26_10-13-36
+    #  -2021-04-14_16-01-37
+    #  -2021-04-20_13-07-10
+    #GN10:
+    #  -2021-03-29_15-41-22
+    #  -2021-03-29_15-41-22
+    #  -2021-04-21_11-00-51
+
+
   parcellations:
     - anatomical
     - SVD
-  filters:
+    - ICA
+
+  selected_trials:
     - All
   conditions:
-    null
-    #left_visual:
-      #phase:      stimulus
-      #sides:      left
-      #modalities: visual
+    #null
+    left_response:
+      responses: left
+    right_response:
+      responses: right
+    no_response:
+      responses: no
+
   features:
-    mean:
-    covariance:
-    autocovariance:
-      max_timelag: [2]
+    #mean:
+    #  max_components : [64]
+    #covariance:
+    #  max_components : [64]
+    moup:
+      timelags: [3]
+      max_components : [64]
+    #autocovariance:
+      #timelags: [[0],[1]]
+      #max_components : 65
+
   decoders:
+    default:
+      reps: [5]
     MLR:
-      reps: [5]
     1NN:
-      reps: [5]
     LDA:
-      reps: [5]
     RF:
-      reps: [5]
+  rfe:
+    selected_features_n:
+      - 5
+      #- 10
+      #- 15
+      #- 20
+
 
 parcellation_opts:
   paths:
-    anatomical: resources/meta/areaMasks.mat
+    anatomical: resources/meta/anatomical.mat
+
 
 #Alternative manual conditions should be supported, currently having only left and right with unique modalities not possible e.g.
 # something like (or with strings and we put a corresponding dict in utils to resolve the actual values)
@@ -69,6 +100,12 @@ trial_conditions:
       visual:   0
       tactile:  1
       vistact:  2
+  responses:
+    column: response_left
+    conds:
+      left: 1
+      right: 0
+      no: -1
 
 phase_conditions:
   pretrial:
@@ -78,4 +115,6 @@ phase_conditions:
     start:  30
     stop:   75
 
-different_config_inputs: 0
+different_config_inputs: 1
+
+loglevel: DEBUG
