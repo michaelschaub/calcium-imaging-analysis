@@ -28,4 +28,4 @@ dependencies:
       #Plotting
       #- networkx
       #- opencv-python
-      #- Shapely
+      - Shapely

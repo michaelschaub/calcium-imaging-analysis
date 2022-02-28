@@ -34,6 +34,9 @@ def locaNMF(data, atlas_path):
     brainmask = brainmask[:width,:height]
     atlas_msk = atlas_msk[:,:width,:height]
     spatials = spatials[:width,:height,:]
+    nan_mask = np.logical_not(np.isnan(spatials).any(axis=-1))
+    atlas_msk &= nan_mask[None,:,:]
+    brainmask &= nan_mask
 
     atlas = np.zeros((width,height), dtype=float)
     for i,a in enumerate(atlas_msk):
@@ -101,12 +104,12 @@ def locaNMF(data, atlas_path):
     A_pixel[brainmask,:] = A
 
     if nonnegative_temporal:
-        C = locanmf_comps.temporal.data.cpu().numpy()
+        C = locanmf_comps.temporal.data.cpu().numpy().T
     else:
-        C = np.matmul(q,locanmf_comps.temporal.data.cpu().numpy().T).T
+        C = np.matmul(q,locanmf_comps.temporal.data.cpu().numpy().T)
 
     # (X,Y,K) -> (K, X, Y)
-    new_spatials = np.moveaxix(A_pixel, -1, 0)
+    new_spatials = np.moveaxis(A_pixel, -1, 0)
     # (T,K)
     new_temporals = C
 

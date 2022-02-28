@@ -172,6 +172,8 @@ rule parcellation:
 		"scripts/parcellation.py"
 
 use rule parcellation as locaNMF with:
+	threads:
+		workflow.cores*0.75
 	wildcard_constraints:
 		parcellation = "LocaNMF"
 	conda:
