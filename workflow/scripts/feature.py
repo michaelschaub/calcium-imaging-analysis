@@ -26,7 +26,7 @@ try:
             "autocovariance"    : (lambda p : { "time_lag_range" : range(1,p["max_timelag"]+1) if "max_timelag" in p else p["timelags"] }),
             "moup"              : (lambda p : {"timelag": p["timelags"]})}
 
-    feature = snakemake.wildcards["feature"].split("_")[0]
+    feature = snakemake.params["params"]['branch']
     params = snakemake.params["params"]
     data = DecompData.load(snakemake.input[0])
 

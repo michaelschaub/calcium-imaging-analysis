@@ -13,13 +13,14 @@ from locanmf import LocaNMF
 # else, if on cpu
 DEVICE='cpu'
 
-def locaNMF(data, atlas_path):
-    minrank = 1; maxrank = 10; # rank = how many components per brain region. Set maxrank to around 10 for regular dataset.
+def locaNMF(data, atlas_path,
+        minrank = 1, maxrank = 10,      # rank = how many components per brain region. Set maxrank to around 10 for regular dataset.
+        min_pixels = 100,               # minimum number of pixels in Allen map for it to be considered a brain region
+        loc_thresh = 70,                # Localization threshold, i.e. percentage of area restricted to be inside the 'Allen boundary
+        r2_thresh = 0.99,               # Fraction of variance in the data to capture with LocaNMF
+        nonnegative_temporal = False,   # Do you want nonnegative temporal components? The data itself should also be nonnegative in this case.
+    ):
     rank_range = (minrank, maxrank, 1)
-    min_pixels = 100 # minimum number of pixels in Allen map for it to be considered a brain region
-    loc_thresh = 70 # Localization threshold, i.e. percentage of area restricted to be inside the 'Allen boundary'
-    r2_thresh = 0.99 # Fraction of variance in the data to capture with LocaNMF
-    nonnegative_temporal = False # Do you want nonnegative temporal components? The data itself should also be nonnegative in this case.
 
     atlas_file = sio.loadmat(atlas_path,simplify_cells=True)
     brainmask = np.asarray(atlas_file['cortexMask'], dtype='bool')

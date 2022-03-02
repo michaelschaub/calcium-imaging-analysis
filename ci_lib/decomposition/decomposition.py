@@ -3,12 +3,12 @@ import scipy.io
 import numpy as np
 from sklearn.decomposition import FastICA
 
-def anatomical_parcellation(DecompDataObject, filter_labels=None, dict_path=None):
+def anatomical_parcellation(DecompDataObject, filter_labels=None, atlas_path=None):
     ### Loading meta data for parcellation, masks and labels for each area
-    if dict_path is None: # Fallback
-        dict_path = Path(__file__).parent.parent.parent/"resources"/"meta"/"anatomical.mat"
-    spatials = np.asarray(scipy.io.loadmat(dict_path ,simplify_cells=True)['areaMasks'], dtype='bool')
-    labels = np.asarray(scipy.io.loadmat(dict_path ,simplify_cells=True) ['areaLabels_wSide'],dtype=str)
+    if atlas_path is None: # Fallback
+        atlas_path = Path(__file__).parent.parent.parent/"resources"/"meta"/"anatomical.mat"
+    spatials = np.asarray(scipy.io.loadmat(atlas_path ,simplify_cells=True)['areaMasks'], dtype='bool')
+    labels = np.asarray(scipy.io.loadmat(atlas_path ,simplify_cells=True) ['areaLabels_wSide'],dtype=str)
 
     #Filter according to labels
     #if filter_labels is not None:
