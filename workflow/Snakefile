@@ -5,6 +5,7 @@ ruleorder: pipeline_entry > parcellation > feature_calculation > feature_elimina
 
 from itertools import product as iterproduct
 def create_parameter_product( conf ):
+	# could also be decoders, or really any other step
 	default_params	= conf["default"] if "default" in conf else {}
 	features	= {}
 	for feat, params in conf.items():
@@ -124,6 +125,9 @@ rule best_features:
 ###   Data processing   ###
 
 rule pipeline_entry:
+	'''
+	aggregates all task and svd data from one session with one animal
+	'''
 	input:
 		_	= [[ f"resources/experiment/{mouse_id}/{date}/task_data/"
 					 for date in dates] for mouse_id,dates in mouses.items()], #To make sure that files are present, unfortunatly gets flattened -> losing information which dates belong to which mouse
@@ -158,12 +162,16 @@ def parcellation_input(wildcards):
 	return input
 
 rule parcellation:
+	'''
+	decomposes data into different parcellations
+	'''
 	input:
 		unpack(parcellation_input)
 	output:
 		"results/{mouse_dates}/{parcellation}/data.h5",
 		config = "results/{mouse_dates}/{parcellation}/conf.yaml",
 	wildcard_constraints:
+		# exclude SVD as parcellation
 		parcellation = "(?!SVD).+"
 	log:
 		"results/{mouse_dates}/{parcellation}/parcellation.log"
@@ -173,6 +181,9 @@ rule parcellation:
 		"scripts/parcellation.py"
 
 rule trial_selection:
+	'''
+	can select trials through predefined filters
+	'''
 	input:
 		"results/{mouse_dates}/{parcellation}/data.h5",
 		config = "results/{mouse_dates}/{parcellation}/conf.yaml",
@@ -196,6 +207,9 @@ def condition_params(wildcards):
 	return params
 
 rule condition:
+	'''
+	Filters trials into different configured conditions
+	'''
 	input:
 		"results/{mouse_dates}/{parcellation}/{filter}/filtered_data.h5",
 		config = "results/{mouse_dates}/{parcellation}/{filter}/conf.yaml",
