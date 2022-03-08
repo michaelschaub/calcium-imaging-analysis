@@ -19,11 +19,14 @@ try:
 
     feature_dict = { "mean" : Means, "raw" : Raws, "covariance" : Covariances, "autocovariance" : AutoCovariances, "moup" :Moup }
 
+    # Dictionary for converting parameters from workflow to parameters, that can be passed to feature creators
     param_dict = {
             "mean"              : (lambda p : {}),
             "raw"               : (lambda p : {}),
             "covariance"        : (lambda p : {}),
+            # convert parameter "max_timelag" to range up to that timelag, if "max_timelag" does not exist, pass "timelags" (iterable)
             "autocovariance"    : (lambda p : { "time_lag_range" : range(1,p["max_timelag"]+1) if "max_timelag" in p else p["timelags"] }),
+            # no conversion needed for Moup
             "moup"              : (lambda p : {"timelag": p["timelags"]})}
 
     feature = snakemake.params["params"]['branch']
