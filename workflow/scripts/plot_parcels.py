@@ -19,7 +19,7 @@ try:
 
     draw_neural_activity(frames=np.sum(data._spats, axis=0),path=snakemake.output['combined'],plt_title=snakemake.wildcards['parcellation'],subfig_titles="")
 
-    draw_neural_activity(frames=data._spats,path=snakemake.output['all'],plt_title=snakemake.wildcards['parcellation'],subfig_titles=data._spat_labels)
+    #draw_neural_activity(frames=data._spats,path=snakemake.output['all'],plt_title=snakemake.wildcards['parcellation'],subfig_titles=data._spat_labels)
 
     for i in range(snakemake.params['n']):
         draw_neural_activity(frames=data._spats[i],path=snakemake.output['single'][i],plt_title=snakemake.wildcards['parcellation'],subfig_titles=data._spat_labels)
