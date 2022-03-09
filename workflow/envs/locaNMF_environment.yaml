@@ -1,7 +1,9 @@
-name: calcium_imaging_analysis
+name: locanmf
 channels:
   - conda-forge
   - defaults
+  - ss5513
+  - pytorch
 dependencies:
   - python=3.6
   - pip
@@ -18,14 +20,5 @@ dependencies:
   - pyyaml
   - pytables
   - opencv
+  - locanmf
   - h5py # conda h5py doesn't work for me
-  - pip:
-      #- tables>=3.6 #doesn't work on win
-      # Models
-      #- pyMou@git+https://github.com/mb-BCA/pyMOU.git@master
-        #- scipy
-
-      #Plotting
-      #- networkx
-      #- opencv-python
-      - Shapely

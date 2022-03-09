@@ -54,7 +54,7 @@ try:
                 "LDA":LDA,
                 "RF":RF}
 
-    decoder = decoders[snakemake.wildcards["decoder"].split("_")[0]]()
+    decoder = decoders[snakemake.params['params']['branch']]()
 
     ### Split
     rep = snakemake.params["params"]['reps']

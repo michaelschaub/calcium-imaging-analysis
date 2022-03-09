@@ -12,10 +12,18 @@ from ci_lib.utils import snakemake_tools
 logger = snakemake_tools.start_log(snakemake)
 #snakemake_tools.save_conf(snakemake, sections=[])
 
-logger.info("snakemake:", dir(snakemake))
-logger.info("script_dir", snakemake.scriptdir)
-logger.info("input:", snakemake.input)
-logger.info("output:", snakemake.output)
-logger.info("log:", snakemake.log)
-logger.info("param:", snakemake.params)
-logger.info("config:", snakemake.config)
+def dict_from_NamedList(nlist):
+    return {**nlist}
+
+def list_from_NamedList(nlist):
+    d = { v for _,v in nlist.items()  }
+    return [ i for i in nlist if i not in d ]
+
+logger.info("script_dir: {}".format(snakemake.scriptdir))
+logger.info("input: {}".format(snakemake.input))
+logger.info("output: {}".format(snakemake.output))
+logger.info("log: {}".format(snakemake.log))
+logger.info("param: {}".format(snakemake.params))
+logger.info("params_list: {}".format(list_from_NamedList(snakemake.params)))
+logger.info("params_dict: {}".format(dict_from_NamedList(snakemake.params)))
+logger.info("config: {}".format(snakemake.config))

@@ -19,9 +19,15 @@ LOGLEVELS = {
             "CRITICAL":logging.CRITICAL, }
 
 def start_log(snakemake):
-    logging.basicConfig(filename=str(snakemake.log), encoding='utf-8', style="{",
-            format="{asctime} {name}: {levelname}: {message}", datefmt="%b %d %H:%M:%S",
-            level=LOGLEVELS[snakemake.config["loglevel"]])
+    # logging <3.9 does not support encoding
+    if sys.version_info[0] == 3 and sys.version_info[1] < 9 :
+        logging.basicConfig(filename=str(snakemake.log), style="{",
+                format="{asctime} {name}: {levelname}: {message}", datefmt="%b %d %H:%M:%S",
+                level=LOGLEVELS[snakemake.config["loglevel"]])
+    else:
+        logging.basicConfig(filename=str(snakemake.log), encoding='utf-8', style="{",
+                format="{asctime} {name}: {levelname}: {message}", datefmt="%b %d %H:%M:%S",
+                level=LOGLEVELS[snakemake.config["loglevel"]])
     logger = logging.getLogger(f"{snakemake.rule}")
     logger.info(f"Start of rule")
     logger.info(f"Loglevel: {logger.getEffectiveLevel()}")
