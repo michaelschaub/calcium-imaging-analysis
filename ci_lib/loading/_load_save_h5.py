@@ -128,19 +128,19 @@ def load_object_h5(h5_obj, label):
             d = {}
             for key in new_obj.keys():
                 new_obj, d[key] = load_object_h5(new_obj, key)
-            return new_obj[old_path], d
+            return (new_obj[old_path], d)
         elif new_obj.attrs["vtype"] == "numpy_array":
             #if new_obj.dtype == "object"): #if we have more than one string attribute
             if label == "labels": #if we have other object attribtues that are no strings
-                return h5_obj, np.array([str.decode('utf-8') for str in new_obj])
+                return (h5_obj, np.array([str.decode('utf-8') for str in new_obj]))
             else:
-                return h5_obj, np.array(new_obj)
+                return (h5_obj, np.array(new_obj))
         elif new_obj.attrs["vtype"] == "pandas_frame":
-            return h5_obj, pd.read_hdf(new_obj.file.filename, new_obj.name)
+            return (h5_obj, pd.read_hdf(new_obj.file.filename, new_obj.name))
         else:
-            return TypeError(f"Object type {new_obj.attrs['type']} is unkown.")
+            raise TypeError(f"Object type {new_obj.attrs['type']} is unkown.")
     else:
-        return h5_obj, None
+        return (h5_obj, None)
 
 def save_h5(data, file, attributes={}, logger=LOGGER ):
     '''
@@ -193,4 +193,4 @@ def load_h5(file, labels=[], logger=LOGGER):
                 logger.warn(f"{label} hashes do not match" )
 
         attributes.append(attr)
-    return h5_file, *attributes
+    return (h5_file, *attributes)

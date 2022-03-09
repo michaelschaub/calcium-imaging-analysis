@@ -1,6 +1,6 @@
 data/*
-resources/*
-results/*
+resources
+results
 .idea/*
 .idea
 .snakemake/*

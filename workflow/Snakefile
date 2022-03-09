@@ -1,31 +1,37 @@
 configfile: "config/config.yaml"
 
-ruleorder: pipeline_entry > parcellation > feature_calculation > feature_elimination
+ruleorder: pipeline_entry > locaNMF > parcellation > feature_calculation > feature_elimination
 
 
 from itertools import product as iterproduct
-def create_parameter_product( conf ):
-	# could also be decoders, or really any other step
-	default_params	= conf["default"] if "default" in conf else {}
-	features	= {}
-	for feat, params in conf.items():
-		if feat == "default":
+def create_parameters( branch_conf, static_conf={} ):
+	'''
+	creates dictionary of unique names (used in paths) and corresponding parameters to be passed by snakemake
+	'''
+	default_params	= branch_conf["default"] if "default" in branch_conf else {}
+	parameters	= {}
+	for branch, br_params in branch_conf.items():
+		if branch == "default":
 			continue
-		if params is None:
-			params	= {}
-		# combine params with defaults into total params
-		params = default_params | params
-		# create a pattern of form "featurename_{}_{}_...", with # of params replacement fields
-		pattern	= "_".join( [f"{feat}"] +  ["{}"]*len(params) )
+		if br_params is None:
+			br_params = {}
+		# combine br_params with defaults into total params
+		params = default_params | br_params
+		# create a pattern of form "branchname_{}_{}_...", with # of params replacement fields
+		pattern	= "_".join( [f"{branch}"] +  ["{}"]*len(params) )
 		# insert parameter names and parameter name replacement fields into pattern
 		pattern	= pattern.format(*map( "{0}~{{{0}}}".format, params.keys() ))
 		# create cartesian product over all parameter values
 		values	= iterproduct( *params.values() )
 		# create list parameter dictionaries from cartesian product
 		values	= [ dict(zip(params.keys(), vals)) for vals in values]
+		# include static parametrs if present
+		if branch in static_conf and static_conf[branch] is not None:
+			values = [ static_conf[branch] | vals for vals in values ]
 		for vals in values:
-			features[ pattern.format(**vals) ] = vals
-	return features
+			parameters[ pattern.format(**vals) ] = {"branch" : branch} | vals
+	return parameters
+
 
 mouses 		= config["branch_opts"]["mouses"]
 #dates		= config["branch_opts"]["dates"]
@@ -33,8 +39,10 @@ mouses 		= config["branch_opts"]["mouses"]
 
 mouse_dates = ["_".join([mouse_id,date]) for mouse_id,dates in mouses.items() for date in dates ]
 
-parcellations	= config["branch_opts"]["parcellations"]
-trial_filters		= config["branch_opts"]["selected_trials"]
+parcells_conf	= config["branch_opts"]["parcellations"]
+parcells_static	= config["static_params"]["parcellations"]
+parcellations	= create_parameters( parcells_conf, parcells_static )
+trial_filters	= config["branch_opts"]["selected_trials"]
 
 conditions	= config["branch_opts"]["conditions"]
 if conditions is None:
@@ -64,17 +72,19 @@ else:
 					for label, conds in conditions.items() if label != "default" }
 
 feature_conf	= config["branch_opts"]["features"]
-features	= create_parameter_product( feature_conf )
+feature_static	= config["static_params"]["features"]
+features	= create_parameters( feature_conf, feature_static )
 
 rfe_ns		= config["branch_opts"]["rfe"]["selected_features_n"]
 
 decoder_conf	= config["branch_opts"]["decoders"]
-decoders	= create_parameter_product( decoder_conf )
+decoder_static	= config["static_params"]["decoders"]
+decoders	= create_parameters( decoder_conf, decoder_static )
 
 wildcard_constraints:
-	mouse_dates		= r"[a-zA-Z\d_-]+",
-	parcellation	= r"[a-zA-Z\d_]+",
-	filter		= r"[a-zA-Z\d_]+",
+	mouse_dates	= r"[a-zA-Z\d_-]+",
+	parcellation	= r"[a-zA-Z\d_~.]+",
+	filter		= r"[a-zA-Z\d_~.]+",
 	cond		= r"[a-zA-Z\d_]+",
 	feature		= r"[a-zA-Z\d_~.\[\], ]+",
 	decoder		= r"[a-zA-Z\d_~.]+",
@@ -156,9 +166,9 @@ def parcellation_input(wildcards):
 	input = {
 		"data"	: "results/{mouse_dates}/SVD/data.h5",
 		"config": "results/{mouse_dates}/SVD/conf.yaml" }
-	#if wildcards["parcellation"] in config["parcellation_opts"]["paths"].keys(): <- leads to such a weird error
-	if wildcards["parcellation"]!='ICA':
-		input["meta"]	= config["parcellation_opts"]["paths"][wildcards["parcellation"]]
+	#if wildcards["parcellations"] in config["paths"]["parcellations"].keys(): #<- leads to such a weird error
+	branch = parcellations[wildcards["parcellation"]]["branch"]
+	input.update( config["paths"]["parcellations"][branch] )
 	return input
 
 rule parcellation:
@@ -167,6 +177,8 @@ rule parcellation:
 	'''
 	input:
 		unpack(parcellation_input)
+	params:
+		params = lambda wildcards: parcellations[wildcards["parcellation"]]
 	output:
 		"results/{mouse_dates}/{parcellation}/data.h5",
 		config = "results/{mouse_dates}/{parcellation}/conf.yaml",
@@ -176,10 +188,18 @@ rule parcellation:
 	log:
 		"results/{mouse_dates}/{parcellation}/parcellation.log"
 	conda:
-		"envs/environment.yaml"
+		#"envs/environment.yaml"	# TODO: fix this!!
+		"envs/locaNMF_environment.yaml"
 	script:
 		"scripts/parcellation.py"
 
+use rule parcellation as locaNMF with:
+	threads:
+		workflow.cores*0.75
+	wildcard_constraints:
+		parcellation = "LocaNMF"
+	conda:
+		"envs/locaNMF_environment.yaml"
 
 rule plot_parcels:
 	'''
@@ -365,6 +385,10 @@ rule debug:
 		"envs/environment.yaml"
 	log:
 		"results/debug.log"
+	params:
+		"?",
+		p1 = "Test",
+		p2 = 12,
 	script:
 		"scripts/debug_snakemake.py"
 

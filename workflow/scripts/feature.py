@@ -29,8 +29,7 @@ try:
             # no conversion needed for Moup
             "moup"              : (lambda p : {"timelag": p["timelags"]})}
 
-    # extract root name of feature (chop off all parameters)
-    feature = snakemake.wildcards["feature"].split("_")[0]
+    feature = snakemake.params["params"]['branch']
     params = snakemake.params["params"]
     data = DecompData.load(snakemake.input[0])
 
