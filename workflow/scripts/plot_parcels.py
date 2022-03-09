@@ -21,6 +21,9 @@ try:
 
     draw_neural_activity(frames=data._spats,path=snakemake.output['all'],plt_title=snakemake.wildcards['parcellation'],subfig_titles=data._spat_labels)
 
+    for i in range(snakemake.params['n']):
+        draw_neural_activity(frames=data._spats[i],path=snakemake.output['single'][i],plt_title=snakemake.wildcards['parcellation'],subfig_titles=data._spat_labels)
+
     snakemake_tools.stop_timer(timer_start, logger=logger)
 except Exception:
     logger.exception('')
