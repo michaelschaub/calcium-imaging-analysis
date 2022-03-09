@@ -180,6 +180,25 @@ rule parcellation:
 	script:
 		"scripts/parcellation.py"
 
+
+rule plot_parcels:
+	'''
+	decomposes data into different parcellations
+	'''
+	input:
+		 "results/{mouse_dates}/{parcellation}/data.h5",
+		 config = "results/{mouse_dates}/{parcellation}/conf.yaml",
+	output:
+		  combined = "results/{mouse_dates}/{parcellation}/visualization/combined_parcels.png",
+		  all = "results/{mouse_dates}/{parcellation}/visualization/all_parcels.png",
+		  #config = "results/{mouse_dates}/{parcellation}/visualization/conf.yaml",
+	log:
+	   "results/{mouse_dates}/{parcellation}/visualization/parcellation.log"
+	conda:
+		 "envs/environment.yaml"
+	script:
+		  "scripts/plot_parcels.py"
+
 rule trial_selection:
 	'''
 	can select trials through predefined filters
@@ -337,7 +356,7 @@ rule plot_glassbrain:
 		interactive_plot = f"results/{{mouse_dates}}/{{parcellation}}/{{filter}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/glassbrain.html",
 
 
-
+## testing
 rule debug:
 	input:
 		tasks	= [ f"resources/experiment/{mouse_id}/{date}/task_data/"
@@ -348,6 +367,11 @@ rule debug:
 		"results/debug.log"
 	script:
 		"scripts/debug_snakemake.py"
+
+rule test_parcel_plots:
+	input:
+		[ f"results/{'_'.join(mouse_dates)}/{parcellation}/visualization/combined_parcels.png"
+  		for parcellation in parcellations]
 
 
 
