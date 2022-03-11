@@ -114,6 +114,17 @@ def locaNMF(data, atlas_path,
     # (T,K)
     new_temporals = C
 
-    data.update(new_temporals, new_spatials, spatial_labels=labels[locanmf_comps.regions.data.cpu().numpy()])
+    new_labels = []
+    regions = locanmf_comps.regions.data.cpu().numpy()
+    n_region = [ (regions == i).sum() for i in range(len(lables))]
+    i_region = np.zeros_like(lables, dtype=int)
+    for r in regions:
+        if n_region[r] == 1:
+            new_labels.append( labels[l] )
+        else:
+            new_labels.append( "{}#{}".format(labels[l],i_region[l]) )
+            i_region[l] += 1
+
+    data.update(new_temporals, new_spatials, spatial_labels=new_labels)
 
     return data
