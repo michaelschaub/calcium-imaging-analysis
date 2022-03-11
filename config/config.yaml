@@ -32,7 +32,7 @@ branch_opts:
 
   parcellations:
     anatomical:
-    #SVD:
+    SVD:
     #ICA:
       #n_comps: [64]
     LocaNMF:
@@ -40,13 +40,25 @@ branch_opts:
   selected_trials:
     - All
   conditions:
+    default:
+      phase: stimulus
+      n_targets: all
+      n_distractors: none
+      auto_reward: no
+      both_spouts: yes
     #null
-    left_response:
-      responses: left
-    right_response:
-      responses: right
-    no_response:
-      responses: no
+    left_visual:
+      sides: left
+      modalities: visual
+    right_visual:
+      sides: right
+      modalities: visual
+    left_tactile:
+      sides: left
+      modalities: tactile
+    right_tactile:
+      sides: right
+      modalities: tactile
 
   features:
     mean:
@@ -135,6 +147,24 @@ trial_conditions:
       left: 1
       right: 0
       no: -1
+  n_targets:
+    column: n_targets
+    conds:
+      all: 6
+  n_distractors:
+    column: n_distractors
+    conds:
+      none: 0
+  auto_reward:
+    column: auto_reward
+    conds:
+      no: 0
+      yes: 1
+  both_spouts:
+    column: both_spouts
+    conds:
+      yes: 1
+      yes: 1
 
 phase_conditions:
   pretrial:
