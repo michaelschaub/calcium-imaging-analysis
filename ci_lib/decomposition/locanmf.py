@@ -16,7 +16,7 @@ LOGGER = logging.getLogger(__name__)
 # else, if on cpu
 DEVICE='cpu'
 
-def locaNMF(data, atlas_path, logger=LOGGER
+def locaNMF(data, atlas_path, logger=LOGGER,
         minrank = 1, maxrank = 10,      # rank = how many components per brain region. Set maxrank to around 10 for regular dataset.
         min_pixels = 100,               # minimum number of pixels in Allen map for it to be considered a brain region
         loc_thresh = 70,                # Localization threshold, i.e. percentage of area restricted to be inside the 'Allen boundary
@@ -121,11 +121,11 @@ def locaNMF(data, atlas_path, logger=LOGGER
     new_labels = np.empty_like(regions, dtype=str)
     n_region = [ (regions == i).sum() for i in range(len(labels))]
     i_region = np.zeros_like(labels, dtype=int)
-    for r in regions:
+    for i,r in enumerate(regions):
         if n_region[r] == 1:
-            new_labels.append( labels[r] )
+            new_labels[i] = labels[r]
         else:
-            new_labels.append( "{}#{}".format(labels[r],i_region[r]) )
+            new_labels[i] = "{}#{}".format(labels[r],i_region[r])
             i_region[r] += 1
     logger.debug("type new_labels {}".format(type(new_labels)))
     logger.debug("len new_labels {}".format(len(new_labels)))
