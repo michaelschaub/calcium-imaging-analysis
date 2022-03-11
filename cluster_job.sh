@@ -1,11 +1,9 @@
 #!/usr/local_rwth/bin/zsh
 
-cores = 4
-
 #SBATCH --job-name=Brain_Connectivity_Pipeline
-#SBATCH --ntasks=$cores
+#SBATCH --ntasks=4
 #SBATCH --mem-per-gpu=16G
-
+#SBATCH --mem=64G
 
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=damin.kuehn@rwth-aachen.de
@@ -13,4 +11,4 @@ cores = 4
 
 source ~/miniconda3/etc/profile.d/conda.sh
 conda activate snakemake
-snakemake -j$cores --use-conda all
+snakemake -j4 --use-conda all
