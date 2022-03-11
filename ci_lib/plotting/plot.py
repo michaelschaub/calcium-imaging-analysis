@@ -6,13 +6,13 @@ from ci_lib.features import Feature_Type
 from snakemake.logging import logger
 
 def construct_rfe_graph(selected_feats, n_nodes, feat_type, labels=None):
-    
+
     if labels is None:
         node_labels = dict()
         for i in range(n_nodes): node_labels[i] = i+1
     else:
         node_labels = dict(enumerate(labels))
-    
+
 
     # matrices to retrieve input/output channels from connections in support network
     mask = np.tri(n_nodes,n_nodes,0, dtype=bool) if feat_type == Feature_Type.UNDIRECTED else np.ones((n_nodes,n_nodes), dtype=bool)
@@ -130,7 +130,14 @@ def graph_circle_plot(list_best_feat, n_nodes, title, feature_type, save_path=Fa
             else:
                 node_color_aff += ['#E8F0F2']
         nx.draw_networkx_nodes(g,pos=pos_circ,node_color=node_color_aff)
-        nx.draw_networkx_labels(g,pos=pos_circ,labels=node_labels)
+        print("pos")
+        print(pos_circ)
+        print("labels")
+        print(node_labels)
+        print(g)
+        #TODO proper workaround
+        cuted_labels = {k:node_labels[k] for k in range(len(pos_circ)) if k in node_labels}
+        nx.draw_networkx_labels(g,pos=pos_circ,labels=cuted_labels) #node_labels)
 
     if feature_type == Feature_Type.DIRECTED or feature_type == Feature_Type.UNDIRECTED:
         #list_best_feat = np.argsort(class_perfs.mean(0))[:n_edges] # select n best features

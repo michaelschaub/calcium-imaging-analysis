@@ -210,7 +210,7 @@ rule plot_parcels:
 		 config = "results/{mouse_dates}/{parcellation}/conf.yaml",
 	output:
 		  combined = "results/{mouse_dates}/{parcellation}/visualization/combined_parcels.png",
-		  all = "results/{mouse_dates}/{parcellation}/visualization/all_parcels.png",
+		  #all = "results/{mouse_dates}/{parcellation}/visualization/all_parcels.png",
 		  single = [f"results/{{mouse_dates}}/{{parcellation}}/visualization/parcel_{i}.png"
 					for i in range(config['parcellation_opts']['n'])					]
 		  #config = "results/{mouse_dates}/{parcellation}/visualization/conf.yaml",
