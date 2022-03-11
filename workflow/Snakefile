@@ -39,6 +39,7 @@ mouses 		= config["branch_opts"]["mouses"]
 
 mouse_dates = ["_".join([mouse_id,date]) for mouse_id,dates in mouses.items() for date in dates ]
 
+
 parcells_conf	= config["branch_opts"]["parcellations"]
 parcells_static	= config["static_params"]["parcellations"]
 parcellations	= create_parameters( parcells_conf, parcells_static )
@@ -81,6 +82,10 @@ rfe_ns		= config["branch_opts"]["rfe"]["selected_features_n"]
 decoder_conf	= config["branch_opts"]["decoders"]
 decoder_static	= config["static_params"]["decoders"]
 decoders	= create_parameters( decoder_conf, decoder_static )
+
+#For annotating plots
+plot_subject_labels = {f"{mouse_id}(#{len(dates)})" for mouse_id,dates in mouses.items()}
+plot_feature_labels = [] #[f"{feat_name} 𝜏={options['timelags']}" if 'timelags' in options else feat_name for feat_name,options in feature_conf]
 
 wildcard_constraints:
 	mouse_dates	= r"[a-zA-Z\d_-]+",
@@ -340,7 +345,9 @@ rule plot_performances:
 	params:
 		conds=list(trial_conditions),
 		decoders=decoders,
-		features=features,
+		features=features, #plot_feature_labels,
+		subjects=plot_subject_labels,
+		trials=defaults,
 	log:
 		f"results/{{mouse_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/plot_performances.log",
 	conda:
