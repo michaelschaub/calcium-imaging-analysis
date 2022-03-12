@@ -2,6 +2,7 @@ from pathlib import Path
 import sys
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
+import os
 import numpy as np
 
 from ci_lib.utils import snakemake_tools
@@ -17,12 +18,18 @@ try:
 
     data = DecompData.load(snakemake.input[0])
 
-    draw_neural_activity(frames=np.sum(data._spats, axis=0),path=snakemake.output['combined'],plt_title=snakemake.wildcards['parcellation'],subfig_titles="")
+    draw_neural_activity(frames=np.sum(data._spats, axis=0),path=snakemake.output['combined'],plt_title=snakemake.wildcards['parcellation'],subfig_titles="",logger=logger)
 
-    #draw_neural_activity(frames=data._spats,path=snakemake.output['all'],plt_title=snakemake.wildcards['parcellation'],subfig_titles=data._spat_labels)
+    #draw_neural_activity(frames=data._spats,path=snakemake.output['all'],plt_title=snakemake.wildcards['parcellation'],subfig_titles=data._spat_labels,logger=logger)
 
+    os.mkdir(Path(snakemake.output['single']))
+    logger.debug(f"n {snakemake.params['n']}")
     for i in range(snakemake.params['n']):
-        draw_neural_activity(frames=data._spats[i],path=snakemake.output['single'][i],plt_title=snakemake.wildcards['parcellation'],subfig_titles=None if data._spat_labels is None else data._spat_labels[i])
+        title = None if data._spat_labels is None else data._spat_labels[i]
+        logger.debug(Path(snakemake.output['single'])/"parcel_{}.png".format(i if title is None else title))
+        draw_neural_activity(frames=data._spats[i],
+                            path=Path(snakemake.output['single'])/"parcel_{}.png".format(i if title is None else title),
+                            plt_title=snakemake.wildcards['parcellation'], subfig_titles=title, logger=logger)
 
     snakemake_tools.stop_timer(timer_start, logger=logger)
 except Exception:

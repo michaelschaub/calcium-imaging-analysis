@@ -2,13 +2,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 
+import logging
+LOGGER = logging.getLogger(__name__)
+
 
 ##Assumes that spatial is identical for all given temps
 
 #def draw_neural_activity(temps,spatials,plt_title,subfig_titles):
 #    pass
 
-def draw_neural_activity(frames,path,plt_title,subfig_titles=None):
+def draw_neural_activity(frames,path,plt_title,subfig_titles=None,logger=LOGGER):
     #Single Frame is wrapped
     if frames.ndim == 2:
         frames = frames[np.newaxis, ...]
@@ -24,7 +27,7 @@ def draw_neural_activity(frames,path,plt_title,subfig_titles=None):
     y_dims = int(np.ceil(np.sqrt(len(frames))))
     x_dims = int(np.ceil(len(frames) / y_dims))
 
-    print("x_dim",x_dims,"y_dim",y_dims)
+    logger.info(f"x_dim {x_dims} y_dim {y_dims}")
 
     fig, ax = plt.subplots(x_dims , y_dims, constrained_layout=True, squeeze=False)
     fig.suptitle(plt_title)
