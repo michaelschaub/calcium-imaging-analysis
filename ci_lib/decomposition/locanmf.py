@@ -119,17 +119,22 @@ def locaNMF(data, atlas_path, logger=LOGGER,
 
     regions = locanmf_comps.regions.data.cpu().numpy()
     max_len = max([len(l) for l in labels])
-    new_labels = np.empty_like(regions, dtype="<U{}".format(max_len))
     n_region = [ (regions == i).sum() for i in range(len(labels))]
+    max_len += 1 + len(str(max(n_region)))
+    new_labels = np.empty_like(regions, dtype="<U{}".format(max_len))
+    logger.debug("1_region {}".format((regions == 1)))
+    logger.debug("n_region {}".format(n_region))
     i_region = np.zeros_like(labels, dtype=int)
     for i,r in enumerate(regions):
         if n_region[r] == 1:
             new_labels[i] = labels[r]
         else:
             new_labels[i] = "{}#{}".format(labels[r],i_region[r])
+            logger.debug(f"{labels[r]}#{i_region[r]}")
             i_region[r] += 1
-    logger.debug("type new_labels {}".format(type(new_labels)))
-    logger.debug("len new_labels {}".format(len(new_labels)))
+    logger.debug("dtype new_labels {}".format(new_labels.dtype))
+    logger.debug("shape new_labels {}".format(new_labels.shape))
+    logger.debug("new_labels {}".format(new_labels))
 
     data.update(new_temporals, new_spatials, spatial_labels=new_labels)
 
