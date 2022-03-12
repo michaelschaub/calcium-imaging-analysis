@@ -39,6 +39,7 @@ branch_opts:
 
   selected_trials:
     - All
+
   conditions:
     default:
       phase: stimulus
@@ -46,7 +47,6 @@ branch_opts:
       n_distractors: none
       auto_reward: no
       both_spouts: yes
-    #null
     left_visual:
       sides: left
       modalities: visual
@@ -59,18 +59,25 @@ branch_opts:
     right_tactile:
       sides: right
       modalities: tactile
+    left_vistact:
+      sides: left
+      modalities: vistact
+    right_vistact:
+      sides: right
+      modalities: vistact
 
   features:
     mean:
       max_components : [64]
-    #covariance:
-      #max_components : [64]
-    moup:
-      timelags: [3]
+    covariance:
       max_components : [64]
-    #autocovariance:
-    #  timelags: [[0],[1]]
-    #  max_components : [64]
+    moup:
+      timelags: [1,2,3]
+      max_components : [64]
+
+    autocovariance:
+      timelags: [[0],[1]]
+      max_components : [64]
 
   decoders:
     default:
@@ -163,7 +170,7 @@ trial_conditions:
   both_spouts:
     column: both_spouts
     conds:
-      yes: 1
+      no: 0
       yes: 1
 
 phase_conditions:
