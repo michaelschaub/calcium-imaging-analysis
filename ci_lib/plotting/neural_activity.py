@@ -12,7 +12,7 @@ def draw_neural_activity(frames,path,plt_title,subfig_titles=None):
     #Single Frame is wrapped
     if frames.ndim == 2:
         frames = frames[np.newaxis, ...]
-        subfig_titles = [""]
+        subfig_titles = [subfig_titles]
 
     if subfig_titles is None:
         n_digits = math.floor(math.log(len(frames), 10))

@@ -118,7 +118,8 @@ def locaNMF(data, atlas_path, logger=LOGGER,
     new_temporals = C
 
     regions = locanmf_comps.regions.data.cpu().numpy()
-    new_labels = np.empty_like(regions, dtype=str)
+    max_len = max([len(l) for l in labels])
+    new_labels = np.empty_like(regions, dtype="<U{}".format(max_len))
     n_region = [ (regions == i).sum() for i in range(len(labels))]
     i_region = np.zeros_like(labels, dtype=int)
     for i,r in enumerate(regions):
