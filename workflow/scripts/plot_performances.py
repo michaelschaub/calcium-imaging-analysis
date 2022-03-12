@@ -17,7 +17,13 @@ try:
 
     decoders = [ dec.split('_')[0] for dec in snakemake.params['decoders']]
     conditions = snakemake.params['conds']
-    features = [ "\n".join(feat.split('_')) for feat in snakemake.params["features"]]
+
+    features = ["\n".join(feat.split('_')[0:2]) if len(feat.split('_'))>3 else feat.split('_')[0] for feat in snakemake.params["features"]]
+
+    #) for feat in snakemake.params["features"]
+
+
+    #features = [ "\n".join(feat.split('_')) for feat in snakemake.params["features"]]
 
     dec_n = len(decoders)
 
@@ -30,7 +36,11 @@ try:
     #Move to util
     linebreak= '\n'
     subject_str = bold("Subjects(")+'#'+bold("Sessions)")+f": {', '.join(snakemake.params['subjects'])}"
-    parcellation_str= bold("Parcellation")+f": {snakemake.wildcards['parcellation']}"
+    if 'parcellation' in snakemake.wildcards:
+        title_str= bold("Parcellation")+f": {snakemake.wildcards['parcellation']}"
+    else:
+        title_str= bold("Feature")+f": {snakemake.wildcards['feature']}"
+
     conditions_str = bold("Conditions")+f":{linebreak}{linebreak.join(snakemake.params['conds'])}"
     trials_str = bold("Trials")+f":{linebreak}{linebreak.join([f'{k}: {v}'  for k,v in snakemake.params['trials'].items()])}"
 
@@ -39,7 +49,7 @@ try:
 
 
 
-    plt.suptitle("\n".join([parcellation_str,subject_str]),x=0.45)
+    plt.suptitle("\n".join([title_str,subject_str]),x=0.45)
 
 
 
@@ -62,7 +72,7 @@ try:
 
     plt.yticks(np.arange(0, 1, 0.1))
     plt.ylabel('Accuracy', fontsize=14)
-    plt.xticks(range(len(features)), features)
+    plt.xticks(range(len(features)), features,fontsize=8)
 
 
     plt.savefig( snakemake.output[0] )
