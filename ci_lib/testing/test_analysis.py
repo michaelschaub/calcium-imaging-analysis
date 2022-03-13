@@ -18,19 +18,18 @@ from sklearn import preprocessing
 from sklearn.model_selection import StratifiedShuffleSplit
 
 #Progress Bar
-from tqdm.auto import tqdm
+from snakemake.logging import logger
 
-from data import DecompData
 
-##better solution?
 import sys
-sys.path.append(Path(__file__).parent)
+sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 
-from features import Raws,Means, Moup, Covariances, AutoCovariances
-from plotting import plots
-from loading import load_task_data_as_pandas_df
-from decomposition import anatomical_parcellation
+from ci_lib import DecompData
+from ci_lib.features import Raws,Means, Moup, Covariances, AutoCovariances
+#from ci_lib.plotting import plots
+from ci_lib.loading import load_task_data_as_pandas_df
+from ci_lib.decomposition import anatomical_parcellation
 
 
 # add missing h5 files here
@@ -44,18 +43,18 @@ plot_path = Path(__file__).parent.parent / Path('plots')
 svd_path = resl_path/'GN06/SVD/data.h5'
 ana_path = resl_path/'GN06/anatomical/data.h5'
 if (not svd_path.exists()):
-    if not (resc_path/'experiments'/'extracted_data.pkl').exists() :
+    if not (resc_path/'experiment'/'extracted_data.pkl').exists() :
         # load behavior data
-        sessions = load_task_data_as_pandas_df.extract_session_data_and_save(root_paths=[resc_path/'experiments'], mouse_ids=["GN06"], reextract=False)
-        with open( resc_path/'experiments'/'extracted_data.pkl', 'wb') as handle:
+        sessions = load_task_data_as_pandas_df.extract_session_data_and_save(root_paths=[resc_path/'experiment'], mouse_ids=["GN06"], reextract=False)
+        with open( resc_path/'experiment'/'extracted_data.pkl', 'wb') as handle:
             pkl.dump(sessions, handle)
     else:
         # load saved data
-        with open( resc_path/'experiments'/'extracted_data.pkl', 'rb') as handle:
+        with open( resc_path/'experiment'/'extracted_data.pkl', 'rb') as handle:
             sessions = pkl.load(handle)
-        print("Loaded pickled data.")
+        logger.info("Loaded pickled data.")
 
-    file_path = resc_path/'experiments'/"GN06"/Path('2021-01-20_10-15-16/SVD_data/Vc.mat')
+    file_path = resc_path/'experiment'/"GN06"/Path('2021-01-20_10-15-16/SVD_data/Vc.mat')
     f = h5py.File(file_path, 'r')
 
     frameCnt = np.array(f['frameCnt'])
@@ -65,11 +64,12 @@ if (not svd_path.exists()):
     mask[missing_task_data] = False
     trial_starts = trial_starts[mask]
 
-    opts_path = resc_path/'experiments'/"GN06"/Path('2021-01-20_10-15-16/SVD_data/opts.mat')
+    opts_path = resc_path/'experiment'/"GN06"/Path('2021-01-20_10-15-16/SVD_data/opts.mat')
     trans_params = scipy.io.loadmat(opts_path,simplify_cells=True)['opts']['transParams']
-    #print(sessions)
-    #print(frameCnt.shape)
+    #logger.info(sessions)
+    #logger.info(frameCnt.shape)
 
+    logger.info(f"Shape {np.array(f['U']).shape}")
     svd = DecompData( sessions, np.array(f["Vc"]), np.array(f["U"]), np.array(trial_starts))
     svd.save(str(svd_path))
 
@@ -81,7 +81,14 @@ if (not svd_path.exists()):
 
 else:
     svd = DecompData.load(str(ana_path))
-    print("Loaded DecompData object.")
+    logger.info("Loaded DecompData object.")
+
+
+temps = svd.temporals_flat
+spats = np.reshape(svd.spatials,(svd.spatials.shape[0],-1))
+
+print("temps norm",np.linalg.norm(temps))
+print("spats norm",np.linalg.norm(spats))
 
 #define different conds
 modal_keys = ['visual', 'tactile', 'vistact']
@@ -100,7 +107,7 @@ cond_keys_str = [f"{s}_{m}" for s, m in list(cond_keys)]
 svd = svd[trial_preselection]
 svd.conditions = [ {"modality" : modal, "target_side_left" : side} for side in side_range for modal in modal_range]
 
-print(cond_keys_str)
+logger.info(cond_keys_str)
 
 #Hardcoded 'vis_left','tact_right'
 #svd.conditions = [(svd._df.modality == 0) & (svd._df.target_side_left == 0) & trial_preselection, (svd._df.modality ==  1) & (svd._df.target_side_left == 1) & trial_preselection]
@@ -109,7 +116,7 @@ print(cond_keys_str)
 #cond_keys =  list(itertools.product(modal_keys,side_keys))
 #cond_keys_str = [f"{s}_{m}" for m, s in cond_keys]
 
-#print(svd.conditions[:,:,:])
+#logger.info(svd.conditions[:,:,:])
 
 
 #####
@@ -190,7 +197,7 @@ for i_feat, feat in enumerate(tqdm(features,desc="Training classifiers for each 
 
     i = 0  ## counter
     for train_idx, test_idx in tqdm(cv_split,desc='Fit and Score Classifiers'):
-        #print(f'\tRepetition {i:>3}/{n_rep}', end="\r" )
+        #logger.info(f'\tRepetition {i:>3}/{n_rep}', end="\r" )
         c_MLR.fit(data[train_idx, :], labels[train_idx])
         c_1NN.fit(data[train_idx, :], labels[train_idx])
         c_LDA.fit(data[train_idx, :], labels[train_idx])
@@ -200,7 +207,7 @@ for i_feat, feat in enumerate(tqdm(features,desc="Training classifiers for each 
         perf[i, i_feat, 2] = c_LDA.score(data[test_idx, :], labels[test_idx])
         perf[i, i_feat, 3] = c_RF.score(data[test_idx, :], labels[test_idx])
         i += 1
-    #print(f'\tRepetition {n_rep:>3}/{n_rep}' )
+    #logger.info(f'\tRepetition {n_rep:>3}/{n_rep}' )
 
 if save_outputs:
     np.save(resl_path/'perf_tasks.npy', perf)
@@ -253,7 +260,7 @@ plt.show()
 #weights = svd[:6,0].temporals #c_LDA.coef_ #c_LDA.means_ #
 #weights = c_LDA.coef_
 #conditions = c_LDA.classes_
-#print(conditions)
+#logger.info(conditions)
 #plots.plot_frame(c_LDA.coef_, svd.spatials[:comp,:,:], conditions, "Coef of Classifier (LDA) for") ##comp = number of components , weights.shape = _ , comp
 
 #plots.plot_frame(c_LDA.means_, svd.spatials[:comp,:,:], conditions)

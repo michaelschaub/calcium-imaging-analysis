@@ -212,6 +212,28 @@ use rule parcellation as locaNMF with:
 	conda:
 		"envs/locaNMF_environment.yaml"
 
+rule plot_parcels:
+	'''
+	decomposes data into different parcellations
+	'''
+	input:
+		 "results/{mouse_dates}/{parcellation}/data.h5",
+		 config = "results/{mouse_dates}/{parcellation}/conf.yaml",
+	output:
+		  combined = "results/{mouse_dates}/{parcellation}/visualization/combined_parcels.png",
+		  all = "results/{mouse_dates}/{parcellation}/visualization/all_parcels.png",
+		  single = [f"results/{{mouse_dates}}/{{parcellation}}/visualization/parcel_{i}.png"
+					for i in range(config['parcellation_opts']['n'])					]
+		  #config = "results/{mouse_dates}/{parcellation}/visualization/conf.yaml",
+	params:
+		n = config['parcellation_opts']['n']
+	log:
+	   "results/{mouse_dates}/{parcellation}/visualization/parcellation.log"
+	conda:
+		 "envs/environment.yaml"
+	script:
+		  "scripts/plot_parcels.py"
+
 rule trial_selection:
 	'''
 	can select trials through predefined filters
@@ -391,7 +413,7 @@ rule plot_glassbrain:
 		interactive_plot = f"results/{{mouse_dates}}/{{parcellation}}/{{trials}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/glassbrain.html",
 
 
-
+## testing
 rule debug:
 	input:
 		tasks	= [ f"resources/experiment/{mouse_id}/{date}/task_data/"
@@ -406,6 +428,11 @@ rule debug:
 		p2 = 12,
 	script:
 		"scripts/debug_snakemake.py"
+
+rule test_parcel_plots:
+	input:
+		[ f"results/{'_'.join(mouse_dates)}/{parcellation}/visualization/combined_parcels.png"
+  		for parcellation in parcellations]
 
 
 
