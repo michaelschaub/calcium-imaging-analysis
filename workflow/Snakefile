@@ -374,7 +374,7 @@ rule plot_performances_parcellations:
 		  subjects=plot_subject_labels,
 		  trials=defaults,
 	log:
-	   f"results/{{mouse_dates}}/plots/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/plot_performances.log",
+	   f"results/plots/{{mouse_dates}}/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{feature}}/plot_performances.log",
 	conda:
 		 "envs/environment.yaml"
 	script:

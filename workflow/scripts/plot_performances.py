@@ -36,9 +36,11 @@ try:
     #Move to util
     linebreak= '\n'
     subject_str = bold("Subjects(")+'#'+bold("Sessions)")+f": {', '.join(snakemake.params['subjects'])}"
-    if 'parcellation' in snakemake.wildcards:
+
+    title_str= ""
+    if 'parcellation' in snakemake.wildcards.keys():
         title_str= bold("Parcellation")+f": {snakemake.wildcards['parcellation']}"
-    else:
+    elif "feature" in snakemake.wildcards.keys():
         title_str= bold("Feature")+f": {snakemake.wildcards['feature']}"
 
     conditions_str = bold("Conditions")+f":{linebreak}{linebreak.join(snakemake.params['conds'])}"
