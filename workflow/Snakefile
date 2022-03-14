@@ -153,6 +153,8 @@ rule pipeline_entry:
 		#maybe find a clean solution from flattened array,
 		task_structured = {mouse_id: [ f"resources/experiment/{mouse_id}/{date}/task_data/"
 				  for date in dates] for mouse_id,dates in mouses.items()} # so we are using this one and we can actually use a dict to make it even comfier
+	wildcard_constraints:
+		mouse_dates	= r"GN[a-zA-Z\d_-]+",
 	log:
 		"results/{mouse_dates}/SVD/pipeline_entry.log"
 	conda:
@@ -161,6 +163,35 @@ rule pipeline_entry:
 		memb_mb=1000
 	script:
 		"scripts/default_entry.py"
+
+rule mSM_entry:
+	'''
+	aggregates all task and svd data from one session with one animal
+	'''
+	input:
+		sessions	= [ f"resources/experiment/{mouse_id}/{date}/SpatialDisc_Session.mat"
+					for mouse_id,dates in mouses.items() for date in dates],
+		Vc		= [ f"resources/experiment/{mouse_id}/{date}/Vc.mat"
+				  for mouse_id,dates in mouses.items() for date in dates],
+		#trans_params	= [ f"resources/experiment/{mouse_id}/{date}/SVD_data/opts.mat"
+						 #for mouse_id,dates in mouses.items() for date in dates],
+	output:
+		"results/{mouse_dates}/SVD/data.h5",
+		config = "results/{mouse_dates}/SVD/conf.yaml",
+	params:
+		mouse_dates_str = '_'.join(mouse_dates),
+		sessions_structured = {mouse_id: { date: f"resources/experiment/{mouse_id}/{date}/SpatialDisc_Session.mat"
+				  for date in dates} for mouse_id,dates in mouses.items()}
+	wildcard_constraints:
+		mouse_dates	= r"mSM[a-zA-Z\d_-]+",
+	log:
+		"results/{mouse_dates}/SVD/pipeline_entry.log"
+	conda:
+		"envs/environment.yaml"
+	resources:
+		memb_mb=1000
+	script:
+		"scripts/mSM_entry.py"
 
 def parcellation_input(wildcards):
 	input = {
