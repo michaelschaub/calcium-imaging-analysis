@@ -1,0 +1,88 @@
+branch_opts:
+  mouses:
+    GN06:
+      - 2021-01-20_10-15-16
+    #GN08:
+    #  - 2021-03-26_13-37-18
+    #  - 2021-03-29_13-37-29
+    #  - 2021-03-29_16-33-41
+    #GN09:
+    #  -2021-03-26_10-13-36
+    #  -2021-04-14_16-01-37
+    #  -2021-04-20_13-07-10
+    #GN10:
+    #  -2021-03-29_15-41-22
+    #  -2021-03-29_15-41-22
+    #  -2021-04-21_11-00-51
+
+
+  parcellations:
+    anatomical:
+    #SVD:
+    #ICA:
+      #n_comps: [64]
+    LocaNMF:
+
+  selected_trials:
+    - All
+  conditions:
+    #null
+    left_response:
+      responses: left
+    right_response:
+      responses: right
+    no_response:
+      responses: no
+
+  features:
+    mean:
+      max_components : [64]
+    #covariance:
+      #max_components : [64]
+    moup:
+      timelags: [3]
+      max_components : [64]
+    #autocovariance:
+    #  timelags: [[0],[1]]
+    #  max_components : [64]
+
+  decoders:
+    default:
+      reps: [5]
+    MLR:
+    1NN:
+    LDA:
+    RF:
+  rfe:
+    selected_features_n:
+      - 5
+      #- 10
+      #- 15
+      #- 20
+
+trial_conditions:
+  sides:
+    column: target_side_left
+    conds:
+      left:   0
+      right:  1
+  modalities:
+    column: modality
+    conds:
+      visual:   0
+      tactile:  1
+      vistact:  2
+  responses:
+    column: response_left
+    conds:
+      left: 1
+      right: 0
+      no: -1
+
+phase_conditions:
+  pretrial:
+    start:  15
+    stop:   30
+  stimulus:
+    start:  30
+    stop:   75
