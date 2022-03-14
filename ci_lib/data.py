@@ -223,8 +223,7 @@ class DecompData(Data):
             # if keys[1] is bool us it as mask on aranged array to create array of frames to keep
             assert np.array(keys[1]).dtype == bool
             trial_frames = np.array(np.arange(len(keys[1]))[keys[1]])
-            print("frames")
-            print(trial_frames)
+            self.logger.debug(f"frames {trial_frames}")
         except:
             try:
                 # else use it to slice from aranged array
@@ -238,18 +237,16 @@ class DecompData(Data):
                     raise
         # starts of selected frames in old temps
         starts = np.array(self._starts[keys[0]])
-        print("starts")
-        print(starts)
+        self.logger.debug(f"starts {starts}")
 
         # indices of temps in all selected frames (2d)
         selected_temps = np.array(trial_frames[np.newaxis, :] + starts[:, np.newaxis], dtype=int)
-        print("frames + starts")
-        print(selected_temps)
+        self.logger.debug("frames + starts {selected_temps}")
 
         # starts of selected frames in new temps
         new_starts = np.insert(np.cumsum(np.diff(selected_temps[:-1, (0, -1)]) + 1), 0, 0)
 
-        print(self._temps.shape)
+        self.logger.debug(self._temps.shape)
         temps = self._temps[selected_temps.flatten()]
         try:
             data = DecompData(df, temps, spats, new_starts, spatial_labels=self._spat_labels)

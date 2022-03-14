@@ -3,7 +3,10 @@ import scipy.io
 import numpy as np
 from sklearn.decomposition import FastICA
 
-def anatomical_parcellation(DecompDataObject, filter_labels=None, atlas_path=None):
+import logging
+LOGGER = logging.getLogger(__name__)
+
+def anatomical_parcellation(DecompDataObject, filter_labels=None, atlas_path=None, logger=LOGGER):
     ### Loading meta data for parcellation, masks and labels for each area
     if atlas_path is None: # Fallback
         atlas_path = Path(__file__).parent.parent.parent/"resources"/"meta"/"anatomical.mat"
@@ -31,7 +34,7 @@ def anatomical_parcellation(DecompDataObject, filter_labels=None, atlas_path=Non
 
     return DecompDataObject
 
-def fastICA(DecompDataObject, n_comps):
+def fastICA(DecompDataObject, n_comps, logger=LOGGER):
     #Eventually add mask?
 
     ica = FastICA(n_components=n_comps,

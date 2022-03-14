@@ -39,7 +39,6 @@ mouses 		= config["branch_opts"]["mouses"]
 
 mouse_dates = ["_".join([mouse_id,date]) for mouse_id,dates in mouses.items() for date in dates ]
 
-
 parcells_conf	= config["branch_opts"]["parcellations"]
 parcells_static	= config["static_params"]["parcellations"]
 parcellations	= create_parameters( parcells_conf, parcells_static )
@@ -212,6 +211,27 @@ use rule parcellation as locaNMF with:
 	conda:
 		"envs/locaNMF_environment.yaml"
 
+rule plot_parcels:
+	'''
+	decomposes data into different parcellations
+	'''
+	input:
+		 "results/{mouse_dates}/{parcellation}/data.h5",
+		 config = "results/{mouse_dates}/{parcellation}/conf.yaml",
+	output:
+		  combined = "results/{mouse_dates}/{parcellation}/visualization/combined_parcels.png",
+		  all = "results/{mouse_dates}/{parcellation}/visualization/all_parcels.png",
+		  single = [f"results/{{mouse_dates}}/{{parcellation}}/visualization/parcel_{i}.png"
+					for i in range(config['parcellation_opts']['n'])					]
+		  #config = "results/{mouse_dates}/{parcellation}/visualization/conf.yaml",
+	params:
+		n = config['parcellation_opts']['n']
+	log:
+	   "results/{mouse_dates}/{parcellation}/visualization/parcellation.log"
+	conda:
+		 "envs/environment.yaml"
+	script:
+		  "scripts/plot_parcels.py"
 
 rule trial_selection:
 	'''
@@ -335,8 +355,9 @@ rule plot_parcels:
 	output:
 		  combined = "results/{mouse_dates}/{parcellation}/visualization/combined_parcels.png",
 		  all = "results/{mouse_dates}/{parcellation}/visualization/all_parcels.png",
-		  single = [f"results/{{mouse_dates}}/{{parcellation}}/visualization/parcel_{i}.png"
-					for i in range(config['parcellation_opts']['n'])					]
+		  single = directory(f"results/{{mouse_dates}}/{{parcellation}}/visualization/single_parcel/")
+		  #[f"results/{{mouse_dates}}/{{parcellation}}/visualization/parcel_{i}.png"
+	 	  #	   for i in range(config['parcellation_opts']['n'])					]
 		  #config = "results/{mouse_dates}/{parcellation}/visualization/conf.yaml",
 	params:
 		  n = config['parcellation_opts']['n']
@@ -443,7 +464,7 @@ rule test_data:
 	input:
 		 "results/GN06/SVD/data.h5"
 	log:
-		"results/GN06/SVD/test_data.log"
+	   "results/GN06/SVD/test_data.log"
 	conda:
 		 "envs/environment.yaml"
 	script:
@@ -453,7 +474,7 @@ rule test_analysis:
 	input:
 		 "results/GN06/SVD/data.h5"
 	log:
-		"results/GN06/SVD/test_analysis.log"
+	   "results/GN06/SVD/test_analysis.log"
 	conda:
 		 "envs/environment.yaml"
 	script:

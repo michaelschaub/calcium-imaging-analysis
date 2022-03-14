@@ -6,17 +6,20 @@ import math
 import scipy.io
 from pathlib import Path
 
+import logging
+LOGGER = logging.getLogger(__name__)
+
 
 ##Assumes that spatial is identical for all given temps
 
 #def draw_neural_activity(temps,spatials,plt_title,subfig_titles):
 #    pass
 
-def draw_neural_activity(frames,path,plt_title,subfig_titles=None,overlay=False):
+def draw_neural_activity(frames,path,plt_title,subfig_titles=None,overlay=False,logger=LOGGER):
     #Single Frame is wrapped
     if frames.ndim == 2:
         frames = frames[np.newaxis, ...]
-        subfig_titles = [""]
+        subfig_titles = [subfig_titles]
 
     if subfig_titles is None:
         n_digits = math.floor(math.log(len(frames), 10))
@@ -35,7 +38,7 @@ def draw_neural_activity(frames,path,plt_title,subfig_titles=None,overlay=False)
     y_dims = int(np.ceil(np.sqrt(len(frames))))
     x_dims = int(np.ceil(len(frames) / y_dims))
 
-    print("x_dim",x_dims,"y_dim",y_dims)
+    logger.info(f"x_dim {x_dims} y_dim {y_dims}")
 
     fig, ax = plt.subplots(x_dims , y_dims, constrained_layout=True, squeeze=False)
     fig.suptitle(plt_title)

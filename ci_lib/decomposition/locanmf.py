@@ -4,6 +4,9 @@ import numpy as np
 import torch
 from locanmf import LocaNMF
 
+import logging
+LOGGER = logging.getLogger(__name__)
+
 ## [OPTIONAL] if cuda support, uncomment following lines
 #import os
 # os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
@@ -13,7 +16,7 @@ from locanmf import LocaNMF
 # else, if on cpu
 DEVICE='cpu'
 
-def locaNMF(data, atlas_path,
+def locaNMF(data, atlas_path, logger=LOGGER,
         minrank = 1, maxrank = 10,      # rank = how many components per brain region. Set maxrank to around 10 for regular dataset.
         min_pixels = 100,               # minimum number of pixels in Allen map for it to be considered a brain region
         loc_thresh = 70,                # Localization threshold, i.e. percentage of area restricted to be inside the 'Allen boundary
@@ -114,6 +117,25 @@ def locaNMF(data, atlas_path,
     # (T,K)
     new_temporals = C
 
-    data.update(new_temporals, new_spatials, spatial_labels=labels[locanmf_comps.regions.data.cpu().numpy()])
+    regions = locanmf_comps.regions.data.cpu().numpy()
+    max_len = max([len(l) for l in labels])
+    n_region = [ (regions == i).sum() for i in range(len(labels))]
+    max_len += 1 + len(str(max(n_region)))
+    new_labels = np.empty_like(regions, dtype="<U{}".format(max_len))
+    logger.debug("1_region {}".format((regions == 1)))
+    logger.debug("n_region {}".format(n_region))
+    i_region = np.zeros_like(labels, dtype=int)
+    for i,r in enumerate(regions):
+        if n_region[r] == 1:
+            new_labels[i] = labels[r]
+        else:
+            new_labels[i] = "{}#{}".format(labels[r],i_region[r])
+            logger.debug(f"{labels[r]}#{i_region[r]}")
+            i_region[r] += 1
+    logger.debug("dtype new_labels {}".format(new_labels.dtype))
+    logger.debug("shape new_labels {}".format(new_labels.shape))
+    logger.debug("new_labels {}".format(new_labels))
+
+    data.update(new_temporals, new_spatials, spatial_labels=new_labels)
 
     return data
