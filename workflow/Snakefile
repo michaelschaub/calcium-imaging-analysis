@@ -212,27 +212,6 @@ use rule parcellation as locaNMF with:
 	conda:
 		"envs/locaNMF_environment.yaml"
 
-rule plot_parcels:
-	'''
-	decomposes data into different parcellations
-	'''
-	input:
-		 "results/{mouse_dates}/{parcellation}/data.h5",
-		 config = "results/{mouse_dates}/{parcellation}/conf.yaml",
-	output:
-		  combined = "results/{mouse_dates}/{parcellation}/visualization/combined_parcels.png",
-		  all = "results/{mouse_dates}/{parcellation}/visualization/all_parcels.png",
-		  single = [f"results/{{mouse_dates}}/{{parcellation}}/visualization/parcel_{i}.png"
-					for i in range(config['parcellation_opts']['n'])					]
-		  #config = "results/{mouse_dates}/{parcellation}/visualization/conf.yaml",
-	params:
-		n = config['parcellation_opts']['n']
-	log:
-	   "results/{mouse_dates}/{parcellation}/visualization/parcellation.log"
-	conda:
-		 "envs/environment.yaml"
-	script:
-		  "scripts/plot_parcels.py"
 
 rule trial_selection:
 	'''
@@ -345,6 +324,28 @@ rule decoding:
 
 
 ###   Plotting   ###
+
+rule plot_parcels:
+	'''
+	decomposes data into different parcellations
+	'''
+	input:
+		 "results/{mouse_dates}/{parcellation}/data.h5",
+		 config = "results/{mouse_dates}/{parcellation}/conf.yaml",
+	output:
+		  combined = "results/{mouse_dates}/{parcellation}/visualization/combined_parcels.png",
+		  all = "results/{mouse_dates}/{parcellation}/visualization/all_parcels.png",
+		  single = [f"results/{{mouse_dates}}/{{parcellation}}/visualization/parcel_{i}.png"
+					for i in range(config['parcellation_opts']['n'])					]
+		  #config = "results/{mouse_dates}/{parcellation}/visualization/conf.yaml",
+	params:
+		  n = config['parcellation_opts']['n']
+	log:
+	   "results/{mouse_dates}/{parcellation}/visualization/parcellation.log"
+	conda:
+		 "envs/environment.yaml"
+	script:
+		  "scripts/plot_parcels.py"
 
 rule plot_performance:
 	input:

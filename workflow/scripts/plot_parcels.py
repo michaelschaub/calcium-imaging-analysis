@@ -17,12 +17,12 @@ try:
 
     data = DecompData.load(snakemake.input[0])
 
-    draw_neural_activity(frames=np.sum(data._spats, axis=0),path=snakemake.output['combined'],plt_title=snakemake.wildcards['parcellation'],subfig_titles="")
+    draw_neural_activity(frames=np.sum(data._spats, axis=0),path=snakemake.output['combined'],plt_title=snakemake.wildcards['parcellation'],subfig_titles="",overlay=True)
 
-    #draw_neural_activity(frames=data._spats,path=snakemake.output['all'],plt_title=snakemake.wildcards['parcellation'],subfig_titles=data._spat_labels)
+    draw_neural_activity(frames=data._spats,path=snakemake.output['all'],plt_title=snakemake.wildcards['parcellation'],subfig_titles=data._spat_labels,overlay=True)
 
     for i in range(snakemake.params['n']):
-        draw_neural_activity(frames=data._spats[i],path=snakemake.output['single'][i],plt_title=snakemake.wildcards['parcellation'],subfig_titles=data._spat_labels)
+        draw_neural_activity(frames=data._spats[i],path=snakemake.output['single'][i],plt_title=snakemake.wildcards['parcellation'],subfig_titles=data._spat_labels,overlay=True)
 
     snakemake_tools.stop_timer(timer_start, logger=logger)
 except Exception:

@@ -2,13 +2,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 
+#For Brain Atlas
+import scipy.io
+from pathlib import Path
+
 
 ##Assumes that spatial is identical for all given temps
 
 #def draw_neural_activity(temps,spatials,plt_title,subfig_titles):
 #    pass
 
-def draw_neural_activity(frames,path,plt_title,subfig_titles=None):
+def draw_neural_activity(frames,path,plt_title,subfig_titles=None,overlay=False):
     #Single Frame is wrapped
     if frames.ndim == 2:
         frames = frames[np.newaxis, ...]
@@ -18,7 +22,14 @@ def draw_neural_activity(frames,path,plt_title,subfig_titles=None):
         n_digits = math.floor(math.log(len(frames), 10))
         subfig_titles = [str(i).zfill(n_digits ) for i in range(len(frames))]
 
-    _ , w, h = frames.shape
+    if overlay:
+        #Hardcoded for now
+        atlas_path = Path(__file__).parent.parent.parent/"resources"/"meta"/"anatomical.mat"
+        edge_map = scipy.io.loadmat(atlas_path ,simplify_cells=True)['edgeMap']
+        edge_map_masked =np.ma.masked_where(edge_map < 1, edge_map)
+
+
+    _ , h, w = frames.shape
 
     #Indices of subplots
     y_dims = int(np.ceil(np.sqrt(len(frames))))
@@ -33,6 +44,8 @@ def draw_neural_activity(frames,path,plt_title,subfig_titles=None):
             if j*x_dims + i < len(frames):
                 #frame =  np.tensordot(temps[], spatial, 1) #np.einsum( "n,nij->ij", temps[h*width + w], spatial) #np.tensordot(temps[w + h], spatial, (-1, 0)) #np.dot(spatial,temps[w*height + h]) #
                 im = ax[i, j].imshow(frames[j*x_dims + i])
+                if overlay:
+                    ax[i, j].imshow(edge_map_masked[:h,:w], interpolation='none')
 
                 fig.colorbar(im, ax=ax[i, j])
                 ax[i, j].set_title(subfig_titles[j*x_dims + i])

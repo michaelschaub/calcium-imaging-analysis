@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.ndimage
+import scipy.io
 
-from snakemake.logging import logger
 
 from pathlib import Path
 import sys
@@ -19,6 +19,8 @@ dorsal_maps = scipy.io.loadmat(dorsal_path ,simplify_cells=True) ['dorsalMaps']
 dorsal_labels = dorsal_maps['labelsSplit']
 dorsal_masks = np.asarray(scipy.io.loadmat(mask_path ,simplify_cells=True)['areaMasks'],dtype='bool')
 dorsal_side =  np.asarray(dorsal_maps['sidesSplit'])[:-1]
+
+dorsal_edgeMap = dorsal_maps['edgeMapScaled']
 
 
 def get_super(x):
@@ -43,7 +45,8 @@ dorsal_dict = {
     'areaMasks': dorsal_masks[reordered_mask],
     'areaLabels': dorsal_labels[reordered_mask],
     'areaSide': dorsal_side[reordered_mask],
-    'areaLabels_wSide': np.asarray([f"{s}{get_super(m)}" for s, m in zip(dorsal_labels[reordered_mask],dorsal_side[reordered_mask])])
+    'areaLabels_wSide': np.asarray([f"{s}{get_super(m)}" for s, m in zip(dorsal_labels[reordered_mask],dorsal_side[reordered_mask])]),
+    'edgeMap':dorsal_edgeMap
 }
 
 dict_path = data_path/"meta"/"anatomical.mat"
