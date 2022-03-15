@@ -27,7 +27,7 @@ try:
 
     dec_n = len(decoders)
 
-    plt.figure(dpi=600)
+    plt.figure(figsize=[2.4+len(features),4.8],dpi=600)
 
 
     #Move to util
@@ -38,20 +38,18 @@ try:
     subject_str = bold("Subjects(")+'#'+bold("Sessions)")+f": {', '.join(snakemake.params['subjects'])}"
 
     title_str= ""
+    x_str=""
+
     if 'parcellation' in snakemake.wildcards.keys():
         title_str= bold("Parcellation")+f": {snakemake.wildcards['parcellation']}"
+        x_str = "Features"
     elif "feature" in snakemake.wildcards.keys():
         title_str= bold("Feature")+f": {snakemake.wildcards['feature']}"
+        x_str = "Parcellations"
 
     conditions_str = bold("Conditions")+f":{linebreak}{linebreak.join(snakemake.params['conds'])}"
     trials_str = bold("Trials")+f":{linebreak}{linebreak.join([f'{k}: {v}'  for k,v in snakemake.params['trials'].items()])}"
 
-    plt.gcf().text(0.78, 0.5, "\n \n".join([conditions_str,trials_str]) , fontsize=10, va='center')
-    plt.subplots_adjust(right=0.75)
-
-
-
-    plt.suptitle("\n".join([title_str,subject_str]),x=0.45)
 
 
 
@@ -68,16 +66,24 @@ try:
                 violin_plts[f,d]=plots.colored_violinplot(perf, positions=f + np.arange(1) + ((d+1)*1/(dec_n+1))-0.5, widths=[1/(dec_n+2)], color=colors(d/dec_n))
 
     #plt.legend( [colors(i/len(decoders)) for i in range(len(decoders))], decoders )
-    plt.legend( [ v['bodies'][0] for v in violin_plts[0]], decoders )
+    plt.legend( [ v['bodies'][0] for v in violin_plts[0]], decoders,loc='lower left')
     plt.plot([-.5, len(features)-.5], [1/len(conditions), 1/len(conditions)], '--k')
     plt.text(len(features)-1,1/len(conditions)+0.01,'random chance',fontsize=7,ha='center')
 
     plt.yticks(np.arange(0, 1, 0.1))
     plt.ylabel('Accuracy', fontsize=14)
     plt.xticks(range(len(features)), features,fontsize=8)
+    plt.xlabel(x_str, fontsize=14)
 
 
     plt.savefig( snakemake.output[0] )
+
+
+    plt.gcf().text(0.78, 0.5, "\n \n".join([conditions_str,trials_str]) , fontsize=10, va='center')
+    plt.subplots_adjust(right=0.75)
+    plt.suptitle("\n".join([title_str,subject_str]),x=0.45)
+
+    plt.savefig(snakemake.output[1])
 
     snakemake_tools.stop_timer(timer_start, logger=logger)
 except Exception:
