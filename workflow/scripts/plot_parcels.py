@@ -18,9 +18,9 @@ try:
 
     data = DecompData.load(snakemake.input[0])
 
-    draw_neural_activity(frames=np.sum(data._spats, axis=0),path=snakemake.output['combined'],plt_title=snakemake.wildcards['parcellation'],subfig_titles="",logger=logger)
+    draw_neural_activity(frames=np.sum(data._spats, axis=0),path=snakemake.output['combined'],plt_title=snakemake.wildcards['parcellation'],subfig_titles="",overlay=True,logger=logger)
 
-    #draw_neural_activity(frames=data._spats,path=snakemake.output['all'],plt_title=snakemake.wildcards['parcellation'],subfig_titles=data._spat_labels,logger=logger)
+    #draw_neural_activity(frames=data._spats,path=snakemake.output['all'],plt_title=snakemake.wildcards['parcellation'],subfig_titles=data._spat_labels,overlay=True,logger=logger)
 
     os.mkdir(Path(snakemake.output['single']))
     logger.debug(f"n {snakemake.params['n']}")
@@ -29,7 +29,7 @@ try:
         logger.debug(Path(snakemake.output['single'])/"parcel_{}.png".format(i if title is None else title))
         draw_neural_activity(frames=data._spats[i],
                             path=Path(snakemake.output['single'])/"parcel_{}.png".format(i if title is None else title),
-                            plt_title=snakemake.wildcards['parcellation'], subfig_titles=title, logger=logger)
+                            plt_title=snakemake.wildcards['parcellation'], subfig_titles=title, overlay=True, logger=logger)
 
     snakemake_tools.stop_timer(timer_start, logger=logger)
 except Exception:

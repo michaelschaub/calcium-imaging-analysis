@@ -78,7 +78,8 @@ try:
             perf[i] = decoder.score(data[test_index,:],labels[test_index])
             decoders.append(decoder)
     except:
-        print("error during decoding")
+        print("Error during training and testing")
+
 
     #Save outputs
     #save_h5(perf, snakemake.output[1]) can't load with corresponding load function
