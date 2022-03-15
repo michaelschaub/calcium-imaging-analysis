@@ -91,8 +91,9 @@ try:
 
     parcellation = DecompData.load(snakemake.input["parcellation"])
     n_comps = cond_feats[0].ncomponents
+    cutted_labels=parcellation.spatial_labels[:n_comps]
 
-    graph_circle_plot(list_best_feat,n_nodes= n_comps, title=feature, feature_type = feat_type, node_labels=parcellation.spatial_labels, save_path=snakemake.output["plot"])
+    graph_circle_plot(list_best_feat,n_nodes= n_comps, title=feature, feature_type = feat_type, node_labels=, save_path=snakemake.output["plot"])
 
     #Glassbrain Plot
     rfe_graph = construct_rfe_graph(list_best_feat, n_nodes = n_comps, feat_type = feat_type)
