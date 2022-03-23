@@ -35,7 +35,8 @@ try:
     params = snakemake.params["params"]
     data = DecompData.load(snakemake.input[0])
 
-    feat = feature_dict[feature].create(data, max_comps=params["max_components"], **param_dict[feature](params))
+    max_comps = params["max_components"] if "max_components" in params else None
+    feat = feature_dict[feature].create(data, max_comps=max_comps, **param_dict[feature](params))
 
 
     feat.save(snakemake.output[0])

@@ -32,10 +32,10 @@ branch_opts:
 
   parcellations:
     anatomical:
-    #SVD:
+    SVD:
     #ICA:
       #n_comps: [64]
-    LocaNMF:
+    #LocaNMF:
 
   selected_trials:
     - All
@@ -50,15 +50,14 @@ branch_opts:
 
   features:
     mean:
-      max_components : [64]
     #covariance:
-      #max_components : [64]
+    #correlation:
     moup:
       timelags: [3]
-      max_components : [64]
-    #autocovariance:
-    #  timelags: [[0],[1]]
-    #  max_components : [64]
+    autocovariance:
+      timelags: [[0],[1],[2],[3]]
+    autocorrelation:
+      timelags: [[0],[1],[2],[3]]
 
   decoders:
     default:
