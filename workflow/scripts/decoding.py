@@ -14,7 +14,7 @@ import sys
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 from ci_lib.utils import snakemake_tools
-from ci_lib.features import Features, Means, Raws, Covariances, AutoCovariances, Moup
+from ci_lib.features import Features, Means, Raws, Covariances, Correlations, AutoCovariances, Moup
 
 
 # redirect std_out to log file
@@ -26,7 +26,7 @@ try:
 
     ### Load feature for all conditions
     cond_str = snakemake.params['conds']
-    feature_dict = { "mean" : Means, "raw" : Raws, "covariance" : Covariances, "autocovariance" : AutoCovariances, "moup" :Moup }
+    feature_dict = { "mean" : Means, "raw" : Raws, "covariance" : Covariances, "correlation" : Correlations, "autocovariance" : AutoCovariances, "moup" :Moup }
     feature_class = feature_dict[snakemake.wildcards["feature"].split("_")[0]]
 
     cond_feats = []
