@@ -5,7 +5,7 @@ sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 from ci_lib.utils import snakemake_tools
 from ci_lib import DecompData
-from ci_lib.features import Means, Raws, Covariances, AutoCovariances, Moup
+from ci_lib.features import Means, Raws, Covariances, Correlations, AutoCovariances, Moup
 
 # redirect std_out to log file
 logger = snakemake_tools.start_log(snakemake)
@@ -17,13 +17,14 @@ try:
     config = snakemake.config["rule_conf"]["feature_calculation"]
 
 
-    feature_dict = { "mean" : Means, "raw" : Raws, "covariance" : Covariances, "autocovariance" : AutoCovariances, "moup" :Moup }
+    feature_dict = { "mean" : Means, "raw" : Raws, "covariance" : Covariances, "correlation" : Correlations, "autocovariance" : AutoCovariances, "moup" :Moup }
 
     # Dictionary for converting parameters from workflow to parameters, that can be passed to feature creators
     param_dict = {
             "mean"              : (lambda p : {}),
             "raw"               : (lambda p : {}),
             "covariance"        : (lambda p : {}),
+            "correlation"        : (lambda p : {}),
             # convert parameter "max_timelag" to range up to that timelag, if "max_timelag" does not exist, pass "timelags" (iterable)
             "autocovariance"    : (lambda p : { "time_lag_range" : range(1,p["max_timelag"]+1) if "max_timelag" in p else p["timelags"] }),
             # no conversion needed for Moup
