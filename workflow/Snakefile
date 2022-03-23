@@ -1,6 +1,6 @@
 configfile: "config/config.yaml"
 
-ruleorder: pipeline_entry > locaNMF > parcellation > feature_calculation > feature_elimination
+ruleorder: pipeline_entry > locaNMF > parcellation > feature_calculation > feature_elimination > condition > trial_selection
 
 
 from itertools import product as iterproduct
@@ -88,7 +88,7 @@ plot_subject_labels = {f"{mouse_id}(#{len(dates)})" for mouse_id,dates in mouses
 
 wildcard_constraints:
 	mouse_dates	= r"[a-zA-Z\d_-]+",
-	parcellation	= r"[a-zA-Z\d_~.]+",
+	parcellation	= r"[a-zA-Z\d_'-~.\[\], ]+", # r"[a-zA-Z\d_~.]+",
 	trials		= r"[a-zA-Z\d_~.]+",
 	cond		= r"[a-zA-Z\d_]+",
 	feature		= r"[a-zA-Z\d_~.\[\], ]+",
@@ -333,7 +333,7 @@ rule plot_parcels:
 		 config = "results/{mouse_dates}/{parcellation}/conf.yaml",
 	output:
 		  combined = "results/{mouse_dates}/{parcellation}/visualization/combined_parcels.png",
-		  all = "results/{mouse_dates}/{parcellation}/visualization/all_parcels.png",
+		  #all = "results/{mouse_dates}/{parcellation}/visualization/all_parcels.png",
 		  single = directory(f"results/{{mouse_dates}}/{{parcellation}}/visualization/single_parcel/")
 		  #[f"results/{{mouse_dates}}/{{parcellation}}/visualization/parcel_{i}.png"
 	 	  #	   for i in range(config['parcellation_opts']['n'])					]

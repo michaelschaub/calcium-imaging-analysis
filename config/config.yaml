@@ -32,10 +32,11 @@ branch_opts:
 
   parcellations:
     anatomical:
+      ROI: [[],['VIS,SS']] #FRP-R,MOp-R'],["VIS,SS"]]
     #SVD:
     #ICA:
       #n_comps: [64]
-    LocaNMF:
+    #LocaNMF:
 
   selected_trials:
     - All
@@ -69,14 +70,15 @@ branch_opts:
   features:
     mean:
       max_components : [64]
-    #covariance:
-      #max_components : [64]
-    moup:
-      timelags: [3]
+    covariance:
       max_components : [64]
-    #autocovariance:
-    #  timelags: [[0],[1]]
+    #moup:
+    #  timelags: [1,2,3]
     #  max_components : [64]
+
+    autocovariance:
+      timelags: [[0],[1],[2],[3],[4]]
+      max_components : [64]
 
   decoders:
     default:
@@ -175,6 +177,9 @@ phase_conditions:
   stimulus:
     start:  30
     stop:   75
+  delay:
+    start: 75
+    stop: 83
 
 different_config_inputs: 1
 
