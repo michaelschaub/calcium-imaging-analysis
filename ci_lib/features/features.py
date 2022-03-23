@@ -406,24 +406,23 @@ def calc_corrs(covs):
 class Correlations(Features):
     _type = Feature_Type.UNDIRECTED
 
-    def __init__(self, data, feature, means, covs, file=None):
+    def __init__(self, data, feature,  covs, file=None):
         self.data = data
         self._feature = feature
-        self._means = means
         self._covs = covs
         self._savefile = file
 
     def create(data, means=None, covs=None, max_comps=None, logger=LOGGER):
-        if means is None:
-            means = calc_means(data.temporals[:, :, :max_comps])
-        elif isinstance(means, Means):
-            means = means._feature
         if covs is None:
+            if means is None:
+                means = calc_means(data.temporals[:, :, :max_comps])
+            elif isinstance(means, Means):
+                means = means._feature
             covs = calc_covs(data.temporals[:, :, :max_comps], means)
         elif isinstance(covs, Covariances):
             covs = np.copy(covs._feature)
         feature = calc_corrs(covs)
-        feat = Correlations(data, feature, means, covs )
+        feat = Correlations(data, feature, covs )
         return feat
 
     def flatten(self, feat=None):
@@ -435,7 +434,6 @@ class Correlations(Features):
         '''
         '''
         h5_file = save_h5( self, file, {"feature" : self._feature,
-                                        "means" : self._means,
                                         "covs" : self._covs } )
         h5_file.attrs["data_hash"] = self._data_hash.hex()
         if self._data.savefile is None:
@@ -452,12 +450,12 @@ class Correlations(Features):
         if try_loaded and feature_hash is not None and feature_hash in Features.LOADED_FEATURES:
             feat = Features.LOADED_FEATURES[feature_hash]
         else:
-            h5_file, feature, means, covs = load_h5( file, labels=["feature","means","covs"])
+            h5_file, feature, covs = load_h5( file, labels=["feature","covs"])
             if try_loaded and h5_file.attrs["data_hash"] in Data.LOADED_DATA:
                 data = Data.LOADED_DATA[h5_file.attrs["data_hash"]]
             elif data_file is None:
                 data_file = h5_file.attrs["data_file"]
-            feat = Class(data_file, feature, means, covs, file)
+            feat = Class(data_file, feature, covs, file)
             feat.data_hash = bytes.fromhex(h5_file.attrs["data_hash"])
             Features.LOADED_FEATURES[feat.hash.digest()] = feat
         return feat
@@ -549,6 +547,83 @@ class AutoCovariances(Features):
             elif data_file is None:
                 data_file = h5_file.attrs["data_file"]
             feat = Class(data_file, feature, means, covs, file)
+            feat.data_hash = bytes.fromhex(h5_file.attrs["data_hash"])
+            Features.LOADED_FEATURES[feat.hash.digest()] = feat
+        return feat
+
+    @property
+    def ncomponents(self):
+        return self._feature.shape[-1]
+
+
+def calc_acorrs(acovs):
+    var = np.diagonal(acovs[:,0,:,:], axis1=1, axis2=2)
+    sig = np.sqrt(var)
+    return (acovs / sig[:,None,:,None]) / sig[:,None,None,:]
+
+class AutoCorrelations(Features):
+    _type = Feature_Type.UNDIRECTED
+
+    def __init__(self, data, feature, acovs, file=None):
+        self.data = data
+        self._feature = feature
+        self._acovs = acovs
+        self._savefile = file
+
+    def create(data, means=None, covs=None, acovs=None, max_comps=None, max_time_lag=None, time_lag_range=None, label = None, logger=LOGGER):
+        if max_time_lag is None or max_time_lag >= data.temporals.shape[1]:
+            max_time_lag = DEFAULT_TIMELAG
+
+        if time_lag_range is None or np.amax(time_lag_range) >= data.temporals.shape[1]:
+            time_lag_range = range(1, max_time_lag + 1)
+
+        if acovs is None:
+            if covs is None:
+                if means is None:
+                    means = calc_means(data.temporals[:, :, :max_comps])
+                elif isinstance(means, Means):
+                    means = means._feature
+                covs = calc_covs(data.temporals[:, :, :max_comps], means)
+            elif isinstance(covs, Covariances):
+                covs = np.copy(covs._feature)
+            acovs = calc_acovs(data.temporals[:, :, :max_comps], means, covs, time_lag_range, label)
+        elif isinstance(acovs, AutoCovariances):
+            acovs = np.copy(acovs._feature)
+        feature = calc_acorrs(acovs)
+        feat = AutoCorrelations(data, feature, acovs)
+        return feat
+
+    def flatten(self, feat=None):
+        if feat is None:
+            feat = self._feature
+        return np.concatenate((flat_covs(feat[:, 0],diagonal=False), feat[:, 1:].reshape((feat.shape[0], -1))), axis=1)
+
+    def save(self, file, data_file=None):
+        '''
+        '''
+        h5_file = save_h5( self, file, {"feature" : self._feature,
+                                        "acovs" : self._acovs } )
+        h5_file.attrs["data_hash"] = self._data_hash.hex()
+        if self._data.savefile is None:
+            if data_file is None:
+                path = pathlib.Path(file)
+                data_file = path.parent / f"data.{path.stem}{path.suffix}"
+            self._data.save(data_file)
+        assert (self._data.savefile is not None), "Failure in saving underlaying data object!"
+        h5_file.attrs["data_file"] = str(self._data.savefile)
+        self._savefile = file
+
+    @classmethod
+    def load(Class, file, data_file=None, feature_hash=None, try_loaded=False):
+        if try_loaded and feature_hash is not None and feature_hash in Features.LOADED_FEATURES:
+            feat = Features.LOADED_FEATURES[feature_hash]
+        else:
+            h5_file, feature, acovs = load_h5( file, labels=["feature","acovs"])
+            if try_loaded and h5_file.attrs["data_hash"] in Data.LOADED_DATA:
+                data = Data.LOADED_DATA[h5_file.attrs["data_hash"]]
+            elif data_file is None:
+                data_file = h5_file.attrs["data_file"]
+            feat = Class(data_file, feature, acovs, file)
             feat.data_hash = bytes.fromhex(h5_file.attrs["data_hash"])
             Features.LOADED_FEATURES[feat.hash.digest()] = feat
         return feat
