@@ -18,12 +18,10 @@ def calc_acovs(temps, means, covs, n_tau_range, label):
 
 
     for i,i_tau in np.array(list(enumerate(n_taus)))[n_taus!=0]: #range(1, n_tau + 1):
-        cov_m[:, i, :, :] = np.tensordot( temps[:, 0:n_frames - i_tau], temps[:, i_tau:n_frames],
-                                            axes=(1, 1)) / float(n_frames - i_tau)
-        #for trial in range(trials):
-            #cov_m[trial, i, :, :] = np.tensordot(temps[trial, 0:n_frames - i_tau],
-                                                     #temps[trial, i_tau:n_frames],
-                                                     #axes=(0, 0)) / float(n_frames - i_tau)
+        for trial in range(trials):
+            cov_m[trial, i, :, :] = np.tensordot(temps[trial, 0:n_frames - i_tau],
+                                                     temps[trial, i_tau:n_frames],
+                                                     axes=(0, 0)) / float(n_frames - i_tau)
     return cov_m
 
 
