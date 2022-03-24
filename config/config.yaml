@@ -32,7 +32,7 @@ branch_opts:
 
   parcellations:
     anatomical:
-      ROI: [[],['VIS,SS']] #FRP-R,MOp-R'],["VIS,SS"]]
+      ROI: [[]] #,['VIS,SS']] #FRP-R,MOp-R'],["VIS,SS"]]
     #SVD:
     #ICA:
       #n_comps: [64]
@@ -89,10 +89,9 @@ branch_opts:
     RF:
   rfe:
     selected_features_n:
-      - 5
-      #- 10
-      #- 15
-      #- 20
+      - 202
+      - 403
+      - 806
 
 static_params:
   parcellations:
