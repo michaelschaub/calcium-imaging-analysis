@@ -32,32 +32,53 @@ branch_opts:
 
   parcellations:
     anatomical:
-    SVD:
+      ROI: [[],['VIS,SS']] #FRP-R,MOp-R'],["VIS,SS"]]
+    #SVD:
     #ICA:
       #n_comps: [64]
     #LocaNMF:
 
   selected_trials:
     - All
+
   conditions:
-    #null
-    left_response:
-      responses: left
-    right_response:
-      responses: right
-    no_response:
-      responses: no
+    default:
+      phase: stimulus
+      n_targets: all
+      n_distractors: none
+      auto_reward: no
+      both_spouts: yes
+    left_visual:
+      sides: left
+      modalities: visual
+    right_visual:
+      sides: right
+      modalities: visual
+    left_tactile:
+      sides: left
+      modalities: tactile
+    right_tactile:
+      sides: right
+      modalities: tactile
+    left_vistact:
+      sides: left
+      modalities: vistact
+    right_vistact:
+      sides: right
+      modalities: vistact
 
   features:
-    mean:
+    #mean:
+    #  max_components : [64]
     #covariance:
-    #correlation:
-    moup:
-      timelags: [3]
+    #  max_components : [64]
+    #moup:
+    #  timelags: [1,2,3]
+    #  max_components : [64]
+
     autocovariance:
-      timelags: [[0],[1],[2],[3]]
-    autocorrelation:
-      timelags: [[0],[1],[2],[3]]
+      timelags: [[1]] #,[2],[3],[4]]
+      max_components : [64]
 
   decoders:
     default:
@@ -96,6 +117,13 @@ static_params:
     #LDA:
     #RF:
 
+#Outdated?
+parcellation_opts:
+  n: 64
+  paths:
+    anatomical: resources/meta/anatomical.mat
+######
+
 
 paths:
   parcellations:
@@ -104,17 +132,6 @@ paths:
       atlas: resources/meta/anatomical.mat
     LocaNMF:
       atlas: resources/meta/anatomical.mat
-
-
-#Alternative manual conditions should be supported, currently having only left and right with unique modalities not possible e.g.
-# something like (or with strings and we put a corresponding dict in utils to resolve the actual values)
-# conditions:
-#   condition1:
-#     target_side_left:0
-#     modality: 1
-#   condition2:
-#     target_side_left:1
-#     modality: 0
 
 trial_conditions:
   sides:
@@ -134,6 +151,24 @@ trial_conditions:
       left: 1
       right: 0
       no: -1
+  n_targets:
+    column: n_targets
+    conds:
+      all: 6
+  n_distractors:
+    column: n_distractors
+    conds:
+      none: 0
+  auto_reward:
+    column: auto_reward
+    conds:
+      no: 0
+      yes: 1
+  both_spouts:
+    column: both_spouts
+    conds:
+      no: 0
+      yes: 1
 
 phase_conditions:
   pretrial:
@@ -142,6 +177,9 @@ phase_conditions:
   stimulus:
     start:  30
     stop:   75
+  delay:
+    start: 75
+    stop: 83
 
 different_config_inputs: 1
 

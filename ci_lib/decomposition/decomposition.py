@@ -3,12 +3,40 @@ import scipy.io
 import numpy as np
 from sklearn.decomposition import FastICA
 
-def anatomical_parcellation(DecompDataObject, filter_labels=None, atlas_path=None):
+import logging
+LOGGER = logging.getLogger(__name__)
+
+def anatomical_parcellation(DecompDataObject, filter_labels=None, atlas_path=None, logger=LOGGER, ROI=[]):
     ### Loading meta data for parcellation, masks and labels for each area
     if atlas_path is None: # Fallback
         atlas_path = Path(__file__).parent.parent.parent/"resources"/"meta"/"anatomical.mat"
     spatials = np.asarray(scipy.io.loadmat(atlas_path ,simplify_cells=True)['areaMasks'], dtype='bool')
     labels = np.asarray(scipy.io.loadmat(atlas_path ,simplify_cells=True) ['areaLabels_wSide'],dtype=str)
+
+    #To load only ROI from of anatomical atlas
+    if ROI != [] and ROI !='':
+        if isinstance(ROI,str):
+            ROI = ROI.split(',')
+        else:
+            ROI = ROI[0].split(',')
+
+        for i,region in enumerate(ROI):
+            if "-R" in ROI[i] or "-L" in ROI[i]:
+                ROI[i]= ROI[i].replace("-R","ᴿ")
+                ROI[i]= ROI[i].replace("-L","ᴸ")
+            #else:
+            #    ROI[i]= ROI[i]+"ᴿ"
+            #    np.insert(ROI,i,ROI[i]+"ᴸ")
+
+        #print([region for region in ROI if region in labels])
+        ind = [i for region in ROI for i, label in enumerate(labels) if region in label]
+
+        #iter=[(spatials[i],region) for i,region in enumerate(labels) if region in ROI]
+        if ind!=[]:
+            spatials, labels = spatials[ind,:,:],labels[ind]
+        else:
+            logger.warn("No ROI matched Atlas from "+",".join[ROI])
+
 
     #Filter according to labels
     #if filter_labels is not None:
@@ -31,7 +59,7 @@ def anatomical_parcellation(DecompDataObject, filter_labels=None, atlas_path=Non
 
     return DecompDataObject
 
-def fastICA(DecompDataObject, n_comps):
+def fastICA(DecompDataObject, n_comps, logger=LOGGER):
     #Eventually add mask?
 
     ica = FastICA(n_components=n_comps,

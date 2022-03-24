@@ -14,11 +14,11 @@ try:
 
     import shutil
 
-    if snakemake.wildcards['filter'] == 'All':
-        shutil.copyfile( snakemake.input[0], snakemake.output[0] )
+    if snakemake.wildcards['trials'] == 'All':
+        shutil.copyfile( snakemake.input[0], snakemake.output[0])
     else:
-        raise ValueError(f"Filter f{snakemake.wildcards['filter']} not recognized")
-    logger.info(f"Applied filter {snakemake.wildcards['filter']}")
+        raise ValueError(f"Filter f{snakemake.wildcards['trials']} not recognized")
+    logger.info(f"Applied filter {snakemake.wildcards['trials']}")
 
     snakemake_tools.stop_timer(timer_start, logger=logger)
 except Exception:

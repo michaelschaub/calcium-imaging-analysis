@@ -160,6 +160,8 @@ def save_h5(data, file, attributes={}, logger=LOGGER ):
     for label, attr in attributes.items():
         if attr is not None:
             h5_file = save_object_h5( h5_file, label, attr)
+            logger.debug(h5_file)
+            logger.debug(h5_file[label].attrs)
             h5_file[label].attrs["hash"] = reproducable_hash(attr).hexdigest()
 
     return h5_file
