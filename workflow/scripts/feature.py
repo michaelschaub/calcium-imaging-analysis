@@ -26,8 +26,8 @@ try:
             "covariance"        : (lambda p : {}),
             "correlation"        : (lambda p : {}),
             # convert parameter "max_timelag" to range up to that timelag, if "max_timelag" does not exist, pass "timelags" (iterable)
-            "autocovariance"    : (lambda p : { "time_lag_range" : range(1,p["max_timelag"]+1) if "max_timelag" in p else p["timelags"] }),
-            "autocorrelation"    : (lambda p : { "time_lag_range" : range(1,p["max_timelag"]+1) if "max_timelag" in p else p["timelags"] }),
+            "autocovariance"    : (lambda p : { "timelags" : range(1,p["max_timelag"]+1) if "max_timelag" in p else p["timelags"] }),
+            "autocorrelation"    : (lambda p : { "timelags" : range(1,p["max_timelag"]+1) if "max_timelag" in p else p["timelags"] }),
             # no conversion needed for Moup
             "moup"              : (lambda p : {"timelag": p["timelags"]})}
 
@@ -37,7 +37,7 @@ try:
 
     max_comps = params["max_components"] if "max_components" in params else None
     feat = feature_dict[feature].create(data, max_comps=max_comps, **param_dict[feature](params))
-
+    logger.debug(f"feature shape {feat._feature.shape}")
 
     feat.save(snakemake.output[0])
 

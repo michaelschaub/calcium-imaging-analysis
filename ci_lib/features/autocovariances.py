@@ -9,18 +9,21 @@ from .covariances import Covariances, calc_covs, flat_covs
 
 
 def calc_acovs(temps, means, covs, n_tau_range, label):
+    n_taus = np.array(n_tau_range)
     temps = temps - means[:, None, :]
     trials, n_frames, comps = temps.shape
-    cov_m = np.zeros([trials, len(n_tau_range)+1, comps, comps])
+    cov_m = np.empty([trials, len(n_tau_range), comps, comps])
 
-    cov_m[:, 0] = covs
+    cov_m[:, np.where(n_taus==0)[0],:,:] = covs[:,None,:,:]
 
-    for trial in range(trials):
 
-        for i,i_tau in enumerate(n_tau_range,1): #range(1, n_tau + 1):
-            cov_m[trial, i, :, :] = np.tensordot(temps[trial, 0:n_frames - i_tau],
-                                                     temps[trial, i_tau:n_frames],
-                                                     axes=(0, 0)) / float(n_frames - i_tau)
+    for i,i_tau in np.array(list(enumerate(n_taus)))[n_taus!=0]: #range(1, n_tau + 1):
+        cov_m[:, i, :, :] = np.tensordot( temps[:, 0:n_frames - i_tau], temps[:, i_tau:n_frames],
+                                            axes=(1, 1)) / float(n_frames - i_tau)
+        #for trial in range(trials):
+            #cov_m[trial, i, :, :] = np.tensordot(temps[trial, 0:n_frames - i_tau],
+                                                     #temps[trial, i_tau:n_frames],
+                                                     #axes=(0, 0)) / float(n_frames - i_tau)
     return cov_m
 
 
@@ -36,7 +39,14 @@ class AutoCovariances(Features):
         self._savefile = file
         self._include_diagonal = include_diagonal
 
-    def create(data, means=None, covs=None, max_comps=None, max_time_lag=None, time_lag_range=None, label = None, include_diagonal=True, logger=LOGGER):
+    def create(data, means=None, covs=None, max_comps=None, max_time_lag=None, timelags=None, label = None, include_diagonal=True, logger=LOGGER):
+
+        if max_time_lag is None or max_time_lag >= data.temporals.shape[1]:
+            max_time_lag = DEFAULT_TIMELAG
+
+        if timelags is None or np.amax(timelags) >= data.temporals.shape[1]:
+            timelags = range(0, max_time_lag + 1)
+
         if means is None:
             means = calc_means(data.temporals[:, :, :max_comps])
         elif isinstance(means, Means):
@@ -46,13 +56,7 @@ class AutoCovariances(Features):
         elif isinstance(covs, Covariances):
             covs = np.copy(covs._feature)
 
-        if max_time_lag is None or max_time_lag >= data.temporals.shape[1]:
-            max_time_lag = DEFAULT_TIMELAG
-
-        if time_lag_range is None or np.amax(time_lag_range) >= data.temporals.shape[1]:
-            time_lag_range = range(1, max_time_lag + 1)
-
-        feature = calc_acovs(data.temporals[:, :, :max_comps], means, covs, time_lag_range, label)
+        feature = calc_acovs(data.temporals[:, :, :max_comps], means, covs, timelags, label)
         feat = AutoCovariances(data, feature, include_diagonal= include_diagonal)
         return feat
 
