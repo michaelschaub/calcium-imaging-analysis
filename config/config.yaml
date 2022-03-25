@@ -16,6 +16,10 @@ branch_opts:
   mouses:
     GN06:
       - 2021-01-20_10-15-16
+      - 2021-03-26_10-53-05
+      - 2021-03-29_11-51-27
+      #- 2021-04-01_13-44-22
+
     #GN08:
     #  - 2021-03-26_13-37-18
     #  - 2021-03-29_13-37-29
@@ -72,13 +76,13 @@ branch_opts:
     #  max_components : [64]
     #covariance:
     #  max_components : [64]
-    #moup:
-    #  timelags: [1,2,3]
-    #  max_components : [64]
-
-    autocovariance:
-      timelags: [[1]] #,[2],[3],[4]]
+    moup:
+      timelags: [3]
       max_components : [64]
+
+    #autocovariance:
+    #  timelags: [[3]] #,[2],[3],[4]]
+    #  max_components : [64]
 
   decoders:
     default:
@@ -89,9 +93,10 @@ branch_opts:
     RF:
   rfe:
     selected_features_n:
-      - 202
-      - 403
-      - 806
+      #- full
+      - 819 #0.2
+      - 410
+      - 205
 
 static_params:
   parcellations:

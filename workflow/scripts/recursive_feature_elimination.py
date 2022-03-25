@@ -52,11 +52,11 @@ try:
     cv_split = cv.split(data, labels)
 
     # Build RFE pipeline
-    c_MLR = RFE_pipeline([('std_scal',skprp.StandardScaler()),('clf',skllm.LogisticRegression(C=0.00001, penalty='l2', multi_class='multinomial', solver='lbfgs', max_iter=500))])
+    c_MLR = RFE_pipeline([('std_scal',skprp.StandardScaler()),('clf',skllm.LogisticRegression(C=0.0001, penalty='l2', multi_class='multinomial', solver='lbfgs', max_iter=500))])
 
     _ , feats = data.shape
     if(rfe_n=="full"):
-        rfe_n = feats
+        rfe_n = feats-1
     if(int(rfe_n)>int(cond_feats[0].ncomponents) and feat_type == Feature_Type.NODE):
         rfe_n = feats
 
@@ -69,9 +69,9 @@ try:
     ### Train & Eval
     for i, (train_i, test_i) in enumerate(cv_split):
 
-        RFE.fit(data[train_i, :], labels[train_i])
+        RFE = RFE.fit(data[train_i, :], labels[train_i])
         ranking[i,:] = RFE.ranking_
-        best_feat_iter = np.argsort(ranking[i])[:int(rfe_n)]
+        best_feat_iter = np.sort(np.argsort(ranking[i])[:int(rfe_n)])
         perf[i] = RFE.estimator_.score(data[test_i, :][:,best_feat_iter], labels[test_i])
         decoders.append(RFE.estimator_)
 
