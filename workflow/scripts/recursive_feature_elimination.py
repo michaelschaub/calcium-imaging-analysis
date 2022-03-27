@@ -37,6 +37,7 @@ try:
 
     feat_type = cond_feats[0].type
     rfe_n = snakemake.wildcards["rfe_n"]
+
     n_rep = 1 #snakemake.params['reps'] #TODO
 
     ### Scale & Split
@@ -55,9 +56,10 @@ try:
     c_MLR = RFE_pipeline([('std_scal',skprp.StandardScaler()),('clf',skllm.LogisticRegression(C=0.0001, penalty='l2', multi_class='multinomial', solver='lbfgs', max_iter=500))])
 
     _ , feats = data.shape
-    if(rfe_n=="full"):
-        rfe_n = feats-1
-    if(int(rfe_n)>int(cond_feats[0].ncomponents) and feat_type == Feature_Type.NODE):
+
+    if(float(rfe_n)<=1):
+        rfe_n= int(np.round(feats*float(rfe_n)))
+    elif(int(rfe_n)>int(cond_feats[0].ncomponents) and feat_type == Feature_Type.NODE):
         rfe_n = feats
 
     RFE = skfs.RFE(c_MLR,n_features_to_select=int(rfe_n))
