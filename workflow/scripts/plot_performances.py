@@ -10,6 +10,9 @@ sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 import ci_lib.plotting as plots
 from ci_lib.utils import snakemake_tools
 
+import re
+
+
 logger = snakemake_tools.start_log(snakemake)
 try:
     timer_start = snakemake_tools.start_timer()
@@ -62,7 +65,7 @@ try:
 
     violin_plts= np.empty([len(features),len(decoders)],dtype='object')
     for f, feature in enumerate(features):
-        if (f % 2) == 0:
+        if (f % 2) == 1:
             plt.axvspan(f-0.5, f+0.5, facecolor='0.2', alpha=0.05, zorder=-100)
 
         for d,decoder in enumerate(decoders):
