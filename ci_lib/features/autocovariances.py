@@ -32,9 +32,7 @@ class AutoCovariances(Features):
     _type=Feature_Type.DIRECTED
 
     def __init__(self, data, feature, file=None, include_diagonal=True):
-        self.data = data
-        self._feature = feature
-        self._savefile = file
+        super().__init__(data=data, feature=feature, file=file)
         self._include_diagonal = include_diagonal
 
     def create(data, means=None, covs=None, max_comps=None, max_time_lag=None, timelags=None, label = None, include_diagonal=True, logger=LOGGER):

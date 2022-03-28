@@ -80,10 +80,8 @@ class Moup(Features):
         return reproducable_hash(tuple( getattr(mou,attr)
                                     for attr in Moup.mou_attrs if attr != "d_fit" for mou in self._mou_ests))
 
-    # may need workaround, _feature should be constant and as close to instant access as possible
-    # also maybe numpy array
     @property
-    def _feature(self):
+    def feature(self):
         return np.asarray([[mou_est.get_J()] for mou_est in self._mou_ests])  # ,other params]
 
     @property

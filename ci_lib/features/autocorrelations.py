@@ -17,11 +17,6 @@ def calc_acorrs(covs, acovs):
 class AutoCorrelations(Features):
     _type = Feature_Type.UNDIRECTED
 
-    def __init__(self, data, feature, file=None):
-        self.data = data
-        self._feature = feature
-        self._savefile = file
-
     def create(data, means=None, covs=None, acovs=None, max_comps=None, max_time_lag=None, timelags=None, label = None, logger=LOGGER):
         if covs is None:
             covs = Covariances.create(data, means, max_comps, True, logger)._feature

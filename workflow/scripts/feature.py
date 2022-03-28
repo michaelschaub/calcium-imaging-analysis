@@ -37,7 +37,7 @@ try:
 
     max_comps = params["max_components"] if "max_components" in params else None
     feat = feature_dict[feature].create(data, max_comps=max_comps, **param_dict[feature](params))
-    logger.debug(f"feature shape {feat._feature.shape}")
+    logger.debug(f"feature shape {feat.feature.shape}")
 
     feat.save(snakemake.output[0])
 

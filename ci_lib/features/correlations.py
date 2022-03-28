@@ -16,11 +16,6 @@ def calc_corrs(covs):
 class Correlations(Features):
     _type = Feature_Type.UNDIRECTED
 
-    def __init__(self, data, feature,  file=None):
-        self.data = data
-        self._feature = feature
-        self._savefile = file
-
     def create(data, means=None, covs=None, max_comps=None, logger=LOGGER):
         if covs is None:
             if means is None:
