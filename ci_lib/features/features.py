@@ -30,13 +30,17 @@ class Features:
         '''expand feature into same shape as temporals in Data (for computation)'''
         if data is None:
             data = self.data
-        feats = self._feature
+        feats = self.feature
         feat = np.empty((data.temporals_flat.shape[0], *feats.shape[1:]), dtype=float)
         starts = list(data._starts)
         starts.append(-1)
         for i in range(len(starts) - 1):
             feat[starts[i]:starts[i + 1]] = feats[i]
         return feat
+
+    @property
+    def feature(self):
+        return self._feature
 
     @property
     def mean(self):
@@ -177,7 +181,7 @@ class Raws(Features):
 
 class FeatureMean(Features):
     def create(base, logger=LOGGER):
-        feature = np.mean(base._feature, axis=0).reshape((1, *base._feature.shape[1:]))
+        feature = np.mean(base.feature, axis=0)[None,:].reshape((1, *base.feature.shape[1:]))
         feat = FeatureMean(base.data, feature )
         feat._base_feature = base
         return feat

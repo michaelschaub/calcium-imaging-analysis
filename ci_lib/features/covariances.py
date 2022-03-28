@@ -24,9 +24,7 @@ class Covariances(Features):
     _type = Feature_Type.UNDIRECTED
 
     def __init__(self, data, feature, file=None, include_diagonal=True):
-        self.data = data
-        self._feature = feature
-        self._savefile = file
+        super().__init__(data=data, feature=feature, file=file)
         self._include_diagonal = include_diagonal
 
     def create(data, means=None, max_comps=None, include_diagonal=True, logger=LOGGER):
