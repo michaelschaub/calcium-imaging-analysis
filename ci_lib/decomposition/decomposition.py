@@ -27,9 +27,8 @@ def anatomical_parcellation(DecompDataObject, filter_labels=None, atlas_path=Non
 
     new_temporals = np.tensordot(DecompDataObject.temporals_flat, svd_segment_mean, 1)
     new_spatials = spatials
-    DecompDataObject.update(new_temporals,new_spatials, spatial_labels=labels)
 
-    return DecompDataObject
+    return DecompDataObject.update(new_temporals,new_spatials, spatial_labels=labels)
 
 def fastICA(DecompDataObject, n_comps):
     #Eventually add mask?
@@ -42,6 +41,4 @@ def fastICA(DecompDataObject, n_comps):
     inverse = ica.mixing_.T #    inverse = ica.mixing_
     new_spatials = np.tensordot(inverse, DecompDataObject.spatials, axes=1)
 
-    DecompDataObject.update(new_temporals, new_spatials)
-
-    return DecompDataObject
+    return DecompDataObject.update(new_temporals, new_spatials)
