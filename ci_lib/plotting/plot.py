@@ -5,6 +5,7 @@ import numpy as np
 from ci_lib.features import Feature_Type
 from snakemake.logging import logger
 
+'''
 def construct_rfe_graph(selected_feats, n_nodes, feat_type, labels=None):
     
     if labels is None:
@@ -51,6 +52,7 @@ def construct_rfe_graph(selected_feats, n_nodes, feat_type, labels=None):
         g.remove_nodes_from(remove)
 
     return g
+'''
 
 def colored_violinplot(*args, color=None, facecolor=None, edgecolor=None, **kwargs):
     violin_parts = plt.violinplot(*args, **kwargs)

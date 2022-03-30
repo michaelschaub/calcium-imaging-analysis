@@ -15,7 +15,7 @@ LOGGER = logging.getLogger(__name__)
 #def draw_neural_activity(temps,spatials,plt_title,subfig_titles):
 #    pass
 
-def draw_neural_activity(frames,path,plt_title,subfig_titles=None,overlay=False,logger=LOGGER):
+def draw_neural_activity(frames,path,plt_title,subfig_titles=None,overlay=False,cortex_map=False,logger=LOGGER,vmin=None,vmax=None):
     #Single Frame is wrapped
     if frames.ndim == 2:
         frames = frames[np.newaxis, ...]
@@ -30,6 +30,11 @@ def draw_neural_activity(frames,path,plt_title,subfig_titles=None,overlay=False,
         atlas_path = Path(__file__).parent.parent.parent/"resources"/"meta"/"anatomical.mat"
         edge_map = scipy.io.loadmat(atlas_path ,simplify_cells=True)['edgeMap']
         edge_map_masked =np.ma.masked_where(edge_map < 1, edge_map)
+
+    if cortex_map:
+        atlas_path = Path(__file__).parent.parent.parent/"resources"/"meta"/"anatomical.mat"
+        cortex_map = scipy.io.loadmat(atlas_path ,simplify_cells=True)['cortexMask']
+
 
 
     _ , h, w = frames.shape
@@ -46,7 +51,10 @@ def draw_neural_activity(frames,path,plt_title,subfig_titles=None,overlay=False,
         for i in range(x_dims):
             if j*x_dims + i < len(frames):
                 #frame =  np.tensordot(temps[], spatial, 1) #np.einsum( "n,nij->ij", temps[h*width + w], spatial) #np.tensordot(temps[w + h], spatial, (-1, 0)) #np.dot(spatial,temps[w*height + h]) #
-                im = ax[i, j].imshow(frames[j*x_dims + i])
+                frame = frames[j*x_dims + i]
+                if(cortex_map):
+                    frame[cortex_map[:h,:w]==0] = np.nan
+                im = ax[i, j].imshow(frame,vmin=vmin, vmax=vmax)
                 if overlay:
                     ax[i, j].imshow(edge_map_masked[:h,:w], interpolation='none')
 

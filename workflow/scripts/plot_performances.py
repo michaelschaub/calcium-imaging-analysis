@@ -80,16 +80,16 @@ try:
     #plt.legend( [colors(i/len(decoders)) for i in range(len(decoders))], decoders )
     plt.legend( [ v['bodies'][0] for v in violin_plts[0]], decoders,loc='lower left')
     plt.plot([-.5, len(features)-.5], [1/len(conditions), 1/len(conditions)], '--k')
-    plt.text(len(features)-1,1/len(conditions)+0.01,'random chance',fontsize=7,ha='center')
+    plt.text(len(features)-0.8,1/len(conditions)+0.01,'random chance',fontsize=7,ha='center')
 
     plt.yticks(np.arange(0, 1.1, 0.1))
     plt.ylabel('Accuracy', fontsize=14)
-    plt.xticks(range(len(features)), features,fontsize=8)
+    plt.xticks(range(len(features)), features,fontsize=10)
     plt.xlabel(x_str, fontsize=14)
 
-    ax = plt.gca()
-    ax.set_ylim([0, 1])
-
+    #ax = plt.gca()
+    #ax.set_ylim([0, 1])
+    plt.subplots_adjust(left=0.2)
     plt.savefig( snakemake.output[0] )
 
 

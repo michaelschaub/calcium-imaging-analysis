@@ -234,7 +234,7 @@ def draw_glassbrain(polygons=None,labelset=None,graph=None,bg_img=None,
         graph_renderer.edge_renderer.data_source.add(edges_labels["target"],"target")
 
         #set edge glyphs
-        graph_renderer.edge_renderer.glyph = MultiLine(line_color="#CCCCCC", line_alpha=0.8, line_width=5)
+        graph_renderer.edge_renderer.glyph = MultiLine(line_color="edge_color", line_alpha=0.8, line_width=5)
         graph_renderer.edge_renderer.selection_glyph = MultiLine(line_color=Spectral4[2], line_width=5)
         graph_renderer.edge_renderer.hover_glyph = MultiLine(line_color=Spectral4[1], line_width=5)
 
