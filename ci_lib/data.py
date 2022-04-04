@@ -311,7 +311,10 @@ class DecompData(Data):
                 select = select & any
             else:
                 select = select & (getattr( self._df, attr ) == val)
+        #if(np.any(select)):
         return self[select]
+        #else:
+            #return None
 
     def _op_data(self, a):
         df = self._df

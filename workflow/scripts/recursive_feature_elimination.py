@@ -7,16 +7,18 @@ import sklearn.linear_model as skllm
 import sklearn.preprocessing as skprp
 import sklearn.feature_selection as skfs
 
+import networkx as nx
+
 
 from pathlib import Path
 import sys
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 from ci_lib.utils import snakemake_tools
-from ci_lib.features import Features, Means, Raws, Covariances, AutoCovariances, Moup, Feature_Type
-from ci_lib.plotting import graph_circle_plot, construct_rfe_graph, plot_glassbrain_bokeh
+from ci_lib.features import Features, Means, Raws, Covariances, AutoCovariances, Moup, AutoCorrelations, Feature_Type
+from ci_lib.plotting import graph_circle_plot, plot_glassbrain_bokeh
 from ci_lib import DecompData
-from ci_lib.rfe import RFE_pipeline
+from ci_lib.rfe import RFE_pipeline, construct_rfe_graph
 
 # redirect std_out to log file
 logger = snakemake_tools.start_log(snakemake)
@@ -28,7 +30,7 @@ try:
     ### Load feature for all conditions
     cond_str = snakemake.params['conds']
     feature = snakemake.wildcards["feature"]
-    feature_dict = { "mean" : Means, "raw" : Raws, "covariance" : Covariances, "autocovariance" : AutoCovariances, "moup" :Moup }
+    feature_dict = { "mean" : Means, "raw" : Raws, "covariance" : Covariances, "autocovariance" : AutoCovariances, "moup" :Moup,"autocorrelation" : AutoCorrelations }
     feature_class = feature_dict[snakemake.wildcards["feature"].split("_")[0]]
 
     cond_feats = []
@@ -53,7 +55,7 @@ try:
     cv_split = cv.split(data, labels)
 
     # Build RFE pipeline
-    c_MLR = RFE_pipeline([('std_scal',skprp.StandardScaler()),('clf',skllm.LogisticRegression(C=0.0001, penalty='l2', multi_class='multinomial', solver='lbfgs', max_iter=500))])
+    c_MLR = RFE_pipeline([('std_scal',skprp.StandardScaler()),('clf',skllm.LogisticRegression(C=0.1, penalty='l2', multi_class='multinomial', solver='lbfgs', max_iter=500))])
 
     _ , feats = data.shape
 
