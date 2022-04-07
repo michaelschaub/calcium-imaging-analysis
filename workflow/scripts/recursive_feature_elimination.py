@@ -16,7 +16,7 @@ sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 from ci_lib.utils import snakemake_tools
 from ci_lib.features import Features, Means, Raws, Covariances, AutoCovariances, Moup, AutoCorrelations, Feature_Type
-from ci_lib.plotting import graph_circle_plot, plot_glassbrain_bokeh
+from ci_lib.plotting import graph_circle_plot, plot_glassbrain_bokeh, graph_sping_plot
 from ci_lib import DecompData
 from ci_lib.rfe import RFE_pipeline, construct_rfe_graph
 
@@ -55,7 +55,7 @@ try:
     cv_split = cv.split(data, labels)
 
     # Build RFE pipeline
-    c_MLR = RFE_pipeline([('std_scal',skprp.StandardScaler()),('clf',skllm.LogisticRegression(C=0.1, penalty='l2', multi_class='multinomial', solver='lbfgs', max_iter=500))])
+    c_MLR = RFE_pipeline([('std_scal',skprp.StandardScaler()),('clf',skllm.LogisticRegression(C=1.0, penalty='l2', multi_class='multinomial', solver='lbfgs', max_iter=500))])
 
     _ , feats = data.shape
 
@@ -64,6 +64,7 @@ try:
     elif(int(rfe_n)>int(cond_feats[0].ncomponents) and feat_type == Feature_Type.NODE):
         rfe_n = feats
 
+    print("rfe_n",rfe_n)
     RFE = skfs.RFE(c_MLR,n_features_to_select=int(rfe_n))
 
     ranking = np.zeros([n_rep,feats],dtype=np.int32)
@@ -80,6 +81,9 @@ try:
         decoders.append(RFE.estimator_)
 
     list_best_feat = np.argsort(ranking.mean(0))[:int(rfe_n)]
+
+    logger.info("perf")
+    logger.info(perf)
 
     with open(snakemake.output["perf"], 'wb') as f:
         pickle.dump(perf, f)

@@ -156,3 +156,23 @@ def graph_circle_plot(list_best_feat, n_nodes, title, feature_type, save_path=Fa
         plt.savefig(save_path)
 
     return g
+
+
+
+def graph_sping_plot(g, title='', node_labels= None, save_path=False):
+
+    if node_labels is None:
+        labels = {i:i for i in g.nodes}
+    else:
+        labels = {i:node_labels[i] for i in g.nodes}
+
+    # plot RFE support network
+    plt.figure(figsize=[10,10])
+    plt.axes([0.05,0.05,0.95,0.95])
+    plt.axis('off')
+    plt.title=title
+    nx.draw_spring(g,labels=labels,node_size=900)
+    if (not save_path):
+        plt.show()
+    else:
+        plt.savefig(save_path)

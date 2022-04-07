@@ -167,9 +167,9 @@ def draw_glassbrain(polygons=None,labelset=None,graph=None,bg_img=None,
 
 
         #Set node glyphs
-        graph_renderer.node_renderer.glyph = Circle(size=20, fill_color="color", fill_alpha="alpha_nodes", tags=["node"], name = "node") #Patch
-        graph_renderer.node_renderer.selection_glyph = Circle(size=20, fill_color=Spectral4[2], tags=["node"],name = "node")
-        graph_renderer.node_renderer.hover_glyph = Circle(size=20, fill_color=Spectral4[1], tags=["node"],name = "node")
+        graph_renderer.node_renderer.glyph = Circle(size="node_size" , fill_color="color", fill_alpha="alpha_nodes", tags=["node"], name = "node") #Patch
+        graph_renderer.node_renderer.selection_glyph = Circle(size="node_size", fill_color=Spectral4[2], tags=["node"],name = "node")
+        graph_renderer.node_renderer.hover_glyph = Circle(size="node_size", fill_color=Spectral4[1], tags=["node"],name = "node")
 
 
         #Background Spatials
@@ -234,6 +234,7 @@ def draw_glassbrain(polygons=None,labelset=None,graph=None,bg_img=None,
         graph_renderer.edge_renderer.data_source.add(edges_labels["target"],"target")
 
         #set edge glyphs
+        #line_cap = round , line_join  = "round"
         graph_renderer.edge_renderer.glyph = MultiLine(line_color="edge_color", line_alpha="edge_alpha", line_width=5)
         graph_renderer.edge_renderer.selection_glyph = MultiLine(line_color=Spectral4[2], line_width=5)
         graph_renderer.edge_renderer.hover_glyph = MultiLine(line_color=Spectral4[1], line_width=5)
