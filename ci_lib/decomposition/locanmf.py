@@ -136,6 +136,5 @@ def locaNMF(data, atlas_path, logger=LOGGER,
     logger.debug("shape new_labels {}".format(new_labels.shape))
     logger.debug("new_labels {}".format(new_labels))
 
-    data.update(new_temporals, new_spatials, spatial_labels=new_labels)
 
-    return data
+    return data.update(new_temporals, new_spatials, spatial_labels=new_labels)

@@ -19,7 +19,7 @@ from ci_lib.features import Feature_Type
 #Needs to be restructured badly
 def plot_glassbrain_bokeh(graph=None, img=None,meta_file=None,
                         components_spatials=None,components_labels=None,components_pos=None,
-                        title='',save_path=None):
+                        title='',save_path=None,small_file=False):
 
 
 
@@ -48,7 +48,7 @@ def plot_glassbrain_bokeh(graph=None, img=None,meta_file=None,
     y_range, x_range= tuple(np.maximum(poly_bbox, img_bbox,dtype=int))
 
     #Plot Glassbrain
-    draw_glassbrain(anatomicalPolygons,labelset, graph, img, components_pos=components_pos, components_labels=components_labels,components_spatials=components_spatials, x_range=x_range, y_range=y_range, scale=2,title=title, save_path=save_path)
+    draw_glassbrain(anatomicalPolygons,labelset, graph, img, components_pos=components_pos, components_labels=components_labels,components_spatials=components_spatials, x_range=x_range, y_range=y_range, scale=2,title=title, save_path=save_path, small_file=small_file)
 
 # Helper Functions
 def calc_center(spatials):
@@ -85,7 +85,7 @@ def create_labelset(centers, labels):
 def draw_glassbrain(polygons=None,labelset=None,graph=None,bg_img=None,
                     components_pos=None, components_labels=None, components_spatials=None,
                     x_range=None,y_range=None,scale=1,
-                    title='',save_path=None):
+                    title='',save_path=None,small_file=False):
 
     width, height = x_range * scale,y_range * scale
     fig = figure(title = title,plot_width=width, plot_height=height ,
@@ -167,9 +167,9 @@ def draw_glassbrain(polygons=None,labelset=None,graph=None,bg_img=None,
 
 
         #Set node glyphs
-        graph_renderer.node_renderer.glyph = Circle(size=20, fill_color="color", fill_alpha="alpha_nodes", tags=["node"], name = "node") #Patch
-        graph_renderer.node_renderer.selection_glyph = Circle(size=20, fill_color=Spectral4[2], tags=["node"],name = "node")
-        graph_renderer.node_renderer.hover_glyph = Circle(size=20, fill_color=Spectral4[1], tags=["node"],name = "node")
+        graph_renderer.node_renderer.glyph = Circle(size="node_size" , fill_color="color", fill_alpha="alpha_nodes", tags=["node"], name = "node") #Patch
+        graph_renderer.node_renderer.selection_glyph = Circle(size="node_size", fill_color=Spectral4[2], tags=["node"],name = "node")
+        graph_renderer.node_renderer.hover_glyph = Circle(size="node_size", fill_color=Spectral4[1], tags=["node"],name = "node")
 
 
         #Background Spatials
@@ -179,42 +179,42 @@ def draw_glassbrain(polygons=None,labelset=None,graph=None,bg_img=None,
         _ , img_h, img_w = components_spatials.shape
         #bg_fig = fig.image(image='image',source=bg_source,x=0,y=img_h,dw=img_w,dh=img_h,color_mapper=colors)
 
-        bg_imgs = []
+        if not small_file:
+            bg_imgs = []
+            for i,spats in enumerate(components_spatials[nodes]):
+                bg_imgs.append(fig.image(image=[np.flipud(components_spatials[nodes][i])],x=0,y=img_h,dw=img_w,dh=img_h,color_mapper=colors))
+                bg_imgs[i].visible = False
 
-        for i,spats in enumerate(components_spatials[nodes]):
-            bg_imgs.append(fig.image(image=[np.flipud(components_spatials[nodes][i])],x=0,y=img_h,dw=img_w,dh=img_h,color_mapper=colors))
-            bg_imgs[i].visible = False
-
-        change_bg_callback = CustomJS(args={'bg_imgs':bg_imgs,'source':bg_source,'spatials':components_spatials[nodes]}, code="""
-            
-            //var img = source.data['image'][0];
-            //img = spatials[index];
-            //console.log(index,img)
-            //source.change.emit();
-            //bg_img.visible = false
-            //console.log("this",bg_imgs)
-            
-            bg_imgs.forEach(img => img.visible=false)
-            
-            
-            
-            if(cb_data.source.data.alpha_nodes){ //should be cb_obj.source.name or cd_data.name == "Node" , but it doesn't work
-                var index = cb_data.source.selected.indices[0];
-                console.log(cb_obj)
-            console.log(cb_data)
-                if(index < bg_imgs.length){
-                    bg_imgs[index].visible=true
+            change_bg_callback = CustomJS(args={'bg_imgs':bg_imgs,'source':bg_source,'spatials':components_spatials[nodes]}, code="""
+                
+                //var img = source.data['image'][0];
+                //img = spatials[index];
+                //console.log(index,img)
+                //source.change.emit();
+                //bg_img.visible = false
+                //console.log("this",bg_imgs)
+                
+                bg_imgs.forEach(img => img.visible=false)
+                
+                
+                
+                if(cb_data.source.data.alpha_nodes){ //should be cb_obj.source.name or cd_data.name == "Node" , but it doesn't work
+                    var index = cb_data.source.selected.indices[0];
+                    console.log(cb_obj)
+                console.log(cb_data)
+                    if(index < bg_imgs.length){
+                        bg_imgs[index].visible=true
+                    }
                 }
-            }
-            
-        """)
+                
+            """)
 
 
-        '''            
-            '''
+            '''            
+                '''
 
-        #fig.add_tools(TapTool(renderers=[graph_renderer.node_renderer],callback=change_bg_callback))
-        fig.add_tools(TapTool(callback=change_bg_callback))
+            #fig.add_tools(TapTool(renderers=[graph_renderer.node_renderer],callback=change_bg_callback))
+            fig.add_tools(TapTool(callback=change_bg_callback))
 
         ''''''
         #def callback(attr,old,new):
@@ -234,7 +234,8 @@ def draw_glassbrain(polygons=None,labelset=None,graph=None,bg_img=None,
         graph_renderer.edge_renderer.data_source.add(edges_labels["target"],"target")
 
         #set edge glyphs
-        graph_renderer.edge_renderer.glyph = MultiLine(line_color="#CCCCCC", line_alpha=0.8, line_width=5)
+        #line_cap = round , line_join  = "round"
+        graph_renderer.edge_renderer.glyph = MultiLine(line_color="edge_color", line_alpha="edge_alpha", line_width=5)
         graph_renderer.edge_renderer.selection_glyph = MultiLine(line_color=Spectral4[2], line_width=5)
         graph_renderer.edge_renderer.hover_glyph = MultiLine(line_color=Spectral4[1], line_width=5)
 

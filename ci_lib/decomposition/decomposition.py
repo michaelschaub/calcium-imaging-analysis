@@ -13,6 +13,7 @@ def anatomical_parcellation(DecompDataObject, filter_labels=None, atlas_path=Non
     spatials = np.asarray(scipy.io.loadmat(atlas_path ,simplify_cells=True)['areaMasks'], dtype='bool')
     labels = np.asarray(scipy.io.loadmat(atlas_path ,simplify_cells=True) ['areaLabels_wSide'],dtype=str)
 
+
     #To load only ROI from of anatomical atlas
     if ROI != [] and ROI !='':
         if isinstance(ROI,str):
@@ -55,11 +56,10 @@ def anatomical_parcellation(DecompDataObject, filter_labels=None, atlas_path=Non
 
     new_temporals = np.tensordot(DecompDataObject.temporals_flat, svd_segment_mean, 1)
     new_spatials = spatials
-    DecompDataObject.update(new_temporals,new_spatials, spatial_labels=labels)
 
-    return DecompDataObject
+    return DecompDataObject.update(new_temporals,new_spatials, spatial_labels=labels)
 
-def fastICA(DecompDataObject, n_comps, logger=LOGGER):
+def fastICA(DecompDataObject, n_comps):
     #Eventually add mask?
 
     ica = FastICA(n_components=n_comps,
@@ -70,6 +70,4 @@ def fastICA(DecompDataObject, n_comps, logger=LOGGER):
     inverse = ica.mixing_.T #    inverse = ica.mixing_
     new_spatials = np.tensordot(inverse, DecompDataObject.spatials, axes=1)
 
-    DecompDataObject.update(new_temporals, new_spatials)
-
-    return DecompDataObject
+    return DecompDataObject.update(new_temporals, new_spatials)
