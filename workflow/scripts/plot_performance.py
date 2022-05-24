@@ -33,10 +33,12 @@ try:
 
     plt.legend( [ v['bodies'][0] for v in violin_plts], decoders )
     plt.plot([-.5, 1-.5], [1/len(conditions), 1/len(conditions)], '--k') #1 cause we only have 1 feature for now
-    plt.yticks(np.arange(0, 1, 0.1))
+    plt.yticks(np.arange(0, 1.1, 0.1))
     plt.ylabel('Accuracy', fontsize=14)
     plt.xticks(range(1), [snakemake.wildcards["feature"].split('_')[0]])
 
+    ax = plt.gca()
+    ax.set_ylim([0, 1])
 
     plt.savefig( snakemake.output[0] )
 

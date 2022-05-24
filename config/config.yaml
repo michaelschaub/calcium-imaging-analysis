@@ -16,6 +16,10 @@ branch_opts:
   mouses:
     GN06:
       - 2021-01-20_10-15-16
+      - 2021-03-26_10-53-05
+      - 2021-03-29_11-51-27
+      #- 2021-04-01_13-44-22
+
     #GN08:
     #  - 2021-03-26_13-37-18
     #  - 2021-03-29_13-37-29
@@ -32,32 +36,52 @@ branch_opts:
 
   parcellations:
     anatomical:
+      ROI: [[]] #,['VIS,SS']] #FRP-R,MOp-R'],["VIS,SS"]]
     #SVD:
     #ICA:
       #n_comps: [64]
-    LocaNMF:
+    #LocaNMF:
 
   selected_trials:
     - All
+
   conditions:
-    #null
-    left_response:
-      responses: left
-    right_response:
-      responses: right
-    no_response:
-      responses: no
+    default:
+      phase: stimulus
+      n_targets: all
+      n_distractors: none
+      auto_reward: no
+      both_spouts: yes
+    left_visual:
+      sides: left
+      modalities: visual
+    right_visual:
+      sides: right
+      modalities: visual
+    left_tactile:
+      sides: left
+      modalities: tactile
+    right_tactile:
+      sides: right
+      modalities: tactile
+    left_vistact:
+      sides: left
+      modalities: vistact
+    right_vistact:
+      sides: right
+      modalities: vistact
 
   features:
-    mean:
-      max_components : [64]
+    #mean:
+    #  max_components : [64]
     #covariance:
-      #max_components : [64]
+    #  max_components : [64]
     moup:
       timelags: [3]
       max_components : [64]
+
     #autocovariance:
-    #  timelags: [[0],[1]]
+    #  timelags: [[3]] #,[2],[3],[4]]
     #  max_components : [64]
 
   decoders:
@@ -69,10 +93,10 @@ branch_opts:
     RF:
   rfe:
     selected_features_n:
-      - 5
-      #- 10
-      #- 15
-      #- 20
+      #- full
+      - 819 #0.2
+      - 410
+      - 205
 
 static_params:
   parcellations:
@@ -97,6 +121,13 @@ static_params:
     #LDA:
     #RF:
 
+#Outdated?
+parcellation_opts:
+  n: 64
+  paths:
+    anatomical: resources/meta/anatomical.mat
+######
+
 
 paths:
   parcellations:
@@ -105,17 +136,6 @@ paths:
       atlas: resources/meta/anatomical.mat
     LocaNMF:
       atlas: resources/meta/anatomical.mat
-
-
-#Alternative manual conditions should be supported, currently having only left and right with unique modalities not possible e.g.
-# something like (or with strings and we put a corresponding dict in utils to resolve the actual values)
-# conditions:
-#   condition1:
-#     target_side_left:0
-#     modality: 1
-#   condition2:
-#     target_side_left:1
-#     modality: 0
 
 trial_conditions:
   sides:
@@ -135,6 +155,24 @@ trial_conditions:
       left: 1
       right: 0
       no: -1
+  n_targets:
+    column: n_targets
+    conds:
+      all: 6
+  n_distractors:
+    column: n_distractors
+    conds:
+      none: 0
+  auto_reward:
+    column: auto_reward
+    conds:
+      no: 0
+      yes: 1
+  both_spouts:
+    column: both_spouts
+    conds:
+      no: 0
+      yes: 1
 
 phase_conditions:
   pretrial:
@@ -143,6 +181,9 @@ phase_conditions:
   stimulus:
     start:  30
     stop:   75
+  delay:
+    start: 75
+    stop: 83
 
 different_config_inputs: 1
 
