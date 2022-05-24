@@ -18,8 +18,8 @@ branch_opts:
 
   parcellations:
     anatomical:
-      ROI: [[]] #,['VIS,SS']] #FRP-R,MOp-R'],["VIS,SS"]]
-    #SVD:
+      #ROI: [[]] #,['VIS,SS']] #FRP-R,MOp-R'],["VIS,SS"]]
+    SVD:
     #ICA:
       #n_comps: [64]
     LocaNMF:
@@ -40,18 +40,18 @@ branch_opts:
     right_visual:
       sides: right
       modalities: visual
-    left_tactile:
-      sides: left
-      modalities: tactile
-    right_tactile:
-      sides: right
-      modalities: tactile
-    left_vistact:
-      sides: left
-      modalities: vistact
-    right_vistact:
-      sides: right
-      modalities: vistact
+    #left_tactile:
+      #sides: left
+      #modalities: tactile
+    #right_tactile:
+      #sides: right
+      #modalities: tactile
+    #left_vistact:
+      #sides: left
+      #modalities: vistact
+    #right_vistact:
+      #sides: right
+      #modalities: vistact
 
   features:
     mean:
@@ -78,6 +78,10 @@ branch_opts:
       - 819 #0.2
       - 410
       - 205
+
+  plotting:
+    plot_parcels:
+      n: 64
 
 trial_conditions:
   sides:

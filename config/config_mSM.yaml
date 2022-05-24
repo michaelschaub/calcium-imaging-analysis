@@ -47,6 +47,10 @@ branch_opts:
       #- 15
       #- 20
 
+  plotting:
+    plot_parcels:
+      n: 64
+
 static_params:
   parcellations:
     anatomical:

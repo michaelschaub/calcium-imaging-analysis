@@ -367,10 +367,10 @@ rule plot_parcels:
 		  #all = "results/{mouse_dates}/{parcellation}/visualization/all_parcels.png",
 		  single = directory(f"results/{{mouse_dates}}/{{parcellation}}/visualization/single_parcel/")
 		  #[f"results/{{mouse_dates}}/{{parcellation}}/visualization/parcel_{i}.png"
-	 	  #	   for i in range(config['parcellation_opts']['n'])					]
+                  #        for i in range(config['branch_opts']['plotting']['plot_parcels']['n']) ]
 		  #config = "results/{mouse_dates}/{parcellation}/visualization/conf.yaml",
 	params:
-		  n = config['parcellation_opts']['n']
+		  n = config['branch_opts']['plotting']['plot_parcels']['n']
 	log:
 	   "results/{mouse_dates}/{parcellation}/visualization/parcellation.log"
 	conda:
