@@ -15,18 +15,18 @@ try:
     def anatom(params):
         from ci_lib.decomposition import anatomical_parcellation
         svd = DecompData.load(snakemake.input[0])
-        anatomical = anatomical_parcellation(svd, atlas_path=snakemake.input["atlas"], **params)
+        anatomical = anatomical_parcellation(svd, atlas_path=snakemake.input["atlas"], logger=logger, **params)
         anatomical.save(snakemake.output[0])
 
     def locaNMF(params):
         from ci_lib.decomposition import locaNMF
         svd = DecompData.load(snakemake.input[0])
-        locanmf = locaNMF(svd, atlas_path=snakemake.input["atlas"], **params)
+        locanmf = locaNMF(svd, atlas_path=snakemake.input["atlas"], logger=logger, **params)
         locanmf.save(snakemake.output[0])
 
     def ICA(params):
         from ci_lib.decomposition import fastICA
-        svd = DecompData.load(snakemake.input[0])
+        svd = DecompData.load(snakemake.input[0], logger=logger)
         ica = fastICA(svd, **params) #snakemake.config
         ica.save(snakemake.output[0])
 

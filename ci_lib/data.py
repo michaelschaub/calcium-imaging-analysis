@@ -40,7 +40,7 @@ class Data(ABC):
 
 
 class DecompData(Data):
-    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, cond_filter=None, trans_params=None, savefile=None, read_only=True, spatial_labels=None, logger=None):
+    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, cond_filter=None, trans_params=None, savefile=None, spatial_labels=None, logger=None):
         self.logger = LOGGER if logger is None else logger
         assert len(df) != trial_starts.shape[0]-1, (
             f"DataFrame df and trial_starts do not have matching length ({len(df)} != {len(trial_starts)})\n\t(maybe remove last entry?)")
@@ -58,17 +58,24 @@ class DecompData(Data):
         self.conditions = cond_filter
         self._savefile = savefile
 
-        if read_only:
-            self._temps.flags.writeable = False
-            self._spats.flags.writeable = False
-            self._starts.flags.writeable = False
+        if len(self) == 0:
+            self.logger.warning("Created DecompData is empty")
+
+    def copy(self):
+        return type(self)( self._df, self._temps, self._spats, self._starts,
+                            savefile=self.savefile, spatial_labels=self._spat_labels, logger=self.logger )
 
 
     #Used for parcellations
-    def update(self,temporal_comps, spatial_comps, spatial_labels=None):
-        self._temps = temporal_comps
-        self._spats = spatial_comps
-        self._spat_labels = spatial_labels
+    def update(self,temporal_comps=None, spatial_comps=None, spatial_labels=None):
+        data = self.copy()
+        if temporal_comps is not None:
+            data._temps = temporal_comps
+        if spatial_comps is not None:
+            data._spats = spatial_comps
+            data._spat_labels = spatial_labels
+        data._savefile = None
+        return data
 
     def save(self, file ):
         h5_file = save_h5( self, file, {"df"    : self._df,
@@ -223,8 +230,7 @@ class DecompData(Data):
             # if keys[1] is bool us it as mask on aranged array to create array of frames to keep
             assert np.array(keys[1]).dtype == bool
             trial_frames = np.array(np.arange(len(keys[1]))[keys[1]])
-            print("frames")
-            print(trial_frames)
+            self.logger.debug(f"frames {trial_frames}")
         except:
             try:
                 # else use it to slice from aranged array
@@ -238,19 +244,23 @@ class DecompData(Data):
                     raise
         # starts of selected frames in old temps
         starts = np.array(self._starts[keys[0]])
-        print("starts")
-        print(starts)
+        self.logger.debug(f"starts {starts}")
 
         # indices of temps in all selected frames (2d)
         selected_temps = np.array(trial_frames[np.newaxis, :] + starts[:, np.newaxis], dtype=int)
-        print("frames + starts")
-        print(selected_temps)
+        self.logger.debug("frames + starts {selected_temps}")
 
         # starts of selected frames in new temps
-        new_starts = np.insert(np.cumsum(np.diff(selected_temps[:-1, (0, -1)]) + 1), 0, 0)
+        if 0 == selected_temps.shape[1]:
+            new_starts = np.zeros((selected_temps.shape[0],), dtype=int)
+        elif 0 == selected_temps.shape[0]:
+            new_starts = np.empty((0,), dtype=int)
+        else:
+            new_starts = np.insert(np.cumsum(np.diff(selected_temps[:-1, (0, -1)]) + 1), 0, 0)
 
-        print(self._temps.shape)
+        self.logger.debug(self._temps.shape)
         temps = self._temps[selected_temps.flatten()]
+
         try:
             data = DecompData(df, temps, spats, new_starts, spatial_labels=self._spat_labels)
         except AssertionError:
@@ -301,7 +311,10 @@ class DecompData(Data):
                 select = select & any
             else:
                 select = select & (getattr( self._df, attr ) == val)
+        #if(np.any(select)):
         return self[select]
+        #else:
+            #return None
 
     def _op_data(self, a):
         df = self._df

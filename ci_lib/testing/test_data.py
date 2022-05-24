@@ -7,14 +7,16 @@ import pathlib
 import math
 
 ###Too complicated
-from loading import load_task_data_as_pandas_df #import extract_session_data_and_save
-from data import DecompData
-from features import Means, Raws
-from plotting import plot_glassbrain,plt_glassbrain
-
 import sys
 from pathlib import Path
-sys.path.append(str(Path(__file__).parent))
+sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
+
+from ci_lib.loading import load_task_data_as_pandas_df #import extract_session_data_and_save
+from ci_lib import Data, DecompData
+from ci_lib.features import Means, Raws
+#from ci_lib.plotting import plot_glassbrain,plt_glassbrain
+
+
 '''
 folders = ['features','loading']
 file_paths =  [Path(__file__).parent / Path(folder) for folder in folders]
@@ -30,8 +32,11 @@ from matplotlib.animation import FuncAnimation
 
 plt_mode = "raw_z_score" # should be from ["mean", "z_score", "raw", "raw_z_score", None]
 plt_mode = "mean" #"mean"
+
+plt_mode = 'raw'
+
 raw_course_graining = 1
-animation_slowdown = 1
+animation_slowdown = 50
 
 save_feat = True
 load_feat = True
@@ -39,9 +44,10 @@ load_feat = True
 force_extraction = False
 
 
-resc_path = pathlib.Path(__file__).parent.parent/'resources'
-resl_path = pathlib.Path(__file__).parent.parent/'results'
-svd_path = pathlib.Path(resl_path/'GN06/SVD/data.h5')
+resc_path = pathlib.Path(__file__).parent.parent.parent/'resources'
+resl_path = pathlib.Path(__file__).parent.parent.parent/'results'
+svd_path = pathlib.Path(resl_path/'GN06_2021-01-20_10-15-16/SVD/data.h5')
+print(svd_path)
 if (not svd_path.exists()) or force_extraction:
     if (not (resc_path/'extracted_data.pkl').exists()) or force_extraction:
         # load behavior data
@@ -116,17 +122,20 @@ if plt_mode in ["mean", "z_score"]:
                 """
                 # compute dot product and reshape back into 2D frame
                 #average_frame = np.einsum( "n,nij->ij", Vc_mean-Vc_baseline_mean, selected_frames.spatials )
-                #average_frame = np.mean( frames_corrected.pixel[:], 0)
+                average_frame = np.mean( frames_corrected.pixel[:], 0)
+
                 #average_frame = frames_corrected.pixel[:,:,:]
+
                 #print(average_frame.shape)
                 print("averages")
-                average_frame = frames_corrected.mean.pixel[0,:,:]
+
+                #average_frame = frames_corrected.mean.pixel[0,:,:]
 
                 # plot
                 #plot_glassbrain(frame=average_frame,title=f"{modality_keys[modality_id]}, {target_side_keys[target_side]}")
-                plt_glassbrain(bg_img=average_frame,title=f"{modality_keys[modality_id]}, {target_side_keys[target_side]}")
+                #plt_glassbrain(bg_img=average_frame,title=f"{modality_keys[modality_id]}, {target_side_keys[target_side]}")
 
-                im = ax[target_side, modality_id].imshow(average_frame, vmin=-0.02, vmax=0.02)
+                im = ax[1-target_side, modality_id].imshow(average_frame, vmin=-0.02, vmax=0.02)
             else:
                 # this plots z-score now
                 Vc = selected_frames.temporals
@@ -150,13 +159,17 @@ if plt_mode in ["mean", "z_score"]:
                 im = ax[target_side, modality_id].imshow(z_score, vmin=-5, vmax=5)
             #
 
-            fig.colorbar(im, ax=ax[target_side, modality_id])
-            ax[target_side, modality_id].set_title(modality_keys[modality_id] + ' - ' + target_side_keys[target_side])
-            ax[target_side, modality_id].set_xticks([])
-            ax[target_side, modality_id].set_yticks([])
-            plt.draw()
-            plt.pause(0.1)
+            #fig.colorbar(im, ax=ax[target_side, modality_id])
+            ax[1-target_side, modality_id].set_title(modality_keys[modality_id] + ' - ' + target_side_keys[target_side])
+            ax[1-target_side, modality_id].set_xticks([])
+            ax[1-target_side, modality_id].set_yticks([])
+            #plt.draw()
+            #plt.pause(0.1)
 
+
+    fig.subplots_adjust(right=0.88)
+    cbar_ax = fig.add_axes([0.9, 0.2, 0.025, 0.6])
+    fig.colorbar(im, cax=cbar_ax)
     #
     plt.show()
 elif plt_mode in ["raw", "raw_z_score" ]:
@@ -202,8 +215,8 @@ elif plt_mode in ["raw", "raw_z_score" ]:
             inter = animation_slowdown * 1e3*cg/15
 
 
-            plot_glassbrain(frame=plot_frames[0],title=f"{modality_keys[modality_id]}, {target_side_keys[target_side]}")
-            '''
+            #plot_glassbrain(frame=plot_frames[0],title=f"{modality_keys[modality_id]}, {target_side_keys[target_side]}")
+
           
             def draw_frame(t):
                 
@@ -219,7 +232,7 @@ elif plt_mode in ["raw", "raw_z_score" ]:
             ani = FuncAnimation( fig, draw_frame,
                                 frames=math.ceil(plot_frames.shape[0]/cg), interval=inter, repeat=True)
             plt.show()
-            '''
+
 
 elif plt_mode is None:
     pass

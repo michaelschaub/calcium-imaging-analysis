@@ -7,16 +7,18 @@ import sklearn.linear_model as skllm
 import sklearn.preprocessing as skprp
 import sklearn.feature_selection as skfs
 
+import networkx as nx
+
 
 from pathlib import Path
 import sys
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 from ci_lib.utils import snakemake_tools
-from ci_lib.features import Features, Means, Raws, Covariances, AutoCovariances, Moup, Feature_Type
-from ci_lib.plotting import graph_circle_plot, construct_rfe_graph, plot_glassbrain_bokeh
+from ci_lib.features import Features, Means, Raws, Covariances, AutoCovariances, Moup, AutoCorrelations, Feature_Type
+from ci_lib.plotting import graph_circle_plot, plot_glassbrain_bokeh, graph_sping_plot
 from ci_lib import DecompData
-from ci_lib.rfe import RFE_pipeline
+from ci_lib.rfe import RFE_pipeline, construct_rfe_graph
 
 # redirect std_out to log file
 logger = snakemake_tools.start_log(snakemake)
@@ -28,7 +30,7 @@ try:
     ### Load feature for all conditions
     cond_str = snakemake.params['conds']
     feature = snakemake.wildcards["feature"]
-    feature_dict = { "mean" : Means, "raw" : Raws, "covariance" : Covariances, "autocovariance" : AutoCovariances, "moup" :Moup }
+    feature_dict = { "mean" : Means, "raw" : Raws, "covariance" : Covariances, "autocovariance" : AutoCovariances, "moup" :Moup,"autocorrelation" : AutoCorrelations }
     feature_class = feature_dict[snakemake.wildcards["feature"].split("_")[0]]
 
     cond_feats = []
@@ -37,6 +39,7 @@ try:
 
     feat_type = cond_feats[0].type
     rfe_n = snakemake.wildcards["rfe_n"]
+
     n_rep = 1 #snakemake.params['reps'] #TODO
 
     ### Scale & Split
@@ -52,14 +55,16 @@ try:
     cv_split = cv.split(data, labels)
 
     # Build RFE pipeline
-    c_MLR = RFE_pipeline([('std_scal',skprp.StandardScaler()),('clf',skllm.LogisticRegression(C=0.00001, penalty='l2', multi_class='multinomial', solver='lbfgs', max_iter=500))])
+    c_MLR = RFE_pipeline([('std_scal',skprp.StandardScaler()),('clf',skllm.LogisticRegression(C=1.0, penalty='l2', multi_class='multinomial', solver='lbfgs', max_iter=500))])
 
     _ , feats = data.shape
-    if(rfe_n=="full"):
-        rfe_n = feats
-    if(int(rfe_n)>int(cond_feats[0].ncomponents) and feat_type == Feature_Type.NODE):
+
+    if(float(rfe_n)<=1):
+        rfe_n= int(np.round(feats*float(rfe_n)))
+    elif(int(rfe_n)>int(cond_feats[0].ncomponents) and feat_type == Feature_Type.NODE):
         rfe_n = feats
 
+    print("rfe_n",rfe_n)
     RFE = skfs.RFE(c_MLR,n_features_to_select=int(rfe_n))
 
     ranking = np.zeros([n_rep,feats],dtype=np.int32)
@@ -69,13 +74,16 @@ try:
     ### Train & Eval
     for i, (train_i, test_i) in enumerate(cv_split):
 
-        RFE.fit(data[train_i, :], labels[train_i])
+        RFE = RFE.fit(data[train_i, :], labels[train_i])
         ranking[i,:] = RFE.ranking_
-        best_feat_iter = np.argsort(ranking[i])[:int(rfe_n)]
+        best_feat_iter = np.sort(np.argsort(ranking[i])[:int(rfe_n)])
         perf[i] = RFE.estimator_.score(data[test_i, :][:,best_feat_iter], labels[test_i])
         decoders.append(RFE.estimator_)
 
     list_best_feat = np.argsort(ranking.mean(0))[:int(rfe_n)]
+
+    logger.info("perf")
+    logger.info(perf)
 
     with open(snakemake.output["perf"], 'wb') as f:
         pickle.dump(perf, f)
@@ -91,12 +99,13 @@ try:
 
     parcellation = DecompData.load(snakemake.input["parcellation"])
     n_comps = cond_feats[0].ncomponents
+    cutted_labels=parcellation.spatial_labels[:n_comps]
 
-    graph_circle_plot(list_best_feat,n_nodes= n_comps, title=feature, feature_type = feat_type, node_labels=parcellation.spatial_labels, save_path=snakemake.output["plot"])
+    graph_circle_plot(list_best_feat,n_nodes= n_comps, title=feature, feature_type = feat_type, node_labels= cutted_labels, save_path=snakemake.output["plot"])
 
     #Glassbrain Plot
     rfe_graph = construct_rfe_graph(list_best_feat, n_nodes = n_comps, feat_type = feat_type)
-    plot_glassbrain_bokeh(graph=rfe_graph,components_spatials=parcellation.spatials,components_labels=parcellation.spatial_labels,save_path=snakemake.output["glassbrain"])
+    plot_glassbrain_bokeh(graph=rfe_graph,components_spatials=parcellation.spatials,components_labels=cutted_labels,save_path=snakemake.output["glassbrain"])
 except Exception:
     logger.exception('')
     sys.exit(1)
