@@ -67,11 +67,14 @@ def align_spatials(spatials,trans_params, cutoff=None, logger=None):
     #find minimum of original spatials
     minimum = np.nanmin(np.abs(spatials))
     logger.debug(f"spatial minimum {minimum}")
+
+    #Append bitmap as last frame
+    spatials = np.append(spatials,np.ones((1,h,w)),axis=0)
+    #Set NANs from spatials to zero in bitmap
+    spatials[-1, np.isnan(spatials[:-1]).all(axis=0)] = 0
+
     #Replace NANs with zeros
     spatials[np.isnan(spatials)] = 0
-
-    #Attend bitmap as last frame
-    spatials = np.append(spatials,np.ones((1,h,w)),axis=0)
 
     #Rotation
     logger.info("Rotation")
@@ -95,10 +98,6 @@ def align_spatials(spatials,trans_params, cutoff=None, logger=None):
 
     bitmask = np.broadcast_to(bitmask,spatials.shape) #for easier broadcasting, is not in memory
     np.putmask(spatials,bitmask,np.NAN) #set all elements of bitmap to NAN
-
-    #try to remove introduced 0s
-    if cutoff is not None:
-        spatials[:, (np.abs(spatials) < cutoff*minimum).all(axis=0)] = np.NAN
 
     #Crop
     logger.info("Crop")
