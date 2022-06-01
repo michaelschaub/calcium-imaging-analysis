@@ -20,6 +20,7 @@ try:
     timer_start = snakemake_tools.start_timer()
 
     files_Vc = snakemake.input["Vc"]
+    trans_paths = snakemake.input["trans_params"]
     files_sessions = snakemake.params["sessions_structured"] #snakemake.input["tasks"]
     mouse_dates_str = snakemake.params["mouse_dates_str"]
 
@@ -76,16 +77,10 @@ try:
     Vc = []
     U = []
     start = 0
-    for file_Vc in files_Vc:
+    for file_Vc,trans_path in zip(files_Vc,trans_paths):
         f = h5py.File(file_Vc, 'r')
 
-        # temporary values
-        trans_params = {
-                'angleD' : 40.,
-                'scaleConst' : 1.,
-                'tC' : np.array([-20,20]),
-                }
-        alignend_U = alignment.align_spatials(np.array(f["U"]).swapaxes(1,2),trans_params)
+        alignend_U = alignment.align_spatials_path(np.array(f["U"]).swapaxes(1,2),trans_path)
         U.append(alignend_U)
 
         Vc.append(np.array(f["Vc"]))

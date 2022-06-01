@@ -183,8 +183,8 @@ rule mSM_entry:
 					for mouse_id,dates in mouses.items() for date in dates],
 		Vc		= [ f"resources/experiment/{mouse_id}/{date}/Vc.mat"
 				  for mouse_id,dates in mouses.items() for date in dates],
-		#trans_params	= [ f"resources/experiment/{mouse_id}/{date}/SVD_data/opts.mat"
-						 #for mouse_id,dates in mouses.items() for date in dates],
+		trans_params	= [ f"resources/experiment/{mouse_id}/{date}/opts2.mat"
+						 for mouse_id,dates in mouses.items() for date in dates],
 	output:
 		"results/{mouse_dates}/SVD/data.h5",
 		config = "results/{mouse_dates}/SVD/conf.yaml",
