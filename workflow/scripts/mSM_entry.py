@@ -85,7 +85,7 @@ try:
                 'scaleConst' : 1.,
                 'tC' : np.array([-20,20]),
                 }
-        alignend_U = alignment.align_spatials(np.array(f["U"]).swapaxes(1,2),trans_params, cutoff=1e-1)
+        alignend_U = alignment.align_spatials(np.array(f["U"]).swapaxes(1,2),trans_params)
         U.append(alignend_U)
 
         Vc.append(np.array(f["Vc"]))
