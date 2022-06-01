@@ -79,7 +79,14 @@ try:
     for file_Vc in files_Vc:
         f = h5py.File(file_Vc, 'r')
 
-        U.append(np.array(f["U"]).swapaxes(1,2))
+        # temporary values
+        trans_params = {
+                'angleD' : 40.,
+                'scaleConst' : 1.,
+                'tC' : np.array([-20,20]),
+                }
+        alignend_U = alignment.align_spatials(np.array(f["U"]).swapaxes(1,2),trans_params, cutoff=1e-1)
+        U.append(alignend_U)
 
         Vc.append(np.array(f["Vc"]))
         logger.debug(f"{U[-1].shape}")
