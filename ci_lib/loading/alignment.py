@@ -14,10 +14,6 @@ def align_spatials(spatials,trans_params, logger=None):
 
     f , h , w = spatials.shape #org shape
 
-    #find minimum of original spatials
-    minimum = np.nanmin(np.abs(spatials))
-    logger.debug(f"spatial minimum {minimum}")
-
     #Append bitmap as last frame
     spatials = np.append(spatials,np.ones((1,h,w)),axis=0)
     #Set NANs from spatials to zero in bitmap
