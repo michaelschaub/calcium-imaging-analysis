@@ -1,0 +1,97 @@
+branch_opts:
+  mouses:
+    mSM65:
+      - 08-Sep-2018
+
+
+  parcellations:
+    anatomical:
+    #SVD:
+    #ICA:
+      #n_comps: [64]
+    LocaNMF:
+
+  selected_trials:
+    - All
+  conditions:
+    default:
+      phase: stimulus
+    visual:
+      modalities: visual
+    auditory:
+      modalities: auditory
+
+  features:
+    mean:
+      max_components : [null]
+    covariance:
+      max_components : [null]
+    #moup:
+      #timelags: [3]
+      #max_components : [64]
+    autocovariance:
+      timelags: [[0],[1]]
+      max_components : [null]
+
+  decoders:
+    default:
+      reps: [5]
+    MLR:
+    1NN:
+    LDA:
+    RF:
+  rfe:
+    selected_features_n:
+      - 5
+      - 10
+      #- 15
+      #- 20
+
+  plotting:
+    plot_parcels:
+      n: 64
+
+static_params:
+  parcellations:
+    anatomical:
+    ICA:
+    LocaNMF:
+      maxrank: 1
+      r2_thresh: 0.75
+  selected_trials: {}
+  features: {}
+    #mean:
+    #covariance:
+    #moup:
+    #autocovariance:
+  decoders: {}
+    #MLR:
+    #1NN:
+    #LDA:
+    #RF:
+
+trial_conditions:
+  sides:
+    column: target_side_left
+    conds:
+      left:   0
+      right:  1
+  modalities:
+    column: StimType
+    conds:
+      visual:   1
+      auditory: 2
+  responses:
+    column: response_left
+    conds:
+      left: 1
+      right: 0
+      no: -1
+
+phase_conditions:
+  pretrial:
+    start:  15
+    stop:   90
+  stimulus:
+    start:  90
+    stop:   141

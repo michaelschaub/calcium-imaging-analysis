@@ -43,7 +43,7 @@ try:
 
         frameCnt = np.array(f['frameCnt'])
         Vc.append(np.array(f["Vc"]))
-        #assert (U[-1] == U[0]).all(), "Combining different dates with different Compositions is not yet supported"
+        assert np.array_equal(U[-1], U[0], equal_nan=True), "Combining different dates with different Compositions is not yet supported"
         trial_starts.append(np.cumsum(frameCnt[:-1, 1]) + start)
         start += Vc[-1].shape[0]
 

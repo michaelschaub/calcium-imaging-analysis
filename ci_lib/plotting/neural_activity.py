@@ -66,3 +66,4 @@ def draw_neural_activity(frames,path,plt_title,subfig_titles=None,overlay=False,
                 #plt.pause(0.1)
     #plt.show()
     plt.savefig(path, format='png')
+    plt.close()

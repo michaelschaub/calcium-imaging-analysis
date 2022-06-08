@@ -24,7 +24,7 @@ try:
 
     os.mkdir(Path(snakemake.output['single']))
     logger.debug(f"n {snakemake.params['n']}")
-    for i in range(len(data._spats)):
+    for i in range(min(len(data._spats),snakemake.params['n'])):
         title = None if data._spat_labels is None else data._spat_labels[i]
         logger.debug(Path(snakemake.output['single'])/"parcel_{}.png".format(i if title is None else title))
         draw_neural_activity(frames=data._spats[i],
