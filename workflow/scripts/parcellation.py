@@ -19,7 +19,7 @@ try:
         anatomical.save(snakemake.output[0])
 
     def locaNMF(params):
-        from ci_lib.decomposition import locaNMF
+        from ci_lib.decomposition.locanmf import locaNMF
         svd = DecompData.load(snakemake.input[0])
         locanmf = locaNMF(svd, atlas_path=snakemake.input["atlas"], logger=logger, **params)
         locanmf.save(snakemake.output[0])
