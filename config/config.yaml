@@ -45,5 +45,7 @@ paths:
 
 different_config_inputs: 1
 
+limit_memory: 1
+
 loglevel: DEBUG
 #loglevel: INFO

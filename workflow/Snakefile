@@ -119,7 +119,7 @@ rule pipeline_entry:
 	conda:
 		"envs/environment.yaml"
 	resources:
-		memb_mb=1000
+		mem_mb=lambda wildcards, input, attempt: 1000*attempt +  max(2*input.size_mb, 1000)
 	script:
 		"scripts/default_entry.py"
 
@@ -148,7 +148,7 @@ rule mSM_entry:
 	conda:
 		"envs/environment.yaml"
 	resources:
-		memb_mb=1000
+		mem_mb=lambda wildcards, input, attempt: 1000*attempt +  max(2*input.size_mb, 1000)
 	script:
 		"scripts/mSM_entry.py"
 
@@ -178,6 +178,8 @@ rule parcellation:
 		f"results/{{mouse_dates}}/{{parcellation}}/parcellation.log"
 	conda:
 		"envs/environment.yaml"
+	resources:
+		mem_mb=lambda wildcards, input, attempt: 1000*attempt +  max(2*input.size_mb, 1000)
 	script:
 		"scripts/parcellation.py"
 
@@ -204,7 +206,7 @@ rule trial_selection:
 	conda:
 		"envs/environment.yaml"
 	resources:
-		memb_mb=1000
+		mem_mb=lambda wildcards, input, attempt: 1000*attempt +  max(2*input.size_mb, 1000)
 	script:
 		"scripts/trial_selection.py"
 
@@ -232,7 +234,7 @@ rule condition:
 	conda:
 		"envs/environment.yaml"
 	resources:
-		memb_mb=1000
+		mem_mb=lambda wildcards, input, attempt: 1000*attempt +  max(2*input.size_mb, 1000)
 	script:
 		"scripts/conditional.py"
 
@@ -250,7 +252,7 @@ rule feature_calculation:
 	conda:
 		"envs/environment.yaml"
 	resources:
-		memb_mb=4000
+		mem_mb=lambda wildcards, input, attempt: 1000*attempt +  max(2*input.size_mb, 4000)
 	script:
 		"scripts/feature.py"
 
@@ -264,8 +266,6 @@ rule feature_elimination:
 		model		= f"{trials_dir}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/decoder_model.pkl",
 		perf		= f"{trials_dir}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/decoder_perf.pkl",
 		config		= f"{trials_dir}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/conf.yaml",
-		plot		= f"{trials_dir}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/circle_plot.png",
-		glassbrain	= f"{trials_dir}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/glassbrain.html",
 	params:
 		conds = list(trial_conditions),
 		reps = 5, #used to be k_folds but was removed form config
@@ -273,8 +273,8 @@ rule feature_elimination:
 		f"{trials_dir}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/feature_calculation.log"
 	conda:
 		 "envs/environment.yaml"
-	#resources:
-	#	memb_mb=1000
+	resources:
+		mem_mb=lambda wildcards, input, attempt: 1000*attempt +  max(2*input.size_mb, 1000)
 	script:
 		  "scripts/recursive_feature_elimination.py"
 
@@ -293,7 +293,7 @@ rule decoding:
 	conda:
 		"envs/environment.yaml"
 	resources:
-		memb_mb=4000
+		mem_mb=lambda wildcards, input, attempt: 1000*attempt +  max(2*input.size_mb, 1000)
 	script:
 		"scripts/decoding.py"
 
@@ -380,49 +380,18 @@ rule plot_performances_parcellations:
 
 rule plot_glassbrain:
 	input:
-		best_feats = f"{trials_dir}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/best_feats.pkl",
-		parcellation = f"results/{{mouse_dates}}/{{parcellation}}/data.h5",
-		feature = f"{trials_dir}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/best_feats.pkl",
+		parcellation      = f"results/{{mouse_dates}}/{{parcellation}}/data.h5",
+		original_features = [f"{trials_dir}/Features/{cond}/{{feature}}/feature_data.h5" for cond in trial_conditions],
+		features          = f"{trials_dir}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/best_feats.pkl",
 
 	output:
-		interactive_plot = f"{trials_dir}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/glassbrain.html",
-
-
-## testing
-rule debug:
-	input:
-		tasks	= [ f"resources/experiment/{mouse_id}/{date}/task_data/"
-				for mouse_id,dates in mouses.items() for date in dates],
+		plot              = f"{trials_dir}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/circle_plot.png",
+		interactive_plot  = f"{trials_dir}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/glassbrain.html",
+	log:
+		f"{trials_dir}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/plot_glassbrain.log",
 	conda:
 		"envs/environment.yaml"
-	log:
-		"results/debug.log"
-	params:
-		"?",
-		p1 = "Test",
-		p2 = 12,
+	resources:
+		mem_mb=lambda wildcards, input, attempt: 16000*attempt +  max(2*input.size_mb, 16000)
 	script:
-		"scripts/debug_snakemake.py"
-
-
-###   legacy tests   ###
-
-rule test_data:
-	input:
-		 "results/GN06/SVD/data.h5"
-	log:
-	   "results/GN06/SVD/test_data.log"
-	conda:
-		 "envs/environment.yaml"
-	script:
-		  "code/test_data.py"
-
-rule test_analysis:
-	input:
-		 "results/GN06/SVD/data.h5"
-	log:
-	   "results/GN06/SVD/test_analysis.log"
-	conda:
-		 "envs/environment.yaml"
-	script:
-		  "code/test_analysis.py"
+		"scripts/plot_glassbrain.py"

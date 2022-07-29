@@ -19,6 +19,8 @@ from ci_lib.features import Features, Means, Raws, Covariances, Correlations, Au
 
 # redirect std_out to log file
 logger = snakemake_tools.start_log(snakemake)
+if snakemake.config['limit_memory']:
+    snakemake_tools.limit_memory(snakemake)
 try:
     snakemake_tools.save_conf(snakemake, sections=["entry","parcellation","trial_selection","conditions","feature_calculation","decoder"],
                                             params=['conds','params'])

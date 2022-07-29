@@ -15,6 +15,8 @@ from ci_lib import DecompData
 
 # redirect std_out to log file
 logger = snakemake_tools.start_log(snakemake)
+if snakemake.config['limit_memory']:
+    snakemake_tools.limit_memory(snakemake)
 try:
     snakemake_tools.save_conf(snakemake, sections=["entry","parcellation"]) #fixed a bug as we dont apply parcellation to SVD and then prefilter fails to compare config as it won't contain parcellation
     timer_start = snakemake_tools.start_timer()

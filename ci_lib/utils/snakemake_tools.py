@@ -2,6 +2,8 @@ import sys
 import datetime
 import yaml
 import logging
+import resource
+
 
 def redirect_to_log(snakemake):
     # deprecated
@@ -67,3 +69,11 @@ def start_timer():
 def stop_timer(start, logger=None):
     delta = datetime.datetime.now() - start
     (logging.getLogger(__name__) if logger is None else logger).info(f"Finished after {delta}")
+
+def limit_memory(snakemake, soft=True):
+    soft, hard = resource.getrlimit(resource.RLIMIT_AS)
+    if soft:
+        soft = snakemake.resources['mem_mb']*1024*1024
+    else:
+        hard = snakemake.resources['mem_mb']*1024*1024
+    resource.setrlimit(resource.RLIMIT_AS, (soft, hard))
