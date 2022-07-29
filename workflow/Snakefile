@@ -4,8 +4,8 @@ ruleorder: pipeline_entry > locaNMF > parcellation > feature_calculation > featu
 
 include: "tools/snakemake_tools.py"
 
-mouses 		= config["branch_opts"]["mouses"]
-mouse_dates	= ["_".join([mouse_id,date]) for mouse_id,dates in mouses.items() for date in dates ]
+mice 		= config["branch_opts"]["mice"]
+mouse_dates	= ["_".join([mouse_id,date]) for mouse_id,dates in mice.items() for date in dates ]
 
 parcells_conf	= config["branch_opts"]["parcellations"]
 parcells_static	= config["static_params"]["parcellations"]
@@ -27,7 +27,7 @@ decoder_static	= config["static_params"]["decoders"]
 decoders	= create_parameters( decoder_conf, decoder_static )
 
 #For annotating plots
-plot_subject_labels = {f"{mouse_id}(#{len(dates)})" for mouse_id,dates in mouses.items()}
+plot_subject_labels = {f"{mouse_id}(#{len(dates)})" for mouse_id,dates in mice.items()}
 #plot_feature_labels = [f"{feat_name} t={options['timelags']}" if 'timelags' in options else feat_name for feat_name,options in feature_conf.items()]
 
 wildcard_constraints:
@@ -99,11 +99,11 @@ rule pipeline_entry:
 	input:
 		#To make sure that files are present, unfortunatly gets flattened -> losing information which dates belong to which mouse
 		_		= [[ f"resources/experiment/{mouse_id}/{date}/task_data/"
-					for date in dates] for mouse_id,dates in mouses.items()],
+					for date in dates] for mouse_id,dates in mice.items()],
 		Vc		= [ f"resources/experiment/{mouse_id}/{date}/SVD_data/Vc.mat"
-					for mouse_id,dates in mouses.items() for date in dates],
+					for mouse_id,dates in mice.items() for date in dates],
 		trans_params	= [ f"resources/experiment/{mouse_id}/{date}/SVD_data/opts.mat"
-					for mouse_id,dates in mouses.items() for date in dates],
+					for mouse_id,dates in mice.items() for date in dates],
 	output:
 		f"results/{{mouse_dates}}/SVD/data.h5",
 		config = f"results/{{mouse_dates}}/SVD/conf.yaml",
@@ -111,7 +111,7 @@ rule pipeline_entry:
 		mouse_dates_str = '_'.join(mouse_dates),
 		#maybe find a clean solution from flattened array,
 		task_structured = {mouse_id: [ f"resources/experiment/{mouse_id}/{date}/task_data/"
-				  for date in dates] for mouse_id,dates in mouses.items()} # so we are using this one and we can actually use a dict to make it even comfier
+				  for date in dates] for mouse_id,dates in mice.items()} # so we are using this one and we can actually use a dict to make it even comfier
 	wildcard_constraints:
 		mouse_dates	= r"GN[a-zA-Z\d_-]+",
 	log:
@@ -129,18 +129,18 @@ rule mSM_entry:
 	'''
 	input:
 		sessions	= [ f"resources/experiment/{mouse_id}/{date}/SpatialDisc_Session.mat"
-					for mouse_id,dates in mouses.items() for date in dates],
+					for mouse_id,dates in mice.items() for date in dates],
 		Vc		= [ f"resources/experiment/{mouse_id}/{date}/Vc.mat"
-					for mouse_id,dates in mouses.items() for date in dates],
+					for mouse_id,dates in mice.items() for date in dates],
 		trans_params	= [ f"resources/experiment/{mouse_id}/{date}/opts2.mat"
-					for mouse_id,dates in mouses.items() for date in dates],
+					for mouse_id,dates in mice.items() for date in dates],
 	output:
 		f"results/{{mouse_dates}}/SVD/data.h5",
 		config = f"results/{{mouse_dates}}/SVD/conf.yaml",
 	params:
 		mouse_dates_str = '_'.join(mouse_dates),
 		sessions_structured = {mouse_id: { date: f"resources/experiment/{mouse_id}/{date}/SpatialDisc_Session.mat"
-					for date in dates} for mouse_id,dates in mouses.items()}
+					for date in dates} for mouse_id,dates in mice.items()}
 	wildcard_constraints:
 		mouse_dates	= r"mSM[a-zA-Z\d_-]+",
 	log:

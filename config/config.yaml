@@ -17,7 +17,7 @@ static_params:
     anatomical:
     ICA:
     LocaNMF:
-      minrank: 1
+      minrank: 0
       maxrank: 10
       min_pixels: 100
       loc_thresh: 70

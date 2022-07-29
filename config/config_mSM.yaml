@@ -1,5 +1,5 @@
 branch_opts:
-  mouses:
+  mice:
     mSM65:
       - 08-Sep-2018
 
@@ -56,8 +56,8 @@ static_params:
     anatomical:
     ICA:
     LocaNMF:
-      maxrank: 1
-      r2_thresh: 0.75
+      maxrank: 5
+      r2_thresh: 0.99
   selected_trials: {}
   features: {}
     #mean:
