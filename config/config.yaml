@@ -5,7 +5,7 @@ static_params:
     LocaNMF:
       minrank: 0
       maxrank: 10
-      min_pixels: 100
+      min_pixels: 400
       loc_thresh: 70
       r2_thresh: 0.99
       nonnegative_temporal: False
@@ -33,5 +33,4 @@ different_config_inputs: 1
 
 limit_memory: 1
 
-loglevel: DEBUG
-#loglevel: INFO
+loglevel: INFO

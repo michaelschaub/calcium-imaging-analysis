@@ -4,6 +4,7 @@ results
 .idea/*
 .idea
 .snakemake/*
+output*
 
 !resources/.gitkeep
 !resources/meta/*

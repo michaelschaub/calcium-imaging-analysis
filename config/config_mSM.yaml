@@ -6,19 +6,27 @@ branch_opts:
 
   parcellations:
     anatomical:
-    #SVD:
-    ICA:
-      n_comps: [64]
-    #LocaNMF:
+    SVD:
+    #ICA:
+      #n_comps: [64]
+    LocaNMF:
 
   selected_trials:
     - All
   conditions:
     default:
       phase: stimulus
-    visual:
+    left_visual:
+      sides: left
       modalities: visual
-    auditory:
+    right_visual:
+      sides: right
+      modalities: visual
+    left_auditory:
+      sides: left
+      modalities: auditory
+    right_auditory:
+      sides: right
       modalities: auditory
 
   features:
@@ -28,7 +36,7 @@ branch_opts:
       max_components : [null]
     #moup:
       #timelags: [3]
-      #max_components : [64]
+      #max_components : [null]
     #autocovariance:
       #timelags: [[0],[1]]
       #max_components : [null]
