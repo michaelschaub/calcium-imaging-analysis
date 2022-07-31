@@ -1,5 +1,5 @@
 branch_opts:
-  mice:
+  subjects:
     mSM65:
       - 08-Sep-2018
 
@@ -7,9 +7,9 @@ branch_opts:
   parcellations:
     anatomical:
     #SVD:
-    #ICA:
-      #n_comps: [64]
-    LocaNMF:
+    ICA:
+      n_comps: [64]
+    #LocaNMF:
 
   selected_trials:
     - All
@@ -29,9 +29,9 @@ branch_opts:
     #moup:
       #timelags: [3]
       #max_components : [64]
-    autocovariance:
-      timelags: [[0],[1]]
-      max_components : [null]
+    #autocovariance:
+      #timelags: [[0],[1]]
+      #max_components : [null]
 
   decoders:
     default:
@@ -43,7 +43,7 @@ branch_opts:
   rfe:
     selected_features_n:
       - 5
-      - 10
+      #- 10
       #- 15
       #- 20
 

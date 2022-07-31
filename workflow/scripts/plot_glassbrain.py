@@ -32,7 +32,7 @@ try:
 
     with open(snakemake.input["features"], 'rb') as f:
         feats = pickle.load(f)
-    parcellation = DecompData.load(snakemake.input["parcellation"])
+    parcellation = DecompData.load(snakemake.input["parcellations"])
     labels = parcellation.spatial_labels
     cut_labels = labels[:n_comps] if labels is not None else None
 
@@ -41,6 +41,8 @@ try:
     #Glassbrain Plot
     rfe_graph = construct_rfe_graph(feats, n_nodes = n_comps, feat_type = feat_type)
     plot_glassbrain_bokeh(graph=rfe_graph,components_spatials=parcellation.spatials,components_labels=cut_labels,save_path=snakemake.output["interactive_plot"])
+
+    snakemake_tools.stop_timer(timer_start, logger=logger)
 except Exception:
     logger.exception('')
     sys.exit(1)

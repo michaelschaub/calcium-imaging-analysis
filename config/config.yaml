@@ -1,17 +1,3 @@
-rule_conf:
-  entry:
-    {}
-  parcellation:
-    {}
-  trial_selection:
-    {}
-  conditions:
-    {}
-  feature_calculation:
-    {}
-  decoder:
-    {}
-
 static_params:
   parcellations:
     anatomical:

@@ -22,7 +22,7 @@ logger = snakemake_tools.start_log(snakemake)
 if snakemake.config['limit_memory']:
     snakemake_tools.limit_memory(snakemake)
 try:
-    snakemake_tools.save_conf(snakemake, sections=["entry","parcellation","trial_selection","conditions","feature_calculation","decoder"],
+    snakemake_tools.save_conf(snakemake, sections=["parcellations","selected_trials","conditions","features","decoders"],
                                             params=['conds','params'])
     start = snakemake_tools.start_timer()
 

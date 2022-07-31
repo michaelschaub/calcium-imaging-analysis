@@ -10,8 +10,8 @@ logger = snakemake_tools.start_log(snakemake)
 if snakemake.config['limit_memory']:
     snakemake_tools.limit_memory(snakemake)
 try:
-    snakemake_tools.check_conf(snakemake, sections=["entry"])
-    snakemake_tools.save_conf(snakemake, sections=["entry","parcellation"])
+    snakemake_tools.check_conf(snakemake, sections=[])
+    snakemake_tools.save_conf(snakemake, sections=["parcellations"])
     start = snakemake_tools.start_timer()
 
     def anatom(params):

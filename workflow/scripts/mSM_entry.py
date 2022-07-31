@@ -18,21 +18,21 @@ logger = snakemake_tools.start_log(snakemake)
 if snakemake.config['limit_memory']:
     snakemake_tools.limit_memory(snakemake)
 try:
-    snakemake_tools.save_conf(snakemake, sections=["entry","parcellation"]) #fixed a bug as we dont apply parcellation to SVD and then prefilter fails to compare config as it won't contain parcellation
+    snakemake_tools.save_conf(snakemake, sections=["parcellations"]) #fixed a bug as we dont apply parcellation to SVD and then prefilter fails to compare config as it won't contain parcellation
     timer_start = snakemake_tools.start_timer()
 
     files_Vc = snakemake.input["Vc"]
     trans_paths = snakemake.input["trans_params"]
     files_sessions = snakemake.params["sessions_structured"] #snakemake.input["tasks"]
-    mouse_dates_str = snakemake.params["mouse_dates_str"]
+    subject_dates_str = snakemake.params["subject_dates_str"]
 
     initial_call = True
-    for mouse_id, fs in files_sessions.items():
+    for subject_id, fs in files_sessions.items():
         for date_time, f in fs.items():
             session = scipy.io.loadmat(f, simplify_cells=True)["SessionData"]
             logger.debug(f"session.keys {session.keys()}")
             nTrials = session["nTrials"]
-            task_data = {"mouse_id": mouse_id, "date_time": date_time}
+            task_data = {"mouse_id": subject_id, "date_time": date_time}
             for k, data in session.items():
                 logger.debug(f"{k}: {type(data)}")
                 if isinstance(data, np.ndarray):

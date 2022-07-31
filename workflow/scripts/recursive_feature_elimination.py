@@ -24,7 +24,7 @@ logger = snakemake_tools.start_log(snakemake)
 if snakemake.config['limit_memory']:
     snakemake_tools.limit_memory(snakemake)
 try:
-    snakemake_tools.save_conf(snakemake, sections=["entry","parcellation","trial_selection","conditions","feature_calculation","decoder"],
+    snakemake_tools.save_conf(snakemake, sections=["parcellations","selected_trials","conditions","features","decoders"],
                               params=['conds','reps'])
     start = snakemake_tools.start_timer()
 
@@ -95,6 +95,7 @@ try:
     with open(snakemake.output["model"], 'wb') as f:
         pickle.dump(decoders, f)
 
+    snakemake_tools.stop_timer(timer_start, logger=logger)
 except Exception:
     logger.exception('')
     sys.exit(1)
