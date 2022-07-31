@@ -36,9 +36,11 @@ def start_log(snakemake):
     return logger
 
 def save_conf(snakemake, sections, params=[], additional_config=None):
-    config = {}
+    config = { 'static_params' : {}, 'branch_opts' : {} }
     for s in sections:
-        config[s] = snakemake.config['rule_conf'][s]
+        config['branch_opts'][s] = snakemake.config['branch_opts'][s]
+        if s not in ['conditions']:
+            config['static_params'][s] = snakemake.config['static_params'][s]
     for p in params:
         config[p] = snakemake.params[p]
     config["wildcards"] = dict(snakemake.wildcards)
@@ -52,7 +54,9 @@ def match_conf(snakemake, sections):
     with open( snakemake.input["config"], 'r') as conf_file:
         config = yaml.safe_load(conf_file)
     for s in sections:
-        if s in config and config[s] != snakemake.config["rule_conf"][s]:
+        if s in config["static_opts"] and config["static_opts"][s] != snakemake.config["static_opts"][s]:
+            return False
+        if s in config["branch_opts"] and config["branch_opts"][s] != snakemake.config["branch_opts"][s]:
             return False
     return True
 
