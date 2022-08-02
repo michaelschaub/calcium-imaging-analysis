@@ -28,7 +28,7 @@ def create_parameters( branch_conf, static_conf={} ):
             parameters[ pattern.format(**vals) ] = {"branch" : branch} | vals
     return parameters
 
-def create_conditions(conditions):
+def create_conditions(conditions, config):
     defaults = conditions["default"] if "default" in conditions else {}
 
     # create trial_conditions fitting for trial data by resolving column names and conditions from trial_conditions
@@ -45,4 +45,17 @@ def create_conditions(conditions):
     phase_conditions    = { label : phase_condition[(defaults | conds)["phase"]] if "phase" in (defaults | conds) else None
                     for label, conds in conditions.items() if label != "default" }
     return trial_conditions, phase_conditions, defaults
+
+#TODO fix this mess / find a snakemake version, that fixes it
+# taking input as an argument creates all kinds of bugs in snakemake...
+#def calculate_memory_resource(wildcards, input, attempt, minimum=1000, step=1000, multiple=2):
+def calculate_memory_resource(wildcards, attempt, minimum=1000, step=1000, multiple=2):
+		#input_mb = input.size_mb
+		#print(f"{wildcards}: {input_mb}\n\t{input}")
+		#if input_mb == '<TBD>':
+			#print("This should only appear in dry-run")
+			#input_mb = 0
+			#print(f"{wildcards}: {input_mb}\n\t{input}")
+		input_mb = 0
+		return max(multiple*input_mb, minimum) + step*(attempt-1)
 

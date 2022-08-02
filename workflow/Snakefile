@@ -1,45 +1,6 @@
-configfile: "config/config.yaml"
+include: "tools/Snakefile.common"
 
 ruleorder: pipeline_entry > locaNMF > parcellation > feature_calculation > feature_elimination > condition > trial_selection
-
-include: "tools/snakemake_tools.py"
-
-subjects 		= config["branch_opts"]["subjects"]
-subject_dates	= ["_".join([subject_id,date]) for subject_id,dates in subjects.items() for date in dates ]
-
-parcells_conf	= config["branch_opts"]["parcellations"]
-parcells_static	= config["static_params"]["parcellations"]
-parcellations	= create_parameters( parcells_conf, parcells_static )
-
-selected_trials	= config["branch_opts"]["selected_trials"]
-
-conditions	= config["branch_opts"]["conditions"]
-trial_conditions, phase_conditions, default_conditions = create_conditions(conditions)
-
-feature_conf	= config["branch_opts"]["features"]
-feature_static	= config["static_params"]["features"]
-features	= create_parameters( feature_conf, feature_static )
-
-rfe_ns		= config["branch_opts"]["rfe"]["selected_features_n"]
-
-decoder_conf	= config["branch_opts"]["decoders"]
-decoder_static	= config["static_params"]["decoders"]
-decoders	= create_parameters( decoder_conf, decoder_static )
-
-#For annotating plots
-plot_subject_labels = {f"{subject_id}(#{len(dates)})" for subject_id,dates in subjects.items()}
-#plot_feature_labels = [f"{feat_name} t={options['timelags']}" if 'timelags' in options else feat_name for feat_name,options in feature_conf.items()]
-
-wildcard_constraints:
-	subject_dates	= r"[a-zA-Z\d_-]+",
-	parcellation	= r"[a-zA-Z\d_'-~.\[\], ]+", # r"[a-zA-Z\d_~.]+",
-	trials		= r"[a-zA-Z\d_~.]+",
-	cond		= r"[a-zA-Z\d_]+",
-	feature		= r"[a-zA-Z\d_~.\[\], ]+",
-	decoder		= r"[a-zA-Z\d_~.]+",
-
-trials_dir = r"results/{subject_dates}/{parcellation}/{trials}"
-
 
 ###   Output accumulation rules   ###
 
@@ -119,7 +80,7 @@ rule pipeline_entry:
 	conda:
 		"envs/environment.yaml"
 	resources:
-		mem_mb=lambda wildcards, input, attempt: 1000*attempt +  max(2*input.size_mb, 1000)
+		mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,1000)
 	script:
 		"scripts/default_entry.py"
 
@@ -148,7 +109,7 @@ rule mSM_entry:
 	conda:
 		"envs/environment.yaml"
 	resources:
-		mem_mb=lambda wildcards, input, attempt: 1000*attempt +  max(2*input.size_mb, 1000)
+		mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,1000)
 	script:
 		"scripts/mSM_entry.py"
 
@@ -179,7 +140,7 @@ rule parcellation:
 	conda:
 		"envs/environment.yaml"
 	resources:
-		mem_mb=lambda wildcards, input, attempt: 1000*attempt +  max(2*input.size_mb, 1000)
+		mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
 	script:
 		"scripts/parcellation.py"
 
@@ -196,17 +157,17 @@ rule trial_selection:
 	can select trials through predefined filters
 	'''
 	input:
-		f"results/{{subject_dates}}/{{parcellation}}/data.h5",
+		data = f"results/{{subject_dates}}/{{parcellation}}/data.h5",
 		config = f"results/{{subject_dates}}/{{parcellation}}/conf.yaml",
 	output:
-		f"{trials_dir}/filtered_data.h5",
-		config = f"{trials_dir}/conf.yaml",
+		f"{TRIALS_DIR}/filtered_data.h5",
+		config = f"{TRIALS_DIR}/conf.yaml",
 	log:
-		f"{trials_dir}/trial_selection.log"
+		f"{TRIALS_DIR}/trial_selection.log"
 	conda:
 		"envs/environment.yaml"
 	resources:
-		mem_mb=lambda wildcards, input, attempt: 1000*attempt +  max(2*input.size_mb, 1000)
+		mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
 	script:
 		"scripts/trial_selection.py"
 
@@ -222,78 +183,78 @@ rule condition:
 	Filters trials into different configured conditions
 	'''
 	input:
-		f"{trials_dir}/filtered_data.h5",
-		config = f"{trials_dir}/conf.yaml",
+		data = f"{TRIALS_DIR}/filtered_data.h5",
+		config = f"{TRIALS_DIR}/conf.yaml",
 	output:
-		f"{trials_dir}/Features/{{cond}}/conditional_data.h5",
-		config = f"{trials_dir}/Features/{{cond}}/conf.yaml",
+		f"{TRIALS_DIR}/Features/{{cond}}/conditional_data.h5",
+		config = f"{TRIALS_DIR}/Features/{{cond}}/conf.yaml",
 	params:
 		condition_params
 	log:
-		f"{trials_dir}/Features/{{cond}}/conditionals.log"
+		f"{TRIALS_DIR}/Features/{{cond}}/conditionals.log"
 	conda:
 		"envs/environment.yaml"
 	resources:
-		mem_mb=lambda wildcards, input, attempt: 1000*attempt +  max(2*input.size_mb, 1000)
+		mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,2000,1000)
 	script:
 		"scripts/conditional.py"
 
 rule feature_calculation:
 	input:
-		f"{trials_dir}/Features/{{cond}}/conditional_data.h5",
-		config = f"{trials_dir}/Features/{{cond}}/conf.yaml",
+		data = f"{TRIALS_DIR}/Features/{{cond}}/conditional_data.h5",
+		config = f"{TRIALS_DIR}/Features/{{cond}}/conf.yaml",
 	output:
-		f"{trials_dir}/Features/{{cond}}/{{feature}}/feature_data.h5",
-		config = f"{trials_dir}/Features/{{cond}}/{{feature}}/conf.yaml",
+		f"{TRIALS_DIR}/Features/{{cond}}/{{feature}}/feature_data.h5",
+		config = f"{TRIALS_DIR}/Features/{{cond}}/{{feature}}/conf.yaml",
 	params:
 		params = lambda wildcards: features[wildcards["feature"]]
 	log:
-		f"{trials_dir}/Features/{{cond}}/{{feature}}/feature_calculation.log"
+		f"{TRIALS_DIR}/Features/{{cond}}/{{feature}}/feature_calculation.log"
 	conda:
 		"envs/environment.yaml"
 	resources:
-		mem_mb=lambda wildcards, input, attempt: 1000*attempt +  max(2*input.size_mb, 4000)
+		mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,2000)
 	script:
 		"scripts/feature.py"
 
 rule feature_elimination:
 	input:
-		feats = [f"{trials_dir}/Features/{cond}/{{feature}}/feature_data.h5" for cond in trial_conditions],
+		feats = [f"{TRIALS_DIR}/Features/{cond}/{{feature}}/feature_data.h5" for cond in trial_conditions],
 		parcellation  = f"results/{{subject_dates}}/{{parcellation}}/data.h5",
-		#config = f"{trials_dir}/{cond}/{feature}/conf.yaml",
+		#config = f"{TRIALS_DIR}/{cond}/{feature}/conf.yaml",
 	output:
-		best_feats	= f"{trials_dir}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/best_feats.pkl",
-		model		= f"{trials_dir}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/decoder_model.pkl",
-		perf		= f"{trials_dir}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/decoder_perf.pkl",
-		config		= f"{trials_dir}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/conf.yaml",
+		best_feats	= f"{TRIALS_DIR}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/best_feats.pkl",
+		model		= f"{TRIALS_DIR}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/decoder_model.pkl",
+		perf		= f"{TRIALS_DIR}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/decoder_perf.pkl",
+		config		= f"{TRIALS_DIR}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/conf.yaml",
 	params:
 		conds = list(trial_conditions),
 		reps = 5, #used to be k_folds but was removed form config
 	log:
-		f"{trials_dir}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/feature_calculation.log"
+		f"{TRIALS_DIR}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/feature_calculation.log"
 	conda:
 		 "envs/environment.yaml"
 	resources:
-		mem_mb=lambda wildcards, input, attempt: 1000*attempt +  max(2*input.size_mb, 1000)
+		mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
 	script:
 		  "scripts/recursive_feature_elimination.py"
 
 rule decoding:
 	input:
-		[f"{trials_dir}/Features/{cond}/{{feature}}/feature_data.h5" for cond in trial_conditions],
+		[f"{TRIALS_DIR}/Features/{cond}/{{feature}}/feature_data.h5" for cond in trial_conditions],
 	output:
-		f"{trials_dir}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/decoder_model.pkl",
-		f"{trials_dir}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/decoder_perf.pkl",
-		config = f"{trials_dir}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/conf.yaml",
+		f"{TRIALS_DIR}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/decoder_model.pkl",
+		f"{TRIALS_DIR}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/decoder_perf.pkl",
+		config = f"{TRIALS_DIR}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/conf.yaml",
 	params:
 		conds = list(trial_conditions),
 		params = lambda wildcards: decoders[wildcards["decoder"]]
 	log:
-		f"{trials_dir}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/decoding.log",
+		f"{TRIALS_DIR}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/decoding.log",
 	conda:
 		"envs/environment.yaml"
 	resources:
-		mem_mb=lambda wildcards, input, attempt: 1000*attempt +  max(2*input.size_mb, 1000)
+		mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
 	script:
 		"scripts/decoding.py"
 
@@ -321,15 +282,15 @@ rule plot_parcels:
 
 rule plot_performance:
 	input:
-		[f"{trials_dir}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/{decoder}/decoder_perf.pkl" for decoder in decoders],
+		[f"{TRIALS_DIR}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/{decoder}/decoder_perf.pkl" for decoder in decoders],
 	output:
-		f"{trials_dir}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/performance.png",
-		f"{trials_dir}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/performance.pkl",
+		f"{TRIALS_DIR}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/performance.png",
+		f"{TRIALS_DIR}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/performance.pkl",
 	params:
 		conds=list(trial_conditions),
 		decoders=decoders,
 	log:
-		f"{trials_dir}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/plot_performance.log",
+		f"{TRIALS_DIR}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/plot_performance.log",
 	conda:
 		"envs/environment.yaml"
 	script:
@@ -337,12 +298,12 @@ rule plot_performance:
 
 rule plot_performances:
 	input:
-		[f"{trials_dir}/Decoding/decoder/{'.'.join(trial_conditions)}/{feature}/{decoder}/decoder_perf.pkl"
+		[f"{TRIALS_DIR}/Decoding/decoder/{'.'.join(trial_conditions)}/{feature}/{decoder}/decoder_perf.pkl"
 				for feature in features
 				for decoder in decoders],
 	output:
-		f"{trials_dir}/Decoding/decoder/{'.'.join(trial_conditions)}/performances.png",
-		f"{trials_dir}/Decoding/decoder/{'.'.join(trial_conditions)}/performances_anno.png",
+		f"{TRIALS_DIR}/Decoding/decoder/{'.'.join(trial_conditions)}/performances.png",
+		f"{TRIALS_DIR}/Decoding/decoder/{'.'.join(trial_conditions)}/performances_anno.png",
 	params:
 		conds=list(trial_conditions),
 		decoders=decoders,
@@ -350,7 +311,7 @@ rule plot_performances:
 		subjects=plot_subject_labels,
 		trials=default_conditions,
 	log:
-		f"{trials_dir}/Decoding/decoder/{'.'.join(trial_conditions)}/plot_performances.log",
+		f"{TRIALS_DIR}/Decoding/decoder/{'.'.join(trial_conditions)}/plot_performances.log",
 	conda:
 		"envs/environment.yaml"
 	script:
@@ -381,17 +342,17 @@ rule plot_performances_parcellations:
 rule plot_glassbrain:
 	input:
 		parcellation      = f"results/{{subject_dates}}/{{parcellation}}/data.h5",
-		original_features = [f"{trials_dir}/Features/{cond}/{{feature}}/feature_data.h5" for cond in trial_conditions],
-		features          = f"{trials_dir}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/best_feats.pkl",
+		original_features = [f"{TRIALS_DIR}/Features/{cond}/{{feature}}/feature_data.h5" for cond in trial_conditions],
+		features          = f"{TRIALS_DIR}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/best_feats.pkl",
 
 	output:
-		plot              = f"{trials_dir}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/circle_plot.png",
-		interactive_plot  = f"{trials_dir}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/glassbrain.html",
+		plot              = f"{TRIALS_DIR}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/circle_plot.png",
+		interactive_plot  = f"{TRIALS_DIR}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/glassbrain.html",
 	log:
-		f"{trials_dir}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/plot_glassbrain.log",
+		f"{TRIALS_DIR}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/plot_glassbrain.log",
 	conda:
 		"envs/environment.yaml"
 	resources:
-		mem_mb=lambda wildcards, input, attempt: 16000*attempt +  max(2*input.size_mb, 16000)
+		mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,16000,16000)
 	script:
 		"scripts/plot_glassbrain.py"
