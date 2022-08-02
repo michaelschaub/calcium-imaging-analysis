@@ -5,11 +5,11 @@ branch_opts:
 
 
   parcellations:
-    anatomical:
+    #anatomical:
     SVD:
     #ICA:
       #n_comps: [64]
-    LocaNMF:
+    #LocaNMF:
 
   selected_trials:
     - All
@@ -80,21 +80,20 @@ static_params:
 
 trial_conditions:
   sides:
-    column: target_side_left
+    column: CorrectSide
     conds:
-      left:   0
-      right:  1
+      left:   1
+      right:  2
   modalities:
     column: StimType
     conds:
       visual:   1
       auditory: 2
   responses:
-    column: response_left
+    column: ResponseSide
     conds:
       left: 1
-      right: 0
-      no: -1
+      right: 2
 
 phase_conditions:
   pretrial:

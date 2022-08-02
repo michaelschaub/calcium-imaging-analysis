@@ -304,6 +304,7 @@ class DecompData(Data):
         '''
         select = True
         for attr, val in conditions.items():
+            self.logger.debug(f"dataframe columns {self._df.columns}")
             if isinstance(val,list):
                 any = False
                 for v in val:

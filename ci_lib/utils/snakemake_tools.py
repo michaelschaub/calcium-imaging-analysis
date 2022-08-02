@@ -3,7 +3,7 @@ import datetime
 import yaml
 import logging
 import resource
-
+import json
 
 def redirect_to_log(snakemake):
     # deprecated
@@ -38,12 +38,12 @@ def start_log(snakemake):
 def save_conf(snakemake, sections, params=[], additional_config=None):
     config = { 'static_params' : {}, 'branch_opts' : {} }
     for s in sections:
-        config['branch_opts'][s] = snakemake.config['branch_opts'][s]
+        config['branch_opts'][s] = json.loads(json.dumps(snakemake.config['branch_opts'][s]))
         if s not in ['conditions']:
-            config['static_params'][s] = snakemake.config['static_params'][s]
+            config['static_params'][s] = json.loads(json.dumps(snakemake.config['static_params'][s]))
     for p in params:
         config[p] = snakemake.params[p]
-    config["wildcards"] = dict(snakemake.wildcards)
+    config["wildcards"] = json.loads(json.dumps(snakemake.wildcards))
     if additional_config is not None:
         for key, item in additional_config:
             config[key] = item
@@ -54,9 +54,9 @@ def match_conf(snakemake, sections):
     with open( snakemake.input["config"], 'r') as conf_file:
         config = yaml.safe_load(conf_file)
     for s in sections:
-        if s in config["static_opts"] and config["static_opts"][s] != snakemake.config["static_opts"][s]:
+        if s in config["static_params"] and config["static_params"][s] != json.loads(json.dumps(snakemake.config["static_params"][s])):
             return False
-        if s in config["branch_opts"] and config["branch_opts"][s] != snakemake.config["branch_opts"][s]:
+        if s in config["branch_opts"] and config["branch_opts"][s] != json.loads(json.dumps(snakemake.config["branch_opts"][s])):
             return False
     return True
 
