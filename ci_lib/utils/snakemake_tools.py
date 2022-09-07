@@ -35,6 +35,13 @@ def start_log(snakemake):
     logger.info(f"Loglevel: {logger.getEffectiveLevel()}")
     return logger
 
+def load_wildcards(snakemake):
+    wildcards = []
+    for path in snakemake.input["config"]:
+        with open(path, "r") as f:
+            wildcards.append(yaml.safe_load(f)['wildcards'])
+
+
 def save_conf(snakemake, sections, params=[], additional_config=None):
     config = { 'static_params' : {}, 'branch_opts' : {} }
     for s in sections:
@@ -43,7 +50,7 @@ def save_conf(snakemake, sections, params=[], additional_config=None):
             config['static_params'][s] = json.loads(json.dumps(snakemake.config['static_params'][s]))
     for p in params:
         config[p] = snakemake.params[p]
-    config["wildcards"] = json.loads(json.dumps(snakemake.wildcards))
+    config["wildcards"] = json.loads(json.dumps(dict(snakemake.wildcards)))
     if additional_config is not None:
         for key, item in additional_config:
             config[key] = item

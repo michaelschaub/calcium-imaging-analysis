@@ -59,3 +59,8 @@ def calculate_memory_resource(wildcards, attempt, minimum=1000, step=1000, multi
 		input_mb = 0
 		return max(multiple*input_mb, minimum) + step*(attempt-1)
 
+PARAMETER_EXPR = r"(_[a-zA-Z0-9'~.\[\], -]+)*"
+
+def branch_match( branches, params=True ):
+	return "(" + "|".join(branches) + ")" + (PARAMETER_EXPR if params else "")
+

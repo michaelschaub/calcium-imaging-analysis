@@ -32,7 +32,7 @@ try:
 
     with open(snakemake.input["features"], 'rb') as f:
         feats = pickle.load(f)
-    parcellation = DecompData.load(snakemake.input["parcellations"])
+    parcellation = DecompData.load(snakemake.input["parcellation"])
     labels = parcellation.spatial_labels
     cut_labels = labels[:n_comps] if labels is not None else None
 

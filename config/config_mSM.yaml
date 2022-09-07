@@ -12,7 +12,7 @@ branch_opts:
     #LocaNMF:
 
   selected_trials:
-    - All
+    All:
   conditions:
     default:
       phase: stimulus

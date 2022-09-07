@@ -26,7 +26,7 @@ if snakemake.config['limit_memory']:
 try:
     snakemake_tools.save_conf(snakemake, sections=["parcellations","selected_trials","conditions","features","decoders"],
                               params=['conds','reps'])
-    start = snakemake_tools.start_timer()
+    timer_start = snakemake_tools.start_timer()
 
     ### Load feature for all conditions
     cond_str = snakemake.params['conds']
@@ -65,7 +65,7 @@ try:
     elif(int(rfe_n)>int(cond_feats[0].ncomponents) and feat_type == Feature_Type.NODE):
         rfe_n = feats
 
-    print("rfe_n",rfe_n)
+    logger.info("rfe_n",rfe_n)
     RFE = skfs.RFE(c_MLR,n_features_to_select=int(rfe_n))
 
     ranking = np.zeros([n_rep,feats],dtype=np.int32)

@@ -1,6 +1,6 @@
 configfile: "config/config.yaml"
 
-from snakemake_tools import create_parameters, create_conditions, calculate_memory_resource as mem_res
+from snakemake_tools import create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match
 
 subjects 	= config["branch_opts"]["subjects"]
 subject_dates	= ["_".join([subject_id,date]) for subject_id,dates in subjects.items() for date in dates ]
@@ -30,10 +30,10 @@ plot_subject_labels = {f"{subject_id}(#{len(dates)})" for subject_id,dates in su
 
 wildcard_constraints:
 	subject_dates	= r"[a-zA-Z\d_-]+",
-	parcellation	= r"[a-zA-Z\d_'-~.\[\], ]+", # r"[a-zA-Z\d_~.]+",
-	trials		= r"[a-zA-Z\d_~.]+",
-	cond		= r"[a-zA-Z\d_]+",
-	feature		= r"[a-zA-Z\d_~.\[\], ]+",
-	decoder		= r"[a-zA-Z\d_~.]+",
+	parcellation	= branch_match(config["branch_opts"]["parcellations"].keys()),
+	trials		= branch_match(config["branch_opts"]["selected_trials"].keys()),
+	cond		= branch_match(config["branch_opts"]["conditions"].keys()),
+	feature		= branch_match(config["branch_opts"]["features"].keys()),
+	decoder		= branch_match(config["branch_opts"]["decoders"].keys()),
 
 TRIALS_DIR = r"results/{subject_dates}/{parcellation}/{trials}"
