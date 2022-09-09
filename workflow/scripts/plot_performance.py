@@ -2,6 +2,7 @@ import pickle
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import cm
+import yaml
 
 from pathlib import Path
 import sys
@@ -15,9 +16,13 @@ try:
     timer_start = snakemake_tools.start_timer()
 
     perf = []
-    for path in snakemake.input:
+    for path in snakemake.input["perf"]:
         with open(path, "rb") as f:
             perf.append(pickle.load(f))
+    config = []
+    for path in snakemake.input["config"]:
+        with open(path, "r") as f:
+            config.append(yaml.safe_load(f))
 
     decoders = [ dec.split('_')[0] for dec in snakemake.params['decoders']]
     conditions = snakemake.params['conds']

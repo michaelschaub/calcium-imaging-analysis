@@ -1,23 +1,9 @@
-rule_conf:
-  entry:
-    {}
-  parcellation:
-    {}
-  trial_selection:
-    {}
-  conditions:
-    {}
-  feature_calculation:
-    {}
-  decoder:
-    {}
-
 static_params:
   parcellations:
     anatomical:
     ICA:
     LocaNMF:
-      minrank: 1
+      minrank: 0
       maxrank: 10
       min_pixels: 400
       loc_thresh: 70
@@ -45,5 +31,6 @@ paths:
 
 different_config_inputs: 1
 
-#loglevel: DEBUG
+limit_memory: 1
+
 loglevel: INFO

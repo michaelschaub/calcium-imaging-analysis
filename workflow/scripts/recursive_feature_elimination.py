@@ -16,16 +16,17 @@ sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 from ci_lib.utils import snakemake_tools
 from ci_lib.features import Features, Means, Raws, Covariances, AutoCovariances, Moup, AutoCorrelations, Feature_Type
-from ci_lib.plotting import graph_circle_plot, plot_glassbrain_bokeh, graph_sping_plot
 from ci_lib import DecompData
-from ci_lib.rfe import RFE_pipeline, construct_rfe_graph
+from ci_lib.rfe import RFE_pipeline
 
 # redirect std_out to log file
 logger = snakemake_tools.start_log(snakemake)
+if snakemake.config['limit_memory']:
+    snakemake_tools.limit_memory(snakemake)
 try:
-    snakemake_tools.save_conf(snakemake, sections=["entry","parcellation","trial_selection","conditions","feature_calculation","decoder"],
+    snakemake_tools.save_conf(snakemake, sections=["parcellations","selected_trials","conditions","features","decoders"],
                               params=['conds','reps'])
-    start = snakemake_tools.start_timer()
+    timer_start = snakemake_tools.start_timer()
 
     ### Load feature for all conditions
     cond_str = snakemake.params['conds']
@@ -64,7 +65,7 @@ try:
     elif(int(rfe_n)>int(cond_feats[0].ncomponents) and feat_type == Feature_Type.NODE):
         rfe_n = feats
 
-    print("rfe_n",rfe_n)
+    logger.info("rfe_n",rfe_n)
     RFE = skfs.RFE(c_MLR,n_features_to_select=int(rfe_n))
 
     ranking = np.zeros([n_rep,feats],dtype=np.int32)
@@ -94,18 +95,7 @@ try:
     with open(snakemake.output["model"], 'wb') as f:
         pickle.dump(decoders, f)
 
-
-    ##Plots
-
-    parcellation = DecompData.load(snakemake.input["parcellation"])
-    n_comps = cond_feats[0].ncomponents
-    cutted_labels=parcellation.spatial_labels[:n_comps]
-
-    graph_circle_plot(list_best_feat,n_nodes= n_comps, title=feature, feature_type = feat_type, node_labels= cutted_labels, save_path=snakemake.output["plot"])
-
-    #Glassbrain Plot
-    rfe_graph = construct_rfe_graph(list_best_feat, n_nodes = n_comps, feat_type = feat_type)
-    plot_glassbrain_bokeh(graph=rfe_graph,components_spatials=parcellation.spatials,components_labels=cutted_labels,save_path=snakemake.output["glassbrain"])
+    snakemake_tools.stop_timer(timer_start, logger=logger)
 except Exception:
     logger.exception('')
     sys.exit(1)

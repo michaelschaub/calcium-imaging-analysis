@@ -7,9 +7,11 @@ from ci_lib import DecompData
 
 # redirect std_out to log file
 logger = snakemake_tools.start_log(snakemake)
+if snakemake.config['limit_memory']:
+    snakemake_tools.limit_memory(snakemake)
 try:
-    snakemake_tools.check_conf(snakemake, sections=["entry"])
-    snakemake_tools.save_conf(snakemake, sections=["entry","parcellation"])
+    snakemake_tools.check_conf(snakemake, sections=[])
+    snakemake_tools.save_conf(snakemake, sections=["parcellations"])
     start = snakemake_tools.start_timer()
 
     def anatom(params):
@@ -19,7 +21,7 @@ try:
         anatomical.save(snakemake.output[0])
 
     def locaNMF(params):
-        from ci_lib.decomposition import locaNMF
+        from ci_lib.decomposition.locanmf import locaNMF
         svd = DecompData.load(snakemake.input[0])
         locanmf = locaNMF(svd, atlas_path=snakemake.input["atlas"], logger=logger, **params)
         locanmf.save(snakemake.output[0])
