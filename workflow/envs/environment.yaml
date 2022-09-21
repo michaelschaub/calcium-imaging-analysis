@@ -9,6 +9,7 @@ dependencies:
   - pandas
   - scipy
 
+
   - scikit-learn
 
   - matplotlib
@@ -24,6 +25,8 @@ dependencies:
       - networkx
       - Shapely
 
+      # ?
+      - psutil
 
       # Windows workaround for h5py
       - wheel

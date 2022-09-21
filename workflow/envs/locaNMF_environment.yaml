@@ -13,6 +13,7 @@ dependencies:
   #- h5py=2.8 #doesn't work on win
   # Learning
   - scikit-learn
+
   # Plotting and visualization
   - matplotlib
   - bokeh

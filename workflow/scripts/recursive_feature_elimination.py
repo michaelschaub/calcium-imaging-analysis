@@ -65,7 +65,6 @@ try:
     elif(int(rfe_n)>int(cond_feats[0].ncomponents) and feat_type == Feature_Type.NODE):
         rfe_n = feats
 
-    logger.info("rfe_n",rfe_n)
     RFE = skfs.RFE(c_MLR,n_features_to_select=int(rfe_n))
 
     ranking = np.zeros([n_rep,feats],dtype=np.int32)
@@ -86,8 +85,8 @@ try:
     logger.info("perf")
     logger.info(perf)
 
-    with open(snakemake.output["perf"], 'wb') as f:
-        pickle.dump(perf, f)
+    snakemake_tools.save_npy(snakemake,snakemake.output["perf"],perf)
+
 
     with open(snakemake.output["best_feats"], 'wb') as f:
         pickle.dump(list_best_feat, f)

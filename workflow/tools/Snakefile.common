@@ -24,6 +24,9 @@ decoder_conf	= config["branch_opts"]["decoders"]
 decoder_static	= config["static_params"]["decoders"]
 decoders	= create_parameters( decoder_conf, decoder_static )
 
+#Data types
+export_type = config["export_type"]
+
 #For annotating plots
 plot_subject_labels = {f"{subject_id}(#{len(dates)})" for subject_id,dates in subjects.items()}
 #plot_feature_labels = [f"{feat_name} t={options['timelags']}" if 'timelags' in options else feat_name for feat_name,options in feature_conf.items()]

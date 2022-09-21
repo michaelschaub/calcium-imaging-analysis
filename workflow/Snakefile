@@ -223,7 +223,7 @@ rule feature_elimination:
 	output:
 		best_feats	= f"{{data_dir}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/best_feats.pkl",
 		model		= f"{{data_dir}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/decoder_model.pkl",
-		perf		= f"{{data_dir}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/decoder_perf.pkl",
+		perf		= f"{{data_dir}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/decoder_perf.{export_type}",
 		config		= f"{{data_dir}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/conf.yaml",
 	params:
 		conds = list(trial_conditions),

@@ -16,7 +16,7 @@ logger = snakemake_tools.start_log(snakemake)
 if snakemake.config['limit_memory']:
     snakemake_tools.limit_memory(snakemake)
 try:
-    start = snakemake_tools.start_timer()
+    timer_start = snakemake_tools.start_timer()
 
     ### Load feature for all conditions
     feature = snakemake.wildcards["feature"]
