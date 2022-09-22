@@ -5,7 +5,9 @@ import logging
 #import resource
 import json
 
+import os
 import numpy
+import pickle
 
 
 def redirect_to_log(snakemake):
@@ -60,24 +62,32 @@ def save_conf(snakemake, sections, params=[], additional_config=None):
     with open( snakemake.output["config"], 'w') as conf_file:
         yaml.dump(config, conf_file)
 
-def save_npy(snakemake, path, data):
-    print(path)
-    match snakemake.config['export_type']:
-        case 'csv':
-            numpy.savetxt(path, data, delimiter=',')
-        case 'npy':
-            numpy.save(path, data)
-        case 'npz':
-            numpy.savez_compressed(path, data)
-        case _:
-            pass
+def save(snakemake, path, data):
+    if isinstance(data, numpy.ndarray):
+        match snakemake.config['export_type']:
+            case 'csv':
+                numpy.savetxt(path, data, delimiter=',')
+            case 'npy':
+                numpy.save(path, data)
+            case 'npz':
+                numpy.savez_compressed(path, data)
+            case _:
+                pass
+    else:
+        with open(path, 'wb') as f:
+            pickle.dump(data, f)
 
-def load_npy(snakemake, path, dtype="float"):
-    match snakemake.config['export_type']:
-        case 'csv':
+def load(snakemake, path, dtype="float"):
+    _ , file_extension = os.path.splitext(path)
+    match file_extension:
+        case '.csv':
             return numpy.loadtxt(path, delimiter=',',dtype=dtype)
-        case 'npy' | 'npz' :
+        case '.npy' | '.npz' :
             return numpy.load(path)
+        case '.pkl':
+            with open(path, 'rb') as f:
+                data = pickle.load(f)
+            return data
         case _:
             pass
 

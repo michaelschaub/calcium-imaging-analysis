@@ -29,7 +29,7 @@ try:
     n_comps = cond_feat.ncomponents
 
     ##Plots
-    feats = snakemake_tools.load_npy(snakemake,snakemake.input["features"],dtype='int')
+    feats = snakemake_tools.load(snakemake,snakemake.input["features"],dtype='int')
 
     parcellation = DecompData.load(snakemake.input["parcellation"])
     labels = parcellation.spatial_labels

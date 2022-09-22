@@ -1,7 +1,5 @@
 import numpy as np
 
-
-
 from sklearn import preprocessing
 from sklearn.model_selection import StratifiedShuffleSplit
 import sklearn.linear_model as skllm
@@ -9,9 +7,6 @@ import sklearn.preprocessing as skprp
 import sklearn.feature_selection as skfs
 
 from ci_lib.feature_selection import RFE_pipeline
-
-
-from ci_lib.features import Features, Means, Raws, Covariances, AutoCovariances, Moup, AutoCorrelations, Feature_Type
 
 
 def rec_feature_elimination(select_feats_n, class_feats, class_labels, repetitions):
