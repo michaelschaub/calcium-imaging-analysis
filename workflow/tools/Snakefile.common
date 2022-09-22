@@ -18,7 +18,8 @@ feature_conf	= config["branch_opts"]["features"]
 feature_static	= config["static_params"]["features"]
 features	= create_parameters( feature_conf, feature_static )
 
-rfe_ns		= config["branch_opts"]["rfe"]["selected_features_n"]
+rfe_ns		= config["branch_opts"]["rfe"]["select_features_n"]
+rfe_reps    = config["branch_opts"]["rfe"]["repetitions"] || 1
 
 decoder_conf	= config["branch_opts"]["decoders"]
 decoder_static	= config["static_params"]["decoders"]

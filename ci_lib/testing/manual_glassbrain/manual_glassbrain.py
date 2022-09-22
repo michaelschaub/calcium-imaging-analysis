@@ -6,7 +6,7 @@ from ci_lib.utils import snakemake_tools
 from ci_lib.features import Features, Means, Raws, Covariances, AutoCovariances, Moup, AutoCorrelations, Feature_Type
 from ci_lib.plotting import graph_circle_plot, plot_glassbrain_bokeh
 from ci_lib import DecompData
-from ci_lib.rfe import RFE_pipeline, construct_rfe_graph
+from ci_lib.feature_selection import RFE_pipeline, construct_rfe_graph
 
 import numpy as np
 import networkx as nx

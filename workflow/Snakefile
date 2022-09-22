@@ -221,13 +221,13 @@ rule feature_elimination:
 	input:
 		feats = [f"{{data_dir}}/Features/{cond}/{{feature}}/features.h5" for cond in trial_conditions],
 	output:
-		best_feats	= f"{{data_dir}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/best_feats.pkl",
+		best_feats	= f"{{data_dir}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/best_feats.{export_type}",
 		model		= f"{{data_dir}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/decoder_model.pkl",
 		perf		= f"{{data_dir}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/decoder_perf.{export_type}",
 		config		= f"{{data_dir}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/conf.yaml",
 	params:
 		conds = list(trial_conditions),
-		reps = 5, #used to be k_folds but was removed form config
+		reps = rfe_reps
 	log:
 		f"{{data_dir}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/feature_calculation.log"
 	conda:
@@ -235,7 +235,7 @@ rule feature_elimination:
 	resources:
 		mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
 	script:
-		"scripts/recursive_feature_elimination.py"
+		"scripts/feature_elimination.py"
 
 rule decoding:
 	input:
@@ -345,7 +345,7 @@ rule plot_glassbrain:
 	input:
 		parcellation      = f"results/{{subject_dates}}/{{parcellation}}/data.h5",
 		original_features = [f"{TRIALS_DIR}/Features/{cond}/{{feature}}/features.h5" for cond in trial_conditions],
-		features          = f"{TRIALS_DIR}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/best_feats.pkl",
+		features          = f"{TRIALS_DIR}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/best_feats.{export_type}",
 
 	output:
 		plot              = f"{TRIALS_DIR}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/circle_plot.png",

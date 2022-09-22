@@ -72,10 +72,10 @@ def save_npy(snakemake, path, data):
         case _:
             pass
 
-def load_npy(snakemake, path):
+def load_npy(snakemake, path, dtype="float"):
     match snakemake.config['export_type']:
         case 'csv':
-            return numpy.loadtxt(path, delimiter=',')
+            return numpy.loadtxt(path, delimiter=',',dtype=dtype)
         case 'npy' | 'npz' :
             return numpy.load(path)
         case _:
