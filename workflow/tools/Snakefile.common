@@ -1,6 +1,6 @@
 configfile: "config/config.yaml"
 
-from snakemake_tools import create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match
+from snakemake_tools import create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match, hash_config
 
 subjects 	= config["branch_opts"]["subjects"]
 subject_dates	= ["_".join([subject_id,date]) for subject_id,dates in subjects.items() for date in dates ]
@@ -27,6 +27,9 @@ decoders	= create_parameters( decoder_conf, decoder_static )
 
 #Data types
 export_type = config["export_type"]
+
+#Run id (based on hash of config)
+run_id = hash_config(config)
 
 #For annotating plots
 plot_subject_labels = {f"{subject_id}(#{len(dates)})" for subject_id,dates in subjects.items()}
