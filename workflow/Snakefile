@@ -1,8 +1,15 @@
 include: "tools/Snakefile.common"
 
-ruleorder: pipeline_entry > locaNMF > parcellation
+report: "report/workflow.rst"
+
+ruleorder: load_GN > load_mSM > locaNMF > parcellation
 
 ###   Output accumulation rules   ###
+rule decode_all:
+	input:
+		expand(f"results/{config['output']['processed_dates']}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/performances.png", parcellation = parcellations, trials= selected_trials),
+		expand(f"results/plots/{config['output']['processed_dates']}/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{feature}}/performances.png", feature =  features, trials= selected_trials)
+
 
 # The first rule is default
 rule decoding_performances:

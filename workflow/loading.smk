@@ -1,6 +1,6 @@
 from snakemake_tools import create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match, hash_config
 
-rule pipeline_entry:
+rule load_GN:
     '''
     aggregates all task and svd data from one session with one animal
     '''
@@ -14,6 +14,7 @@ rule pipeline_entry:
                             for subject_id,dates in config["subjects"].items() for date in dates],
     output:
         f"results/{{subject_dates}}/SVD/data.h5",
+        align_plot = report("results/{subject_dates}/SVD/alignment.png", caption="report/alignment.rst", category="Processing", subcategory="Brain Alignment", labels={"Step": "Brain Alignment"}),
         config = f"results/{{subject_dates}}/SVD/conf.yaml",
     params:
         subject_dates_str = '_'.join(config["subject_dates"]),
@@ -31,7 +32,7 @@ rule pipeline_entry:
     script:
         "scripts/default_entry.py"
 
-rule mSM_entry:
+rule load_mSM:
     '''
     aggregates all task and svd data from one session with one animal
     '''

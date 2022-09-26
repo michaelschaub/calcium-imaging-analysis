@@ -1,0 +1,1 @@
+This is the workflow description. Test reference alignment.png_. And a reference to a category `Processing`_.

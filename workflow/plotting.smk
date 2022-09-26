@@ -39,7 +39,7 @@ rule plot_performance:
     script:
         "scripts/plot_performance.py"
 
-rule plot_performances:
+rule plot_performances_features:
     input:
         perf   = [f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{feature}/{decoder}/decoder_perf.pkl"
                   for feature in config['features']
@@ -48,7 +48,7 @@ rule plot_performances:
                   for feature in config['features']
                   for decoder in config["decoders"]],
     output:
-        f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/performances.png",
+        report(f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/performances.png", caption="report/decode_features.rst", category="Plotting", subcategory="Decoding Performance across Features"),
         f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/performances_anno.png",
     params:
         conds=list(config['trial_conditions']),
