@@ -17,9 +17,9 @@ branch_opts:
 
 
   parcellations:
-    #anatomical:
+    anatomical:
     #ROI: [[]] #,['VIS,SS']] #FRP-R,MOp-R'],["VIS,SS"]]
-    SVD:
+    #SVD:
     #ICA:
     #n_comps: [64]
     #LocaNMF:
@@ -34,12 +34,16 @@ branch_opts:
       n_distractors: none
       auto_reward: no
       both_spouts: yes
-    left_visual:
-      sides: left
+    visual:
       modalities: visual
-    right_visual:
-      sides: right
-      modalities: visual
+    tactile:
+      modalities: tactile
+    #left_visual:
+      #sides: left
+      #modalities: visual
+    #right_visual:
+      #sides: right
+      #modalities: visual
       #left_tactile:
       #sides: left
       #modalities: tactile
@@ -54,15 +58,15 @@ branch_opts:
       #modalities: vistact
 
   features:
-    mean:
-      max_components : [64]
+    #mean:
+    #  max_components : [64]
       #covariance:
       #max_components : [64]
-    #moup:
-      #timelags: [1,2,3]
-      #max_components : [64]
-    #autocovariance:
-      #timelags: [[0],[1]]
+    moup:
+      timelags: [1] #,2,3]
+    #  max_components : [64]
+    autocovariance:
+      timelags: [[0]] #,[1]]
       #max_components : [64]
 
   decoders:
@@ -173,4 +177,4 @@ limit_memory: 1
 
 loglevel: INFO
 
-export_type: 'csv'
+export_type: 'npy'

@@ -8,7 +8,9 @@ ruleorder: load_GN > load_mSM > locaNMF > parcellation
 rule decode_all:
 	input:
 		expand(f"results/{config['output']['processed_dates']}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/performances.png", parcellation = parcellations, trials= selected_trials),
-		expand(f"results/plots/{config['output']['processed_dates']}/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{feature}}/performances.png", feature =  features, trials= selected_trials)
+		expand(f"results/plots/{config['output']['processed_dates']}/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{feature}}/performances.png", feature =  features, trials= selected_trials),
+		expand(f"results/{config['output']['processed_dates']}/{{parcellation}}/visualization/combined_parcels.png", parcellation = parcellations)
+
 
 
 # The first rule is default

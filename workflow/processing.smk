@@ -50,6 +50,7 @@ rule trial_selection:
         config = f"{{data_dir}}/conf.yaml",
     output:
         f"{{data_dir}}/{{trials}}/data.h5",
+        #report = report(f"{{data_dir}}/{{trials}}/conf.yaml"),
         config = f"{{data_dir}}/{{trials}}/conf.yaml",
     log:
         f"{{data_dir}}/{{trials}}/trial_selection.log"
@@ -90,15 +91,21 @@ rule condition:
 
 rule feature_calculation:
     input:
-        data = f"{{data_dir}}/data.h5",
-        config = f"{{data_dir}}/conf.yaml",
+        data = f"{{data_dir}}/{{cond}}/data.h5",
+        config = f"{{data_dir}}/{{cond}}/conf.yaml",
     output:
-        f"{{data_dir}}/{{feature}}/features.h5",
-        config = f"{{data_dir}}/{{feature}}/conf.yaml",
+        f"{{data_dir}}/{{cond}}/{{feature}}/features.h5",
+        export = report(
+            f"{{data_dir}}/{{cond}}/{{feature}}/features.{config['export_type']}",
+            caption="report/alignment.rst",
+            category="4 Feature Calculation",
+            subcategory="{feature}",
+            labels={"Condition": "{cond}"}),
+        config = f"{{data_dir}}/{{cond}}/{{feature}}/conf.yaml",
     params:
         params = lambda wildcards: config["features"][wildcards["feature"]]
     log:
-        f"{{data_dir}}/{{feature}}/feature_calculation.log"
+        f"{{data_dir}}/{{cond}}/{{feature}}/feature_calculation.log"
     conda:
         "envs/environment.yaml"
     resources:
