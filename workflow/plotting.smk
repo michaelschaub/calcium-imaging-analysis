@@ -60,7 +60,7 @@ rule plot_performances_features:
                   for feature in config['features']
                   for decoder in config["decoders"]],
     output:
-        report(f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/performances.png", caption="report/decode_features.rst", category="5 Decoding", subcategory="Compare Features", labels={"Parcellation":"{parcellation}"}),
+        report(f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/performances.png", caption="report/decode_features.rst", category="6 Decoding", subcategory="Compare Features", labels={"Parcellation":"{parcellation}"}),
         f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/performances_anno.png",
     params:
         conds=list(config['trial_conditions']),
@@ -81,7 +81,7 @@ rule plot_performances_parcellations:
          for parcellation in config['parcellations']
          for decoder in config["decoders"]],
     output:
-        report(f"results/plots/{{mouse_dates}}/{{trials}}/Decoding/{'.'.join(config['trial_conditions'])}/{{feature}}/performances.png", caption="report/decode_features.rst", category="5 Decoding", subcategory="Compare Parcellation", labels={"Feature":"{feature}"}),
+        report(f"results/plots/{{mouse_dates}}/{{trials}}/Decoding/{'.'.join(config['trial_conditions'])}/{{feature}}/performances.png", caption="report/decode_features.rst", category="6 Decoding", subcategory="Compare Parcellation", labels={"Feature":"{feature}"}),
 
         f"results/plots/{{mouse_dates}}/{{trials}}/Decoding/{'.'.join(config['trial_conditions'])}/{{feature}}/performances_anno.png",
     params:

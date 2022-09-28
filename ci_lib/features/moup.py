@@ -54,16 +54,18 @@ def recompose_mou_ests( attr_arrays, mou_ests=None ):
 class Moup(Features):
     _type = Feature_Type.DIRECTED
 
-    def __init__(self, data, mou_ests, label=None, file=None):
+    def __init__(self, data, feature, mou_ests, label=None, file=None):
         self.data = data
+        self._feature = feature
         self._mou_ests = mou_ests
         self._label = label
         self._savefile = file
 
     def create(data, max_comps=None, timelag=None, label=None, logger=LOGGER):
         mou_ests = fit_moup(data.temporals[:, :, :max_comps], timelag if timelag>0 else None, label, logger=logger)
-        feat = Moup(data, mou_ests, label)
-        return feat
+        feature = np.asarray([[mou_est.get_J()] for mou_est in self._mou_ests])
+        return Moup(data, feature, mou_ests, label)
+
 
     def flatten(self, feat=None):
         n = self._mou_ests[0].get_J().shape[0]
@@ -75,14 +77,24 @@ class Moup(Features):
 
         return flat_params
 
+    '''
+    def export(self, path, feat=None):
+        feats = np.empty((len(self._mou_ests),*(self._mou_ests[0].get_J().shape[0]))
+
+        for i,mou_est in enumerate(self._mou_ests):
+            feats[i,:] = mou_est.get_J()[]
+
+        save(snakemake, path, feats)
+    '''
+
     @property
     def hash(self):
         return reproducable_hash(tuple( getattr(mou,attr)
                                     for attr in Moup.mou_attrs if attr != "d_fit" for mou in self._mou_ests))
 
-    @property
-    def feature(self):
-        return np.asarray([[mou_est.get_J()] for mou_est in self._mou_ests])  # ,other params]
+#   @property
+#   def feature(self):
+#       return np.asarray([[mou_est.get_J()] for mou_est in self._mou_ests])   # ,other params]
 
     @property
     def ncomponents(self):

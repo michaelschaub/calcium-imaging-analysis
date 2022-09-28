@@ -23,7 +23,7 @@ class Features:
         self._savefile = file
 
     def flatten(self):
-        '''flatten contained feauture to one trial and one feature dimension'''
+        '''flatten contained feature to one trial and one feature dimension'''
         pass
 
     def expand(self, data=None):
@@ -41,6 +41,10 @@ class Features:
     @property
     def feature(self):
         return self._feature
+
+    @feature.setter
+    def feature(self,value):
+        self._feature = value
 
     @property
     def mean(self):

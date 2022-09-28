@@ -2,7 +2,7 @@ include: "tools/Snakefile.common"
 
 report: "report/workflow.rst"
 
-ruleorder: load_GN > load_mSM > locaNMF > parcellation
+ruleorder: load_GN > load_mSM > locaNMF > parcellation > thresholding > feature_calculation
 
 ###   Output accumulation rules   ###
 rule decode_all:

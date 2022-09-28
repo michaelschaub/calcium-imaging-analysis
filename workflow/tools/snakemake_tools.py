@@ -10,16 +10,27 @@ def create_parameters( branch_conf, static_conf={} ):
     default_params    = branch_conf["default"] if "default" in branch_conf else {}
     parameters    = {}
     for branch, br_params in branch_conf.items():
+
+
         if branch == "default":
             continue
         if br_params is None:
             br_params = {}
         # combine br_params with defaults into total params
         params = default_params | br_params
+
+        optional = None
+        if "optional" in params.keys():
+            optional = params["optional"]
+            del params["optional"]
+
+        ### From here
         # create a pattern of form "branchname_{}_{}_...", with # of params replacement fields
         pattern    = "_".join( [f"{branch}"] +  ["{}"]*len(params) )
+        print(pattern)
         # insert parameter names and parameter name replacement fields into pattern
         pattern    = pattern.format(*map( "{0}~{{{0}}}".format, params.keys() ))
+        print(pattern)
         # create cartesian product over all parameter values
         values    = iterproduct( *params.values() )
         # create list parameter dictionaries from cartesian product
@@ -29,6 +40,31 @@ def create_parameters( branch_conf, static_conf={} ):
             values = [ static_conf[branch] | vals for vals in values ]
         for vals in values:
             parameters[ pattern.format(**vals) ] = {"branch" : branch} | vals
+
+        ###TODO same code twice
+
+        ### From here
+        if optional is not None:
+            params = params | optional
+
+            # create a pattern of form "branchname_{}_{}_...", with # of params replacement fields
+            pattern    = "_".join( [f"{branch}"] +  ["{}"]*len(params) )
+            print(pattern)
+            # insert parameter names and parameter name replacement fields into pattern
+            pattern    = pattern.format(*map( "{0}~{{{0}}}".format, params.keys() ))
+            print(pattern)
+            # create cartesian product over all parameter values
+            values    = iterproduct( *params.values() )
+            # create list parameter dictionaries from cartesian product
+            values    = [ dict(zip(params.keys(), vals)) for vals in values]
+            # include static parametrs if present
+            if branch in static_conf and static_conf[branch] is not None:
+                values = [ static_conf[branch] | vals for vals in values ]
+            for vals in values:
+                parameters[ pattern.format(**vals) ] = {"branch" : branch} | vals
+        ### TODO this is just checking if it works  COPY PASTA
+
+    print(parameters)
     return parameters
 
 def create_conditions(conditions, config):
