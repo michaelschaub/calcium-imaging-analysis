@@ -64,10 +64,21 @@ branch_opts:
       #max_components : [64]
     moup:
       timelags: [1] #,2,3]
+      optional:
+        thresh:
+          - 0.1
+          - 0.5
     #  max_components : [64]
     autocovariance:
-      timelags: [[0]] #,[1]]
+      timelags: [[1]] #,[1]]
+      optional:
+        thresh:
+          - 0.1
+          - 0.5
+
       #max_components : [64]
+
+
 
   decoders:
     default:

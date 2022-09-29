@@ -127,15 +127,22 @@ rule feature_calculation:
 rule thresholding:
     input:
         data = f"{{data_dir}}/{{cond}}/{{feature}}/features.h5",
-        config = f"{{data_dir}}/{{cond}}/conf.yaml",
+        config = f"{{data_dir}}/{{cond}}/{{feature}}/conf.yaml",
     output:
         data = f"{{data_dir}}/{{cond}}/{{feature}}_thresh~{{thresh}}/features.h5",
         export_raw = report(
-        f"{{data_dir}}/{{cond}}/{{feature}}_thresh~{{thresh}}/features_thresh.{config['export_type']}",
-        caption="report/alignment.rst",
-        category="5 Thresholding",
-        subcategory="{feature}",
-        labels={"Threshold": "{thresh}", "Condition": "{cond}", "Type": "Data"}),
+            f"{{data_dir}}/{{cond}}/{{feature}}_thresh~{{thresh}}/features_thresh.{config['export_type']}",
+            caption="report/alignment.rst",
+            category="5 Thresholding",
+            subcategory="{feature}",
+            labels={"Threshold": "{thresh}", "Condition": "{cond}", "Type": "Data"}),
+
+        export_plot = report(
+            f"{{data_dir}}/{{cond}}/{{feature}}_thresh~{{thresh}}/features_thresh.png",
+            caption="report/alignment.rst",
+            category="5 Thresholding",
+            subcategory="{feature}",
+            labels={"Threshold": "{thresh}", "Condition": "{cond}", "Type": "Plot"}),
     params:
         params = lambda wildcards: config["features"][f"{wildcards['feature']}_thresh~{wildcards['thresh']}"]
     log:

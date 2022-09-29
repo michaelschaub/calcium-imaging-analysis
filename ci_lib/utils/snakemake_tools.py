@@ -9,6 +9,7 @@ import os
 import numpy
 import pickle
 
+from pathlib import Path
 
 def redirect_to_log(snakemake):
     # deprecated
