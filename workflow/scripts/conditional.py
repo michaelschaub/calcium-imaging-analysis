@@ -7,9 +7,11 @@ from ci_lib import DecompData
 
 # redirect std_out to log file
 logger = snakemake_tools.start_log(snakemake)
+if snakemake.config['limit_memory']:
+    snakemake_tools.limit_memory(snakemake)
 try:
-    snakemake_tools.check_conf(snakemake, sections=["entry","parcellation","trial_selection"])
-    snakemake_tools.save_conf(snakemake, sections=["entry","parcellation","trial_selection","conditions"])
+    snakemake_tools.check_conf(snakemake, sections=["parcellations","selected_trials"])
+    snakemake_tools.save_conf(snakemake, sections=["parcellations","selected_trials","conditions"])
     timer_start = snakemake_tools.start_timer()
 
     data = DecompData.load(snakemake.input[0])

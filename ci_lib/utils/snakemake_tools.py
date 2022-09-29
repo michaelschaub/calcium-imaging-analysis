@@ -2,6 +2,8 @@ import sys
 import datetime
 import yaml
 import logging
+import resource
+import json
 
 def redirect_to_log(snakemake):
     # deprecated
@@ -33,13 +35,22 @@ def start_log(snakemake):
     logger.info(f"Loglevel: {logger.getEffectiveLevel()}")
     return logger
 
+def load_wildcards(snakemake):
+    wildcards = []
+    for path in snakemake.input["config"]:
+        with open(path, "r") as f:
+            wildcards.append(yaml.safe_load(f)['wildcards'])
+
+
 def save_conf(snakemake, sections, params=[], additional_config=None):
-    config = {}
+    config = { 'static_params' : {}, 'branch_opts' : {} }
     for s in sections:
-        config[s] = snakemake.config['rule_conf'][s]
+        config['branch_opts'][s] = json.loads(json.dumps(snakemake.config['branch_opts'][s]))
+        if s not in ['conditions']:
+            config['static_params'][s] = json.loads(json.dumps(snakemake.config['static_params'][s]))
     for p in params:
         config[p] = snakemake.params[p]
-    config["wildcards"] = dict(snakemake.wildcards)
+    config["wildcards"] = json.loads(json.dumps(dict(snakemake.wildcards)))
     if additional_config is not None:
         for key, item in additional_config:
             config[key] = item
@@ -50,7 +61,9 @@ def match_conf(snakemake, sections):
     with open( snakemake.input["config"], 'r') as conf_file:
         config = yaml.safe_load(conf_file)
     for s in sections:
-        if s in config and config[s] != snakemake.config["rule_conf"][s]:
+        if s in config["static_params"] and config["static_params"][s] != json.loads(json.dumps(snakemake.config["static_params"][s])):
+            return False
+        if s in config["branch_opts"] and config["branch_opts"][s] != json.loads(json.dumps(snakemake.config["branch_opts"][s])):
             return False
     return True
 
@@ -67,3 +80,11 @@ def start_timer():
 def stop_timer(start, logger=None):
     delta = datetime.datetime.now() - start
     (logging.getLogger(__name__) if logger is None else logger).info(f"Finished after {delta}")
+
+def limit_memory(snakemake, soft=True):
+    soft, hard = resource.getrlimit(resource.RLIMIT_AS)
+    if soft:
+        soft = snakemake.resources['mem_mb']*1024*1024
+    else:
+        hard = snakemake.resources['mem_mb']*1024*1024
+    resource.setrlimit(resource.RLIMIT_AS, (soft, hard))

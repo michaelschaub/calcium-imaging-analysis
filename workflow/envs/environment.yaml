@@ -26,6 +26,6 @@ dependencies:
         #- scipy
 
       #Plotting
-      #- networkx
+      - networkx
       #- opencv-python
       - Shapely
