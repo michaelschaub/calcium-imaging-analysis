@@ -1,1 +1,0 @@
-#Snakemake Script hierhin auslagern
