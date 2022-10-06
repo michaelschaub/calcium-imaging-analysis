@@ -2,14 +2,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 
-#from ci_lib.features import Feature_Type #can't import due to circular dependencies
-from enum import Enum
-class Feature_Type(Enum): #
-    NODE = 0
-    UNDIRECTED = 1
-    DIRECTED = 2
-    TIMESERIES = 3
-
+from ci_lib.features import Feature_Type
 from snakemake.logging import logger
 
 '''

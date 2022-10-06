@@ -3,34 +3,29 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python>=3.10
+  - python=3.6
   - pip
+  # Data handling
   - numpy
   - pandas
-  - scipy
-
-
+  #- h5py=2.8 #doesn't work on win
+  # Learning
   - scikit-learn
-
+  # Plotting and visualization
   - matplotlib
   - bokeh
-
+  - hdf5
   - pyyaml
   - pytables
   - opencv
-
+  - h5py # conda h5py doesn't work for me
   - pip:
-      - pyMou@git+https://github.com/mb-BCA/pyMOU.git@master
+      #- tables>=3.6 #doesn't work on win
+      # Models
+      #- pyMou@git+https://github.com/mb-BCA/pyMOU.git@master
+        #- scipy
 
+      #Plotting
       - networkx
+      #- opencv-python
       - Shapely
-
-      # ?
-      - psutil
-
-      # Windows workaround for h5py
-      - wheel
-      - cython
-      - versioned-hdf5
-      - h5py
-
