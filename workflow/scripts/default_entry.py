@@ -42,11 +42,14 @@ try:
 
         #Aligns spatials for each date with respective trans_params
         alignend_U, align_plot = alignment.align_spatials_path(np.array(f["U"]),trans_path,plot_alignment_path=snakemake.output["align_plot"])
+        print(alignend_U.shape)
         U.append(alignend_U)
 
         frameCnt = np.array(f['frameCnt'])
         Vc.append(np.array(f["Vc"]))
-        assert np.array_equal(U[-1], U[0], equal_nan=True), "Combining different dates with different Compositions is not yet supported"
+        #assert np.array_equal(U[-1], U[0], equal_nan=True), "Combining different dates with different Compositions is not yet supported"
+        # multiple dates cant have same spatials currently as they are independently created
+
         trial_starts.append(np.cumsum(frameCnt[:-1, 1]) + start)
         start += Vc[-1].shape[0]
 
