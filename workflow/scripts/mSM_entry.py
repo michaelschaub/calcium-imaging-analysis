@@ -94,7 +94,9 @@ try:
         logger.info(
             f"Dimensions: n_trials={n_trials}, frames per trial={frames}, n_components={n_components}, width={width}, height={height}")
         frameCnt[0] = 0
-        assert np.array_equal(U[-1], U[0], equal_nan=True), "Combining different dates with different Compositions is not yet supported"
+        #assert np.array_equal(U[-1], U[0], equal_nan=True), "Combining different dates with different Compositions is not yet supported"
+        #TODO
+
         trial_starts.append(np.cumsum(frameCnt) + start)
         logger.debug(repr(trial_starts))
         Vc[-1] = np.concatenate( Vc[-1] )
