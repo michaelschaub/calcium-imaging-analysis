@@ -1,0 +1,61 @@
+ci\_lib.testing package
+=======================
+
+Submodules
+----------
+
+ci\_lib.testing.norm module
+---------------------------
+
+.. automodule:: ci_lib.testing.norm
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ci\_lib.testing.test\_RFE module
+--------------------------------
+
+.. automodule:: ci_lib.testing.test_RFE
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ci\_lib.testing.test\_analysis module
+-------------------------------------
+
+.. automodule:: ci_lib.testing.test_analysis
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ci\_lib.testing.test\_data module
+---------------------------------
+
+.. automodule:: ci_lib.testing.test_data
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ci\_lib.testing.test\_glassbrain module
+---------------------------------------
+
+.. automodule:: ci_lib.testing.test_glassbrain
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ci\_lib.testing.test\_transform module
+--------------------------------------
+
+.. automodule:: ci_lib.testing.test_transform
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: ci_lib.testing
+   :members:
+   :undoc-members:
+   :show-inheritance:

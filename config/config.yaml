@@ -58,6 +58,8 @@ branch_opts:
       #modalities: vistact
 
   features:
+    raw:
+      max_components : [64]
     #mean:
     #  max_components : [64]
       #covariance:
