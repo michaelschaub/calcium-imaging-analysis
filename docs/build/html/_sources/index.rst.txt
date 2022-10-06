@@ -1,0 +1,14 @@
+Contents
+--------
+
+.. toctree::
+   api
+
+Welcome to WIPAR's documentation!
+=================================
+
+**WIPAR** (**W** idefield **I** maging **P** ipeline for **A** nalysis and **R** egression) is a data pipeline for processing and analysing task-specific (widefield) calcium imaging data through neural decoding. Here, calcium activity is a proxy for neuronal activations. It provides stand-alone functionalities to visualize the data analysis as well as enabling the export of processed data for other visualization purposes.
+
+.. note::
+
+   This project is under active development.

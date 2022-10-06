@@ -16,7 +16,7 @@ sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 from ci_lib.utils import snakemake_tools
 from ci_lib.features import Features, Means, Raws, Covariances, Correlations, AutoCovariances, AutoCorrelations, Moup
 
-
+#Setup
 # redirect std_out to log file
 logger = snakemake_tools.start_log(snakemake)
 if snakemake.config['limit_memory']:

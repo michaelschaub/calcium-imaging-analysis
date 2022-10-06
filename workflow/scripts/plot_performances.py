@@ -70,7 +70,7 @@ try:
 
         for d,decoder in enumerate(decoders):
 
-            with open(snakemake.input["perf"][d+f*dec_n], "rb") as file:
+            with open(snakemake.input[d+f*dec_n], "rb") as file:
                 try:
                     perf = pickle.load(file)
                 except:
