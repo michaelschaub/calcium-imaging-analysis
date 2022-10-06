@@ -6,26 +6,7 @@ from sklearn.decomposition import FastICA
 import logging
 LOGGER = logging.getLogger(__name__)
 
-def anatomical_parcellation(DecompDataObject, atlas_path=None, ROI=[], logger=LOGGER, ):
-    '''
-    Decomposes a DecompDataObject into a anatomical parcellation based on a Brain Atlas
-
-    :param DecompDataObject: DecompDataObject with abitrary parcellation (Usually SVD)
-    :type DecompDataObject: DecompDataObject
-
-    :param atlas_path: Path to Dict containing the Brain Atlas (TODO Specify Format)
-    :type atlas_path: String or pathlib.Path or None
-
-    :param ROI: Regions of interest to use
-    :type ROI: [Strings] or None
-
-    :param logger: The LOGGER object that all console outputs are piped into
-    :type logger: LOGGER
-
-    :return: Anatomically parcellated DecompDataObject with Spatials corresponding to the given Atlas.
-    :rtype: DecompDataObject
-    '''
-
+def anatomical_parcellation(DecompDataObject, filter_labels=None, atlas_path=None, logger=LOGGER, ROI=[]):
     ### Loading meta data for parcellation, masks and labels for each area
     if atlas_path is None: # Fallback
         atlas_path = Path(__file__).parent.parent.parent/"resources"/"meta"/"anatomical.mat"
@@ -79,18 +60,6 @@ def anatomical_parcellation(DecompDataObject, atlas_path=None, ROI=[], logger=LO
     return DecompDataObject.update(new_temporals,new_spatials, spatial_labels=labels)
 
 def fastICA(DecompDataObject, n_comps):
-    """
-    Decomposes an DecompDataObject with Independet Component Analysis
-
-    :param DecompDataObject: DecompDataObject with abitrary parcellation (Usually SVD)
-    :type DecompDataObject: DecompDataObject
-
-    :param n_comps: Number of independent components (w.r.t. time).
-    :type n_comps: int
-
-    :return: DecompDataObject with Spatials corresponding to the independent components (w.r.t. time) obtianed by ICA.
-    :rtype: DecompDataObject
-    """
     #Eventually add mask?
 
     ica = FastICA(n_components=n_comps,

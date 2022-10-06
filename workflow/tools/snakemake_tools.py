@@ -1,8 +1,5 @@
 from itertools import product as iterproduct
 
-import json
-import hashlib
-
 def create_parameters( branch_conf, static_conf={} ):
     '''
     creates dictionary of unique names (used in paths) and corresponding parameters to be passed by snakemake
@@ -67,22 +64,3 @@ PARAMETER_EXPR = r"(_[a-zA-Z0-9'~.\[\], -]+)*"
 def branch_match( branches, params=True ):
 	return "(" + "|".join(branches) + ")" + (PARAMETER_EXPR if params else "")
 
-
-def hash_config(config):
-    return hashlib.md5(json.dumps(deep_stringize_dict_keys(config), sort_keys=True).encode('utf-8')).hexdigest() #Json.dump to force nested dicts to be sorted
-
-def deep_stringize_dict_keys(item):
-    """Converts all keys to strings in a nested dictionary"""
-    if isinstance(item, dict):
-        return {str(k): deep_stringize_dict_keys(v) for k, v in item.items()}
-
-    if isinstance(item, list):
-        # This will check only ONE layer deep for nested dictionaries inside lists.
-        # If you need deeper than that, you're probably doing something stupid.
-        if any(isinstance(v, dict) for v in item):
-            return [deep_stringize_dict_keys(v) if isinstance(v, dict) else v
-                    for v in item]
-
-    # I don't care about tuples, since they don't exist in JSON
-
-    return item

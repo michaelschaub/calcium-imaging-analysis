@@ -38,11 +38,7 @@ try:
     feat = feature_dict[feature].create(data, max_comps=max_comps, **param_dict[feature](params))
     logger.debug(f"feature shape {feat.feature.shape}")
 
-
     feat.save(snakemake.output[0])
-
-    snakemake_tools.save(snakemake, snakemake.output["export"], feat.feature)
-
 
     snakemake_tools.stop_timer(start, logger=logger)
 except Exception:
