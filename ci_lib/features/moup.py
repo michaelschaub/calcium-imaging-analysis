@@ -12,7 +12,7 @@ LOGGER = logging.getLogger(__name__)
 
 from .features import Features, Feature_Type
 
-def fit_moup(temps, tau, label, logger=LOGGER):
+def fit_moup(temps, tau, logger=LOGGER):
     mou_ests = np.empty((len(temps)),dtype=np.object_)
 
     for i,trial in enumerate(temps):
@@ -57,7 +57,7 @@ class Moup(Features):
         self._savefile = file
 
     def create(data, max_comps=None, timelag=1, label=None, logger=LOGGER):
-        mou_ests = fit_moup(data.temporals[:, :, :max_comps], timelag, label, logger=logger)
+        mou_ests = fit_moup(data.temporals[:, :, :max_comps], timelag, logger=logger)
         feat = Moup(data, mou_ests, label)
         return feat
 

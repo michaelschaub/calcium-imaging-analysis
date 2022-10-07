@@ -8,7 +8,7 @@ from .means import Means, calc_means
 from .covariances import Covariances, calc_covs, flat_covs
 
 
-def calc_acovs(temps, means, covs, n_tau_range, label):
+def calc_acovs(temps, means, covs, n_tau_range):
     n_taus = np.array(n_tau_range)
     temps = temps - means[:, None, :]
     trials, n_frames, comps = temps.shape
@@ -32,7 +32,7 @@ class AutoCovariances(Features):
         super().__init__(data=data, feature=feature, file=file)
         self._include_diagonal = include_diagonal
 
-    def create(data, means=None, covs=None, max_comps=None, timelag=1, label = None, include_diagonal=True, logger=LOGGER):
+    def create(data, means=None, covs=None, max_comps=None, timelag=1, include_diagonal=True, logger=LOGGER):
 
         timelags = np.asarray(timelag, dtype=int).reshape(-1)
         if np.max(timelags) >= data.temporals.shape[1]:
@@ -50,7 +50,7 @@ class AutoCovariances(Features):
         elif isinstance(covs, Covariances):
             covs = np.copy(covs._feature)
 
-        feature = calc_acovs(data.temporals[:, :, :max_comps], means, covs, timelags, label)
+        feature = calc_acovs(data.temporals[:, :, :max_comps], means, covs, timelags)
         feat = AutoCovariances(data, feature, include_diagonal= include_diagonal)
         return feat
 
