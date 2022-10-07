@@ -21,7 +21,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Installation" href="tutorial/usage.html" /> 
+    <link rel="next" title="Installation" href="tutorial/installation.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -42,12 +42,24 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="tutorial/usage.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial/tutorial.html">Tutorial</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Workflow</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="workflow/loading.html">Loading</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow/brain_alignment.html">Brain Alignment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow/parcellation.html">Parcellation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow/brain_connectivity.html">Brain Connectivity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow/trials_conditions.html">Trials &amp; Condition Selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow/neural_decoding.html">Neural Decoding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow/biomarker_detection.html">Biomarker Detection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow/visualizing.html">Visualizing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow/report.html">Report</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="development/file_struct.html">File Structure</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul>
@@ -80,25 +92,35 @@
              
   <section id="wipar">
 <h1>WIPAR<a class="headerlink" href="#wipar" title="Permalink to this heading">¶</a></h1>
-<p><strong>WIPAR</strong> (<strong>W</strong> idefield <strong>I</strong> maging <strong>P</strong> ipeline for <strong>A</strong> nalysis and <strong>R</strong> egression) is a data pipeline for processing and analysing task-specific (widefield) calcium imaging data through neural decoding.
+<p><strong>WIPAR</strong> (<strong>W</strong>idefield <strong>I</strong>maging <strong>P</strong>ipeline for <strong>A</strong>nalysis and <strong>R</strong>egression) is a data pipeline for processing and analysing task-specific (widefield) calcium imaging data through neural decoding.
 Here, calcium activity is a proxy for neuronal activations.
 It provides stand-alone functionalities to visualize the data analysis as well as enabling the export of processed data for other visualization purposes.</p>
+<section id="feature-overview">
+<h2>Feature Overview<a class="headerlink" href="#feature-overview" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="workflow/brain_alignment.html"><span class="doc">Brain Alignment of different subjects and experiments</span></a></p></li>
+<li><p><a class="reference internal" href="workflow/parcellation.html"><span class="doc">Different data-driven &amp; anatomical parcellations (Atlas-based, locaNMF, SVD, ICA)</span></a></p></li>
+<li><p><a class="reference internal" href="workflow/brain_connectivity.html"><span class="doc">Different brain connectivity measurements (FC, EC)</span></a></p></li>
+<li><p><a class="reference internal" href="workflow/neural_decoding.html"><span class="doc">Neural Decoding through simple machine learning models</span></a></p></li>
+<li><p><a class="reference internal" href="workflow/biomarker_detection.html"><span class="doc">Biomarker Detection through Feature Selection</span></a></p></li>
+<li><p><a class="reference internal" href="workflow/trials_conditions.html"><span class="doc">Generic &amp; customizable selection of trials and conditions</span></a></p></li>
+<li><p><a class="reference internal" href="workflow/visualizing.html"><span class="doc">Interactive &amp; automated visualization of results</span></a></p></li>
+<li><p><a class="reference internal" href="workflow/report.html"><span class="doc">Web-interface to review pipeline runs and export results</span></a></p></li>
+</ul>
+</section>
 <section id="getting-started">
 <span id="main-getting-started"></span><h2>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>To get a first impression of the results you can generate with WIPAR, have a look at an exemplary <a class="reference external" href="https://raw.github.com/michaelschaub/calcium-imaging-analysis/blob/readthedocs/report.html">report</a> that is automatically compiled.</p></li>
-<li><p>To get started <a class="reference internal" href="tutorial/usage.html#id1"><span class="std std-ref">install WIPAR and it’s requirements</span></a></p></li>
-<li><p>For an example on how to use WIPAR have a look at the <a class="reference internal" href="tutorial/example.html#id1"><span class="std std-ref">tutorial</span></a></p></li>
+<li><p>To get a first impression of the results you can generate with WIPAR, please have a look at an exemplary <a class="reference external" href="https://raw.github.com/michaelschaub/calcium-imaging-analysis/blob/readthedocs/report.html">report</a> that is automatically compiled.</p></li>
+<li><p>To get started <a class="reference internal" href="tutorial/installation.html#id1"><span class="std std-ref">install WIPAR and it’s requirements</span></a></p></li>
+<li><p>For an example on how to use WIPAR and general guidelines have a look at the <a class="reference internal" href="tutorial/tutorial.html#tutorial"><span class="std std-ref">tutorial</span></a></p></li>
 <li><p>Detailed explanations of the configurations can be found here</p></li>
 </ul>
 <div class="toctree-wrapper compound" id="id1">
 </div>
 <div class="toctree-wrapper compound" id="workflow">
-<p class="caption" role="heading"><span class="caption-text">Workflow</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="workflow/loading.html">Loading</a></li>
-<li class="toctree-l1"><a class="reference internal" href="workflow/parcellation.html">Parcellation</a></li>
-</ul>
+</div>
+<div class="toctree-wrapper compound" id="develop">
 </div>
 <div class="toctree-wrapper compound" id="api">
 </div>
@@ -109,7 +131,7 @@ It provides stand-alone functionalities to visualize the data analysis as well a
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="tutorial/usage.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="tutorial/installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
