@@ -2,7 +2,8 @@ API
 ===
 
 .. autosummary::
-   :toctree:
+    :toctree: _autosummary
+    :recursive:
 
     ci_lib
     ci_lib.decomposition
@@ -12,5 +13,7 @@ API
     ci_lib.networks
     ci_lib.plotting
     ci_lib.utils
+
+
 
 

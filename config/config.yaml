@@ -1,7 +1,9 @@
 branch_opts:
   subjects:
-    GN06:
-      - 2021-01-20_10-15-16
+    #GN06:
+      #- 2021-03-26_10-53-05
+      #- 2021-03-29_11-51-27
+
     #GN08:
     #  - 2021-03-26_13-37-18
     #  - 2021-03-29_13-37-29
@@ -10,10 +12,10 @@ branch_opts:
     #  -2021-03-26_10-13-36
     #  -2021-04-14_16-01-37
     #  -2021-04-20_13-07-10
-    #GN10:
-    #  -2021-03-29_15-41-22
-    #  -2021-03-29_15-41-22
-    #  -2021-04-21_11-00-51
+    GN10:
+      - 2021-03-29_15-41-22
+    #  - 2021-04-14_14-50-49
+    #  - 2021-04-21_11-00-51
 
 
   parcellations:
@@ -34,28 +36,28 @@ branch_opts:
       n_distractors: none
       auto_reward: no
       both_spouts: yes
-    visual:
+    #visual:
+    # modalities: visual
+    #tactile:
+    #  modalities: tactile
+    left_visual:
+      sides: left
       modalities: visual
-    tactile:
+    right_visual:
+      sides: right
+      modalities: visual
+    left_tactile:
+      sides: left
       modalities: tactile
-    #left_visual:
-      #sides: left
-      #modalities: visual
-    #right_visual:
-      #sides: right
-      #modalities: visual
-      #left_tactile:
-      #sides: left
-      #modalities: tactile
-      #right_tactile:
-      #sides: right
-      #modalities: tactile
-      #left_vistact:
-      #sides: left
-      #modalities: vistact
-      #right_vistact:
-      #sides: right
-      #modalities: vistact
+    right_tactile:
+      sides: right
+      modalities: tactile
+    left_vistact:
+      sides: left
+      modalities: vistact
+    right_vistact:
+      sides: right
+      modalities: vistact
 
   features:
     raw:

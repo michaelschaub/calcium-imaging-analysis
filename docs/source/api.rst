@@ -2,7 +2,17 @@ API
 ===
 
 .. autosummary::
-   :toctree:
+    :toctree: _autosummary
+    :recursive:
+
+    ci_lib
+    ci_lib.decomposition
+    ci_lib.feature_selection
+    ci_lib.features
+    ci_lib.loading
+    ci_lib.networks
+    ci_lib.plotting
+    ci_lib.utils
 
 
 

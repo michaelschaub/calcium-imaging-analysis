@@ -20,7 +20,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="API" href="api.html" /> 
+    <link rel="next" title="ci_lib" href="_autosummary/ci_lib.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -39,7 +39,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_autosummary/ci_lib.html">ci_lib</a></li>
 </ul>
 
         </div>
@@ -67,25 +67,51 @@
            <div itemprop="articleBody">
              
   <section id="contents">
-<h1>Contents<a class="headerlink" href="#contents" title="Permalink to this heading"></a></h1>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="api.html">API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="ci_lib.html">ci_lib</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ci_lib.decomposition.html">ci_lib.decomposition</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ci_lib.feature_selection.html">ci_lib.feature_selection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ci_lib.features.html">ci_lib.features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ci_lib.loading.html">ci_lib.loading</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ci_lib.networks.html">ci_lib.networks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ci_lib.plotting.html">ci_lib.plotting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ci_lib.utils.html">ci_lib.utils</a></li>
-</ul>
-</li>
-</ul>
-</div>
+<h1>Contents<a class="headerlink" href="#contents" title="Permalink to this heading">¶</a></h1>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/ci_lib.html#module-ci_lib" title="ci_lib"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ci_lib</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
 <section id="welcome-to-wipar-s-documentation">
-<h2>Welcome to WIPAR’s documentation!<a class="headerlink" href="#welcome-to-wipar-s-documentation" title="Permalink to this heading"></a></h2>
+<h2>Welcome to WIPAR’s documentation!<a class="headerlink" href="#welcome-to-wipar-s-documentation" title="Permalink to this heading">¶</a></h2>
 <p><strong>WIPAR</strong> (<strong>W</strong> idefield <strong>I</strong> maging <strong>P</strong> ipeline for <strong>A</strong> nalysis and <strong>R</strong> egression) is a data pipeline for processing and analysing task-specific (widefield) calcium imaging data through neural decoding. Here, calcium activity is a proxy for neuronal activations. It provides stand-alone functionalities to visualize the data analysis as well as enabling the export of processed data for other visualization purposes.</p>
+<p>This is a test</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="ci_lib.decomposition.locanmf.locaNMF">
+<span class="sig-prename descclassname"><span class="pre">ci_lib.decomposition.locanmf.</span></span><span class="sig-name descname"><span class="pre">locaNMF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">DecompDataObject</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atlas_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger=&lt;Logger</span> <span class="pre">ci_lib.decomposition.locanmf</span> <span class="pre">(WARNING)&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minrank=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxrank=10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_pixels=100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loc_thresh=70</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r2_thresh=0.99</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nonnegative_temporal=False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ci_lib/decomposition/locanmf.html#locaNMF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ci_lib.decomposition.locanmf.locaNMF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decomposes a DecompDataObject with locaNMF with seeds based on a Brain Atlas (TODO cite)
+TODO a bit more formal
+TODO types</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>DecompDataObject</strong> (<em>DecompDataObject</em>) – DecompDataObject with abitrary parcellation (Usually SVD)</p></li>
+<li><p><strong>atlas_path</strong> (<em>String</em><em> or </em><em>pathlib.Path</em><em> or </em><em>None</em>) – Path to Dict containing the Brain Atlas (TODO Specify Format)</p></li>
+<li><p><strong>minrank</strong> – how many components per brain region. Set maxrank to around 10 for regular dataset.</p></li>
+<li><p><strong>maxrank</strong> – how many components per brain region. Set maxrank to around 10 for regular dataset.</p></li>
+<li><p><strong>min_pixels</strong> – minimum number of pixels in Allen map for it to be considered a brain region</p></li>
+<li><p><strong>loc_thresh</strong> – Localization threshold, i.e. percentage of area restricted to be inside the ‘Allen boundary</p></li>
+<li><p><strong>r2_thresh</strong> – Fraction of variance in the data to capture with LocaNMF</p></li>
+<li><p><strong>nonnegative_temporal</strong> – Do you want nonnegative temporal components? The data itself should also be nonnegative in this case.</p></li>
+<li><p><strong>logger</strong> (<em>LOGGER</em>) – The LOGGER object that all console outputs are piped into</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>DecompDataObject with Data-driven Spatials constrained to the Brain Regions in the Atlas.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>DecompDataObject</p>
+</dd>
+</dl>
+</dd></dl>
+
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This project is under active development.</p>
@@ -97,7 +123,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="api.html" class="btn btn-neutral float-right" title="API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="_autosummary/ci_lib.html" class="btn btn-neutral float-right" title="ci_lib" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

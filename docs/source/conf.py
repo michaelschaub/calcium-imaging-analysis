@@ -6,9 +6,9 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../..'))
+#sys.path.insert(0, os.path.abspath('../..'))
 
-import ci_lib
+#import ci_lib
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -24,19 +24,30 @@ release = '0.0.9'
 extensions = [
     'sphinx.ext.duration',
     'sphinx.ext.doctest',
-    'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
-    'sphinx_rtd_theme',
+    'autoapi.extension',
+    #'sphinx.ext.autodoc',
+    #'sphinx.ext.autosummary',
+    #'sphinx.ext.intersphinx',  # Link to other project's documentation (see mapping below)
+    'sphinx.ext.viewcode',  # Add a link to the Python source code for classes, functions etc.
     'myst_parser'
 ]
 
+autoapi_dirs = ['../../ci_lib']
+
+autosummary_generate = True
+
+
 templates_path = ['_templates']
-exclude_patterns = ['snakemake']
+#exclude_patterns = ['snakemake']
 
 
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "sphinx_rtd_theme"
+on_rtd = os.environ.get("READTHEDOCS", None) == "True"
+if not on_rtd:  # only import and set the theme if we're building docs locally
+    import sphinx_rtd_theme
+    html_theme = "sphinx_rtd_theme"
+    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 html_static_path = ['_static']

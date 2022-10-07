@@ -1,4 +1,4 @@
-include: "tools/Snakefile.common"
+include: "tools/Snakefile.smk"
 
 report: "report/workflow.rst"
 
@@ -78,7 +78,7 @@ rule parcellation_plots:
 '''
 
 module loading:
-	snakefile: "loading.smk"
+	snakefile: "rules/loading.smk"
 	config:  config | config['loading']
 
 use rule * from loading
