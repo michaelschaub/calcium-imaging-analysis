@@ -9,13 +9,11 @@ from ci_lib.features import Feature_Type
 
 
 def construct_network(edges, n_nodes, feat_type, edge_weight=None, edge_alpha=None):
-    '''
-    if labels is None:
-        node_labels = dict()
-        for i in range(n_nodes): node_labels[i] = i+1
-    else:
-        node_labels = dict(enumerate(labels))
-    '''
+    #if labels is None:
+    #    node_labels = dict()
+    #    for i in range(n_nodes): node_labels[i] = i+1
+    #else:
+    #    node_labels = dict(enumerate(labels))
     if edge_weight is None:
         edge_weight = 0.5*np.ones((len(selected_feats))) #0.5 := 0 for plt.cm
 

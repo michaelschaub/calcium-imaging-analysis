@@ -4,10 +4,20 @@ from sklearn import preprocessing
 from sklearn.model_selection import StratifiedShuffleSplit
 import sklearn.linear_model as skllm
 import sklearn.preprocessing as skprp
+import sklearn.pipeline as skppl
 import sklearn.feature_selection as skfs
 
-from ci_lib.feature_selection import RFE_pipeline
 
+class RFE_pipeline(skppl.Pipeline):
+    '''
+    MLR adapted for recursive feature elimination (RFE)
+    '''
+    def fit(self, X, y=None, **fit_params):
+        """simply extends the pipeline to recover the coefficients (used by RFE) from the last element (the classifier)
+        """
+        super(RFE_pipeline, self).fit(X, y, **fit_params)
+        self.coef_ = self.steps[-1][-1].coef_
+        return self
 
 def rec_feature_elimination(select_feats_n, class_feats, class_labels, repetitions):
     """
