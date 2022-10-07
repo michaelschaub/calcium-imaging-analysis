@@ -18,24 +18,14 @@ try:
 
     feature_dict = { "mean" : Means, "raw" : Raws, "covariance" : Covariances, "correlation" : Correlations, "autocovariance" : AutoCovariances, "autocorrelation" : AutoCorrelations, "moup" :Moup }
 
-    # Dictionary for converting parameters from workflow to parameters, that can be passed to feature creators
-    param_dict = {
-            "mean"              : (lambda p : {}),
-            "raw"               : (lambda p : {}),
-            "covariance"        : (lambda p : {}),
-            "correlation"        : (lambda p : {}),
-            # convert parameter "max_timelag" to range up to that timelag, if "max_timelag" does not exist, pass "timelags" (iterable)
-            "autocovariance"    : (lambda p : { "timelags" : range(1,p["max_timelag"]+1) if "max_timelag" in p else p["timelags"] }),
-            "autocorrelation"    : (lambda p : { "timelags" : range(1,p["max_timelag"]+1) if "max_timelag" in p else p["timelags"] }),
-            # no conversion needed for Moup
-            "moup"              : (lambda p : {"timelag": p["timelags"]})}
-
     feature = snakemake.params["params"]['branch']
     params = snakemake.params["params"]
-    data = DecompData.load(snakemake.input[0])
-
     max_comps = params["max_components"] if "max_components" in params else None
-    feat = feature_dict[feature].create(data, max_comps=max_comps, **param_dict[feature](params))
+    params.pop("branch",None)
+    params.pop("max_components",None)
+
+    data = DecompData.load(snakemake.input[0])
+    feat = feature_dict[feature].create(data, max_comps=max_comps, **params)
     logger.debug(f"feature shape {feat.feature.shape}")
 
     feat.save(snakemake.output[0])

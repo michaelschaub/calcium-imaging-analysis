@@ -59,10 +59,10 @@ branch_opts:
     #covariance:
       #max_components : [64]
     moup:
-      timelags: [3]
+      timelag: [3]
       max_components : [64]
     #autocovariance:
-    #  timelags: [[0],[1]]
+    #  timelag: [[0],[1]]
     #  max_components : [64]
 
   decoders:

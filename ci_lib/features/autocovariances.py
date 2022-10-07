@@ -25,9 +25,6 @@ def calc_acovs(temps, means, covs, n_tau_range, label):
     return cov_m
 
 
-DEFAULT_TIMELAG = 10
-
-
 class AutoCovariances(Features):
     _type=Feature_Type.DIRECTED
 
@@ -35,13 +32,14 @@ class AutoCovariances(Features):
         super().__init__(data=data, feature=feature, file=file)
         self._include_diagonal = include_diagonal
 
-    def create(data, means=None, covs=None, max_comps=None, max_time_lag=None, timelags=None, label = None, include_diagonal=True, logger=LOGGER):
+    def create(data, means=None, covs=None, max_comps=None, timelag=1, label = None, include_diagonal=True, logger=LOGGER):
 
-        if max_time_lag is None or max_time_lag >= data.temporals.shape[1]:
-            max_time_lag = DEFAULT_TIMELAG
-
-        if timelags is None or np.amax(timelags) >= data.temporals.shape[1]:
-            timelags = range(0, max_time_lag + 1)
+        timelags = np.asarray(timelag, dtype=int).reshape(-1)
+        if np.max(timelags) >= data.temporals.shape[1]:
+            logger.warn("AutoCovariances with timelag exceeding length of data found, removing too large timelags!")
+            timelags = timelags[timelags >= data.temporals.shape[1]]
+        if len(timelags) == 0:
+            raise ValueError
 
         if means is None:
             means = calc_means(data.temporals[:, :, :max_comps])

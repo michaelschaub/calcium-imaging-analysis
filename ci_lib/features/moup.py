@@ -12,22 +12,18 @@ LOGGER = logging.getLogger(__name__)
 
 from .features import Features, Feature_Type
 
-
 def fit_moup(temps, tau, label, logger=LOGGER):
     mou_ests = np.empty((len(temps)),dtype=np.object_)
 
     for i,trial in enumerate(temps):
         mou_est = MOU()
-        if tau is None:
-            raise RuntimeWarning("Moup without lag (integer) given; set i_opt_tau to 1")
-            mou_ests[i] = mou_est.fit(trial, i_tau_opt=1, epsilon_C=0.01, epsilon_Sigma=0.01)
-        else:
-            mou_ests[i] = mou_est.fit(trial, i_tau_opt=tau, epsilon_C=0.01, epsilon_Sigma=0.01) #, regul_C=0.1
-            # print number of iterations and model error in log
-            logger.info('iter {}, err {}'.format( mou_est.d_fit['iterations'], mou_est.d_fit['distance']))
-
+        if tau is None or tau <= 0:
+            logger.warn("Moup without lag (positive integer) given; set i_opt_tau to 1")
+            tau = 1
+        mou_ests[i] = mou_est.fit(trial, i_tau_opt=tau, epsilon_C=0.01, epsilon_Sigma=0.01) #, regul_C=0.1
+        # print number of iterations and model error in log
+        logger.info('iter {}, err {}'.format( mou_est.d_fit['iterations'], mou_est.d_fit['distance']))
         # regularization may be helpful here to "push" small weights to zero here
-
     return mou_ests
 
 def decompose_mou_ests( mou_ests ):
@@ -60,8 +56,8 @@ class Moup(Features):
         self._label = label
         self._savefile = file
 
-    def create(data, max_comps=None, timelag=None, label=None, logger=LOGGER):
-        mou_ests = fit_moup(data.temporals[:, :, :max_comps], timelag if timelag>0 else None, label, logger=logger)
+    def create(data, max_comps=None, timelag=1, label=None, logger=LOGGER):
+        mou_ests = fit_moup(data.temporals[:, :, :max_comps], timelag, label, logger=logger)
         feat = Moup(data, mou_ests, label)
         return feat
 
