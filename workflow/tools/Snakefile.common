@@ -32,7 +32,7 @@ config["output"] = {"processed_dates" :  '_'.join(subject_dates)}
 
 config["processing"] = {"trial_conditions" : trial_conditions,
                         "phase_conditions": phase_conditions,
-                        "feature_selection": {"n":config["branch_opts"]["rfe"]["select_features_n"],
+                        "feature_selection": {"n":config["branch_opts"]["rfe"]["selected_features_n"],
                                               "reps": config["branch_opts"]["rfe"]["repetitions"]},
                         "parcellations": parcellations,
                         "parcellation_wildcard_matching": config["paths"]["parcellations"], #TODO what is this?

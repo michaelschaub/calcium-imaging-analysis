@@ -82,7 +82,7 @@ try:
     for file_Vc,trans_path in zip(files_Vc,trans_paths):
         f = h5py.File(file_Vc, 'r')
 
-        alignend_U = alignment.align_spatials_path(np.array(f["U"]).swapaxes(1,2),trans_path)
+        alignend_U, align_plot = alignment.align_spatials_path(np.array(f["U"]).swapaxes(1,2),trans_path,plot_alignment_path=snakemake.output["align_plot"])
         U.append(alignend_U)
 
         Vc.append(np.array(f["Vc"]))
