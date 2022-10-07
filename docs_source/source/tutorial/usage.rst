@@ -1,15 +1,16 @@
-Usage
-=====
-
-To use WIPAR, first install it.
+Installation
+============
 
 .. _installation:
 
-Installation
+Requirements
 ------------
 
 First, you need to install a Conda-based Python3 distribution like `Anaconda <https://docs.anaconda.com/anaconda/install/index.html>`_.
 Then follow the install instructions for `Snakemake <https://snakemake.readthedocs.io/en/stable/getting_started/installation.html>`_.
+
+Installation
+------------
 
 Currently WIPAR is only available on `Github <https://github.com/michaelschaub/calcium-imaging-analysis>`_, so you need to pull the repository to a folder of your choice. This folder will from now on be referenced as root.
 
