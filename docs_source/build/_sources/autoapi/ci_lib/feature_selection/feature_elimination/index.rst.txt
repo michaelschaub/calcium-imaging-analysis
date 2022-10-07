@@ -1,0 +1,102 @@
+:py:mod:`ci_lib.feature_selection.feature_elimination`
+======================================================
+
+.. py:module:: ci_lib.feature_selection.feature_elimination
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   ci_lib.feature_selection.feature_elimination.RFE_pipeline
+
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   ci_lib.feature_selection.feature_elimination.rec_feature_elimination
+
+
+
+.. py:class:: RFE_pipeline(steps, *, memory=None, verbose=False)
+
+   Bases: :py:obj:`sklearn.pipeline.Pipeline`
+
+   
+   MLR adapted for recursive feature elimination (RFE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:method:: fit(X, y=None, **fit_params)
+
+      
+      simply extends the pipeline to recover the coefficients (used by RFE) from the last element (the classifier)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
+.. py:function:: rec_feature_elimination(select_feats_n, class_feats, class_labels, repetitions)
+
+   
+   @param select_feats_n The number of reduced features
+   @param class_feats An array that contains the features for each class.
+   @param class_labels An array that contains the labels of each class
+   @param repetitions The number of repetitions
+
+   @return (The best performing features, the corresponding performance on the test data, the trained models)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+

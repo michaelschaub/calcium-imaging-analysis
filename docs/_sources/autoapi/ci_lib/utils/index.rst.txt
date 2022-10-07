@@ -1,0 +1,108 @@
+:py:mod:`ci_lib.utils`
+======================
+
+.. py:module:: ci_lib.utils
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   snakemake_tools/index.rst
+
+
+Package Contents
+----------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   ci_lib.utils.redirect_to_log
+   ci_lib.utils.start_log
+   ci_lib.utils.load_wildcards
+   ci_lib.utils.save_conf
+   ci_lib.utils.save
+   ci_lib.utils.load
+   ci_lib.utils.match_conf
+   ci_lib.utils.check_conf
+   ci_lib.utils.start_timer
+   ci_lib.utils.stop_timer
+   ci_lib.utils.limit_memory
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   ci_lib.utils.LOGLEVELS
+
+
+.. py:function:: redirect_to_log(snakemake)
+
+
+.. py:data:: LOGLEVELS
+   
+
+   
+
+.. py:function:: start_log(snakemake)
+
+
+.. py:function:: load_wildcards(snakemake)
+
+
+.. py:function:: save_conf(snakemake, sections, params=[], additional_config=None)
+
+
+.. py:function:: save(snakemake, path, data)
+
+
+.. py:function:: load(snakemake, path, dtype='float')
+
+
+.. py:function:: match_conf(snakemake, sections)
+
+
+.. py:function:: check_conf(snakemake, sections, logger=None)
+
+
+.. py:function:: start_timer()
+
+
+.. py:function:: stop_timer(start, logger=None)
+
+
+.. py:function:: limit_memory(snakemake, soft=True)
+
+   
+   if soft:
+       soft = snakemake.resources['mem_mb']*1024*1024
+   else:
+       hard = snakemake.resources['mem_mb']*1024*1024
+   resource.setrlimit(resource.RLIMIT_AS, (soft, hard))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+

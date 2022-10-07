@@ -1,0 +1,35 @@
+:py:mod:`plotly_extensions`
+===========================
+
+.. py:module:: plotly_extensions
+
+.. autoapi-nested-parse::
+
+   Created on Fri May 15 11:45:07 2020
+
+   @author: aransil
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   plotly_extensions.addEdge
+   plotly_extensions.add_arrows
+
+
+
+.. py:function:: addEdge(start, end, edge_x, edge_y, lengthFrac=1, arrowPos=None, arrowLength=0.025, arrowAngle=30, dotSize=20)
+
+
+.. py:function:: add_arrows(source_x: List[float], target_x: List[float], source_y: List[float], target_y: List[float], arrowLength=0.025, arrowAngle=30)
+
+

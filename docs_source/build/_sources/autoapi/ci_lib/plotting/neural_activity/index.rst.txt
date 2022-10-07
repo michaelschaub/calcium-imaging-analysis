@@ -1,0 +1,35 @@
+:py:mod:`ci_lib.plotting.neural_activity`
+=========================================
+
+.. py:module:: ci_lib.plotting.neural_activity
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   ci_lib.plotting.neural_activity.draw_neural_activity
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   ci_lib.plotting.neural_activity.LOGGER
+
+
+.. py:data:: LOGGER
+   
+
+   
+
+.. py:function:: draw_neural_activity(frames, path, plt_title, subfig_titles=None, overlay=False, cortex_map=False, logger=LOGGER, vmin=None, vmax=None)
+
+

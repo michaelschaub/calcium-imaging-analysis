@@ -1,0 +1,49 @@
+:py:mod:`ci_lib.plotting`
+=========================
+
+.. py:module:: ci_lib.plotting
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   glassbrain_bokeh/index.rst
+   neural_activity/index.rst
+   plot/index.rst
+
+
+Package Contents
+----------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   ci_lib.plotting.graph_circle_plot
+   ci_lib.plotting.colored_violinplot
+   ci_lib.plotting.graph_sping_plot
+   ci_lib.plotting.plot_glassbrain_bokeh
+   ci_lib.plotting.draw_neural_activity
+
+
+
+.. py:function:: graph_circle_plot(list_best_feat, n_nodes, title, feature_type, save_path=False, node_labels=None)
+
+
+.. py:function:: colored_violinplot(*args, color=None, facecolor=None, edgecolor=None, **kwargs)
+
+
+.. py:function:: graph_sping_plot(g, title='', node_labels=None, save_path=False)
+
+
+.. py:function:: plot_glassbrain_bokeh(graph=None, img=None, meta_file=None, components_spatials=None, components_labels=None, components_pos=None, title='', save_path=None, small_file=False)
+
+
+.. py:function:: draw_neural_activity(frames, path, plt_title, subfig_titles=None, overlay=False, cortex_map=False, logger=LOGGER, vmin=None, vmax=None)
+
+

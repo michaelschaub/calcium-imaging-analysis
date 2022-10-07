@@ -1,0 +1,148 @@
+:py:mod:`ci_lib.features.moup`
+==============================
+
+.. py:module:: ci_lib.features.moup
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   ci_lib.features.moup.Moup
+
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   ci_lib.features.moup.fit_moup
+   ci_lib.features.moup.decompose_mou_ests
+   ci_lib.features.moup.recompose_mou_ests
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   ci_lib.features.moup.LOGGER
+
+
+.. py:data:: LOGGER
+   
+
+   
+
+.. py:function:: fit_moup(temps, tau, label, logger=LOGGER)
+
+
+.. py:function:: decompose_mou_ests(mou_ests)
+
+
+.. py:function:: recompose_mou_ests(attr_arrays, mou_ests=None)
+
+
+.. py:class:: Moup(data, mou_ests, label=None, file=None)
+
+   Bases: :py:obj:`ci_lib.features.features.Features`
+
+   .. py:property:: hash
+
+      
+      reproducable hashsum of features to compare with others
+      WARNING: MAY NOT WORK, STILL IN DEVELOPMENT
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:property:: feature
+
+
+   .. py:property:: ncomponents
+
+
+   .. py:attribute:: _type
+      
+
+      
+
+   .. py:attribute:: mou_attrs
+      :annotation: = ['n_nodes', 'J', 'mu', 'Sigma', 'd_fit']
+
+      
+
+   .. py:method:: create(max_comps=None, timelag=None, label=None, logger=LOGGER)
+
+
+   .. py:method:: flatten(feat=None)
+
+      
+      flatten contained feauture to one trial and one feature dimension
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: save(file, data_file=None)
+
+      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: load(file, data_file=None, feature_hash=None, try_loaded=False, label=None)
+      :classmethod:
+
+
+

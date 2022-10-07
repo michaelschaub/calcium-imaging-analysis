@@ -1,0 +1,82 @@
+:py:mod:`ci_lib.features.autocorrelations`
+==========================================
+
+.. py:module:: ci_lib.features.autocorrelations
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   ci_lib.features.autocorrelations.AutoCorrelations
+
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   ci_lib.features.autocorrelations.calc_acorrs
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   ci_lib.features.autocorrelations.LOGGER
+
+
+.. py:data:: LOGGER
+   
+
+   
+
+.. py:function:: calc_acorrs(covs, acovs)
+
+
+.. py:class:: AutoCorrelations(data, feature, file=None)
+
+   Bases: :py:obj:`ci_lib.features.features.Features`
+
+   .. py:property:: ncomponents
+
+
+   .. py:attribute:: _type
+      
+
+      
+
+   .. py:method:: create(means=None, covs=None, acovs=None, max_comps=None, max_time_lag=None, timelags=None, label=None, logger=LOGGER)
+
+
+   .. py:method:: flatten(feat=None)
+
+      
+      flatten contained feauture to one trial and one feature dimension
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+

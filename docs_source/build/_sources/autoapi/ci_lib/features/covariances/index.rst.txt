@@ -1,0 +1,86 @@
+:py:mod:`ci_lib.features.covariances`
+=====================================
+
+.. py:module:: ci_lib.features.covariances
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   ci_lib.features.covariances.Covariances
+
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   ci_lib.features.covariances.calc_covs
+   ci_lib.features.covariances.flat_covs
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   ci_lib.features.covariances.LOGGER
+
+
+.. py:data:: LOGGER
+   
+
+   
+
+.. py:function:: calc_covs(temps, means)
+
+
+.. py:function:: flat_covs(covs, diagonal)
+
+
+.. py:class:: Covariances(data, feature, file=None, include_diagonal=True)
+
+   Bases: :py:obj:`ci_lib.features.features.Features`
+
+   .. py:property:: ncomponents
+
+
+   .. py:attribute:: _type
+      
+
+      
+
+   .. py:method:: create(means=None, max_comps=None, include_diagonal=True, logger=LOGGER)
+
+
+   .. py:method:: flatten(feat=None)
+
+      
+      flatten contained feauture to one trial and one feature dimension
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+

@@ -1,0 +1,591 @@
+:py:mod:`ci_lib.features`
+=========================
+
+.. py:module:: ci_lib.features
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   autocorrelations/index.rst
+   autocovariances/index.rst
+   correlations/index.rst
+   covariances/index.rst
+   features/index.rst
+   means/index.rst
+   moup/index.rst
+
+
+Package Contents
+----------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   ci_lib.features.Feature_Type
+   ci_lib.features.Features
+   ci_lib.features.Raws
+   ci_lib.features.Means
+   ci_lib.features.Covariances
+   ci_lib.features.Correlations
+   ci_lib.features.AutoCovariances
+   ci_lib.features.AutoCorrelations
+   ci_lib.features.Moup
+
+
+
+
+.. py:class:: Feature_Type
+
+   Bases: :py:obj:`enum.Enum`
+
+   
+   Generic enumeration.
+
+   Derive from this class to define new enumerations.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: NODE
+      :annotation: = 0
+
+      
+
+   .. py:attribute:: UNDIRECTED
+      :annotation: = 1
+
+      
+
+   .. py:attribute:: DIRECTED
+      :annotation: = 2
+
+      
+
+   .. py:attribute:: TIMESERIES
+      :annotation: = 3
+
+      
+
+
+.. py:class:: Features(data, feature, file=None)
+
+   .. py:property:: feature
+
+
+   .. py:property:: mean
+
+      
+      Create FeatureMean object taking trial means over selfs features
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:property:: hash
+
+      
+      reproducable hashsum of features to compare with others
+      WARNING: MAY NOT WORK, STILL IN DEVELOPMENT
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:property:: data
+
+      
+      data object from with this feature is computated,
+      is retrieved from Data.LOADED_DATA by hash or loaded from file, when not set directly
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:property:: data_hash
+
+
+   .. py:property:: data_file
+
+
+   .. py:property:: type
+
+
+   .. py:attribute:: LOADED_FEATURES
+      
+
+      
+
+   .. py:method:: flatten()
+
+      
+      flatten contained feauture to one trial and one feature dimension
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: expand(data=None)
+
+      
+      expand feature into same shape as temporals in Data (for computation)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: save(file, data_file=None)
+
+      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: load(file, data_file=None, feature_hash=None, try_loaded=False)
+      :classmethod:
+
+
+
+.. py:class:: Raws(data, feature, file=None)
+
+   Bases: :py:obj:`Features`
+
+   .. py:property:: pixel
+
+
+   .. py:property:: ncomponents
+
+
+   .. py:attribute:: _type
+      
+
+      
+
+   .. py:method:: create(max_comps=None, logger=LOGGER)
+
+
+   .. py:method:: flatten(feat=None)
+
+      
+      flatten contained feauture to one trial and one feature dimension
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
+.. py:class:: Means(data, feature, file=None)
+
+   Bases: :py:obj:`ci_lib.features.features.Features`
+
+   .. py:property:: pixel
+
+
+   .. py:property:: ncomponents
+
+
+   .. py:attribute:: _type
+      
+
+      
+
+   .. py:method:: create(max_comps=None, logger=LOGGER)
+
+
+   .. py:method:: flatten(feat=None)
+
+      
+      flatten contained feauture to one trial and one feature dimension
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _op_data(a)
+
+
+
+.. py:class:: Covariances(data, feature, file=None, include_diagonal=True)
+
+   Bases: :py:obj:`ci_lib.features.features.Features`
+
+   .. py:property:: ncomponents
+
+
+   .. py:attribute:: _type
+      
+
+      
+
+   .. py:method:: create(means=None, max_comps=None, include_diagonal=True, logger=LOGGER)
+
+
+   .. py:method:: flatten(feat=None)
+
+      
+      flatten contained feauture to one trial and one feature dimension
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
+.. py:class:: Correlations(data, feature, file=None)
+
+   Bases: :py:obj:`ci_lib.features.features.Features`
+
+   .. py:property:: ncomponents
+
+
+   .. py:attribute:: _type
+      
+
+      
+
+   .. py:method:: create(means=None, covs=None, max_comps=None, logger=LOGGER)
+
+
+   .. py:method:: flatten(feat=None)
+
+      
+      flatten contained feauture to one trial and one feature dimension
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
+.. py:class:: AutoCovariances(data, feature, file=None, include_diagonal=True)
+
+   Bases: :py:obj:`ci_lib.features.features.Features`
+
+   .. py:property:: ncomponents
+
+
+   .. py:attribute:: _type
+      
+
+      
+
+   .. py:method:: create(means=None, covs=None, max_comps=None, max_time_lag=None, timelags=None, label=None, include_diagonal=True, logger=LOGGER)
+
+
+   .. py:method:: flatten(feat=None)
+
+      
+      flatten contained feauture to one trial and one feature dimension
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
+.. py:class:: AutoCorrelations(data, feature, file=None)
+
+   Bases: :py:obj:`ci_lib.features.features.Features`
+
+   .. py:property:: ncomponents
+
+
+   .. py:attribute:: _type
+      
+
+      
+
+   .. py:method:: create(means=None, covs=None, acovs=None, max_comps=None, max_time_lag=None, timelags=None, label=None, logger=LOGGER)
+
+
+   .. py:method:: flatten(feat=None)
+
+      
+      flatten contained feauture to one trial and one feature dimension
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
+.. py:class:: Moup(data, mou_ests, label=None, file=None)
+
+   Bases: :py:obj:`ci_lib.features.features.Features`
+
+   .. py:property:: hash
+
+      
+      reproducable hashsum of features to compare with others
+      WARNING: MAY NOT WORK, STILL IN DEVELOPMENT
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:property:: feature
+
+
+   .. py:property:: ncomponents
+
+
+   .. py:attribute:: _type
+      
+
+      
+
+   .. py:attribute:: mou_attrs
+      :annotation: = ['n_nodes', 'J', 'mu', 'Sigma', 'd_fit']
+
+      
+
+   .. py:method:: create(max_comps=None, timelag=None, label=None, logger=LOGGER)
+
+
+   .. py:method:: flatten(feat=None)
+
+      
+      flatten contained feauture to one trial and one feature dimension
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: save(file, data_file=None)
+
+      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: load(file, data_file=None, feature_hash=None, try_loaded=False, label=None)
+      :classmethod:
+
+
+

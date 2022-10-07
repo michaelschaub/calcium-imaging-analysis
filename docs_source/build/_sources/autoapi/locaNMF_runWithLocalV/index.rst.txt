@@ -1,0 +1,31 @@
+:py:mod:`locaNMF_runWithLocalV`
+===============================
+
+.. py:module:: locaNMF_runWithLocalV
+
+.. autoapi-nested-parse::
+
+   Created on Sun May  5 22:34:05 2019
+
+   @author: Simon
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   locaNMF_runWithLocalV.locaNMF_runWithLocalV
+
+
+
+.. py:function:: locaNMF_runWithLocalV(animal)
+
+

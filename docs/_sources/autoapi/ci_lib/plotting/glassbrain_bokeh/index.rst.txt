@@ -1,0 +1,42 @@
+:py:mod:`ci_lib.plotting.glassbrain_bokeh`
+==========================================
+
+.. py:module:: ci_lib.plotting.glassbrain_bokeh
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   ci_lib.plotting.glassbrain_bokeh.plot_glassbrain_bokeh
+   ci_lib.plotting.glassbrain_bokeh.calc_center
+   ci_lib.plotting.glassbrain_bokeh.calc_polygons
+   ci_lib.plotting.glassbrain_bokeh.format_polygons
+   ci_lib.plotting.glassbrain_bokeh.create_labelset
+   ci_lib.plotting.glassbrain_bokeh.draw_glassbrain
+
+
+
+.. py:function:: plot_glassbrain_bokeh(graph=None, img=None, meta_file=None, components_spatials=None, components_labels=None, components_pos=None, title='', save_path=None, small_file=False)
+
+
+.. py:function:: calc_center(spatials)
+
+
+.. py:function:: calc_polygons(masks)
+
+
+.. py:function:: format_polygons(polys, labels)
+
+
+.. py:function:: create_labelset(centers, labels)
+
+
+.. py:function:: draw_glassbrain(polygons=None, labelset=None, graph=None, bg_img=None, components_pos=None, components_labels=None, components_spatials=None, x_range=None, y_range=None, scale=1, title='', save_path=None, small_file=False)
+
+

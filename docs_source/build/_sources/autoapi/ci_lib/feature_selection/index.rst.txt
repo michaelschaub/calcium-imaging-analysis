@@ -1,0 +1,84 @@
+:py:mod:`ci_lib.feature_selection`
+==================================
+
+.. py:module:: ci_lib.feature_selection
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   construct_graph/index.rst
+   feature_elimination/index.rst
+
+
+Package Contents
+----------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   ci_lib.feature_selection.construct_rfe_graph
+   ci_lib.feature_selection.rec_feature_elimination
+
+
+
+.. py:function:: construct_rfe_graph(selected_feats, n_nodes, feat_type, edge_weight=None, edge_alpha=None)
+
+   
+   if labels is None:
+       node_labels = dict()
+       for i in range(n_nodes): node_labels[i] = i+1
+   else:
+       node_labels = dict(enumerate(labels))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: rec_feature_elimination(select_feats_n, class_feats, class_labels, repetitions)
+
+   
+   @param select_feats_n The number of reduced features
+   @param class_feats An array that contains the features for each class.
+   @param class_labels An array that contains the labels of each class
+   @param repetitions The number of repetitions
+
+   @return (The best performing features, the corresponding performance on the test data, the trained models)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+

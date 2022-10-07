@@ -1,0 +1,49 @@
+:py:mod:`ci_lib.loading.load_task_data_as_pandas_df`
+====================================================
+
+.. py:module:: ci_lib.loading.load_task_data_as_pandas_df
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   ci_lib.loading.load_task_data_as_pandas_df.load_individual_session_data
+   ci_lib.loading.load_task_data_as_pandas_df.extract_session_data_and_save
+   ci_lib.loading.load_task_data_as_pandas_df.fix_dates
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   ci_lib.loading.load_task_data_as_pandas_df.LOGGER
+   ci_lib.loading.load_task_data_as_pandas_df.modality_keys
+
+
+.. py:data:: LOGGER
+   
+
+   
+
+.. py:function:: load_individual_session_data(date_folder, mouse_id, logger=None)
+
+
+.. py:function:: extract_session_data_and_save(root_paths, mouse_dates_str, reextract=False, logger=None)
+
+
+.. py:function:: fix_dates(sessions, logger=None)
+
+
+.. py:data:: modality_keys
+   :annotation: = ['visual', 'tactile', 'visual-tactile']
+
+   
+

@@ -1,0 +1,46 @@
+:py:mod:`ci_lib.feature_selection.construct_graph`
+==================================================
+
+.. py:module:: ci_lib.feature_selection.construct_graph
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   ci_lib.feature_selection.construct_graph.construct_rfe_graph
+
+
+
+.. py:function:: construct_rfe_graph(selected_feats, n_nodes, feat_type, edge_weight=None, edge_alpha=None)
+
+   
+   if labels is None:
+       node_labels = dict()
+       for i in range(n_nodes): node_labels[i] = i+1
+   else:
+       node_labels = dict(enumerate(labels))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+

@@ -1,0 +1,22 @@
+:py:mod:`ci_lib.networks.construct_network`
+===========================================
+
+.. py:module:: ci_lib.networks.construct_network
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   ci_lib.networks.construct_network.construct_network
+
+
+
+.. py:function:: construct_network(edges, n_nodes, feat_type, edge_weight=None, edge_alpha=None)
+
+

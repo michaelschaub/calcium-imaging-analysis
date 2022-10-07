@@ -1,0 +1,15 @@
+API Reference
+=============
+
+This page contains auto-generated API reference documentation [#f1]_.
+
+.. toctree::
+   :titlesonly:
+
+   /autoapi/ci_lib/index
+   /autoapi/locaNMF_runWithLocalV/index
+   /autoapi/locaNMF_runWithV/index
+   /autoapi/glassbrain_plotly/index
+   /autoapi/plotly_extensions/index
+
+.. [#f1] Created with `sphinx-autoapi <https://github.com/readthedocs/sphinx-autoapi>`_

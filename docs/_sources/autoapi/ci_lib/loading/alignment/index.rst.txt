@@ -1,0 +1,39 @@
+:py:mod:`ci_lib.loading.alignment`
+==================================
+
+.. py:module:: ci_lib.loading.alignment
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   ci_lib.loading.alignment.align_spatials_path
+   ci_lib.loading.alignment.align_spatials
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   ci_lib.loading.alignment.LOGGER
+
+
+.. py:data:: LOGGER
+   
+
+   
+
+.. py:function:: align_spatials_path(spatials, trans_path, plot_alignment_path=None)
+
+
+.. py:function:: align_spatials(spatials, trans_params, logger=None, plot_alignment_path=None)
+
+
