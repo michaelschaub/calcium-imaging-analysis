@@ -1,0 +1,34 @@
+name: sphinx
+channels:
+  - defaults
+  - conda-forge
+  - bioconda 
+dependencies:
+  - pyyaml
+  - python[version='>=3.10']
+  - matplotlib
+  - numpy
+  - scikit-learn
+  - opencv
+  - pip
+  - pytables
+  - pandas
+  - bokeh
+  - scipy
+  - snakemake
+  - pip:
+      - sphinx
+      - sphinx-autoapi
+      - torch
+      - numpydoc
+      - pyMou@git+https://github.com/mb-BCA/pyMOU.git@master
+      - networkx
+      - Shapely
+
+      - psutil
+      - wheel
+      - cython
+      - versioned-hdf5
+      - h5py
+
+prefix: C:\Users\daminkuehn\anaconda3\envs\sphinx

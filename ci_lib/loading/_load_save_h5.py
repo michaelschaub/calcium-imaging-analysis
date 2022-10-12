@@ -60,14 +60,17 @@ def save_object_h5(h5_obj, label, attr):
     '''
     saves an attribute into some h5 object
 
-    h5_obj : some wrapper for some HDF5 object
-        The object to save in
-    label : string
-        The path at which the attribute is saved inside the object
-    attr : some SAVEABLE_TYPE
-        The attribute to be saved
+    Parameters
+    ----------
+        h5_obj : some wrapper for some HDF5 object
+            The object to save in
+        label : string
+            The path at which the attribute is saved inside the object
+        attr : some SAVEABLE_TYPE
+            The attribute to be saved
 
-    Returns:
+    Returns
+    -------
     h5_obj : wrapper for some HDF5 object
         Since the HDF5 file may have been closed and reopened by this function, a new version of h5_obj is returned
     '''
@@ -110,12 +113,15 @@ def load_object_h5(h5_obj, label):
     '''
     loads an attribute from some h5 object
 
+    Parameters
+    ----------
     h5_obj : some wrapper for some HDF5 object
         The object to load from
     label : string
         The path at which the attribute is saved inside the object
 
-    Returns:
+    Returns
+    -------
     h5_obj : HDF5 object
         Since the HDF5 file may have been closed and reopened by this function, a new version of h5_obj is returned
     attr : some SAVEABLE_TYPE
@@ -146,12 +152,15 @@ def save_h5(data, file, attributes={}, logger=LOGGER ):
     '''
     saves attributes into HDF5 file
 
+    Parameters
+    ----------
     file : pathlike
         The os path of the file to save into
     *attributes : {string : SAVEABLE_TYPE}
         The loaded attributes in form of a dictionary
 
-    Returns:
+    Returns
+    -------
     h5_file : h5py.File object
         a refernce to the File object
     '''
@@ -170,12 +179,15 @@ def load_h5(file, labels=[], logger=LOGGER):
     '''
     loads attributes from HDF5 file
 
+    Parameters
+    ----------
     file : pathlike
         The os path of the file to load from
     labels : [string]
         The paths at which the attributes are saved inside the file
 
-    Returns:
+    Returns
+    -------
     h5_file : h5py.File object
         a refernce to the File object
     *attributes : [SAVEABLE_TYPE's]

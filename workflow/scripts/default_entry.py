@@ -9,6 +9,7 @@ sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 from ci_lib.utils import snakemake_tools
 from ci_lib.loading import load_task_data_as_pandas_df, alignment #import extract_session_data_and_save
+from ci_lib.plotting import draw_neural_activity
 from ci_lib import DecompData
 
 # redirect std_out to log file
@@ -40,12 +41,15 @@ try:
         f = h5py.File(file_Vc, 'r')
 
         #Aligns spatials for each date with respective trans_params
-        alignend_U = alignment.align_spatials_path(np.array(f["U"]),trans_path)
+        alignend_U, align_plot = alignment.align_spatials_path(np.array(f["U"]),trans_path,plot_alignment_path=snakemake.output["align_plot"])
+        print(alignend_U.shape)
         U.append(alignend_U)
 
         frameCnt = np.array(f['frameCnt'])
         Vc.append(np.array(f["Vc"]))
-        assert np.array_equal(U[-1], U[0], equal_nan=True), "Combining different dates with different Compositions is not yet supported"
+        #assert np.array_equal(U[-1], U[0], equal_nan=True), "Combining different dates with different Compositions is not yet supported"
+        # multiple dates cant have same spatials currently as they are independently created
+
         trial_starts.append(np.cumsum(frameCnt[:-1, 1]) + start)
         start += Vc[-1].shape[0]
 

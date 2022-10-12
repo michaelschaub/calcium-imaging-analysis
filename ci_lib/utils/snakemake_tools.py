@@ -2,8 +2,14 @@ import sys
 import datetime
 import yaml
 import logging
-import resource
+#import resource
 import json
+
+import os
+import numpy
+import pickle
+
+from pathlib import Path
 
 def redirect_to_log(snakemake):
     # deprecated
@@ -57,6 +63,35 @@ def save_conf(snakemake, sections, params=[], additional_config=None):
     with open( snakemake.output["config"], 'w') as conf_file:
         yaml.dump(config, conf_file)
 
+def save(snakemake, path, data):
+    if isinstance(data, numpy.ndarray):
+        match snakemake.config['export_type']:
+            case 'csv':
+                numpy.savetxt(path, data, delimiter=',')
+            case 'npy':
+                numpy.save(path, data)
+            case 'npz':
+                numpy.savez_compressed(path, data)
+            case _:
+                pass
+    else:
+        with open(path, 'wb') as f:
+            pickle.dump(data, f)
+
+def load(snakemake, path, dtype="float"):
+    _ , file_extension = os.path.splitext(path)
+    match file_extension:
+        case '.csv':
+            return numpy.loadtxt(path, delimiter=',',dtype=dtype)
+        case '.npy' | '.npz' :
+            return numpy.load(path)
+        case '.pkl':
+            with open(path, 'rb') as f:
+                data = pickle.load(f)
+            return data
+        case _:
+            pass
+
 def match_conf(snakemake, sections):
     with open( snakemake.input["config"], 'r') as conf_file:
         config = yaml.safe_load(conf_file)
@@ -82,9 +117,14 @@ def stop_timer(start, logger=None):
     (logging.getLogger(__name__) if logger is None else logger).info(f"Finished after {delta}")
 
 def limit_memory(snakemake, soft=True):
+    '''
     soft, hard = resource.getrlimit(resource.RLIMIT_AS)
+
+
     if soft:
         soft = snakemake.resources['mem_mb']*1024*1024
     else:
         hard = snakemake.resources['mem_mb']*1024*1024
     resource.setrlimit(resource.RLIMIT_AS, (soft, hard))
+    '''
+    pass

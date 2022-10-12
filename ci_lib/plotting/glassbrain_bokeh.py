@@ -14,7 +14,6 @@ from shapely.geometry import Polygon
 from scipy.ndimage import center_of_mass
 
 from pathlib import Path
-from ci_lib.features import Feature_Type
 
 #Needs to be restructured badly
 def plot_glassbrain_bokeh(graph=None, img=None,meta_file=None,

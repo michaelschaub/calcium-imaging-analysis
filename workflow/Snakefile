@@ -1,25 +1,52 @@
-include: "tools/Snakefile.common"
+include: "tools/Snakefile.smk"
 
-ruleorder: pipeline_entry > locaNMF > parcellation
+report: "report/workflow.rst"
+
+ruleorder: load_GN > load_mSM > locaNMF > parcellation > thresholding > feature_calculation
 
 ###   Output accumulation rules   ###
+rule decode_all:
+	input:
+		expand(f"results/{config['output']['processed_dates']}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/performances.png", parcellation = parcellations, trials= selected_trials),
+		expand(f"results/plots/{config['output']['processed_dates']}/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{feature}}/performances.png", feature =  features, trials= selected_trials),
+		expand(f"results/{config['output']['processed_dates']}/{{parcellation}}/visualization/combined_parcels.png", parcellation = parcellations)
+
+
 
 # The first rule is default
 rule decoding_performances:
 	input:
-		[ f"results/{'_'.join(subject_dates)}/{parcellation}/{trials}/Decoding/decoder/{'.'.join(trial_conditions)}/performances.png"
+		[ f"results/{config['output']['processed_dates']}/{parcellation}/{trials}/Decoding/decoder/{'.'.join(trial_conditions)}/performances.png"
 			for parcellation in parcellations
 			for trials in selected_trials],
-		[ f"results/{'_'.join(subject_dates)}/{parcellation}/{trials}/Decoding/decoder/{'.'.join(trial_conditions)}/{feature}/plots/performance.png"
-			for parcellation in parcellations
-			for trials in selected_trials
-			for cond in trial_conditions
-			for feature in features],
-		[ f"results/plots/{'_'.join(subject_dates)}/{trials}/Decoding/{'.'.join(trial_conditions)}/{feature}/performances.png"
+		#[ f"results/{'_'.join(subject_dates)}/{parcellation}/{trials}/Decoding/decoder/{'.'.join(trial_conditions)}/{feature}/plots/performance.png"
+		#	for parcellation in parcellations
+		#	for trials in selected_trials
+		#	for feature in features],
+		[ f"results/plots/{config['output']['processed_dates']}/{trials}/Decoding/{'.'.join(trial_conditions)}/{feature}/performances.png"
 		  	for feature in features
 		   	for trials in selected_trials],
+	output:
+		decoders = [ f"results/runs/{run_id}/features_{parcellation}_{trials}_{config['output']['processed_dates']}_{'.'.join(trial_conditions)}_decoding_performances.png"
+			for parcellation in parcellations
+			for trials in selected_trials],
+		#decoder = [ f"results/runs/{run_id}/Features/{'_'.join(subject_dates)}_{parcellation}_{trials}_{'.'.join(trial_conditions)}_{feature}_performance.png"
+		#	for parcellation in parcellations
+		#	for trials in selected_trials
+		#	for feature in features],
+		parcellations = [ f"results/runs/{run_id}/parcellations_{feature}_{trials}_{config['output']['processed_dates']}_{'.'.join(trial_conditions)}_decoding_performances.png"
+			for feature in features
+			for trials in selected_trials],
+	log:
+		f"results/runs/{run_id}/pipeline_entry.log"
+	conda:
+		"envs/environment.yaml"
+	resources:
+		mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,1000)
+	script:
+		"scripts/run_aggregation.py"
 
-
+'''
 rule all_decode:
 	input:
 		[ f"results/{'_'.join(subject_dates)}/{parcellation}/{trials}/Decoding/decoder/{'.'.join(trial_conditions)}/{feature}/{decoder}/decoder_model.pkl"
@@ -48,313 +75,22 @@ rule parcellation_plots:
 	input:
 		[ f"results/{'_'.join(subject_dates)}/{parcellation}/visualization/combined_parcels.png"
 			for parcellation in parcellations]
+'''
 
+module loading:
+	snakefile: "rules/loading.smk"
+	config:  config | config['loading']
 
+use rule * from loading
 
-###   Data processing   ###
+module processing:
+	snakefile: "rules/processing.smk"
+	config: config | config['processing']
 
-rule pipeline_entry:
-	'''
-	aggregates all task and svd data from one session with one animal
-	'''
-	input:
-		#To make sure that files are present, unfortunatly gets flattened -> losing information which dates belong to which subject
-		_		= [[ f"resources/experiment/{subject_id}/{date}/task_data/"
-					for date in dates] for subject_id,dates in subjects.items()],
-		Vc		= [ f"resources/experiment/{subject_id}/{date}/SVD_data/Vc.mat"
-					for subject_id,dates in subjects.items() for date in dates],
-		trans_params	= [ f"resources/experiment/{subject_id}/{date}/SVD_data/opts.mat"
-					for subject_id,dates in subjects.items() for date in dates],
-	output:
-		f"results/{{subject_dates}}/SVD/data.h5",
-		config = f"results/{{subject_dates}}/SVD/conf.yaml",
-	params:
-		subject_dates_str = '_'.join(subject_dates),
-		#maybe find a clean solution from flattened array,
-		task_structured = {subject_id: [ f"resources/experiment/{subject_id}/{date}/task_data/"
-				  for date in dates] for subject_id,dates in subjects.items()} # so we are using this one and we can actually use a dict to make it even comfier
-	wildcard_constraints:
-		subject_dates	= r"GN[a-zA-Z\d_-]+",
-	log:
-		f"results/{{subject_dates}}/SVD/pipeline_entry.log"
-	conda:
-		"envs/environment.yaml"
-	resources:
-		mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,1000)
-	script:
-		"scripts/default_entry.py"
+use rule * from processing
 
-rule mSM_entry:
-	'''
-	aggregates all task and svd data from one session with one animal
-	'''
-	input:
-		sessions	= [ f"resources/experiment/{subject_id}/{date}/SpatialDisc_Session.mat"
-					for subject_id,dates in subjects.items() for date in dates],
-		Vc		= [ f"resources/experiment/{subject_id}/{date}/Vc.mat"
-					for subject_id,dates in subjects.items() for date in dates],
-		trans_params	= [ f"resources/experiment/{subject_id}/{date}/opts2.mat"
-					for subject_id,dates in subjects.items() for date in dates],
-	output:
-		f"results/{{subject_dates}}/SVD/data.h5",
-		config = f"results/{{subject_dates}}/SVD/conf.yaml",
-	params:
-		subject_dates_str = '_'.join(subject_dates),
-		sessions_structured = {subject_id: { date: f"resources/experiment/{subject_id}/{date}/SpatialDisc_Session.mat"
-					for date in dates} for subject_id,dates in subjects.items()}
-	wildcard_constraints:
-		subject_dates	= r"mSM[a-zA-Z\d_-]+",
-	log:
-		f"results/{{subject_dates}}/SVD/pipeline_entry.log"
-	conda:
-		"envs/environment.yaml"
-	resources:
-		mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,1000)
-	script:
-		"scripts/mSM_entry.py"
+module plotting:
+	snakefile: "rules/plotting.smk"
+	config: config | config['plotting']
 
-def parcellation_input(wildcards):
-	input = {
-		"data"	: f"{{data_dir}}/SVD/data.h5",
-		"config": f"{{data_dir}}/SVD/conf.yaml" }
-	branch = parcellations[wildcards["parcellation"]]["branch"]
-	input.update( config["paths"]["parcellations"][branch] )
-	return input
-
-rule parcellation:
-	'''
-	decomposes data into different parcellations
-	'''
-	input:
-		unpack(parcellation_input)
-	params:
-		params = lambda wildcards: parcellations[wildcards["parcellation"]]
-	output:
-		f"{{data_dir}}/{{parcellation}}/data.h5",
-		config = f"{{data_dir}}/{{parcellation}}/conf.yaml",
-	wildcard_constraints:
-		# exclude SVD as parcellation
-		parcellation = "(?!SVD).+"
-	log:
-		f"{{data_dir}}/{{parcellation}}/parcellation.log"
-	conda:
-		"envs/environment.yaml"
-	resources:
-		mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
-	script:
-		"scripts/parcellation.py"
-
-use rule parcellation as locaNMF with:
-	threads:
-		workflow.cores*0.75
-	wildcard_constraints:
-		parcellation = "LocaNMF"
-	conda:
-		"envs/locaNMF_environment.yaml"
-
-rule trial_selection:
-	'''
-	can select trials through predefined filters
-	'''
-	input:
-		data = f"{{data_dir}}/data.h5",
-		config = f"{{data_dir}}/conf.yaml",
-	output:
-		f"{{data_dir}}/{{trials}}/data.h5",
-		config = f"{{data_dir}}/{{trials}}/conf.yaml",
-	log:
-		f"{{data_dir}}/{{trials}}/trial_selection.log"
-	conda:
-		"envs/environment.yaml"
-	resources:
-		mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
-	script:
-		"scripts/trial_selection.py"
-
-def condition_params(wildcards):
-	params = {
-		"trial_conditions" : { wildcards["cond"] : trial_conditions[wildcards["cond"]]},
-		"phase_conditions" : { wildcards["cond"] : phase_conditions[wildcards["cond"]]},
-	}
-	return params
-
-rule condition:
-	'''
-	Filters trials into different configured conditions
-	'''
-	input:
-		data = f"{{data_dir}}/data.h5",
-		config = f"{{data_dir}}/conf.yaml",
-	output:
-		f"{{data_dir}}/Features/{{cond}}/data.h5",
-		config = f"{{data_dir}}/Features/{{cond}}/conf.yaml",
-	params:
-		condition_params
-	log:
-		f"{{data_dir}}/Features/{{cond}}/conditionals.log"
-	conda:
-		"envs/environment.yaml"
-	resources:
-		mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,2000,1000)
-	script:
-		"scripts/conditional.py"
-
-rule feature_calculation:
-	input:
-		data = f"{{data_dir}}/data.h5",
-		config = f"{{data_dir}}/conf.yaml",
-	output:
-		f"{{data_dir}}/{{feature}}/features.h5",
-		config = f"{{data_dir}}/{{feature}}/conf.yaml",
-	params:
-		params = lambda wildcards: features[wildcards["feature"]]
-	log:
-		f"{{data_dir}}/{{feature}}/feature_calculation.log"
-	conda:
-		"envs/environment.yaml"
-	resources:
-		mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,2000)
-	script:
-		"scripts/feature.py"
-
-rule feature_elimination:
-	input:
-		feats = [f"{{data_dir}}/Features/{cond}/{{feature}}/features.h5" for cond in trial_conditions],
-	output:
-		best_feats	= f"{{data_dir}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/best_feats.pkl",
-		model		= f"{{data_dir}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/decoder_model.pkl",
-		perf		= f"{{data_dir}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/decoder_perf.pkl",
-		config		= f"{{data_dir}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/conf.yaml",
-	params:
-		conds = list(trial_conditions),
-		reps = 5, #used to be k_folds but was removed form config
-	log:
-		f"{{data_dir}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/feature_calculation.log"
-	conda:
-		 "envs/environment.yaml"
-	resources:
-		mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
-	script:
-		"scripts/recursive_feature_elimination.py"
-
-rule decoding:
-	input:
-		[f"{{data_dir}}/Features/{cond}/{{feature}}/features.h5" for cond in trial_conditions],
-	output:
-		f"{{data_dir}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/decoder_model.pkl",
-		f"{{data_dir}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/decoder_perf.pkl",
-		config = f"{{data_dir}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/conf.yaml",
-	params:
-		conds = list(trial_conditions),
-		params = lambda wildcards: decoders[wildcards["decoder"]]
-	log:
-		f"{{data_dir}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/decoding.log",
-	conda:
-		"envs/environment.yaml"
-	resources:
-		mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
-	script:
-		"scripts/decoding.py"
-
-
-###   Plotting   ###
-
-rule plot_parcels:
-	'''
-	decomposes data into different parcellations
-	'''
-	input:
-		f"{{data_dir}}/{{parcellation}}/data.h5",
-		config = f"{{data_dir}}/{{parcellation}}/conf.yaml",
-	output:
-		combined = f"{{data_dir}}/{{parcellation}}/visualization/combined_parcels.png",
-		single = directory(f"{{data_dir}}/{{parcellation}}/visualization/single_parcel/")
-	params:
-		n = config['branch_opts']['plotting']['plot_parcels']['n']
-	log:
-		f"{{data_dir}}/{{parcellation}}/visualization/parcellation.log"
-	conda:
-		"envs/environment.yaml"
-	script:
-		"scripts/plot_parcels.py"
-
-rule plot_performance:
-	input:
-		perf   = [f"{TRIALS_DIR}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/{decoder}/decoder_perf.pkl" for decoder in decoders],
-		config = [f"{TRIALS_DIR}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/{decoder}/conf.yaml" for decoder in decoders],
-	output:
-		f"{TRIALS_DIR}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/performance.png",
-		f"{TRIALS_DIR}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/performance.pkl",
-	params:
-		conds=list(trial_conditions),
-		decoders=decoders,
-	log:
-		f"{TRIALS_DIR}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/plot_performance.log",
-	conda:
-		"envs/environment.yaml"
-	script:
-		"scripts/plot_performance.py"
-
-rule plot_performances:
-	input:
-		perf   = [f"{TRIALS_DIR}/Decoding/decoder/{'.'.join(trial_conditions)}/{feature}/{decoder}/decoder_perf.pkl"
-				for feature in features
-				for decoder in decoders],
-		config = [f"{TRIALS_DIR}/Decoding/decoder/{'.'.join(trial_conditions)}/{feature}/{decoder}/conf.yaml"
-				for feature in features
-				for decoder in decoders],
-	output:
-		f"{TRIALS_DIR}/Decoding/decoder/{'.'.join(trial_conditions)}/performances.png",
-		f"{TRIALS_DIR}/Decoding/decoder/{'.'.join(trial_conditions)}/performances_anno.png",
-	params:
-		conds=list(trial_conditions),
-		decoders=decoders,
-		features=features, #plot_feature_labels,
-		subjects=plot_subject_labels,
-		trials=default_conditions,
-	log:
-		f"{TRIALS_DIR}/Decoding/decoder/{'.'.join(trial_conditions)}/plot_performances.log",
-	conda:
-		"envs/environment.yaml"
-	script:
-		"scripts/plot_performances.py"
-
-rule plot_performances_parcellations:
-	input:
-		[f"{{data_dir}}/{parcellation}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/{decoder}/decoder_perf.pkl"
-			for parcellation in parcellations
-			for decoder in decoders],
-	output:
-		f"{{data_dir}}/plots/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{feature}}/performances.png",
-		f"{{data_dir}}/plots/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{feature}}/performances_anno.png",
-	params:
-		conds=list(trial_conditions),
-		decoders=decoders,
-		features=parcellations, #plot_feature_labels,
-		subjects=plot_subject_labels,
-		trials=default_conditions,
-	log:
-		f"{{data_dir}}/plots/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{feature}}/plot_performances.log",
-	conda:
-		"envs/environment.yaml"
-	script:
-		"scripts/plot_performances.py"
-
-
-rule plot_glassbrain:
-	input:
-		parcellation      = f"results/{{subject_dates}}/{{parcellation}}/data.h5",
-		original_features = [f"{TRIALS_DIR}/Features/{cond}/{{feature}}/features.h5" for cond in trial_conditions],
-		features          = f"{TRIALS_DIR}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/best_feats.pkl",
-
-	output:
-		plot              = f"{TRIALS_DIR}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/circle_plot.png",
-		interactive_plot  = f"{TRIALS_DIR}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/glassbrain.html",
-	log:
-		f"{TRIALS_DIR}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/plot_glassbrain.log",
-	conda:
-		"envs/environment.yaml"
-	resources:
-		mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,16000,16000)
-	script:
-		"scripts/plot_glassbrain.py"
+use rule * from plotting

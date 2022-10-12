@@ -1,7 +1,10 @@
 branch_opts:
   subjects:
     GN06:
-      - 2021-01-20_10-15-16
+      #- 2021-01-20_10-15-16
+      - 2021-03-26_10-53-05
+      #- 2021-03-29_11-51-27
+
     #GN08:
     #  - 2021-03-26_13-37-18
     #  - 2021-03-29_13-37-29
@@ -18,14 +21,14 @@ branch_opts:
 
   parcellations:
     anatomical:
-      #ROI: [[]] #,['VIS,SS']] #FRP-R,MOp-R'],["VIS,SS"]]
-    SVD:
+    #ROI: [[]] #,['VIS,SS']] #FRP-R,MOp-R'],["VIS,SS"]]
+    #SVD:
     #ICA:
-      #n_comps: [64]
-    LocaNMF:
+    #n_comps: [64]
+    #LocaNMF:
 
   selected_trials:
-    - All
+    All:
 
   conditions:
     default:
@@ -34,36 +37,47 @@ branch_opts:
       n_distractors: none
       auto_reward: no
       both_spouts: yes
+    #visual:
+    # modalities: visual
+    #tactile:
+    #  modalities: tactile
     left_visual:
       sides: left
       modalities: visual
     right_visual:
       sides: right
       modalities: visual
-    #left_tactile:
-      #sides: left
-      #modalities: tactile
-    #right_tactile:
-      #sides: right
-      #modalities: tactile
-    #left_vistact:
-      #sides: left
-      #modalities: vistact
-    #right_vistact:
-      #sides: right
-      #modalities: vistact
+    left_tactile:
+      sides: left
+      modalities: tactile
+    right_tactile:
+      sides: right
+      modalities: tactile
+    left_vistact:
+      sides: left
+      modalities: vistact
+    right_vistact:
+      sides: right
+      modalities: vistact
 
   features:
-    mean:
-      max_components : [64]
-    #covariance:
+    #raw:
+    #  max_components : [64]
+    #mean:
+    #  max_components : [64]
+      #covariance:
       #max_components : [64]
     moup:
-      timelag: [3]
-      max_components : [64]
-    #autocovariance:
-    #  timelag: [[0],[1]]
+      timelags: [1] #,2,3]
+      optional:
+        thresh:
+          - 0.5
     #  max_components : [64]
+    autocovariance:
+      timelags: [[1]] #,[1]]
+      optional:
+        thresh:
+          - 0.5
 
   decoders:
     default:
@@ -72,12 +86,13 @@ branch_opts:
     1NN:
     LDA:
     RF:
+
   rfe:
-    selected_features_n:
-      #- full
-      - 819 #0.2
-      - 410
-      - 205
+    select_features_n:
+      # - 1.0
+      #- 100
+      - 0.5
+    reps: 2
 
   plotting:
     plot_parcels:

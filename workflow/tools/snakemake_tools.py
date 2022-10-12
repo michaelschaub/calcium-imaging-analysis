@@ -1,5 +1,8 @@
 from itertools import product as iterproduct
 
+import json
+import hashlib
+
 def create_parameters( branch_conf, static_conf={} ):
     '''
     creates dictionary of unique names (used in paths) and corresponding parameters to be passed by snakemake
@@ -7,16 +10,27 @@ def create_parameters( branch_conf, static_conf={} ):
     default_params    = branch_conf["default"] if "default" in branch_conf else {}
     parameters    = {}
     for branch, br_params in branch_conf.items():
+
+
         if branch == "default":
             continue
         if br_params is None:
             br_params = {}
         # combine br_params with defaults into total params
         params = default_params | br_params
+
+        optional = None
+        if "optional" in params.keys():
+            optional = params["optional"]
+            del params["optional"]
+
+        ### From here
         # create a pattern of form "branchname_{}_{}_...", with # of params replacement fields
         pattern    = "_".join( [f"{branch}"] +  ["{}"]*len(params) )
+        print(pattern)
         # insert parameter names and parameter name replacement fields into pattern
         pattern    = pattern.format(*map( "{0}~{{{0}}}".format, params.keys() ))
+        print(pattern)
         # create cartesian product over all parameter values
         values    = iterproduct( *params.values() )
         # create list parameter dictionaries from cartesian product
@@ -26,6 +40,31 @@ def create_parameters( branch_conf, static_conf={} ):
             values = [ static_conf[branch] | vals for vals in values ]
         for vals in values:
             parameters[ pattern.format(**vals) ] = {"branch" : branch} | vals
+
+        ###TODO same code twice
+
+        ### From here
+        if optional is not None:
+            params = params | optional
+
+            # create a pattern of form "branchname_{}_{}_...", with # of params replacement fields
+            pattern    = "_".join( [f"{branch}"] +  ["{}"]*len(params) )
+            print(pattern)
+            # insert parameter names and parameter name replacement fields into pattern
+            pattern    = pattern.format(*map( "{0}~{{{0}}}".format, params.keys() ))
+            print(pattern)
+            # create cartesian product over all parameter values
+            values    = iterproduct( *params.values() )
+            # create list parameter dictionaries from cartesian product
+            values    = [ dict(zip(params.keys(), vals)) for vals in values]
+            # include static parametrs if present
+            if branch in static_conf and static_conf[branch] is not None:
+                values = [ static_conf[branch] | vals for vals in values ]
+            for vals in values:
+                parameters[ pattern.format(**vals) ] = {"branch" : branch} | vals
+        ### TODO this is just checking if it works  COPY PASTA
+
+    print(parameters)
     return parameters
 
 def create_conditions(conditions, config):
@@ -64,3 +103,22 @@ PARAMETER_EXPR = r"(_[a-zA-Z0-9'~.\[\], -]+)*"
 def branch_match( branches, params=True ):
 	return "(" + "|".join(branches) + ")" + (PARAMETER_EXPR if params else "")
 
+
+def hash_config(config):
+    return hashlib.md5(json.dumps(deep_stringize_dict_keys(config), sort_keys=True).encode('utf-8')).hexdigest() #Json.dump to force nested dicts to be sorted
+
+def deep_stringize_dict_keys(item):
+    """Converts all keys to strings in a nested dictionary"""
+    if isinstance(item, dict):
+        return {str(k): deep_stringize_dict_keys(v) for k, v in item.items()}
+
+    if isinstance(item, list):
+        # This will check only ONE layer deep for nested dictionaries inside lists.
+        # If you need deeper than that, you're probably doing something stupid.
+        if any(isinstance(v, dict) for v in item):
+            return [deep_stringize_dict_keys(v) if isinstance(v, dict) else v
+                    for v in item]
+
+    # I don't care about tuples, since they don't exist in JSON
+
+    return item

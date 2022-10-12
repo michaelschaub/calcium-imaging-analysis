@@ -2,7 +2,14 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 
-from ci_lib.features import Feature_Type
+#from ci_lib.features import Feature_Type #can't import due to circular dependencies
+from enum import Enum
+class Feature_Type(Enum): #
+    NODE = 0
+    UNDIRECTED = 1
+    DIRECTED = 2
+    TIMESERIES = 3
+
 from snakemake.logging import logger
 
 '''
@@ -90,6 +97,8 @@ def plot_frame(temps, spatial, titles, plt_title):
                 #plt.pause(0.1)
     #plt.show()
     plt.savefig(plt_title, format='png')
+
+
 
 
 def graph_circle_plot(list_best_feat, n_nodes, title, feature_type, save_path=False,  node_labels=None):

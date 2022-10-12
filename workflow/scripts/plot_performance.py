@@ -15,6 +15,8 @@ logger = snakemake_tools.start_log(snakemake)
 try:
     timer_start = snakemake_tools.start_timer()
 
+    #  TODO this whole script is a mess -> encapsulate as function
+
     perf = []
     for path in snakemake.input["perf"]:
         with open(path, "rb") as f:

@@ -1,8 +1,12 @@
 import scipy.io as sio
 import numpy as np
+import sys
 
-import torch
-from locanmf import LocaNMF
+
+if sys.version_info[:2] == (1,6): ##Guard locanmf
+    from locanmf import LocaNMF
+    import torch
+
 
 import logging
 LOGGER = logging.getLogger(__name__)
@@ -16,13 +20,37 @@ LOGGER = logging.getLogger(__name__)
 # else, if on cpu
 DEVICE='cpu'
 
-def locaNMF(data, atlas_path, logger=LOGGER,
-        minrank = 1, maxrank = 10,      # rank = how many components per brain region. Set maxrank to around 10 for regular dataset.
-        min_pixels = 100,               # minimum number of pixels in Allen map for it to be considered a brain region
-        loc_thresh = 70,                # Localization threshold, i.e. percentage of area restricted to be inside the 'Allen boundary
-        r2_thresh = 0.99,               # Fraction of variance in the data to capture with LocaNMF
-        nonnegative_temporal = False,   # Do you want nonnegative temporal components? The data itself should also be nonnegative in this case.
+def locaNMF(DecompDataObject, atlas_path, logger=LOGGER,
+        minrank = 1, maxrank = 10,
+        min_pixels = 100,
+        loc_thresh = 70,
+        r2_thresh = 0.99,
+        nonnegative_temporal = False,
     ):
+    """
+    Decomposes a DecompDataObject with locaNMF with seeds based on a Brain Atlas (TODO cite)
+    TODO a bit more formal
+    TODO types
+
+    :param DecompDataObject: DecompDataObject with abitrary parcellation (Usually SVD)
+    :type DecompDataObject: DecompDataObject
+
+    :param atlas_path: Path to Dict containing the Brain Atlas (TODO Specify Format)
+    :type atlas_path: String or pathlib.Path or None
+
+    :param minrank: how many components per brain region. Set maxrank to around 10 for regular dataset.
+    :param maxrank: how many components per brain region. Set maxrank to around 10 for regular dataset.
+    :param min_pixels: minimum number of pixels in Allen map for it to be considered a brain region
+    :param loc_thresh: Localization threshold, i.e. percentage of area restricted to be inside the 'Allen boundary
+    :param r2_thresh: Fraction of variance in the data to capture with LocaNMF
+    :param nonnegative_temporal: Do you want nonnegative temporal components? The data itself should also be nonnegative in this case.
+
+    :param logger: The LOGGER object that all console outputs are piped into
+    :type logger: LOGGER
+
+    :return: DecompDataObject with Data-driven Spatials constrained to the Brain Regions in the Atlas.
+    :rtype: DecompDataObject
+    """
     rank_range = (minrank, maxrank, 1)
 
     atlas_file = sio.loadmat(atlas_path,simplify_cells=True)
@@ -30,11 +58,11 @@ def locaNMF(data, atlas_path, logger=LOGGER,
     atlas_msk = np.asarray(atlas_file['areaMasks'], dtype='bool')
     labels = np.asarray(atlas_file['areaLabels_wSide'],dtype=str)
 
-    temporals = data.temporals_flat
-    spatials = np.moveaxis(data.spatials, 0, -1 )
+    temporals = DecompDataObject.temporals_flat
+    spatials = np.moveaxis(DecompDataObject.spatials, 0, -1 )
 
-    width = min(data.n_xaxis, brainmask.shape[0])
-    height = min(data.n_yaxis, brainmask.shape[1])
+    width = min(DecompDataObject.n_xaxis, brainmask.shape[0])
+    height = min(DecompDataObject.n_yaxis, brainmask.shape[1])
     brainmask = brainmask[:width,:height]
     atlas_msk = atlas_msk[:,:width,:height]
     spatials = spatials[:width,:height,:]
@@ -137,4 +165,4 @@ def locaNMF(data, atlas_path, logger=LOGGER,
     logger.debug("new_labels {}".format(new_labels))
 
 
-    return data.update(new_temporals, new_spatials, spatial_labels=new_labels)
+    return DecompDataObject.update(new_temporals, new_spatials, spatial_labels=new_labels)
