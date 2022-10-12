@@ -152,7 +152,7 @@ rule thresholding:
     resources:
         mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,2000)
     script:
-        "scripts/thresholding.py"
+        "../scripts/thresholding.py"
 
 
 rule feature_elimination:
