@@ -26,11 +26,11 @@ rule load_GN:
     log:
         f"results/{{subject_dates}}/SVD/pipeline_entry.log"
     conda:
-        "envs/environment.yaml"
+        "../envs/environment.yaml"
     resources:
         mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,1000)
     script:
-        "scripts/default_entry.py"
+        "../scripts/default_entry.py"
 
 rule load_mSM:
     '''
@@ -56,8 +56,8 @@ rule load_mSM:
     log:
         f"results/{{subject_dates}}/SVD/pipeline_entry.log"
     conda:
-        "envs/environment.yaml"
+        "../envs/environment.yaml"
     resources:
         mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,1000)
     script:
-        "scripts/mSM_entry.py"
+        "../scripts/mSM_entry.py"

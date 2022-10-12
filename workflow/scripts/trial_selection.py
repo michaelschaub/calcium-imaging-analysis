@@ -5,6 +5,7 @@ sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 from ci_lib.utils import snakemake_tools
 
+### Setup
 # redirect std_out to log file
 logger = snakemake_tools.start_log(snakemake)
 if snakemake.config['limit_memory']:
@@ -16,7 +17,10 @@ try:
 
     import shutil
 
-    if snakemake.wildcards['trials'] == 'All':
+    ### Load
+    ### Process (Copy)
+    ### Save
+    if snakemake.wildcards['trials'] == 'All': #TODO Support selecting specific trials
         shutil.copyfile( snakemake.input[0], snakemake.output[0])
     else:
         raise ValueError(f"Filter f{snakemake.wildcards['trials']} not recognized")

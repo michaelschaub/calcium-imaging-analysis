@@ -10,14 +10,13 @@ sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 import ci_lib.plotting as plots
 from ci_lib.utils import snakemake_tools
 
-import re
 
-
+### Setup
 logger = snakemake_tools.start_log(snakemake)
 try:
     timer_start = snakemake_tools.start_timer()
 
-
+    #TODO this whole script is a mess -> encapsulate as function
     decoders = [ dec.split('_')[0] for dec in snakemake.params['decoders']]
     conditions = snakemake.params['conds']
 

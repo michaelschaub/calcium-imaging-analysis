@@ -29,7 +29,7 @@ def fit_moup(temps, tau, label, logger=LOGGER):
         # regularization may be helpful here to "push" small weights to zero here
 
     return mou_ests
-
+'''
 def decompose_mou_ests( mou_ests ):
     attr_arrays = {attr : [] for attr in Moup.mou_attrs}
     for mou in mou_ests:
@@ -49,50 +49,69 @@ def recompose_mou_ests( attr_arrays, mou_ests=None ):
             else:
                 mou.d_fit = attr_arrays[attr][i]
     return mou_ests
-
+'''
 
 class Moup(Features):
     _type = Feature_Type.DIRECTED
 
-    def __init__(self, data, mou_ests, label=None, file=None):
+    def __init__(self, data, feature, mou_ests, label=None, file=None):
         self.data = data
+        self._feature = feature
         self._mou_ests = mou_ests
         self._label = label
         self._savefile = file
 
     def create(data, max_comps=None, timelag=None, label=None, logger=LOGGER):
         mou_ests = fit_moup(data.temporals[:, :, :max_comps], timelag if timelag>0 else None, label, logger=logger)
-        feat = Moup(data, mou_ests, label)
-        return feat
+        feature = np.asarray([[mou_est.get_J()] for mou_est in mou_ests]) #TODO remove unnecessary additional dimension trials x 1 (!) x w x h, was done to fit autocov/cor but never needed
+
+        for i, J in enumerate(feature[:,0,:,:]):
+            np.fill_diagonal(feature[i,0,:,:], -1.0 / np.diagonal(J))
+
+        return Moup(data, feature, mou_ests, label)
+
 
     def flatten(self, feat=None):
-        n = self._mou_ests[0].get_J().shape[0]
+        n = self._feature[0,0,:,:].shape[0] # _mou_ests[0].get_J().shape[0] #Second 0 due to padding dim
         mask_jac = np.logical_not(np.eye(n, dtype=bool)) # TODO: ADAPT WHEN MASK AVAILABLE
-        flat_params = np.empty((len(self._mou_ests), mask_jac.sum()))
+        flat_params = np.empty((len(self._feature), mask_jac.sum())) #0 due to padding dim
 
-        for i,mou_est in enumerate(self._mou_ests):
-            flat_params[i,:] = mou_est.get_J()[mask_jac]
+        for i,Js in enumerate(self._feature):
+            flat_params[i,:] = Js[0,mask_jac]
 
         return flat_params
 
-    @property
-    def hash(self):
-        return reproducable_hash(tuple( getattr(mou,attr)
-                                    for attr in Moup.mou_attrs if attr != "d_fit" for mou in self._mou_ests))
+    '''
+    def export(self, path, feat=None):
+        feats = np.empty((len(self._mou_ests),*(self._mou_ests[0].get_J().shape[0]))
 
-    @property
-    def feature(self):
-        return np.asarray([[mou_est.get_J()] for mou_est in self._mou_ests])  # ,other params]
+        for i,mou_est in enumerate(self._mou_ests):
+            feats[i,:] = mou_est.get_J()[]
+
+        save(snakemake, path, feats)
+    '''
+
+    #@property
+    #def hash(self):
+    #    return reproducable_hash(tuple( getattr(mou,attr)
+    #                                for attr in Moup.mou_attrs if attr != "d_fit" for mou in self._mou_ests))
+
+#   @property
+#   def feature(self):
+#       return np.asarray([[mou_est.get_J()] for mou_est in self._mou_ests])   # ,other params]
 
     @property
     def ncomponents(self):
-        return self._mou_ests[0].get_J().shape[0]
+        return self._feature.shape[-1] #TODO why only last axis?
+        #return self._mou_ests[0].get_J().shape[0]
 
+
+'''
     mou_attrs = ["n_nodes", "J", "mu", "Sigma", "d_fit"]
 
+    
     def save(self, file, data_file=None):
-        '''
-        '''
+
         attr_arrays = decompose_mou_ests( self._mou_ests )
         attr_arrays["d_fit"] = { key: np.array([ a[key] for a in attr_arrays["d_fit"]]) for key in attr_arrays["d_fit"][0].keys() }
 
@@ -125,3 +144,4 @@ class Moup(Features):
             feat.data_hash = bytes.fromhex(h5_file.attrs["data_hash"])
             Features.LOADED_FEATURES[feat.hash.digest()] = feat
         return feat
+'''

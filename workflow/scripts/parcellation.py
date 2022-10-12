@@ -5,8 +5,8 @@ sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 from ci_lib.utils import snakemake_tools
 from ci_lib import DecompData
 
-# redirect std_out to log file
-logger = snakemake_tools.start_log(snakemake)
+### Setup
+logger = snakemake_tools.start_log(snakemake) # redirect std_out to log file
 if snakemake.config['limit_memory']:
     snakemake_tools.limit_memory(snakemake)
 try:
@@ -16,8 +16,11 @@ try:
 
     def anatom(params):
         from ci_lib.decomposition import anatomical_parcellation
+        ### Load
         svd = DecompData.load(snakemake.input[0])
+        ### Process
         anatomical = anatomical_parcellation(svd, atlas_path=snakemake.input["atlas"], logger=logger, **params)
+        ### Save
         anatomical.save(snakemake.output[0])
 
     def locaNMF(params):
