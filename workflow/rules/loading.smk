@@ -25,11 +25,11 @@ rule pipeline_entry:
     log:
         f"results/{{subject_dates}}/SVD/pipeline_entry.log"
     conda:
-        "envs/environment.yaml"
+        "../envs/environment.yaml"
     resources:
         mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,1000)
     script:
-        "scripts/default_entry.py"
+        "../scripts/default_entry.py"
 
 rule mSM_entry:
     '''
@@ -54,8 +54,8 @@ rule mSM_entry:
     log:
         f"results/{{subject_dates}}/SVD/pipeline_entry.log"
     conda:
-        "envs/environment.yaml"
+        "../envs/environment.yaml"
     resources:
         mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,1000)
     script:
-        "scripts/mSM_entry.py"
+        "../scripts/mSM_entry.py"
