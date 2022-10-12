@@ -97,7 +97,7 @@ rule feature_calculation:
         f"{{data_dir}}/{{cond}}/{{feature}}/features.h5",
         export_raw = report(
             f"{{data_dir}}/{{cond}}/{{feature}}/features.{config['export_type']}",
-            caption="report/alignment.rst",
+            caption="../report/alignment.rst",
             category="4 Feature Calculation",
             subcategory="{feature}",
             labels={"Condition": "{cond}", "Type": "Data"}),
@@ -132,14 +132,14 @@ rule thresholding:
         data = f"{{data_dir}}/{{cond}}/{{feature}}_thresh~{{thresh}}/features.h5",
         export_raw = report(
             f"{{data_dir}}/{{cond}}/{{feature}}_thresh~{{thresh}}/features_thresh.{config['export_type']}",
-            caption="report/alignment.rst",
+            caption="../report/alignment.rst",
             category="5 Thresholding",
             subcategory="{feature}",
             labels={"Threshold": "{thresh}", "Condition": "{cond}", "Type": "Data"}),
 
         export_plot = report(
             f"{{data_dir}}/{{cond}}/{{feature}}_thresh~{{thresh}}/features_thresh.png",
-            caption="report/alignment.rst",
+            caption="../report/alignment.rst",
             category="5 Thresholding",
             subcategory="{feature}",
             labels={"Threshold": "{thresh}", "Condition": "{cond}", "Type": "Plot"}),
