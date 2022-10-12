@@ -1,6 +1,7 @@
 branch_opts:
   subjects:
-    #GN06:
+    GN06:
+      #- 2021-01-20_10-15-16
       - 2021-03-26_10-53-05
       #- 2021-03-29_11-51-27
 
@@ -85,12 +86,13 @@ branch_opts:
     1NN:
     LDA:
     RF:
+
   rfe:
     select_features_n:
       # - 1.0
       #- 100
       - 0.5
-    repetitions: 2
+    reps: 2
 
   plotting:
     plot_parcels:
