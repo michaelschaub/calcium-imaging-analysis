@@ -14,7 +14,7 @@ rule load_GN:
                             for subject_id,dates in config["subjects"].items() for date in dates],
     output:
         f"results/{{subject_dates}}/SVD/data.h5",
-        align_plot = report("results/{subject_dates}/SVD/alignment.png", caption="report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "GN", "Subjects":", ".join(config["subjects"])}),
+        align_plot = report("results/{subject_dates}/SVD/alignment.png", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "GN", "Subjects":", ".join(config["subjects"])}),
         config = f"results/{{subject_dates}}/SVD/conf.yaml",
     params:
         subject_dates_str = '_'.join(config["subject_dates"]),
@@ -45,7 +45,7 @@ rule load_mSM:
                             for subject_id,dates in config["subjects"].items() for date in dates],
     output:
         f"results/{{subject_dates}}/SVD/data.h5",
-        align_plot = report("results/{subject_dates}/SVD/alignment.png", caption="report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "GN", "Subjects":config["subjects"]}), # TODO Needs to be implemented
+        align_plot = report("results/{subject_dates}/SVD/alignment.png", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "mSM", "Subjects":", ".join(config["subjects"])}),
         config = f"results/{{subject_dates}}/SVD/conf.yaml",
     params:
         subject_dates_str = '_'.join(config["subject_dates"]),

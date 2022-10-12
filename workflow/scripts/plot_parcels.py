@@ -9,24 +9,22 @@ from ci_lib.utils import snakemake_tools
 from ci_lib import DecompData
 from ci_lib.plotting import draw_neural_activity
 
-# redirect std_out to log file
-logger = snakemake_tools.start_log(snakemake)
+### Setup
+logger = snakemake_tools.start_log(snakemake) # redirect std_out to log file
 try:
     snakemake_tools.check_conf(snakemake, sections=["parcellations"])
-    #snakemake_tools.save_conf(snakemake, sections=["parcellations","selected_trials","conditions"])
     timer_start = snakemake_tools.start_timer()
 
+    ### Load
     data = DecompData.load(snakemake.input[0])
 
+    ### Process (Plot)
+    ### Save
     draw_neural_activity(frames=np.sum(data._spats, axis=0),path=snakemake.output['combined'],plt_title=snakemake.wildcards['parcellation'],subfig_titles="",overlay=True,logger=logger)
 
-    #draw_neural_activity(frames=data._spats,path=snakemake.output['all'],plt_title=snakemake.wildcards['parcellation'],subfig_titles=data._spat_labels,overlay=True,logger=logger)
-
     os.mkdir(Path(snakemake.output['single']))
-    logger.debug(f"n {snakemake.params['n']}")
     for i in range(min(len(data._spats),snakemake.params['n'])):
         title = None if data._spat_labels is None else data._spat_labels[i]
-        logger.debug(Path(snakemake.output['single'])/"parcel_{}.png".format(i if title is None else title))
         draw_neural_activity(frames=data._spats[i],
                             path=Path(snakemake.output['single'])/"parcel_{}.png".format(i if title is None else title),
                             plt_title=snakemake.wildcards['parcellation'], subfig_titles=title, overlay=True, logger=logger)
