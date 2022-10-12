@@ -96,14 +96,13 @@ static_params:
     #  r2_thresh: 0.99
     #  nonnegative_temporal: False
 
+
   selected_trials:
     All:
 
   features:
     mean:
-    #covariance:
-    #moup:
-    #autocovariance:
+
   decoders:
     MLR:
     1NN:
