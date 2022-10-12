@@ -1,4 +1,4 @@
-include: "tools/Snakefile.common"
+include: "tools/Snakefile.smk"
 
 report: "report/workflow.rst"
 

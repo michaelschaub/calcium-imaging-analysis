@@ -5,8 +5,7 @@ Copyright 2019 Andrea Insabato, Gorka Zamora-López, Matthieu Gilson
 
 Released under the Apache License, Version 2.0 (the "License");
 you may not use this software except in compliance with the License.
-You may obtain a copy of the License at
-    http://www.apache.org/licenses/LICENSE-2.0
+You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
 
 Main class to deal with construction, simulation and estimation for the 
 multivariate Ornstein-Uhlenbeck (MOU) process.
@@ -17,7 +16,8 @@ import scipy.linalg as spl
 import scipy.stats as stt
 from sklearn.base import BaseEstimator
 import logging
-LOGGER = logging.getLogger(__name__)
+
+#LOGGER = logging.getLogger(__name__)
 
 
 ###############################################################################
@@ -68,7 +68,7 @@ class MOU(BaseEstimator):
         the Jacobian comes from focusing on the connectivity matrix as a graph.
         """
 
-        self.logger = LOGGER if logger is None else logger.getChild(__name__)
+        self.logger = logging.getLogger(__name__) if logger is None else logger.getChild(__name__)
 
         # SECURITY CHECKS AND ARRANGEMENTS FOR THE PARAMETERS
         # Construct Jacobian
@@ -568,7 +568,7 @@ class MOU(BaseEstimator):
             Description here ...
 
         Returns
-        --------
+        -------
         ts : ndarray of rank-2
             Time series of simulated network activity of shape [T, n_nodes]
 
