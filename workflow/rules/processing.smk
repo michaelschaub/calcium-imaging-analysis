@@ -148,7 +148,7 @@ rule thresholding:
     log:
         f"{{data_dir}}/{{cond}}/{{feature}}_thresh~{{thresh}}/feature_thresh.log"
     conda:
-        "envs/environment.yaml"
+        "../envs/environment.yaml"
     resources:
         mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,2000)
     script:
