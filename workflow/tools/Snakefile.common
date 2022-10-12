@@ -30,7 +30,6 @@ config["loading"] = {"subjects": subjects,
 
 config["output"] = {"processed_dates" :  '_'.join(subject_dates)}
 
-
 config["processing"] = {"trial_conditions" : trial_conditions,
                         "phase_conditions": phase_conditions,
                         "feature_selection": {"n":config["branch_opts"]["rfe"]["select_features_n"],
