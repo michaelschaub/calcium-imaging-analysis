@@ -5,7 +5,7 @@ branch_opts:
 
 
   parcellations:
-    #anatomical:
+    anatomical:
     SVD:
     #ICA:
       #n_comps: [64]
@@ -31,15 +31,15 @@ branch_opts:
 
   features:
     mean:
-      max_components : [null]
+      max_components : [ 64 ]
     covariance:
-      max_components : [null]
+      max_components : [ 64 ]
     #moup:
       #timelags: [3]
-      #max_components : [null]
+      #max_components : [ 64 ]
     #autocovariance:
       #timelags: [[0],[1]]
-      #max_components : [null]
+      #max_components : [ 64 ]
 
   decoders:
     default:
@@ -54,6 +54,7 @@ branch_opts:
       #- 10
       #- 15
       #- 20
+    repetitions: 2
 
   plotting:
     plot_parcels:

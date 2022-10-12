@@ -13,14 +13,15 @@ from ci_lib.utils import snakemake_tools
 from ci_lib.loading import load_task_data_as_pandas_df, alignment #import extract_session_data_and_save
 from ci_lib import DecompData
 
-# redirect std_out to log file
-logger = snakemake_tools.start_log(snakemake)
+### Setup
+logger = snakemake_tools.start_log(snakemake) # redirect std_out to log file
 if snakemake.config['limit_memory']:
     snakemake_tools.limit_memory(snakemake)
 try:
     snakemake_tools.save_conf(snakemake, sections=["parcellations"]) #fixed a bug as we dont apply parcellation to SVD and then prefilter fails to compare config as it won't contain parcellation
     timer_start = snakemake_tools.start_timer()
 
+    ### Load
     files_Vc = snakemake.input["Vc"]
     trans_paths = snakemake.input["trans_params"]
     files_sessions = snakemake.params["sessions_structured"] #snakemake.input["tasks"]
@@ -68,13 +69,12 @@ try:
     sessions = sessions.drop(sessions.index[total_nans])
     logger.info(f"Dropped {len(total_nans)} trials, because of NaN entries.")
 
-        
     logger.info("Loaded task data")
-
 
     if len(files_Vc) > 1:
         warnings.warn("Combining different dates may still be buggy!")
 
+    ### Process
     trial_starts = []
     Vc = []
     U = []
@@ -82,7 +82,7 @@ try:
     for file_Vc,trans_path in zip(files_Vc,trans_paths):
         f = h5py.File(file_Vc, 'r')
 
-        alignend_U = alignment.align_spatials_path(np.array(f["U"]).swapaxes(1,2),trans_path)
+        alignend_U, align_plot = alignment.align_spatials_path(np.array(f["U"]).swapaxes(1,2),trans_path,plot_alignment_path=snakemake.output["align_plot"])
         U.append(alignend_U)
 
         Vc.append(np.array(f["Vc"]))
@@ -109,7 +109,7 @@ try:
     logger.debug(f"{Vc.shape}")
 
 
-
+    ### Save
     svd = DecompData( sessions, Vc, U, trial_starts)
     logger.debug(f"svd dataframe:\n{str(svd._df)}")
     svd.save( snakemake.output[0] )

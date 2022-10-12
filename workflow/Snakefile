@@ -2,7 +2,7 @@ include: "tools/Snakefile.smk"
 
 report: "report/workflow.rst"
 
-ruleorder: load_GN > load_mSM > locaNMF > parcellation
+ruleorder: load_GN > load_mSM > locaNMF > parcellation > thresholding > feature_calculation
 
 ###   Output accumulation rules   ###
 rule decode_all:
@@ -84,13 +84,13 @@ module loading:
 use rule * from loading
 
 module processing:
-	snakefile: "processing.smk"
+	snakefile: "rules/processing.smk"
 	config: config | config['processing']
 
 use rule * from processing
 
 module plotting:
-	snakefile: "plotting.smk"
+	snakefile: "rules/plotting.smk"
 	config: config | config['plotting']
 
 use rule * from plotting

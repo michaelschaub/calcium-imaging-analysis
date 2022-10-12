@@ -1,7 +1,7 @@
 branch_opts:
   subjects:
     #GN06:
-      #- 2021-03-26_10-53-05
+      - 2021-03-26_10-53-05
       #- 2021-03-29_11-51-27
 
     #GN08:
@@ -12,10 +12,10 @@ branch_opts:
     #  -2021-03-26_10-13-36
     #  -2021-04-14_16-01-37
     #  -2021-04-20_13-07-10
-    GN10:
-      - 2021-03-29_15-41-22
-    #  - 2021-04-14_14-50-49
-    #  - 2021-04-21_11-00-51
+    #GN10:
+    #  -2021-03-29_15-41-22
+    #  -2021-03-29_15-41-22
+    #  -2021-04-21_11-00-51
 
 
   parcellations:
@@ -60,18 +60,23 @@ branch_opts:
       modalities: vistact
 
   features:
-    raw:
-      max_components : [64]
+    #raw:
+    #  max_components : [64]
     #mean:
     #  max_components : [64]
       #covariance:
       #max_components : [64]
     moup:
       timelags: [1] #,2,3]
+      optional:
+        thresh:
+          - 0.5
     #  max_components : [64]
     autocovariance:
-      timelags: [[0]] #,[1]]
-      #max_components : [64]
+      timelags: [[1]] #,[1]]
+      optional:
+        thresh:
+          - 0.5
 
   decoders:
     default:
@@ -82,10 +87,8 @@ branch_opts:
     RF:
   rfe:
     select_features_n:
-      #- full
-      #- 819 #0.2
-      #- 410
-      #- 205
+      # - 1.0
+      #- 100
       - 0.5
     repetitions: 2
 
@@ -93,79 +96,30 @@ branch_opts:
     plot_parcels:
       n: 64
 
-trial_conditions:
-  sides:
-    column: target_side_left
-    conds:
-      left:   0
-      right:  1
-  modalities:
-    column: modality
-    conds:
-      visual:   0
-      tactile:  1
-      vistact:  2
-  responses:
-    column: response_left
-    conds:
-      left: 1
-      right: 0
-      no: -1
-  n_targets:
-    column: n_targets
-    conds:
-      all: 6
-  n_distractors:
-    column: n_distractors
-    conds:
-      none: 0
-  auto_reward:
-    column: auto_reward
-    conds:
-      no: 0
-      yes: 1
-  both_spouts:
-    column: both_spouts
-    conds:
-      no: 0
-      yes: 1
-
-phase_conditions:
-  pretrial:
-    start:  15
-    stop:   30
-  stimulus:
-    start:  30
-    stop:   75
-  delay:
-    start: 75
-    stop: 83
-
-
-
-
 static_params:
   parcellations:
     anatomical:
     ICA:
-    LocaNMF:
-      minrank: 0
-      maxrank: 10
-      min_pixels: 400
-      loc_thresh: 70
-      r2_thresh: 0.99
-      nonnegative_temporal: False
-  selected_trials: {}
-  features: {}
-    #mean:
-    #covariance:
-    #moup:
-    #autocovariance:
-  decoders: {}
-    #MLR:
-    #1NN:
-    #LDA:
-    #RF:
+    #LocaNMF:
+    #  minrank: 0
+    #  maxrank: 10
+    #  min_pixels: 400
+    #  loc_thresh: 70
+    #  r2_thresh: 0.99
+    #  nonnegative_temporal: False
+
+
+  selected_trials:
+    All:
+
+  features:
+    mean:
+
+  decoders:
+    MLR:
+    1NN:
+    LDA:
+    RF:
 
 paths:
   parcellations:
