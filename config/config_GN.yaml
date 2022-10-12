@@ -35,7 +35,7 @@ branch_opts:
       phase: stimulus
       n_targets: all
       n_distractors: none
-      auto_reward: no
+      Auto_reward: no
       both_spouts: yes
     #visual:
     # modalities: visual
@@ -61,19 +61,19 @@ branch_opts:
       modalities: vistact
 
   features:
-    #raw:
+    #Raws:
     #  max_components : [64]
-    #mean:
+    #Means:
     #  max_components : [64]
-      #covariance:
+      #Covariances:
       #max_components : [64]
-    moup:
+    Moup:
       timelags: [1] #,2,3]
       optional:
         thresh:
           - 0.5
     #  max_components : [64]
-    autocovariance:
+    AutoCovariances:
       timelags: [[1]] #,[1]]
       optional:
         thresh:

@@ -6,7 +6,7 @@ LOGGER = logging.getLogger(__name__)
 from .features import Features, Feature_Type
 from .means import Means, calc_means
 from .covariances import Covariances, calc_covs, flat_covs
-from .autocovariances import AutoCovariances, calc_acovs, DEFAULT_TIMELAG
+from .autocovariances import AutoCovariances, calc_acovs
 
 
 def calc_acorrs(covs, acovs):

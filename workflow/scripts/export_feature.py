@@ -16,22 +16,9 @@ try:
     snakemake_tools.save_conf(snakemake, sections=["parcellations","selected_trials","conditions","features"])
     start = snakemake_tools.start_timer()
 
-    feature = snakemake.params["params"]['branch']
-    params = snakemake.params["params"]
-    max_comps = params["max_components"] if "max_components" in params else None
-    params.pop("branch",None)
-    params.pop("max_components",None)
 
-    data = DecompData.load(snakemake.input[0])
-    feat = feat_from_string(feature).create(data, max_comps=max_comps, **params)
-    logger.debug(f"feature shape {feat.feature.shape}")
-
-
-    feat.save(snakemake.output[0])
-
-    snakemake_tools.save(snakemake, snakemake.output["export_raw"], feat.feature)
-
-    #snakemake_tools.save(snakemake, snakemake.output["export_plot"], feat.feature)
+    feat = feat_from_string(snakemake.params["branch"]).load(path)
+    snakemake_tools.save(snakemake, snakemake.output[0], feat.feature, export_type=snakemake.wildcards['ext'])
 
     snakemake_tools.stop_timer(start, logger=logger)
 except Exception:
