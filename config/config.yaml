@@ -1,8 +1,9 @@
 branch_opts:
   subjects:
-    #GN06:
-      #- 2021-03-26_10-53-05
-      #- 2021-03-29_11-51-27
+    GN06:
+      - 2021-03-26_10-53-05
+      - 2021-03-29_11-51-27
+      - 2021-01-20_10-15-16
 
     #GN08:
     #  - 2021-03-26_13-37-18
@@ -14,14 +15,14 @@ branch_opts:
     #  -2021-04-20_13-07-10
     GN10:
       - 2021-03-29_15-41-22
-    #  - 2021-04-14_14-50-49
-    #  - 2021-04-21_11-00-51
+      - 2021-04-14_14-50-49
+      - 2021-04-21_11-00-51
 
 
   parcellations:
     anatomical:
     #ROI: [[]] #,['VIS,SS']] #FRP-R,MOp-R'],["VIS,SS"]]
-    #SVD:
+    SVD:
     #ICA:
     #n_comps: [64]
     #LocaNMF:
@@ -60,18 +61,18 @@ branch_opts:
       modalities: vistact
 
   features:
-    raw:
-      max_components : [64]
+    #raw:
+    #  max_components : [64]
     #mean:
     #  max_components : [64]
       #covariance:
       #max_components : [64]
     moup:
       timelags: [1] #,2,3]
-    #  max_components : [64]
+      max_components : [64]
     autocovariance:
       timelags: [[0]] #,[1]]
-      #max_components : [64]
+      max_components : [64]
 
   decoders:
     default:
