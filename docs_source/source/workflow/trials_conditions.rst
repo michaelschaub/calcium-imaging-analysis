@@ -1,2 +1,0 @@
-Trials & Condition Selection
-============================
