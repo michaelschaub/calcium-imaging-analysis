@@ -9,14 +9,14 @@ from ci_lib.utils import snakemake_tools
 from ci_lib.features import Features, Means, Raws, Covariances, AutoCovariances, Moup, AutoCorrelations
 from ci_lib.plotting import graph_circle_plot, plot_glassbrain_bokeh, graph_sping_plot
 from ci_lib import DecompData
-from ci_lib.rfe import construct_rfe_graph
+from ci_lib.feature_selection import construct_rfe_graph
 
 # redirect std_out to log file
 logger = snakemake_tools.start_log(snakemake)
 if snakemake.config['limit_memory']:
     snakemake_tools.limit_memory(snakemake)
 try:
-    start = snakemake_tools.start_timer()
+    timer_start = snakemake_tools.start_timer()
 
     ### Load feature for all conditions
     feature = snakemake.wildcards["feature"]
@@ -29,9 +29,8 @@ try:
     n_comps = cond_feat.ncomponents
 
     ##Plots
+    feats = snakemake_tools.load(snakemake,snakemake.input["features"],dtype='int')
 
-    with open(snakemake.input["features"], 'rb') as f:
-        feats = pickle.load(f)
     parcellation = DecompData.load(snakemake.input["parcellation"])
     labels = parcellation.spatial_labels
     cut_labels = labels[:n_comps] if labels is not None else None
