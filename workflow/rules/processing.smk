@@ -27,11 +27,11 @@ rule parcellation:
     log:
         f"{{data_dir}}/{{parcellation}}/parcellation.log"
     conda:
-        "envs/environment.yaml"
+        "../envs/environment.yaml"
     resources:
         mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
     script:
-        "scripts/parcellation.py"
+        "../scripts/parcellation.py"
 
 use rule parcellation as locaNMF with:
     threads:
@@ -39,7 +39,7 @@ use rule parcellation as locaNMF with:
     wildcard_constraints:
         parcellation = "LocaNMF"
     conda:
-        "envs/locaNMF_environment.yaml"
+        "../envs/locaNMF_environment.yaml"
 
 rule trial_selection:
     '''
@@ -54,11 +54,11 @@ rule trial_selection:
     log:
         f"{{data_dir}}/{{trials}}/trial_selection.log"
     conda:
-        "envs/environment.yaml"
+        "../envs/environment.yaml"
     resources:
         mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
     script:
-        "scripts/trial_selection.py"
+        "../scripts/trial_selection.py"
 
 def condition_params(wildcards):
     params = {
@@ -82,11 +82,11 @@ rule condition:
     log:
         f"{{data_dir}}/Features/{{cond}}/conditionals.log"
     conda:
-        "envs/environment.yaml"
+        "../envs/environment.yaml"
     resources:
         mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,2000,1000)
     script:
-        "scripts/conditional.py"
+        "../scripts/conditional.py"
 
 rule feature_calculation:
     input:
@@ -100,11 +100,11 @@ rule feature_calculation:
     log:
         f"{{data_dir}}/{{feature}}/feature_calculation.log"
     conda:
-        "envs/environment.yaml"
+        "../envs/environment.yaml"
     resources:
         mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,2000)
     script:
-        "scripts/feature.py"
+        "../scripts/feature.py"
 
 rule feature_elimination:
     input:
@@ -120,11 +120,11 @@ rule feature_elimination:
     log:
         f"{{data_dir}}/Decoding/rfe/{'.'.join(config['trial_conditions'])}/{{rfe_n}}/{{feature}}/feature_calculation.log"
     conda:
-        "envs/environment.yaml"
+        "../envs/environment.yaml"
     resources:
         mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
     script:
-        "scripts/feature_elimination.py"
+        "../scripts/feature_elimination.py"
 
 rule decoding:
     input:
@@ -139,8 +139,8 @@ rule decoding:
     log:
         f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/decoding.log",
     conda:
-        "envs/environment.yaml"
+        "../envs/environment.yaml"
     resources:
         mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
     script:
-        "scripts/decoding.py"
+        "../scripts/decoding.py"

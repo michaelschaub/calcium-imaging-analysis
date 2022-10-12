@@ -18,9 +18,9 @@ rule plot_parcels:
     log:
         f"{{data_dir}}/{{parcellation}}/visualization/parcellation.log"
     conda:
-        "envs/environment.yaml"
+        "../envs/environment.yaml"
     script:
-        "scripts/plot_parcels.py"
+        "../scripts/plot_parcels.py"
 
 rule plot_performance:
     input:
@@ -35,9 +35,9 @@ rule plot_performance:
     log:
         f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/plot_performance.log",
     conda:
-        "envs/environment.yaml"
+        "../envs/environment.yaml"
     script:
-        "scripts/plot_performance.py"
+        "../scripts/plot_performance.py"
 
 rule plot_performances:
     input:
@@ -59,9 +59,9 @@ rule plot_performances:
     log:
         f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/plot_performances.log",
     conda:
-        "envs/environment.yaml"
+        "../envs/environment.yaml"
     script:
-        "scripts/plot_performances.py"
+        "../scripts/plot_performances.py"
 
 rule plot_performances_parcellations:
     input:
@@ -80,9 +80,9 @@ rule plot_performances_parcellations:
     log:
         f"results/plots/{{mouse_dates}}/{{trials}}/Decoding/{'.'.join(config['trial_conditions'])}/{{feature}}/plot_performances.log",
     conda:
-        "envs/environment.yaml"
+        "../envs/environment.yaml"
     script:
-        "scripts/plot_performances.py"
+        "../scripts/plot_performances.py"
 
 
 rule plot_glassbrain:
@@ -97,8 +97,8 @@ rule plot_glassbrain:
     log:
         f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/rfe/{'.'.join(config['trial_conditions'])}/{{rfe_n}}/{{feature}}/plot_glassbrain.log",
     conda:
-        "envs/environment.yaml"
+        "../envs/environment.yaml"
     resources:
         mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,16000,16000)
     script:
-        "scripts/plot_glassbrain.py"
+        "../scripts/plot_glassbrain.py"
