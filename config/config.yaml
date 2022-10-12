@@ -2,13 +2,13 @@ static_params:
   parcellations:
     anatomical:
     ICA:
-    LocaNMF:
-      minrank: 0
-      maxrank: 10
-      min_pixels: 400
-      loc_thresh: 70
-      r2_thresh: 0.99
-      nonnegative_temporal: False
+    #LocaNMF:
+    #  minrank: 0
+    #  maxrank: 10
+    #  min_pixels: 400
+    #  loc_thresh: 70
+    #  r2_thresh: 0.99
+    #  nonnegative_temporal: False
   selected_trials: {}
   features: {}
     #mean:
@@ -34,3 +34,5 @@ different_config_inputs: 1
 limit_memory: 1
 
 loglevel: INFO
+
+export_type: 'npy'

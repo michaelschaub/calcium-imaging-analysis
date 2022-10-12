@@ -22,10 +22,10 @@ branch_opts:
     SVD:
     #ICA:
       #n_comps: [64]
-    LocaNMF:
+    #LocaNMF:
 
   selected_trials:
-    - All
+    All:
 
   conditions:
     default:
@@ -73,11 +73,12 @@ branch_opts:
     LDA:
     RF:
   rfe:
-    selected_features_n:
+    select_features_n:
       #- full
       - 819 #0.2
       - 410
       - 205
+    reps: 5
 
   plotting:
     plot_parcels:
