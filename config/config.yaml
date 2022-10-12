@@ -54,16 +54,23 @@ branch_opts:
       #modalities: vistact
 
   features:
-    mean:
-      max_components : [64]
-      #covariance:
-      #max_components : [64]
-    moup:
-      timelags: [3]
-      max_components : [64]
-    #autocovariance:
-    #  timelags: [[0],[1]]
+    #mean:
     #  max_components : [64]
+    #covariance:
+    #max_components : [64]
+    moup:
+      timelags: [1] #,2,3]
+      optional:
+        thresh:
+          - 0.1
+          - 0.5
+    #  max_components : [64]
+    autocovariance:
+      timelags: [[1]] #,[1]]
+      optional:
+        thresh:
+          - 0.1
+          - 0.5
 
   decoders:
     default:

@@ -50,6 +50,7 @@ rule trial_selection:
         config = f"{{data_dir}}/conf.yaml",
     output:
         f"{{data_dir}}/{{trials}}/data.h5",
+        #report = report(f"{{data_dir}}/{{trials}}/conf.yaml"),
         config = f"{{data_dir}}/{{trials}}/conf.yaml",
     log:
         f"{{data_dir}}/{{trials}}/trial_selection.log"
@@ -90,21 +91,69 @@ rule condition:
 
 rule feature_calculation:
     input:
-        data = f"{{data_dir}}/data.h5",
-        config = f"{{data_dir}}/conf.yaml",
+        data = f"{{data_dir}}/{{cond}}/data.h5",
+        config = f"{{data_dir}}/{{cond}}/conf.yaml",
     output:
-        f"{{data_dir}}/{{feature}}/features.h5",
-        config = f"{{data_dir}}/{{feature}}/conf.yaml",
+        f"{{data_dir}}/{{cond}}/{{feature}}/features.h5",
+        export_raw = report(
+            f"{{data_dir}}/{{cond}}/{{feature}}/features.{config['export_type']}",
+            caption="report/alignment.rst",
+            category="4 Feature Calculation",
+            subcategory="{feature}",
+            labels={"Condition": "{cond}", "Type": "Data"}),
+
+        #export_plot = report(
+        #    f"{{data_dir}}/{{cond}}/{{feature}}/features.png",
+        #    caption="report/alignment.rst",
+        #    category="4 Feature Calculation",
+        #    subcategory="{feature}",
+        #    labels={"Condition": "{cond}", "Type": "Plot"}),
+
+        config = f"{{data_dir}}/{{cond}}/{{feature}}/conf.yaml",
+    wildcard_constraints:
+        feature = r'(?!thresh).+'
     params:
         params = lambda wildcards: config["features"][wildcards["feature"]]
     log:
-        f"{{data_dir}}/{{feature}}/feature_calculation.log"
+        f"{{data_dir}}/{{cond}}/{{feature}}/feature_calculation.log"
     conda:
         "../envs/environment.yaml"
     resources:
         mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,2000)
     script:
         "../scripts/feature.py"
+
+#Need prio over features
+rule thresholding:
+    input:
+        data = f"{{data_dir}}/{{cond}}/{{feature}}/features.h5",
+        config = f"{{data_dir}}/{{cond}}/{{feature}}/conf.yaml",
+    output:
+        data = f"{{data_dir}}/{{cond}}/{{feature}}_thresh~{{thresh}}/features.h5",
+        export_raw = report(
+            f"{{data_dir}}/{{cond}}/{{feature}}_thresh~{{thresh}}/features_thresh.{config['export_type']}",
+            caption="report/alignment.rst",
+            category="5 Thresholding",
+            subcategory="{feature}",
+            labels={"Threshold": "{thresh}", "Condition": "{cond}", "Type": "Data"}),
+
+        export_plot = report(
+            f"{{data_dir}}/{{cond}}/{{feature}}_thresh~{{thresh}}/features_thresh.png",
+            caption="report/alignment.rst",
+            category="5 Thresholding",
+            subcategory="{feature}",
+            labels={"Threshold": "{thresh}", "Condition": "{cond}", "Type": "Plot"}),
+    params:
+        params = lambda wildcards: config["features"][f"{wildcards['feature']}_thresh~{wildcards['thresh']}"]
+    log:
+        f"{{data_dir}}/{{cond}}/{{feature}}_thresh~{{thresh}}/feature_thresh.log"
+    conda:
+        "../envs/environment.yaml"
+    resources:
+        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,2000)
+    script:
+        "scripts/thresholding.py"
+
 
 rule feature_elimination:
     input:

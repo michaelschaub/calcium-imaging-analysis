@@ -10,6 +10,7 @@ from ci_lib import DecompData
 import shutil
 import time
 
+#TODO move to utils or just remove whole script
 def rec_iter_link(input,output):
     for i,o in zip(input,output):
         if isinstance(i,str) and isinstance(o,str):

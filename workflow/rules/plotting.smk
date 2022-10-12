@@ -11,8 +11,20 @@ rule plot_parcels:
         f"{{data_dir}}/{{parcellation}}/data.h5",
         config = f"{{data_dir}}/{{parcellation}}/conf.yaml",
     output:
-        combined = f"{{data_dir}}/{{parcellation}}/visualization/combined_parcels.png",
-        single = directory(f"{{data_dir}}/{{parcellation}}/visualization/single_parcel/")
+        combined = report(
+                    f"{{data_dir}}/{{parcellation}}/visualization/combined_parcels.png",
+                    caption="report/alignment.rst",
+                    category="2 Parcellation",
+                    subcategory="Overview",
+                    labels={"Method":"{parcellation}"}),
+        single = report(
+                    directory(f"{{data_dir}}/{{parcellation}}/visualization/single_parcel/"),
+                    patterns =["parcel_{name}.png"],
+                    caption="report/alignment.rst",
+                    category="2 Parcellation",
+                    subcategory="{parcellation}",
+                    labels={"Parcel": "{name}",
+                            "Method":"{parcellation}" }),
     params:
         n = config["parcels_n"],
     log:
@@ -39,7 +51,7 @@ rule plot_performance:
     script:
         "../scripts/plot_performance.py"
 
-rule plot_performances:
+rule plot_performances_features:
     input:
         perf   = [f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{feature}/{decoder}/decoder_perf.pkl"
                   for feature in config['features']
@@ -48,7 +60,7 @@ rule plot_performances:
                   for feature in config['features']
                   for decoder in config["decoders"]],
     output:
-        f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/performances.png",
+        report(f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/performances.png", caption="report/decode_features.rst", category="6 Decoding", subcategory="Compare Features", labels={"Parcellation":"{parcellation}"}),
         f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/performances_anno.png",
     params:
         conds=list(config['trial_conditions']),
@@ -69,7 +81,8 @@ rule plot_performances_parcellations:
          for parcellation in config['parcellations']
          for decoder in config["decoders"]],
     output:
-        f"results/plots/{{mouse_dates}}/{{trials}}/Decoding/{'.'.join(config['trial_conditions'])}/{{feature}}/performances.png",
+        report(f"results/plots/{{mouse_dates}}/{{trials}}/Decoding/{'.'.join(config['trial_conditions'])}/{{feature}}/performances.png", caption="report/decode_features.rst", category="6 Decoding", subcategory="Compare Parcellation", labels={"Feature":"{feature}"}),
+
         f"results/plots/{{mouse_dates}}/{{trials}}/Decoding/{'.'.join(config['trial_conditions'])}/{{feature}}/performances_anno.png",
     params:
         conds=list(config['trial_conditions']),
