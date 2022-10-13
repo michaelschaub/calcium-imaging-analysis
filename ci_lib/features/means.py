@@ -15,6 +15,8 @@ class Means(Features):
     _type = Feature_Type.NODE
 
     def create(data, max_comps=None, logger=LOGGER):
+        if max_comps is not None:
+            logger.warn("DEPRECATED: max_comps parameter in features can not garanty sensible choice of components, use n_components parameter for parcellations instead")
         feat = Means(data, feature=calc_means(data.temporals[:, :, :max_comps]))
         return feat
 

@@ -58,6 +58,8 @@ class Moup(Features):
         self._savefile = file
 
     def create(data, max_comps=None, timelag=1, label=None, logger=LOGGER):
+        if max_comps is not None:
+            logger.warn("DEPRECATED: max_comps parameter in features can not garanty sensible choice of components, use n_components parameter for parcellations instead")
         mou_ests = fit_moup(data.temporals[:, :, :max_comps], timelag, label, logger=logger)
         feature = np.asarray([[mou_est.get_J()] for mou_est in mou_ests]) #TODO remove unnecessary additional dimension trials x 1 (!) x w x h, was done to fit autocov/cor but never needed
 

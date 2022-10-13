@@ -18,6 +18,8 @@ class AutoCorrelations(Features):
     _type = Feature_Type.UNDIRECTED
 
     def create(data, means=None, covs=None, acovs=None, max_comps=None, timelag=1, logger=LOGGER):
+        if max_comps is not None:
+            logger.warn("DEPRECATED: max_comps parameter in features can not garanty sensible choice of components, use n_components parameter for parcellations instead")
         if covs is None:
             covs = Covariances.create(data, means, max_comps, True, logger)._feature
         elif isinstance(covs, Covariances):
