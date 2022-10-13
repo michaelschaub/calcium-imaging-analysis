@@ -28,7 +28,7 @@ try:
 
     ### Load feature for all conditions
     cond_str = snakemake.params['conds']
-    feature_class = feat_from_string(snakemake.wildcards["feature"].split("_")[0])
+    feature_class = feat_from_string(snakemake.params["feature"])
 
     cond_feats = []
     for path in snakemake.input:

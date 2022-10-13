@@ -107,6 +107,8 @@ rule plot_glassbrain:
     output:
         plot              = f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/rfe/{'.'.join(config['trial_conditions'])}/{{rfe_n}}/{{feature}}/circle_plot.png",
         interactive_plot  = f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/rfe/{'.'.join(config['trial_conditions'])}/{{rfe_n}}/{{feature}}/glassbrain.html",
+    params:
+        feature = lambda wildcards: config["features"][wildcards["feature"]]["branch"]
     log:
         f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/rfe/{'.'.join(config['trial_conditions'])}/{{rfe_n}}/{{feature}}/plot_glassbrain.log",
     conda:

@@ -18,7 +18,7 @@ try:
     ### Load features and labels for all conditions
     class_labels = snakemake.params['conds']
     feature = snakemake.wildcards["feature"]
-    feature_class = feat_from_string(snakemake.wildcards["feature"].split("_")[0])
+    feature_class = feat_from_string(snakemake.params["feature"])
 
     class_feats = []
     for path in snakemake.input["feats"]:

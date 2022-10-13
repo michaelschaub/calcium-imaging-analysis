@@ -17,7 +17,7 @@ try:
     start = snakemake_tools.start_timer()
 
     ### Load
-    feature_class = feat_from_string(snakemake.wildcards["feature"].split("_")[0])
+    feature_class = feat_from_string(snakemake.params["params"]['branch'])
     feat = feature_class.load(snakemake.input["data"])
 
     threshold = snakemake.params["params"]["thresh"]

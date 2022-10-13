@@ -4,7 +4,7 @@ from snakemake_tools import create_parameters, create_conditions, calculate_memo
 
 def parcellation_input(wildcards):
     input = {
-        "data"	: f"{{data_dir}}/SVD/data.h5",
+        "data"  : f"{{data_dir}}/SVD/data.h5",
         "config": f"{{data_dir}}/SVD/conf.yaml" }
     branch = config["parcellations"][wildcards["parcellation"]]["branch"]
     input.update( config["parcellation_wildcard_matching"][branch] )
@@ -157,15 +157,16 @@ rule thresholding:
 
 rule feature_elimination:
     input:
-        feats = [f"{{data_dir}}/Features/{cond}/{{feature}}/features.h5" for cond in config['trial_conditions']],
+        feats      = [f"{{data_dir}}/Features/{cond}/{{feature}}/features.h5" for cond in config['trial_conditions']],
     output:
-        best_feats	= f"{{data_dir}}/Decoding/rfe/{'.'.join(config['trial_conditions'])}/{{rfe_n}}/{{feature}}/best_feats.{config['export_type']}",
-        model		= f"{{data_dir}}/Decoding/rfe/{'.'.join(config['trial_conditions'])}/{{rfe_n}}/{{feature}}/decoder_model.pkl",
-        perf		= f"{{data_dir}}/Decoding/rfe/{'.'.join(config['trial_conditions'])}/{{rfe_n}}/{{feature}}/decoder_perf.{config['export_type']}",
-        config		= f"{{data_dir}}/Decoding/rfe/{'.'.join(config['trial_conditions'])}/{{rfe_n}}/{{feature}}/conf.yaml",
+        best_feats = f"{{data_dir}}/Decoding/rfe/{'.'.join(config['trial_conditions'])}/{{rfe_n}}/{{feature}}/best_feats.{config['export_type']}",
+        model      = f"{{data_dir}}/Decoding/rfe/{'.'.join(config['trial_conditions'])}/{{rfe_n}}/{{feature}}/decoder_model.pkl",
+        perf       = f"{{data_dir}}/Decoding/rfe/{'.'.join(config['trial_conditions'])}/{{rfe_n}}/{{feature}}/decoder_perf.{config['export_type']}",
+        config     = f"{{data_dir}}/Decoding/rfe/{'.'.join(config['trial_conditions'])}/{{rfe_n}}/{{feature}}/conf.yaml",
     params:
         conds = list(config["trial_conditions"]),
-        reps = config['feature_selection']['reps']
+        reps = config['feature_selection']['reps'],
+        feature = lambda wildcards: config["features"][wildcards["feature"]]["branch"]
     log:
         f"{{data_dir}}/Decoding/rfe/{'.'.join(config['trial_conditions'])}/{{rfe_n}}/{{feature}}/feature_calculation.log"
     conda:
@@ -184,7 +185,8 @@ rule decoding:
         config = f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/conf.yaml",
     params:
         conds = list(config['trial_conditions']),
-        params = lambda wildcards: config["decoders"][wildcards["decoder"]]
+        params = lambda wildcards: config["decoders"][wildcards["decoder"]],
+        feature = lambda wildcards: config["features"][wildcards["feature"]]["branch"]
     log:
         f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/decoding.log",
     conda:

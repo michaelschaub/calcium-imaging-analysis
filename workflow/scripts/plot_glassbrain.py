@@ -21,7 +21,7 @@ try:
     ### Load
     ## TODO: replace with feature class load handler
     feature = snakemake.wildcards["feature"]
-    feature_class = feat_from_string(snakemake.wildcards["feature"].split("_")[0])
+    feature_class = feat_from_string(snakemake.params["feature"])
     feat_type = feature_class._type
 
     cond_feat = feature_class.load(snakemake.input["original_features"][0])
