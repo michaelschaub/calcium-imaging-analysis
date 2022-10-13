@@ -23,8 +23,10 @@ branch_opts:
     anatomical:
     #ROI: [[]] #,['VIS,SS']] #FRP-R,MOp-R'],["VIS,SS"]]
     #SVD:
+      #optional:
+        #n_components : [ 64 ]
     #ICA:
-    #n_comps: [64]
+      #n_components: [ 64 ]
     #LocaNMF:
 
   selected_trials:
@@ -62,11 +64,8 @@ branch_opts:
 
   features:
     #Raws:
-    #  max_components : [64]
     #Means:
-    #  max_components : [64]
-      #Covariances:
-      #max_components : [64]
+    #Covariances:
     Moup:
       timelags: [1] #,2,3]
       optional:

@@ -35,10 +35,17 @@ try:
         ica = fastICA(svd, **params) #snakemake.config
         ica.save(snakemake.output[0])
 
+    def SVD(params):
+        from ci_lib.decomposition import postprocess_SVD
+        svd = DecompData.load(snakemake.input[0], logger=logger)
+        svd = postprocess_SVD(svd, **params) #snakemake.config
+        svd.save(snakemake.output[0])
+
 
     parcellation = {'anatomical': anatom,
                     'ICA':ICA,
-                    'LocaNMF': locaNMF}
+                    'LocaNMF': locaNMF,
+                    'SVD' : SVD}
     params = snakemake.params["params"]
     parcellation[params.pop('branch')]( params )
 

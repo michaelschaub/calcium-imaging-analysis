@@ -6,12 +6,12 @@ from sklearn.decomposition import FastICA
 import logging
 LOGGER = logging.getLogger(__name__)
 
-def anatomical_parcellation(DecompDataObject, atlas_path=None, ROI=[], logger=LOGGER, ):
+def anatomical_parcellation(data, atlas_path=None, ROI=[], logger=LOGGER, ):
     '''
     Decomposes a DecompDataObject into a anatomical parcellation based on a Brain Atlas
 
-    :param DecompDataObject: DecompDataObject with abitrary parcellation (Usually SVD)
-    :type DecompDataObject: DecompDataObject
+    :param data: DecompDataObject with abitrary parcellation (Usually SVD)
+    :type data: DecompDataObject
 
     :param atlas_path: Path to Dict containing the Brain Atlas (TODO Specify Format)
     :type atlas_path: String or pathlib.Path or None
@@ -63,42 +63,58 @@ def anatomical_parcellation(DecompDataObject, atlas_path=None, ROI=[], logger=LO
     #    pass
 
     # Maps and Spats have slightly different dims
-    frames, _ = DecompDataObject.temporals_flat.shape
-    n_svd , h, _ = DecompDataObject.spatials.shape
+    frames, _ = data.temporals_flat.shape
+    n_svd , h, _ = data.spatials.shape
     n_segments , _ , w = spatials.shape
 
     svd_segments_bitmasks = np.broadcast_to(spatials,(n_svd,*spatials.shape)) #repeats spatials for every frame (not in memory, just simulates it by setting a stride )
 
     svd_segment_mean = np.zeros((n_svd,n_segments))
-    svd_segment_mean = np.moveaxis([np.nanmean(DecompDataObject.spatials[:,:h,:w][svd_segments_bitmasks[:,i,:h,:w]].reshape(n_svd,-1),axis=-1) for i in range(n_segments)],-1,0)
+    svd_segment_mean = np.moveaxis([np.nanmean(data.spatials[:,:h,:w][svd_segments_bitmasks[:,i,:h,:w]].reshape(n_svd,-1),axis=-1) for i in range(n_segments)],-1,0)
     np.nan_to_num(svd_segment_mean,copy=False)
 
-    new_temporals = np.tensordot(DecompDataObject.temporals_flat, svd_segment_mean, 1)
+    new_temporals = np.tensordot(data.temporals_flat, svd_segment_mean, 1)
     new_spatials = spatials
 
-    return DecompDataObject.update(new_temporals,new_spatials, spatial_labels=labels)
+    return data.recreate(new_temporals,new_spatials, spatial_labels=labels)
 
-def fastICA(DecompDataObject, n_comps):
+def fastICA(data, n_components):
     """
     Decomposes an DecompDataObject with Independet Component Analysis
 
-    :param DecompDataObject: DecompDataObject with abitrary parcellation (Usually SVD)
-    :type DecompDataObject: DecompDataObject
+    :param data: DecompDataObject with abitrary parcellation (Usually SVD)
+    :type data: DecompDataObject
 
-    :param n_comps: Number of independent components (w.r.t. time).
-    :type n_comps: int
+    :param n_components: Number of independent components (w.r.t. time).
+    :type n_components: int
 
     :return: DecompDataObject with Spatials corresponding to the independent components (w.r.t. time) obtianed by ICA.
     :rtype: DecompDataObject
     """
     #Eventually add mask?
 
-    ica = FastICA(n_components=n_comps,
+    ica = FastICA(n_components=n_components,
                   random_state=0)
 
-    new_temporals = ica.fit_transform(DecompDataObject.temporals_flat)
+    new_temporals = ica.fit_transform(data.temporals_flat)
 
     inverse = ica.mixing_.T #    inverse = ica.mixing_
-    new_spatials = np.tensordot(inverse, DecompDataObject.spatials, axes=1)
+    new_spatials = np.tensordot(inverse, data.spatials, axes=1)
 
-    return DecompDataObject.update(new_temporals, new_spatials)
+    return data.recreate(new_temporals, new_spatials)
+
+def postprocess_SVD(data, n_components):
+    """
+    Modifies an SVD DecompDataObject, for example to crop to the number of components
+
+    :param data: DecompDataObject with SVD parcellation
+    :type data: DecompDataObject
+
+    :param n_components: Number of components (w.r.t. time).
+    :type n_components: int
+
+    :return: DecompDataObject containing the processes SVD
+    :rtype: DecompDataObject
+    """
+
+    return data.recreate(data.temporals_flat[:,:n_components], data.spatials[:n_components,:,:])

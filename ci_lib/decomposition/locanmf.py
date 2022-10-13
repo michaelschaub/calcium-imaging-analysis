@@ -165,4 +165,4 @@ def locaNMF(DecompDataObject, atlas_path, logger=LOGGER,
     logger.debug("new_labels {}".format(new_labels))
 
 
-    return DecompDataObject.update(new_temporals, new_spatials, spatial_labels=new_labels)
+    return DecompDataObject.recreate(new_temporals, new_spatials, spatial_labels=new_labels)

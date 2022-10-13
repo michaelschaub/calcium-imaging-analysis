@@ -68,7 +68,7 @@ class DecompData(Data):
 
 
     #Used for parcellations
-    def update(self,temporal_comps=None, spatial_comps=None, spatial_labels=None):
+    def recreate(self,temporal_comps=None, spatial_comps=None, spatial_labels=None):
         data = self.copy()
         if temporal_comps is not None:
             data._temps = temporal_comps

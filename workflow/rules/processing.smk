@@ -23,7 +23,7 @@ rule parcellation:
         config = f"{{data_dir}}/{{parcellation}}/conf.yaml",
     wildcard_constraints:
         # exclude SVD as parcellation
-        parcellation = "(?!SVD).+"
+        parcellation = "(?!SVD$).+"
     log:
         f"{{data_dir}}/{{parcellation}}/parcellation.log"
     conda:

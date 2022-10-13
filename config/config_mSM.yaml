@@ -5,10 +5,13 @@ branch_opts:
 
 
   parcellations:
-    anatomical:
+    #anatomical:
+      #ROI: [[]] #,['VIS,SS']] #FRP-R,MOp-R'],["VIS,SS"]]
     SVD:
-    #ICA:
-      #n_comps: [64]
+      optional:
+        n_components : [ 64 ]
+    ICA:
+      n_components: [ 64 ]
     #LocaNMF:
 
   selected_trials:
@@ -31,15 +34,11 @@ branch_opts:
 
   features:
     Means:
-      max_components : [ 64 ]
-    Covariances:
-      max_components : [ 64 ]
+    #Covariances:
     #Moup:
       #timelags: [3]
-      #max_components : [ 64 ]
     #AutoCovariances:
       #timelags: [[0],[1]]
-      #max_components : [ 64 ]
 
   decoders:
     default:
