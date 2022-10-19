@@ -14,7 +14,7 @@ import time
 def rec_iter_link(input,output):
     for i,o in zip(input,output):
         if isinstance(i,str) and isinstance(o,str):
-            #os.symlink(src=str(i) , dst=str(o))
+
             #print(f"copy {r'{}'.format(i)} - > {r'{}'.format(o)}")
             print(Path(r'{}'.format(o)).parent)
             Path(r'{}'.format(o)).parent.touch()
@@ -24,6 +24,7 @@ def rec_iter_link(input,output):
 
 
             shutil.copy2(Path(r'{}'.format(i)),Path(r'{}'.format(o)))
+            #os.symlink(src=str(i) , dst=str(o))
 
             time.sleep(1)
 

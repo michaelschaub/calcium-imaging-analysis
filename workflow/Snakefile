@@ -7,9 +7,34 @@ ruleorder: load_GN > load_mSM > locaNMF > parcellation > thresholding > feature_
 ###   Output accumulation rules   ###
 rule decode_all:
 	input:
-		expand(f"results/{config['output']['processed_dates']}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/performances.png", parcellation = parcellations, trials= selected_trials),
-		expand(f"results/plots/{config['output']['processed_dates']}/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{feature}}/performances.png", feature =  features, trials= selected_trials),
-		expand(f"results/{config['output']['processed_dates']}/{{parcellation}}/visualization/combined_parcels.png", parcellation = parcellations)
+		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/performances.png", session_run = session_runs,  parcellation = parcellations, trials= selected_trials),
+		expand(f"results/plots/{{session_run}}/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{feature}}/performances.png", session_run = session_runs,  feature =  features, trials= selected_trials),
+		expand(f"results/{{session_run}}/{{parcellation}}/visualization/combined_parcels.png", session_run = session_runs,  parcellation = parcellations)
+
+
+
+#### dict.keys() give pickle error for nested dicts, have to iterate over it to get only keys...
+def getKeys(dict):
+	list = []
+	for key in dict.keys():
+		list.append(key)
+	return list
+
+rule all_feats:
+	input:
+		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Features/{{trial_conditions}}/{{feature}}/features.{config['export_type']}", session_run = session_runs,  parcellation = parcellations, trials= selected_trials, trial_conditions = trial_conditions, feature =  features)
+	output:
+		dict = f"results/aggregated_feats.{config['export_type']}"
+	params:
+		iter = [session_runs, getKeys(parcellations), getKeys(selected_trials), getKeys(trial_conditions), getKeys(features)],
+		#path_str = r"results/{{session_run}}/{{parcellation}}/{{trials}}/Features/{{trial_conditions}}/{{feature}}/features.h5"
+	conda:
+		"envs/environment.yaml"
+	script:
+		"scripts/aggregate_dict.py"
+
+
+#output aggregation
 
 
 

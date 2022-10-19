@@ -20,9 +20,9 @@ Run the pipeline with
 
 .. code-block:: console
 
-    $ snakemake -j4 --use-conda decode_all
+    $ snakemake -j4 --use-conda decode_all --configfile config/config_GN.yaml
 
-Parameters (like -j4, --use-conda, ...) are detailed [here](snakemake_run). To test the pipeline installation the default config (``/WIPAR/config/config.yaml``) was used. How to customize your config file to meet your requirements is described here.
+Parameters (like -j4, --use-conda, ...) are detailed [here](snakemake_run). To test the pipeline installation the default config (``/WIPAR/config/config.yaml``) was used together with the config that characterizes Gerions experiment (``/WIPAR/config/config_GN.yaml``). How to customize your config file to meet your requirements is described here.
 
 To get a quick overview of all the processing steps and produced results from the pipeline run, create a report with
 
@@ -30,7 +30,7 @@ To get a quick overview of all the processing steps and produced results from th
 
     $ snakemake --report report.html
 
-Open the created ``/WIPAR/report.html`` file in your browser. It should look like this `report <https://raw.github.com/michaelschaub/calcium-imaging-analysis/blob/readthedocs/report.html>`_. The report is explained in :ref:`report<report>`.
+Open the created ``/WIPAR/report.html`` file in your browser. It should look like this `report <_pages/report.html>`_. The report is explained in :ref:`report<report>`.
 
 
 Neural Decoding

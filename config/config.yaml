@@ -1,9 +1,11 @@
 branch_opts:
+  combine_sessions: False
+
   subjects:
     GN06:
-      #- 2021-01-20_10-15-16
+      - 2021-01-20_10-15-16
       - 2021-03-26_10-53-05
-      #- 2021-03-29_11-51-27
+      - 2021-03-29_11-51-27
 
     #GN08:
     #  - 2021-03-26_13-37-18
@@ -13,10 +15,10 @@ branch_opts:
     #  -2021-03-26_10-13-36
     #  -2021-04-14_16-01-37
     #  -2021-04-20_13-07-10
-    #GN10:
-    #  -2021-03-29_15-41-22
-    #  -2021-03-29_15-41-22
-    #  -2021-04-21_11-00-51
+    GN10:
+      - 2021-03-29_15-41-22
+      - 2021-03-29_15-41-22
+      - 2021-04-21_11-00-51
 
 
   parcellations:
@@ -61,23 +63,23 @@ branch_opts:
       modalities: vistact
 
   features:
-    #raw:
-    #  max_components : [64]
+    raw:
+      max_components : [64]
     #mean:
     #  max_components : [64]
       #covariance:
       #max_components : [64]
     moup:
       timelags: [1] #,2,3]
-      optional:
-        thresh:
-          - 0.5
+      #optional:
+      #  thresh:
+      #    - 0.5
     #  max_components : [64]
     autocovariance:
       timelags: [[1]] #,[1]]
-      optional:
-        thresh:
-          - 0.5
+      #optional:
+      #  thresh:
+      #    - 0.5
 
   decoders:
     default:

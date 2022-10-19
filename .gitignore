@@ -9,3 +9,10 @@ output*
 !resources/.gitkeep
 !resources/meta/*
 !results/.gitkeep
+
+# Sphinx documentation
+docs/build/
+
+# Snakemake report
+report.zip
+report.html
