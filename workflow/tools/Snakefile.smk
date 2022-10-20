@@ -27,6 +27,9 @@ decoder_conf	= config["branch_opts"]["decoders"]
 decoder_static	= config["static_params"]["decoders"]
 decoders	= create_parameters( decoder_conf, decoder_static )
 
+rfe_ns = config["branch_opts"]["rfe"]["select_features_n"]
+rfe_reps = config["branch_opts"]["rfe"]["reps"]
+
 #Run id (based on hash of config)
 run_id = hash_config(config)
 
@@ -37,8 +40,8 @@ config["output"] = {"processed_dates" :  session_runs}
 
 config["processing"] = {"trial_conditions" : trial_conditions,
                         "phase_conditions": phase_conditions,
-                        "feature_selection": {"n":config["branch_opts"]["rfe"]["select_features_n"],
-                                              "reps": config["branch_opts"]["rfe"]["reps"]},
+                        "feature_selection": {"n": rfe_ns,
+                                              "reps": rfe_reps},
                         "parcellations": parcellations,
                         "parcellation_wildcard_matching": config["paths"]["parcellations"], #TODO what is this?
 

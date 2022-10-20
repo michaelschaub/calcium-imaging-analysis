@@ -4,6 +4,8 @@ report: "report/workflow.rst"
 
 ruleorder: load_GN > load_mSM > locaNMF > parcellation > thresholding > feature_calculation
 
+from snakemake_tools import getKeys
+
 ###   Output accumulation rules   ###
 rule decode_all:
 	input:
@@ -12,17 +14,9 @@ rule decode_all:
 		expand(f"results/{{session_run}}/{{parcellation}}/visualization/combined_parcels.png", session_run = session_runs,  parcellation = parcellations)
 
 
-
-#### dict.keys() give pickle error for nested dicts, have to iterate over it to get only keys...
-def getKeys(dict):
-	list = []
-	for key in dict.keys():
-		list.append(key)
-	return list
-
 rule all_feats:
 	input:
-		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Features/{{trial_conditions}}/{{feature}}/features.{config['export_type']}", session_run = session_runs,  parcellation = parcellations, trials= selected_trials, trial_conditions = trial_conditions, feature =  features)
+		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Features/{{trial_conditions}}/{{feature}}/{{trial_conditions}}.{{feature}}.{config['export_type']}", session_run = session_runs,  parcellation = parcellations, trials= selected_trials, trial_conditions = trial_conditions, feature =  features)
 	output:
 		dict = f"results/aggregated_feats.{config['export_type']}"
 	params:
@@ -32,6 +26,10 @@ rule all_feats:
 		"envs/environment.yaml"
 	script:
 		"scripts/aggregate_dict.py"
+
+rule best_features:
+	input:
+		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/circle_plot.png", session_run = session_runs, parcellation = parcellations, trials = selected_trials, feature = features, rfe_n = rfe_ns)
 
 
 #output aggregation
@@ -72,29 +70,6 @@ rule decoding_performances:
 		"scripts/run_aggregation.py"
 
 '''
-rule all_decode:
-	input:
-		[ f"results/{'_'.join(subject_dates)}/{parcellation}/{trials}/Decoding/decoder/{'.'.join(trial_conditions)}/{feature}/{decoder}/decoder_model.pkl"
-			for parcellation in parcellations
-			for trials in selected_trials
-			for feature in features
-			for decoder in decoders]
-
-rule all_features:
-	input:
-		[ f"results/{'_'.join(subject_dates)}/{parcellation}/{trials}/Features/{cond}/{feature}/features.h5"
-			for parcellation in parcellations
-			for trials in selected_trials
-			for cond in trial_conditions
-			for feature in features ]
-
-rule best_features:
-	input:
-		 [ f"results/{'_'.join(subject_dates)}/{parcellation}/{trials}/Decoding/rfe/{'.'.join(trial_conditions)}/{rfe_n}/{feature}/circle_plot.png"
-			for parcellation in parcellations
-			for trials in selected_trials
-			for feature in features
-			for rfe_n in rfe_ns]
 
 rule parcellation_plots:
 	input:

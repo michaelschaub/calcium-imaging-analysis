@@ -15,6 +15,8 @@ class Feature_Type(Enum):
     UNDIRECTED = 1
     DIRECTED = 2
     TIMESERIES = 3
+    def __eq__(self, other):
+        return self.value == other.value
 
 class Features:
     def __init__(self, data, feature, file=None):
@@ -159,6 +161,9 @@ class Features:
     @property
     def type(self):
         return self._type
+
+    def plot(self, path):
+        pass
 
 
 class Raws(Features):

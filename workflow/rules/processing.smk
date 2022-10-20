@@ -96,18 +96,17 @@ rule feature_calculation:
     output:
         f"{{data_dir}}/{{cond}}/{{feature}}/features.h5",
         export_raw = report(
-            f"{{data_dir}}/{{cond}}/{{feature}}/features.{config['export_type']}",
+            f"{{data_dir}}/{{cond}}/{{feature}}/{{cond}}.{{feature}}.{config['export_type']}",
             caption="../report/alignment.rst",
             category="4 Feature Calculation",
             subcategory="{feature}",
             labels={"Condition": "{cond}", "Type": "Data"}),
-
-        #export_plot = report(
-        #    f"{{data_dir}}/{{cond}}/{{feature}}/features.png",
-        #    caption="report/alignment.rst",
-        #    category="4 Feature Calculation",
-        #    subcategory="{feature}",
-        #    labels={"Condition": "{cond}", "Type": "Plot"}),
+        export_plot = report(
+            f"{{data_dir}}/{{cond}}/{{feature}}/{{cond}}.{{feature}}.png",
+            caption="../report/alignment.rst",
+            category="4 Feature Calculation",
+            subcategory="{feature}",
+            labels={"Condition": "{cond}", "Type": "Plot"}),
 
         config = f"{{data_dir}}/{{cond}}/{{feature}}/conf.yaml",
     wildcard_constraints:

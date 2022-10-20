@@ -15,10 +15,10 @@ branch_opts:
     #  -2021-03-26_10-13-36
     #  -2021-04-14_16-01-37
     #  -2021-04-20_13-07-10
-    GN10:
-      - 2021-03-29_15-41-22
-      - 2021-03-29_15-41-22
-      - 2021-04-21_11-00-51
+    #GN10:
+    #  - 2021-03-29_15-41-22
+    #  - 2021-03-29_15-41-22
+    #  - 2021-04-21_11-00-51
 
 
   parcellations:
@@ -63,8 +63,8 @@ branch_opts:
       modalities: vistact
 
   features:
-    raw:
-      max_components : [64]
+    #raw:
+    #  max_components : [64]
     #mean:
     #  max_components : [64]
       #covariance:
@@ -93,7 +93,7 @@ branch_opts:
     select_features_n:
       # - 1.0
       #- 100
-      - 0.5
+      - 1.0
     reps: 2
 
   plotting:

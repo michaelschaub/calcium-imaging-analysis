@@ -3,6 +3,7 @@ import numpy as np
 from ci_lib import Data, DecompData
 from ci_lib.loading import reproducable_hash, load_h5, save_h5
 from ci_lib.networks import MOU #from pymou import MOU
+from ci_lib.plotting import plot_connectivity_matrix
 
 import pathlib
 from enum import Enum
@@ -81,6 +82,8 @@ class Moup(Features):
 
         return flat_params
 
+    def plot(self,path):
+        plot_connectivity_matrix([np.mean(self._feature,axis=0)[0],np.std(self._feature,axis=0)[0]],title="mean|std",path=path) #TODO why is it trial x 1 (?) x w x h
     '''
     def export(self, path, feat=None):
         feats = np.empty((len(self._mou_ests),*(self._mou_ests[0].get_J().shape[0]))

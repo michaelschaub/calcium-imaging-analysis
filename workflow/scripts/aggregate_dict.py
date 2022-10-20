@@ -32,7 +32,6 @@ logger = snakemake_tools.start_log(snakemake)
 if snakemake.config['limit_memory']:
     snakemake_tools.limit_memory(snakemake)
 try:
-    #snakemake_tools.save_conf(snakemake, sections=["parcellations"]) #fixed a bug as we dont apply parcellation to SVD and then prefilter fails to compare config as it won't contain parcellation
     timer_start = snakemake_tools.start_timer()
 
     nested_dict = lambda: defaultdict(nested_dict)
@@ -44,12 +43,12 @@ try:
         val = snakemake_tools.load(snakemake,snakemake.input[i]) #TODO this assumes that the order of inputs is unchanged
         nest = set_nested_dict_recursive(nest, list(keys), val)
 
+    snakemake_tools.save(snakemake,snakemake.output["dict"],dict(nest))
+
     #remove lambda exp. so nested_dict can be pickled
     #pkl_save_dict = json.loads(json.dumps(nest))
     #nest.default_factory = None
     # i just went with dict(nesteddict)
-
-    snakemake_tools.save(snakemake,snakemake.output["dict"],dict(nest))
 
     snakemake_tools.stop_timer(timer_start, logger=logger)
 except Exception:

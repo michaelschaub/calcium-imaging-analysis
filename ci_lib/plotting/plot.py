@@ -9,6 +9,8 @@ class Feature_Type(Enum): #
     UNDIRECTED = 1
     DIRECTED = 2
     TIMESERIES = 3
+    def __eq__(self, other):
+        return self.value == other.value
 
 from snakemake.logging import logger
 
@@ -99,8 +101,6 @@ def plot_frame(temps, spatial, titles, plt_title):
     plt.savefig(plt_title, format='png')
 
 
-
-
 def graph_circle_plot(list_best_feat, n_nodes, title, feature_type, save_path=False,  node_labels=None):
     #%% network and plot properties
     N = n_nodes #20 # number of nodes
@@ -118,7 +118,7 @@ def graph_circle_plot(list_best_feat, n_nodes, title, feature_type, save_path=Fa
         node_labels = dict(enumerate(node_labels))
 
     # matrices to retrieve input/output channels from connections in support network
-    mask = np.tri(N,N,0, dtype=bool) if feature_type == Feature_Type.UNDIRECTED else np.ones((N,N), dtype=bool)
+    mask = np.tri(N,N,0, dtype=bool) if feature_type.__eq__(Feature_Type.UNDIRECTED) else np.ones((N,N), dtype=bool)
 
     row_ind = np.repeat(np.arange(N).reshape([N,-1]),N,axis=1)
     col_ind = np.repeat(np.arange(N).reshape([-1,N]),N,axis=0)
@@ -130,7 +130,8 @@ def graph_circle_plot(list_best_feat, n_nodes, title, feature_type, save_path=Fa
     plt.axes([0.05,0.05,0.95,0.95])
     plt.axis('off')
     plt.title=title
-    if feature_type == Feature_Type.NODE: # nodal
+
+    if feature_type.__eq__(Feature_Type.NODE): # nodal
         #list_best_feat = np.argsort(class_perfs.mean(0))[:n_edges] # select n best features
         node_color_aff = []
         g = nx.Graph()
@@ -143,9 +144,9 @@ def graph_circle_plot(list_best_feat, n_nodes, title, feature_type, save_path=Fa
         nx.draw_networkx_nodes(g,pos=pos_circ,node_color=node_color_aff)
         nx.draw_networkx_labels(g,pos=pos_circ,labels=node_labels)
 
-    if feature_type == Feature_Type.DIRECTED or feature_type == Feature_Type.UNDIRECTED:
+    if feature_type.__eq__(Feature_Type.DIRECTED) or feature_type.__eq__(Feature_Type.UNDIRECTED):
         #list_best_feat = np.argsort(class_perfs.mean(0))[:n_edges] # select n best features
-        g = nx.Graph() if feature_type == Feature_Type.UNDIRECTED else nx.MultiDiGraph()
+        g = nx.Graph() if feature_type.__eq__(Feature_Type.UNDIRECTED) else nx.MultiDiGraph()
         for i in range(N):
             g.add_node(i)
         node_color_aff = ['#E8F0F2']*N
