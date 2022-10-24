@@ -91,30 +91,30 @@ rule condition:
 
 rule feature_calculation:
     input:
-        data = f"{{data_dir}}/{{cond}}/data.h5",
-        config = f"{{data_dir}}/{{cond}}/conf.yaml",
+        data = f"results/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/data.h5",
+        config = f"results/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/conf.yaml",
     output:
-        f"{{data_dir}}/{{cond}}/{{feature}}/features.h5",
+        f"results/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5",
         export_raw = report(
-            f"{{data_dir}}/{{cond}}/{{feature}}/{{cond}}.{{feature}}.{config['export_type']}",
+            f"results/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.{config['export_type']}",
             caption="../report/alignment.rst",
             category="4 Feature Calculation",
             subcategory="{feature}",
-            labels={"Condition": "{cond}", "Type": "Data"}),
+            labels={"Condition": "{cond}", "Subject/Date": "{mouse_dates}", "Type": "Data"}),
         export_plot = report(
-            f"{{data_dir}}/{{cond}}/{{feature}}/{{cond}}.{{feature}}.png",
+            f"results/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.png",
             caption="../report/alignment.rst",
             category="4 Feature Calculation",
             subcategory="{feature}",
-            labels={"Condition": "{cond}", "Type": "Plot"}),
+            labels={"Condition": "{cond}", "Subject/Date": "{mouse_dates}", "Type": "Plot"}),
 
-        config = f"{{data_dir}}/{{cond}}/{{feature}}/conf.yaml",
+        config = f"results/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/conf.yaml",
     wildcard_constraints:
         feature = r'(?!thresh).+'
     params:
         params = lambda wildcards: config["features"][wildcards["feature"]]
     log:
-        f"{{data_dir}}/{{cond}}/{{feature}}/feature_calculation.log"
+        f"results/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/feature_calculation.log"
     conda:
         "../envs/environment.yaml"
     resources:
