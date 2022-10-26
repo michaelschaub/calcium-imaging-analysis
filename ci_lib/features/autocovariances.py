@@ -31,7 +31,7 @@ DEFAULT_TIMELAG = 10
 
 
 class AutoCovariances(Features):
-    _type=Feature_Type.DIRECTED
+    _type=Feature_Type.UNDIRECTED
 
     def __init__(self, data, feature, file=None, include_diagonal=True):
         super().__init__(data=data, feature=feature, file=file)

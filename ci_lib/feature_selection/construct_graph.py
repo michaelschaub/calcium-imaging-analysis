@@ -61,7 +61,8 @@ def construct_rfe_graph(selected_feats, n_nodes, feat_type, edge_weight=None, ed
                 if edge_weight is None:
                     g.add_edge(col_ind[ij],row_ind[ij])
                 else:
-                    g.add_edge(col_ind[ij],row_ind[ij],edge_color=color.rgb2hex(plt.cm.viridis(edge_weight[i])),edge_alpha=edge_alpha[i])
+                    print(plt.cm.viridis(edge_weight[ij]))
+                    g.add_edge(col_ind[ij],row_ind[ij],edge_color=color.rgb2hex(plt.cm.viridis(edge_weight[ij])),edge_alpha=edge_alpha[ij])
                     #edge_attrs[(col_ind[ij],row_ind[ij])] = plt.cm.viridis(edge_weight[ij])
         #nx.set_edge_attributes(g, edge_attrs, "edge_color")
 

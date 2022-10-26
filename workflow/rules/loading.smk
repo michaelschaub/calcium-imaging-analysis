@@ -10,11 +10,11 @@ rule load_GN:
                       for date in dates] for subject_id,dates in config["subjects"].items()],
         Vc		= [ f"resources/experiment/{subject_id}/{date}/SVD_data/Vc.mat"
                       for subject_id,dates in config["subjects"].items() for date in dates],
-        trans_params	= [ f"resources/experiment/{subject_id}/{date}/SVD_data/opts.mat"
+        trans_params	= [ f"resources/experiment/{subject_id}/{date}/SVD_data/opts2.mat"
                             for subject_id,dates in config["subjects"].items() for date in dates],
     output:
         f"results/{{subject_dates}}/SVD/data.h5",
-        align_plot = report("results/{subject_dates}/SVD/alignment.png", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "GN", "Subjects":", ".join(config["subjects"])}),
+        align_plot = report("results/{subject_dates}/SVD/alignment.png", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "GN", "Subjects":"{subject_dates}"}),
         config = f"results/{{subject_dates}}/SVD/conf.yaml",
     params:
         subject_dates_str = '_'.join(config["subject_dates"]),

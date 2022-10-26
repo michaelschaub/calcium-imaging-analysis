@@ -141,7 +141,7 @@ def draw_glassbrain(polygons=None,labelset=None,graph=None,bg_img=None,
         alpha_nodes[selected_nodes] = 1
 
         #add interaction tools to edges
-        fig.add_tools(HoverTool(renderers=[graph_renderer.edge_renderer],tooltips="@connection",line_policy='interp'))
+        fig.add_tools(HoverTool(renderers=[graph_renderer.edge_renderer],tooltips=[("Edge","@connection"),("Value","@weight")],line_policy='interp'))
         fig.add_tools(HoverTool(renderers=[graph_renderer.edge_renderer],tooltips="@source",line_policy='prev'))
         fig.add_tools(HoverTool(renderers=[graph_renderer.edge_renderer],tooltips="@target",line_policy='next'))
         fig.add_tools(HoverTool(tooltips=None), BoxSelectTool())
@@ -155,12 +155,12 @@ def draw_glassbrain(polygons=None,labelset=None,graph=None,bg_img=None,
         if nx.is_directed(graph) and graph.edges():
             graph_renderer.node_renderer.data_source.add(node_labels[:,1],"inc")
             graph_renderer.node_renderer.data_source.add(node_labels[:,0],"out")
-            fig.add_tools(HoverTool(renderers=[graph_renderer.node_renderer],tooltips=[("Node","@label"),("🢂◯","@inc"),("◯🢂","@out")]))
+            fig.add_tools(HoverTool(renderers=[graph_renderer.node_renderer],tooltips=[("Node","@label"),("🢂◯","@inc"),("◯🢂","@out"),("Value","@weight")]))
             #fig.add_tools(TapTool(renderers=[graph_renderer.node_renderer],tooltips=[("Comp","@label"),("Inc","@inc"),("Out","@out")]))
 
         elif graph.edges():
             graph_renderer.node_renderer.data_source.add(node_labels[:,0],"connected")
-            fig.add_tools(HoverTool(renderers=[graph_renderer.node_renderer],tooltips=[("Node","@label"),("🢀🢂","@connected")]))
+            fig.add_tools(HoverTool(renderers=[graph_renderer.node_renderer],tooltips=[("Node","@label"),("🢀🢂","@connected"),("Value","@weight")]))
 
 
 
