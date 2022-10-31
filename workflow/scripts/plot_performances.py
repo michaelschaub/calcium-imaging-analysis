@@ -12,7 +12,7 @@ from ci_lib.utils import snakemake_tools
 
 
 ### Setup
-logger = snakemake_tools.start_log(snakemake)
+logger = start_log(snakemake)
 try:
     timer_start = snakemake_tools.start_timer()
 

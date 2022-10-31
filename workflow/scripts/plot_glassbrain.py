@@ -6,13 +6,14 @@ import sys
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 from ci_lib.utils import snakemake_tools
+from ci_lib.utils.logging import start_log
 from ci_lib.features import Features, Means, Raws, Covariances, AutoCovariances, Moup, AutoCorrelations
 from ci_lib.plotting import graph_circle_plot, plot_glassbrain_bokeh, graph_sping_plot
 from ci_lib import DecompData
 from ci_lib.feature_selection import construct_rfe_graph
 
 ### Setup
-logger = snakemake_tools.start_log(snakemake) # redirect std_out to log file
+logger = start_log(snakemake) # redirect std_out to log file
 if snakemake.config['limit_memory']:
     snakemake_tools.limit_memory(snakemake)
 try:

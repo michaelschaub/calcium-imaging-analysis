@@ -3,10 +3,11 @@ import sys
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 from ci_lib.utils import snakemake_tools
+from ci_lib.utils.logging import start_log
 from ci_lib import DecompData
 
 ### Setup
-logger = snakemake_tools.start_log(snakemake) # redirect std_out to log file
+logger = start_log(snakemake) # redirect std_out to log file
 if snakemake.config['limit_memory']:
     snakemake_tools.limit_memory(snakemake)
 try:

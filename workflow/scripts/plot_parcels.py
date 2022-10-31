@@ -6,11 +6,12 @@ import os
 import numpy as np
 
 from ci_lib.utils import snakemake_tools
+from ci_lib.utils.logging import start_log
 from ci_lib import DecompData
 from ci_lib.plotting import draw_neural_activity
 
 ### Setup
-logger = snakemake_tools.start_log(snakemake) # redirect std_out to log file
+logger = start_log(snakemake) # redirect std_out to log file
 try:
     snakemake_tools.check_conf(snakemake, sections=["parcellations"])
     timer_start = snakemake_tools.start_timer()
