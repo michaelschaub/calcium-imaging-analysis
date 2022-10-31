@@ -2,8 +2,8 @@ trial_conditions:
   sides:
     column: target_side_left
     conds:
-      left:   0
-      right:  1
+      left:   1
+      right:  0
   modalities:
     column: modality
     conds:
@@ -45,3 +45,12 @@ phase_conditions:
   delay:
     start: 75
     stop: 83
+  response:
+    start: 83
+    stop: 113
+  w_response:
+    start: 30
+    stop: 83
+  all:
+    start: 30
+    stop: 113

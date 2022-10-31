@@ -2,25 +2,25 @@ include: "tools/Snakefile.smk"
 
 report: "report/workflow.rst"
 
-ruleorder: load_GN > load_mSM > locaNMF > parcellation > thresholding > feature_calculation
+ruleorder:  feature_concat > load_GN > load_mSM > locaNMF > parcellation > thresholding > feature_calculation
 
 from snakemake_tools import getKeys
 
 ###   Output accumulation rules   ###
 rule decode_all:
 	input:
-		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/performances.png", session_run = session_runs,  parcellation = parcellations, trials= selected_trials),
-		expand(f"results/plots/{{session_run}}/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{feature}}/performances.png", session_run = session_runs,  feature =  features, trials= selected_trials),
+		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/performances.png", session_run = session_runs+["All"],  parcellation = parcellations, trials= selected_trials),
+		expand(f"results/plots/{{session_run}}/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{feature}}/performances.png", session_run = session_runs+["All"],  feature =  features, trials= selected_trials),
 		expand(f"results/{{session_run}}/{{parcellation}}/visualization/combined_parcels.png", session_run = session_runs,  parcellation = parcellations)
 
 
 rule all_feats:
 	input:
-		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Features/{{trial_conditions}}/{{feature}}/{{trial_conditions}}.{{feature}}.{config['export_type']}", session_run = session_runs,  parcellation = parcellations, trials= selected_trials, trial_conditions = trial_conditions, feature =  features)
+		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Features/{{trial_conditions}}/{{feature}}/{{trial_conditions}}.{{feature}}.{config['export_type']}", session_run = session_runs+["All"],  parcellation = parcellations, trials= selected_trials, trial_conditions = trial_conditions, feature =  features)
 	output:
 		dict = f"results/aggregated_feats.{config['export_type']}"
 	params:
-		iter = [session_runs, getKeys(parcellations), getKeys(selected_trials), getKeys(trial_conditions), getKeys(features)],
+		iter = [session_runs+["All"], getKeys(parcellations), getKeys(selected_trials), getKeys(trial_conditions), getKeys(features)],
 		#path_str = r"results/{{session_run}}/{{parcellation}}/{{trials}}/Features/{{trial_conditions}}/{{feature}}/features.h5"
 	conda:
 		"envs/environment.yaml"

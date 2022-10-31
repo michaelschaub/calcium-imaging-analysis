@@ -46,7 +46,8 @@ config["processing"] = {"trial_conditions" : trial_conditions,
                         "parcellation_wildcard_matching": config["paths"]["parcellations"], #TODO what is this?
 
                         "features":features,
-                        "decoders":decoders}
+                        "decoders":decoders,
+                        "session_runs":session_runs}
 
 
 #For annotating plots

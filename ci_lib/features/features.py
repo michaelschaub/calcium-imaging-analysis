@@ -28,6 +28,18 @@ class Features:
         '''flatten contained feature to one trial and one feature dimension'''
         pass
 
+    def concat(self, Features, overwrite=False):
+        ''' concats feature values from List of Features to this feature'''
+        if not isinstance(Features, list):
+            Features = [Features]
+        print(self._feature.shape)
+        if overwrite:
+            self._feature = np.concatenate([f._feature for f in Features],axis=0)
+        else:
+            self._feature = np.concatenate([self._feature,[f._feature for f in Features]],axis=0)
+
+        print(self._feature.shape)
+
     def expand(self, data=None):
         '''expand feature into same shape as temporals in Data (for computation)'''
         if data is None:
@@ -47,6 +59,21 @@ class Features:
     @feature.setter
     def feature(self,value):
         self._feature = value
+
+    @property
+    def trials_n(self):
+        trials_n, *_ = self._feature.shape
+        return trials_n
+
+
+    def subsample(self,n):
+
+        rng = np.random.default_rng()
+
+        select_n = rng.choice(self.trials_n,size=n,replace=False)
+
+        self._feature = self._feature[select_n ]
+
 
     @property
     def mean(self):
@@ -163,7 +190,8 @@ class Features:
         return self._type
 
     def plot(self, path):
-        pass
+        #Create empty fi    le if inheritingfeature class doesn't define a visualization
+        open(path, 'a').close()
 
 
 class Raws(Features):

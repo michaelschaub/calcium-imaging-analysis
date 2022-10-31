@@ -122,6 +122,35 @@ rule feature_calculation:
     script:
         "../scripts/feature.py"
 
+rule feature_concat:
+    input:
+        expand("results/{session_run}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5", session_run = config["session_runs"])
+    output:
+        f"results/All/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5",
+        export_raw = report(
+            f"results/All/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.{config['export_type']}",
+            caption="../report/alignment.rst",
+            category="4 Feature Calculation",
+            subcategory="{feature}",
+            labels={"Condition": "{cond}", "Subject/Date": "All", "Type": "Data"}),
+        export_plot = report(
+            f"results/All/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.png",
+            caption="../report/alignment.rst",
+            category="4 Feature Calculation",
+            subcategory="{feature}",
+            labels={"Condition": "{cond}", "Subject/Date": "All", "Type": "Plot"}),
+    params:
+        params = lambda wildcards: config["features"][wildcards["feature"]]
+    log:
+        f"results/All/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/feature_calculation.log"
+    conda:
+        "../envs/environment.yaml"
+    resources:
+        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,2000)
+    script:
+        "../scripts/feature_concat.py"
+
+
 #Need prio over features
 rule thresholding:
     input:

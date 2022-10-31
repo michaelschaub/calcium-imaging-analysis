@@ -6,6 +6,10 @@ branch_opts:
       - 2021-03-26_10-53-05
       - 2021-03-29_11-51-27
       - 2021-04-01_13-44-22
+      - 2021-03-01_13-57-39
+      - 2021-03-02_15-49-02
+      - 2021-03-03_14-02-06
+      - 2021-03-04_11-51-23
 
     #GN08:
     # - 2021-03-26_13-37-18
@@ -23,7 +27,7 @@ branch_opts:
 
   parcellations:
     anatomical:
-      ROI: [['VISp-R,VISrl-R,SSp-bfd-R,MOs-R,VISp-L,VISrl-L,SSp-bfd-L,MOs-L'],[]]#FRP-R,MOp-R'],["VIS,SS"]]
+      ROI: [['VISp-R,VISrl-R,SSp-bfd-R,MOs-R,MOs-L,SSp-bfd-L,VISrl-L,VISp-L'],[]]#FRP-R,MOp-R'],["VIS,SS"]]
     #SVD:
     #ICA:
     #n_comps: [64]
@@ -34,18 +38,61 @@ branch_opts:
 
   conditions:
     default:
-      phase: stimulus
-      n_targets: all
-      n_distractors: none
+      phase: delay #w_response
+      #n_targets: all
+      #n_distractors: none
       auto_reward: no
       both_spouts: yes
 
-    visual:
-      modalities: visual
-    tactile:
-      modalities: tactile
-    multisensory:
-      modalities: vistact
+    leftResponse_leftStim:
+      responses: left
+      sides: left
+
+    leftResponse_rightStim:
+      responses: left
+      sides: right
+
+    rightResponse_rightStim:
+      responses: right
+      sides: right
+
+    rightResponse_leftStim:
+      responses: right
+      sides: left
+
+    noResponse:
+      responses: no
+
+
+    #left_in_visual:
+    #  responses: left
+    #  modalities: visual
+    #right_in_visual:
+    #  responses: right
+    #  modalities: visual
+    #left_in_tactile:
+    #  responses: left
+    #  modalities: tactile
+    #right_in_tactile:
+    #  responses: right
+    #  modalities: tactile
+    #left_in_vistact:
+    #  responses: left
+    #  modalities: vistact
+    #right_in_vistact:
+    #  responses: right
+    #  modalities: vistact
+    #undecided:
+    #  responses: no
+
+
+
+    #visual:
+    #  modalities: visual
+    #tactile:
+    #  modalities: tactile
+    #multisensory:
+    #  modalities: vistact
 
     #left_visual:
     #  sides: left
@@ -73,8 +120,8 @@ branch_opts:
     #  max_components : [64]
       #covariance:
       #max_components : [64]
-    moup:
-      timelags: [1] #,2,3]
+    #moup:
+    #  timelags: [1] #,2,3]
       #optional:
       #  thresh:
       #    - 0.5
