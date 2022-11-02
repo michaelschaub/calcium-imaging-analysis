@@ -23,7 +23,9 @@ try:
 
     feats = []
     for i in snakemake.input:
-        feats.append(feature_class.load(i))
+        feat = feature_class.load(i)
+        if feat.trials_n>0:
+            feats.append(feat)
 
     feats[0].concat(feats, overwrite=True)
 

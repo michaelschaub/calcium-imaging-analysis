@@ -19,7 +19,7 @@ Currently WIPAR is only available on `Github <https://github.com/michaelschaub/c
 
 .. code-block:: console
 
-    $ git pull https://github.com/michaelschaub/calcium-imaging-analysis.git
+    $ git clone https://github.com/michaelschaub/calcium-imaging-analysis.git
 
 You should have the following file structure in your ``/WIPAR`` folder.
 

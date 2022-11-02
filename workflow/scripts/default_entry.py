@@ -21,12 +21,13 @@ try:
     timer_start = snakemake_tools.start_timer()
 
     files_Vc = snakemake.input["Vc"]
-    task_files = snakemake.params["task_structured"] #snakemake.input["tasks"]
+
+    task_files = snakemake.params[0]['task_structured'] #snakemake.input["tasks"] #
     trans_paths = snakemake.input["trans_params"]
-    subject_dates_str = snakemake.params["subject_dates_str"]
+
 
     sessions = load_task_data_as_pandas_df.extract_session_data_and_save(
-            root_paths=task_files, mouse_dates_str = subject_dates_str, reextract=True, logger=logger) #reextraction needs to be done for different set of dates otherwise session will have wrong dims
+            root_paths=task_files, reextract=True, logger=logger) #reextraction needs to be done for different set of dates otherwise session will have wrong dims
     logger.info("Loaded task data")
 
 
@@ -37,6 +38,10 @@ try:
     Vc = []
     U = []
     start = 0
+
+    print("Load")
+    print(snakemake.input["Vc"])
+
     for file_Vc,trans_path in zip(files_Vc,trans_paths):
         f = h5py.File(file_Vc, 'r')
 

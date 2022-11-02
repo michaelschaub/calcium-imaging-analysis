@@ -2,7 +2,7 @@ include: "tools/Snakefile.smk"
 
 report: "report/workflow.rst"
 
-ruleorder:  feature_concat > load_GN > load_mSM > locaNMF > parcellation > thresholding > feature_calculation
+ruleorder:  load_GN > load_mSM  > locaNMF > parcellation > feature_concat > thresholding > feature_calculation
 
 from snakemake_tools import getKeys
 

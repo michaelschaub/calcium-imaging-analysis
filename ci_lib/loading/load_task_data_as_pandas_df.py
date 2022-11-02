@@ -135,7 +135,7 @@ def load_individual_session_data(date_folder, mouse_id, logger=None):
 #
 
 
-def extract_session_data_and_save(root_paths,  mouse_dates_str , reextract=False, logger=None):
+def extract_session_data_and_save(root_paths,  reextract=False, logger=None):
     # if type(root_paths) is str:
     #     root_paths = [root_paths]
     # #

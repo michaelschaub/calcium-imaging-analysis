@@ -238,8 +238,8 @@ class DecompData(Data):
                 #trial_frames = np.array(np.arange(np.max(np.diff(self._starts)))[keys[1]]) <- max can't work if we have some outliers in the frame length
                 trial_frames = np.array(np.arange(np.min(np.diff(self._starts)))[keys[1]])
             except ValueError as err:
-                if "zero-size array to reduction operation maximum" in err.args[0]:
-                    self.logger.warn("Data has size zero")
+                if "zero-size array to reduction operation" in err.args[0]:
+                    self.logger.warning("Data has size zero")
                     trial_frames = np.array([])
                 else:
                     raise

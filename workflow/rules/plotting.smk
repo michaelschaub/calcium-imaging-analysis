@@ -60,8 +60,12 @@ rule plot_performances_features:
                   for feature in config['features']
                   for decoder in config["decoders"]],
     output:
-        report(f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/performances.png", caption="../report/decode_features.rst", category="6 Decoding", subcategory="Compare Features", labels={"Parcellation":"{parcellation}"}),
-        f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/performances_anno.png",
+        report(f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/performances.png",
+            caption="../report/decode_features.rst",
+            category="6 Decoding",
+            subcategory="Compare Features",
+            labels={"Parcellation":"{parcellation}","Subject/Date": "{subject_dates}"}),
+        f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/performances_anno.png"
     params:
         conds=list(config['trial_conditions']),
         decoders=config["decoders"],

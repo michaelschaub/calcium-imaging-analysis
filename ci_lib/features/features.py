@@ -67,9 +67,11 @@ class Features:
 
 
     def subsample(self,n):
-
+        '''
+        Subsampling Trials to balance number of datapoints between different conditions
+        :param n: Number of trials to sample
+        '''
         rng = np.random.default_rng()
-
         select_n = rng.choice(self.trials_n,size=n,replace=False)
 
         self._feature = self._feature[select_n ]

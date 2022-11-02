@@ -63,17 +63,24 @@ try:
     cv = StratifiedShuffleSplit(rep, test_size=0.2, random_state=420)
 
     ### Balance cond feats
-    min_number_trials = cond_feats[0].trials_n
-    for i in range(len(cond_feats)):
-        min_number_trials = np.min([min_number_trials,cond_feats[i].trials_n])
+    #balance = snakemake.params["params"]['balance']
+    balance = False
+    if balance:
+        min_number_trials = cond_feats[0].trials_n
+        for i in range(len(cond_feats)):
+            min_number_trials = np.min([min_number_trials,cond_feats[i].trials_n])
 
-    for i in range(len(cond_feats)):
-        cond_feats[i].subsample(min_number_trials)
+        for i in range(len(cond_feats)):
+            cond_feats[i].subsample(min_number_trials)
+            print(cond_feats[i].trials_n)
+
 
 
     data = np.concatenate([feat.flatten() for feat in cond_feats])
     labels = np.concatenate([np.full((len(cond_feats[i].flatten())), cond_str[i])
                              for i in range(len(cond_feats))])
+
+    print(data.shape)
 
     ### Scale
     scaler = preprocessing.StandardScaler().fit( data )
