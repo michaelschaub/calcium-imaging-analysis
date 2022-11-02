@@ -6,91 +6,91 @@ ruleorder: load_GN > load_mSM > locaNMF > parcellation > thresholding > feature_
 
 ###   Output accumulation rules   ###
 rule decode_all:
-	input:
-		expand(f"results/{config['output']['processed_dates']}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/performances.png", parcellation = parcellations, trials= selected_trials),
-		expand(f"results/plots/{config['output']['processed_dates']}/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{feature}}/performances.png", feature =  features, trials= selected_trials),
-		expand(f"results/{config['output']['processed_dates']}/{{parcellation}}/visualization/combined_parcels.png", parcellation = parcellations)
+    input:
+        expand(f"results/{config['output']['processed_dates']}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/performances.png", parcellation = parcellations, trials= selected_trials),
+        expand(f"results/plots/{config['output']['processed_dates']}/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{feature}}/performances.png", feature =  features, trials= selected_trials),
+        expand(f"results/{config['output']['processed_dates']}/{{parcellation}}/visualization/combined_parcels.png", parcellation = parcellations)
 
 
 
 # The first rule is default
 rule decoding_performances:
-	input:
-		[ f"results/{config['output']['processed_dates']}/{parcellation}/{trials}/Decoding/decoder/{'.'.join(trial_conditions)}/performances.png"
-			for parcellation in parcellations
-			for trials in selected_trials],
-		#[ f"results/{'_'.join(subject_dates)}/{parcellation}/{trials}/Decoding/decoder/{'.'.join(trial_conditions)}/{feature}/plots/performance.png"
-		#	for parcellation in parcellations
-		#	for trials in selected_trials
-		#	for feature in features],
-		[ f"results/plots/{config['output']['processed_dates']}/{trials}/Decoding/{'.'.join(trial_conditions)}/{feature}/performances.png"
-		  	for feature in features
-		   	for trials in selected_trials],
-	output:
-		decoders = [ f"results/runs/{run_id}/features_{parcellation}_{trials}_{config['output']['processed_dates']}_{'.'.join(trial_conditions)}_decoding_performances.png"
-			for parcellation in parcellations
-			for trials in selected_trials],
-		#decoder = [ f"results/runs/{run_id}/Features/{'_'.join(subject_dates)}_{parcellation}_{trials}_{'.'.join(trial_conditions)}_{feature}_performance.png"
-		#	for parcellation in parcellations
-		#	for trials in selected_trials
-		#	for feature in features],
-		parcellations = [ f"results/runs/{run_id}/parcellations_{feature}_{trials}_{config['output']['processed_dates']}_{'.'.join(trial_conditions)}_decoding_performances.png"
-			for feature in features
-			for trials in selected_trials],
-	log:
-		f"results/runs/{run_id}/pipeline_entry.log"
-	conda:
-		"envs/environment.yaml"
-	resources:
-		mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,1000)
-	script:
-		"scripts/run_aggregation.py"
+    input:
+        [ f"results/{config['output']['processed_dates']}/{parcellation}/{trials}/Decoding/decoder/{'.'.join(trial_conditions)}/performances.png"
+            for parcellation in parcellations
+            for trials in selected_trials],
+        #[ f"results/{'_'.join(subject_dates)}/{parcellation}/{trials}/Decoding/decoder/{'.'.join(trial_conditions)}/{feature}/plots/performance.png"
+        #    for parcellation in parcellations
+        #    for trials in selected_trials
+        #    for feature in features],
+        [ f"results/plots/{config['output']['processed_dates']}/{trials}/Decoding/{'.'.join(trial_conditions)}/{feature}/performances.png"
+              for feature in features
+               for trials in selected_trials],
+    output:
+        decoders = [ f"results/runs/{run_id}/features_{parcellation}_{trials}_{config['output']['processed_dates']}_{'.'.join(trial_conditions)}_decoding_performances.png"
+            for parcellation in parcellations
+            for trials in selected_trials],
+        #decoder = [ f"results/runs/{run_id}/Features/{'_'.join(subject_dates)}_{parcellation}_{trials}_{'.'.join(trial_conditions)}_{feature}_performance.png"
+        #    for parcellation in parcellations
+        #    for trials in selected_trials
+        #    for feature in features],
+        parcellations = [ f"results/runs/{run_id}/parcellations_{feature}_{trials}_{config['output']['processed_dates']}_{'.'.join(trial_conditions)}_decoding_performances.png"
+            for feature in features
+            for trials in selected_trials],
+    log:
+        f"results/runs/{run_id}/pipeline_entry.log"
+    conda:
+        "envs/environment.yaml"
+    resources:
+        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,1000)
+    script:
+        "scripts/run_aggregation.py"
 
 '''
 rule all_decode:
-	input:
-		[ f"results/{'_'.join(subject_dates)}/{parcellation}/{trials}/Decoding/decoder/{'.'.join(trial_conditions)}/{feature}/{decoder}/decoder_model.pkl"
-			for parcellation in parcellations
-			for trials in selected_trials
-			for feature in features
-			for decoder in decoders]
+    input:
+        [ f"results/{'_'.join(subject_dates)}/{parcellation}/{trials}/Decoding/decoder/{'.'.join(trial_conditions)}/{feature}/{decoder}/decoder_model.pkl"
+            for parcellation in parcellations
+            for trials in selected_trials
+            for feature in features
+            for decoder in decoders]
 
 rule all_features:
-	input:
-		[ f"results/{'_'.join(subject_dates)}/{parcellation}/{trials}/Features/{cond}/{feature}/features.h5"
-			for parcellation in parcellations
-			for trials in selected_trials
-			for cond in trial_conditions
-			for feature in features ]
+    input:
+        [ f"results/{'_'.join(subject_dates)}/{parcellation}/{trials}/Features/{cond}/{feature}/features.h5"
+            for parcellation in parcellations
+            for trials in selected_trials
+            for cond in trial_conditions
+            for feature in features ]
 
 rule best_features:
-	input:
-		 [ f"results/{'_'.join(subject_dates)}/{parcellation}/{trials}/Decoding/rfe/{'.'.join(trial_conditions)}/{rfe_n}/{feature}/circle_plot.png"
-			for parcellation in parcellations
-			for trials in selected_trials
-			for feature in features
-			for rfe_n in rfe_ns]
-
-rule parcellation_plots:
-	input:
-		[ f"results/{'_'.join(subject_dates)}/{parcellation}/visualization/combined_parcels.png"
-			for parcellation in parcellations]
+    input:
+         [ f"results/{'_'.join(subject_dates)}/{parcellation}/{trials}/Decoding/rfe/{'.'.join(trial_conditions)}/{rfe_n}/{feature}/circle_plot.png"
+            for parcellation in parcellations
+            for trials in selected_trials
+            for feature in features
+            for rfe_n in rfe_ns]
 '''
 
+rule parcellation_plots:
+    input:
+        [ f"results/{'_'.join(subject_dates)}/{parcellation}/visualization/combined_parcels.png"
+            for parcellation in parcellations]
+
 module loading:
-	snakefile: "rules/loading.smk"
-	config:  config | config['loading']
+    snakefile: "rules/loading.smk"
+    config:  config | config['loading']
 
 use rule * from loading
 
 module processing:
-	snakefile: "rules/processing.smk"
-	config: config | config['processing']
+    snakefile: "rules/processing.smk"
+    config: config | config['processing']
 
 use rule * from processing
 
 module plotting:
-	snakefile: "rules/plotting.smk"
-	config: config | config['plotting']
+    snakefile: "rules/plotting.smk"
+    config: config | config['plotting']
 
 use rule * from plotting

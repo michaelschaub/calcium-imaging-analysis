@@ -5,7 +5,7 @@ rule load_GN:
     aggregates all task and svd data from one session with one animal
     '''
     input:
-        #To make sure that files are present, unfortunatly gets flattened -> losing information which dates belong to which subject
+        #To make sure that files are present, unfortunately gets flattened -> losing information which dates belong to which subject
         _		= [[ f"resources/experiment/{subject_id}/{date}/task_data/"
                       for date in dates] for subject_id,dates in config["subjects"].items()],
         Vc		= [ f"resources/experiment/{subject_id}/{date}/SVD_data/Vc.mat"
