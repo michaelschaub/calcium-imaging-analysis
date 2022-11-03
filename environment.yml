@@ -16,6 +16,7 @@ dependencies:
   - bokeh
   - scipy
   - snakemake
+  - docutils=0.16
   - pip:
       - sphinx
       - sphinx-autoapi
