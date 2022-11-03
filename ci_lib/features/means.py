@@ -14,8 +14,18 @@ def calc_means(temps):
 class Means(Features):
     _type = Feature_Type.NODE
 
-    def create(data, max_comps=None, logger=LOGGER):
-        feat = Means(data, feature=calc_means(data.temporals[:, :, :max_comps]))
+    def create(data, max_comps=None, logger=LOGGER, window_size=None):
+        if window is None:
+            feat = Means(data, feature=calc_means(data.temporals[:, :, :max_comps]))
+        else
+            trials , phase_length, comps  =   data.temporals.shape
+            windows = [range(i,i+window_size) for i in range(0,phase_length-window_size)]
+
+            feat_val = np.zeros((len(windows),trials,comps if max_comps is None else max_comps))
+            for w,window in enumerate(windows):
+                feat_val[w] = calc_means(data.temporals[:, window, :max_comps])
+                
+            feat = Means(data, feature=feat_val, time_resolved=True)
         return feat
 
     def flatten(self, feat=None):

@@ -53,6 +53,10 @@ class DecompData(Data):
         self._starts = trial_starts
         self._spat_labels = spatial_labels
 
+        #Needed to calculate z-score based on mean and stdev over whole dataset after splitting data into conditions
+        self._mean = np.mean(self._temps,axis=0)
+        self._stdev = np.std(self._temps,axis=0)
+
 
         if cond_filter is None:
             cond_filter = []
@@ -162,6 +166,19 @@ class DecompData(Data):
     @property
     def t_max(self):
         return self._temps.shape[0]
+
+    @property
+    def temporals_z_scored(self):
+        '''
+        Get z-score of temporal components of DecompData object, reshaped into trials. Z-score is calculated using the mean and standart deviation of the full dataset, even after splitting the DecompData-object into conditions.
+        '''
+        try:
+            return np.reshape(self._temps - self._mean * (1/self._stdev), (len(self), -1, self.n_components))
+        except ValueError as err:
+            if "cannot reshape array of size 0 into shape" in err.args[0]:
+                return np.zeros((0, 0, self.n_components))
+            else:
+                raise
 
     @property
     def temporals(self):

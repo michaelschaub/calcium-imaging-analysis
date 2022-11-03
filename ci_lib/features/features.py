@@ -19,10 +19,11 @@ class Feature_Type(Enum):
         return self.value == other.value
 
 class Features:
-    def __init__(self, data, feature, file=None):
+    def __init__(self, data, feature, file=None, time_resolved=False):
         self.data = data
         self._feature = feature
         self._savefile = file
+        self._time_resolved = time_resolved
 
     def flatten(self):
         '''flatten contained feature to one trial and one feature dimension'''

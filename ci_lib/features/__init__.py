@@ -5,3 +5,4 @@ from .correlations import Correlations
 from .autocovariances import AutoCovariances
 from .autocorrelations import AutoCorrelations
 from .moup import Moup
+from .cofluctuations import Cofluctuation
