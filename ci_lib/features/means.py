@@ -17,7 +17,7 @@ class Means(Features):
     def create(data, max_comps=None, logger=LOGGER, window_size=None):
         if window is None:
             feat = Means(data, feature=calc_means(data.temporals[:, :, :max_comps]))
-        else
+        else:
             trials , phase_length, comps  =   data.temporals.shape
             windows = [range(i,i+window_size) for i in range(0,phase_length-window_size)]
 

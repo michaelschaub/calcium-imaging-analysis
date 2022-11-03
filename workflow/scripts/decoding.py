@@ -14,7 +14,7 @@ import sys
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 from ci_lib.utils import snakemake_tools
-from ci_lib.features import Features, Means, Raws, Covariances, Correlations, AutoCovariances, AutoCorrelations, Moup
+from ci_lib.features import Means, Raws, Covariances, Correlations, AutoCovariances, AutoCorrelations, Moup, Cofluctuation
 
 #Setup
 # redirect std_out to log file
@@ -28,7 +28,7 @@ try:
 
     ### Load feature for all conditions
     cond_str = snakemake.params['conds']
-    feature_dict = { "mean" : Means, "raw" : Raws, "covariance" : Covariances, "correlation" : Correlations, "autocovariance" : AutoCovariances, "autocorrelation" : AutoCorrelations, "moup" :Moup }
+    feature_dict = { "mean" : Means, "raw" : Raws, "covariance" : Covariances, "correlation" : Correlations, "autocovariance" : AutoCovariances, "autocorrelation" : AutoCorrelations, "moup" :Moup, "cofluctuation":Cofluctuation }
     feature_class = feature_dict[snakemake.wildcards["feature"].split("_")[0]]
 
     cond_feats = []
@@ -64,11 +64,13 @@ try:
 
     ### Balance cond feats
     #balance = snakemake.params["params"]['balance']
-    balance = False
+    balance = True
     if balance:
         min_number_trials = cond_feats[0].trials_n
         for i in range(len(cond_feats)):
             min_number_trials = np.min([min_number_trials,cond_feats[i].trials_n])
+
+        print(min_number_trials)
 
         for i in range(len(cond_feats)):
             cond_feats[i].subsample(min_number_trials)

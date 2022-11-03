@@ -16,9 +16,9 @@ def calc_covs(temps, means):
 
 def flat_time_resolved_c(connectivity, diagonal):
     # true upper triangle matrix (same shape as covariance)
-    ind = np.triu(np.ones(covs.shape[1:], dtype=bool),k=int(not diagonal))
+    ind = np.triu(np.ones(connectivity.shape[1:], dtype=bool),k=int(not diagonal))
     # flattened upper triangle of all trials and timepoints
-    return covs[:,:, ind]
+    return connectivity[:, ind]
 
 
 class Cofluctuation(Features):
@@ -44,7 +44,7 @@ class Cofluctuation(Features):
         #np.einsum('ijk,ijl->ijkl',zscores_over_time,zscores_over_time)
         #np.tensordot(zscores_over_time,np.transpose(zscores_over_time),axis=)
 
-        rss = np.sqrt(np.sum(co_fluct*co_fluct,axis=(2,3)),axis=-1)
+        rss = np.sqrt(np.sum(co_fluct*co_fluct,axis=(2,3)))
         print(rss)
 
         return Cofluctuation(data, co_fluct,include_diagonal=include_diagonal) #, )
