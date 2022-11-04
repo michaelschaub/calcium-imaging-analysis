@@ -75,12 +75,14 @@ try:
             print(cond_feats[i].trials_n)
 
 
+    try:
+        data = np.concatenate([feat.flatten() for feat in cond_feats if feat.trials_n>0])
+        labels = np.concatenate([np.full((len(cond_feats[i].flatten())), cond_str[i])
+                                 for i in range(len(cond_feats)) if cond_feats[i].trials_n>0])
+    except ValueError as err:
+        if "cannot reshape array of size 0 into shape (0,newaxis)" in err:
+            logger.warning("Empty Condition")
 
-    data = np.concatenate([feat.flatten() for feat in cond_feats])
-    labels = np.concatenate([np.full((len(cond_feats[i].flatten())), cond_str[i])
-                             for i in range(len(cond_feats))])
-
-    print(data.shape)
 
     ### Scale
     scaler = preprocessing.StandardScaler().fit( data )
