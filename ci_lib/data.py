@@ -76,11 +76,14 @@ class DecompData(Data):
         data = self.copy()
         if temporal_comps is not None:
             data._temps = temporal_comps
+            #Needed to calculate z-score based on mean and stdev over whole dataset after splitting data into conditions
+            data._mean = np.mean(self._temps,axis=0)
+            data._stdev = np.std(self._temps,axis=0)
         if spatial_comps is not None:
             data._spats = spatial_comps
             data._spat_labels = spatial_labels
         data._savefile = None
-        return data
+        return data #TODO maybe as inplace instead?
 
     def save(self, file ):
         h5_file = save_h5( self, file, {"df"    : self._df,
