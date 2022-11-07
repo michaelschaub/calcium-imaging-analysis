@@ -55,12 +55,13 @@ def recompose_mou_ests( attr_arrays, mou_ests=None ):
 class Moup(Features):
     _type = Feature_Type.DIRECTED
 
-    def __init__(self, data, feature, mou_ests, label=None, file=None):
+    def __init__(self, data, feature, mou_ests, label=None, file=None,time_resolved=False):
         self.data = data
         self._feature = feature
         self._mou_ests = mou_ests
         self._label = label
         self._savefile = file
+        self._time_resolved = time_resolved
 
     def create(data, max_comps=None, timelag=None, label=None, logger=LOGGER):
         mou_ests = fit_moup(data.temporals[:, :, :max_comps], timelag if timelag>0 else None, label, logger=logger)

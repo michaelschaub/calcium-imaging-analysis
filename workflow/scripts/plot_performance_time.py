@@ -15,8 +15,6 @@ logger = snakemake_tools.start_log(snakemake)
 try:
     timer_start = snakemake_tools.start_timer()
 
-    #  TODO this whole script is a mess -> encapsulate as function
-
     perf = []
     for path in snakemake.input["perf"]:
         with open(path, "rb") as f:
@@ -29,21 +27,35 @@ try:
     decoders = [ dec.split('_')[0] for dec in snakemake.params['decoders']]
     conditions = snakemake.params['conds']
 
-    fig=plt.figure()
+    
+    fig=plt.figure(figsize=[20,10])
     plt.suptitle("Decoding performance")
     violin_plts = []
     colors = cm.get_cmap('Accent',len(decoders)) #[np.arange(0,len(decoders),1)]
+    legend = []
 
     for i,decoder in enumerate(decoders):
-        flat_perfs =  np.array(perf[i]).flatten() #list(numpy.concatenate(perf[i]).flat) #Had dimension timepoints x reps
-        violin_plts.append(plots.colored_violinplot(flat_perfs, positions=np.arange(1) + ((i+1)*1/(len(decoders)+1))-0.5, widths=[1/(len(decoders)+2)], color=colors(i/len(decoders))))
+        timesteps = len(perf[i])
+        width = 0.8 #/(timesteps+2)
 
+        #violin_plts.append(plots.colored_violinplot(timestep_perf, positions= pos , widths=[width], color=colors(i/len(decoders))))
 
-    plt.legend( [ v['bodies'][0] for v in violin_plts], decoders )
-    plt.plot([-.5, 1-.5], [1/len(conditions), 1/len(conditions)], '--k') #1 cause we only have 1 feature for now
+        for j,timestep_perf in enumerate(perf[i]):
+            #flat_perfs =  np.array(perf[i]).flatten() #list(numpy.concatenate(perf[i]).flat) #Had dimension timepoints x reps
+            pos = np.arange(1) + (j) #*1/(timesteps+1))-0.5
+            violin_plts.append(plots.colored_violinplot(timestep_perf, positions= pos , widths=[width], color=colors(i/len(decoders))))
+        
+        legend.append(violin_plts[-1]['bodies'][0])
+
+    plt.legend( legend, decoders,loc='lower left')
+    plt.plot([-.5, timesteps -.5], [1/len(conditions), 1/len(conditions)], '--k')
+    plt.text(timesteps-0.8,1/len(conditions)+0.01,'random chance',fontsize=7,ha='center')
+
+   
     plt.yticks(np.arange(0, 1.1, 0.1))
     plt.ylabel('Accuracy', fontsize=14)
-    plt.xticks(range(1), [snakemake.wildcards["feature"].split('_')[0]])
+    plt.xticks(np.arange(0, 1+timesteps, 7.5),np.arange(0, 1+timesteps, 7.5)*(1/15))
+    plt.xlabel('t in s')
 
     ax = plt.gca()
     ax.set_ylim([0, 1])

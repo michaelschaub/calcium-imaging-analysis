@@ -203,6 +203,27 @@ rule feature_elimination:
     script:
         "../scripts/feature_elimination.py"
 
+'''
+rule decoding:
+    input:
+        [f"{{data_dir}}/Features/{cond}/{{feature}}/features.h5" for cond in config['trial_conditions']],
+    output:
+        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/decoder_model.pkl",
+        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/decoder_perf.pkl",
+        config = f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/conf.yaml",
+    params:
+        conds = list(config['trial_conditions']),
+        params = lambda wildcards: config["decoders"][wildcards["decoder"]]
+    log:
+        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/decoding.log",
+    conda:
+        "../envs/environment.yaml"
+    resources:
+        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
+    script:
+        "../scripts/decoding.py"
+'''
+
 rule decoding:
     input:
         [f"{{data_dir}}/Features/{cond}/{{feature}}/features.h5" for cond in config['trial_conditions']],

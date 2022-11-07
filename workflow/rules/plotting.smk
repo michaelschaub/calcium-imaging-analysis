@@ -101,6 +101,26 @@ rule plot_performances_parcellations:
     script:
         "../scripts/plot_performances.py"
 
+rule plot_performance_over_time:
+    input:
+        perf   = [f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{decoder}/decoder_perf.pkl" for decoder in config["decoders"]],
+        config = [f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{decoder}/conf.yaml" for decoder in config["decoders"]],
+    output:
+        #f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/{{subject_dates}}_{{parcellation}}_{{feature}}_{'.'.join(config['trial_conditions'])}_over_time.png",
+        #f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/{{subject_dates}}_{{parcellation}}_{{feature}}_{'.'.join(config['trial_conditions'])}_over_time.pkl",
+        f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/performance_over_time.png",
+        f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/performance_over_time.pkl",
+    params:
+        conds=list(config['trial_conditions']),
+        decoders=config["decoders"],
+    log:
+        f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/plot_performance.log",
+    conda:
+        "../envs/environment.yaml"
+    script:
+        "../scripts/plot_performance_time.py"
+
+
 
 rule plot_glassbrain:
     input:

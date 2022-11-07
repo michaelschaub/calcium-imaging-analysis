@@ -14,11 +14,16 @@ def calc_covs(temps, means):
     return np.einsum("itn,itm->inm", temps, temps) / temps.shape[1]
 
 
-def flat_time_resolved_c(connectivity, diagonal):
+def flat_time_resolved_c(connectivity, diagonal,timepoints=slice(None)):
+    #Select timepoints
+    connectivity = connectivity[:,timepoints]
+
+
     # true upper triangle matrix (same shape as covariance)
     ind = np.triu(np.ones(connectivity.shape[1:], dtype=bool),k=int(not diagonal))
     # flattened upper triangle of all trials and timepoints
-    return connectivity[:, ind]
+
+    return connectivity[:, ind] 
 
 
 class Cofluctuation(Features):
@@ -26,6 +31,7 @@ class Cofluctuation(Features):
 
     def __init__(self, data, feature, file=None, include_diagonal=True):
         super().__init__(data=data, feature=feature, file=file)
+        self._time_resolved = True
         self._include_diagonal = include_diagonal
 
     def create(data, means=None, max_comps=None, include_diagonal=True, logger=LOGGER):
@@ -35,7 +41,7 @@ class Cofluctuation(Features):
         trials, frames, comps = zscores_over_time.shape
         co_fluct = np.zeros((trials, frames, comps, comps))
         co_fluct = np.einsum('...n,...m->...nm',zscores_over_time,zscores_over_time)
-        print(co_fluct.shape)
+
         # [np.matmul(f,np.transpose(f)) for f in t] for t in zscores_over_time]
             
         #co_fluct_slow = np.array([[i*j for j in b.T]  for i in a.T])
@@ -45,14 +51,16 @@ class Cofluctuation(Features):
         #np.tensordot(zscores_over_time,np.transpose(zscores_over_time),axis=)
 
         rss = np.sqrt(np.sum(co_fluct*co_fluct,axis=(2,3)))
-        print(rss)
+
 
         return Cofluctuation(data, co_fluct,include_diagonal=include_diagonal) #, )
 
-    def flatten(self, feat=None):
+    def flatten(self, timepoints=slice(None), feat=None):
         if feat is None:
             feat = self._feature
-        return flat_time_resolved_c(feat, self._include_diagonal)
+        return flat_time_resolved_c(feat, self._include_diagonal,timepoints)
+
+
 
     @property
     def ncomponents(self):
