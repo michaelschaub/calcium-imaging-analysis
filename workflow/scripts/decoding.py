@@ -52,6 +52,7 @@ try:
         return skens.RandomForestClassifier(n_estimators=100, bootstrap=False)
 
     decoders = {"MLR":MLR,
+                "MLRshuffle":MLR,
                 "1NN":NN,
                 "LDA":LDA,
                 "RF":RF}
@@ -68,19 +69,28 @@ try:
     if balance:
         min_number_trials = cond_feats[0].trials_n
         for i in range(len(cond_feats)):
+            print(cond_str[i])
+            print(cond_feats[i].trials_n)
             min_number_trials = np.min([min_number_trials,cond_feats[i].trials_n])
 
-        print(min_number_trials)
 
         for i in range(len(cond_feats)):
             cond_feats[i].subsample(min_number_trials)
-            print(cond_feats[i].trials_n)
+            
 
 
 
     data = np.concatenate([feat.flatten() for feat in cond_feats])
     labels = np.concatenate([np.full((len(cond_feats[i].flatten())), cond_str[i])
                              for i in range(len(cond_feats))])
+
+    def shuffle_along_axis(a, axis):
+        idx = np.random.rand(*a.shape).argsort(axis=axis)
+        return np.take_along_axis(a,idx,axis=axis)
+    if "shuffle" in snakemake.params['params']['branch']:
+        print(labels)
+        labels = shuffle_along_axis(labels,axis=0)
+        print(labels)
 
     print(data.shape)
 
