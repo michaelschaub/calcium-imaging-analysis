@@ -38,8 +38,6 @@ try:
         timesteps = len(perf[i])
         width = 0.8 #/(timesteps+2)
 
-        #violin_plts.append(plots.colored_violinplot(timestep_perf, positions= pos , widths=[width], color=colors(i/len(decoders))))
-
         for j,timestep_perf in enumerate(perf[i]):
             #flat_perfs =  np.array(perf[i]).flatten() #list(numpy.concatenate(perf[i]).flat) #Had dimension timepoints x reps
             pos = np.arange(1) + (j) #*1/(timesteps+1))-0.5
@@ -54,11 +52,11 @@ try:
    
     plt.yticks(np.arange(0, 1.1, 0.1))
     plt.ylabel('Accuracy', fontsize=14)
-    plt.xticks(np.arange(0, 1+timesteps, 7.5),np.arange(0, 1+timesteps, 7.5)*(1/15))
-    plt.xlabel('t in s')
+    plt.xticks(np.arange(0, 1+timesteps, 7.5),np.arange(-30, 1+timesteps-30, 7.5)) #,np.arange(0, 1+timesteps, 7.5)*(1/15))
+    plt.xlabel('Frames (15 Hertz)')
 
     ax = plt.gca()
-    ax.set_ylim([0, 1])
+    ax.set_ylim([0, 1.05])
 
     plt.savefig( snakemake.output[0] )
 

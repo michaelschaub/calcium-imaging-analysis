@@ -17,6 +17,7 @@ try:
 
     #Load input
     data = DecompData.load(snakemake.input[0])
+
     data.conditions = snakemake.params[0]["trial_conditions"]
 
     #Processing
@@ -31,6 +32,7 @@ try:
 
         #Save output
         data.conditions[cond, :, start:stop].save(file)
+
 
     snakemake_tools.stop_timer(timer_start, logger=logger)
 except Exception:

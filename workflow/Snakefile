@@ -2,20 +2,23 @@ include: "tools/Snakefile.smk"
 
 report: "report/workflow.rst"
 
-ruleorder:  load_GN > load_mSM  > locaNMF > parcellation > feature_concat > thresholding > feature_calculation
+ruleorder:  load_GN > load_mSM  > locaNMF > parcellate > feature_concat > thresholding > feature_calculation
 
 from snakemake_tools import getKeys
 
 ###   Output accumulation rules   ###
-rule decode_all:
-	input:
-		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/performances.png", session_run = session_runs+["All"],  parcellation = parcellations, trials= selected_trials),
-		expand(f"results/plots/{{session_run}}/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{feature}}/performances.png", session_run = session_runs+["All"],  feature =  features, trials= selected_trials),
-		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/performance_over_time.png", session_run = session_runs+["All"] ,parcellation = parcellations, feature =  features, trials= selected_trials),
-		expand(f"results/{{session_run}}/{{parcellation}}/visualization/combined_parcels.png", session_run = session_runs,  parcellation = parcellations)
+
+#rule subdivided_svd:
+
+#rule brain_alignment:
+
+rule parcellation: 
+	input: 
+		expand(f"results/{{session_run}}/{{parcellation}}/data.h5", session_run = session_runs,  parcellation = parcellations) #TODO add all session_run = session_runs+["All"]
 
 
-rule all_feats:
+
+rule feature:
 	input:
 		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Features/{{trial_conditions}}/{{feature}}/{{trial_conditions}}.{{feature}}.{config['export_type']}", session_run = session_runs+["All"],  parcellation = parcellations, trials= selected_trials, trial_conditions = trial_conditions, feature =  features)
 	output:
@@ -28,7 +31,15 @@ rule all_feats:
 	script:
 		"scripts/aggregate_dict.py"
 
-rule best_features:
+rule decode:
+	input:
+		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/performances.png", session_run = session_runs+["All"],  parcellation = parcellations, trials= selected_trials),
+		expand(f"results/plots/{{session_run}}/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{feature}}/performances.png", session_run = session_runs+["All"],  feature =  features, trials= selected_trials),
+		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/performance_over_time.png", session_run = session_runs+["All"] ,parcellation = parcellations, feature =  features, trials= selected_trials),
+		expand(f"results/{{session_run}}/{{parcellation}}/visualization/combined_parcels.png", session_run = session_runs,  parcellation = parcellations)
+
+
+rule biomarkers:
 	input:
 		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/circle_plot.png", session_run = session_runs, parcellation = parcellations, trials = selected_trials, feature = features, rfe_n = rfe_ns)
 

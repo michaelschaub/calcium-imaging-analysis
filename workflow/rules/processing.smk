@@ -10,7 +10,7 @@ def parcellation_input(wildcards):
     input.update( config["parcellation_wildcard_matching"][branch] )
     return input
 
-rule parcellation:
+rule parcellate:
     '''
     decomposes data into different parcellations
     '''
@@ -33,7 +33,7 @@ rule parcellation:
     script:
         "../scripts/parcellation.py"
 
-use rule parcellation as locaNMF with:
+use rule parcellate as locaNMF with:
     threads:
         workflow.cores*0.75
     wildcard_constraints:

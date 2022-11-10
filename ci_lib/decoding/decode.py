@@ -10,6 +10,7 @@ import sklearn.preprocessing as skppc
 import sklearn.pipeline as skppl
 import sklearn.ensemble as skens
 from sklearn import preprocessing
+from sklearn import metrics
 from sklearn.model_selection import StratifiedShuffleSplit
 import numpy as np
 import pickle
@@ -70,7 +71,12 @@ def flatten(feat_list,label_list, timepoints = slice(None)):
     labels_flat = np.concatenate([np.full((len(feat_list[i].flatten(timepoints))), label_list[i])
                              for i in range(len(feat_list))])
 
+
     return data_flat,labels_flat
+
+def confusion_matrix(x,y_true,DecoderObject, label_order):
+    y_pred = DecoderObject.predict(x)
+    return metrics.confusion_matrix(y_true,y_pred,labels=label_order)
 
 
 '''
@@ -119,7 +125,7 @@ def decode_from_feature(feat_wildcard,feat_path_list,labels,decoder,reps=5,outpu
                     decode(data_flat,labels_flat,decoder,reps,outputs,balance,time_resolved)    
 '''
 
-def decode(data, labels, decoder, reps):
+def decode(data, labels, decoder, reps, label_order=None):
     ### Split
     cv = StratifiedShuffleSplit(reps, test_size=0.2, random_state=420)
 
@@ -128,6 +134,7 @@ def decode(data, labels, decoder, reps):
     data = scaler.transform(data)
     cv_split = cv.split(data, labels)
     perf = np.zeros((reps),dtype=float)
+    confusion = np.zeros((reps,len(label_order),len(label_order)),dtype=float)
     trained_decoders = []
     
     #Select Decoder
@@ -143,13 +150,14 @@ def decode(data, labels, decoder, reps):
         for i, (train_index, test_index) in enumerate(cv_split):
             decoder.fit(data[train_index,:],labels[train_index])
             perf[i] = decoder.score(data[test_index,:],labels[test_index])
+            confusion[i,:,:] = confusion_matrix(data[test_index,:],labels[test_index],decoder,label_order)
             trained_decoders.append(decoder)
     except Exception as Err:
         print("Error during training and testing")
         print(Err)
 
     
-    return perf, trained_decoders
+    return perf, confusion, trained_decoders
     
 '''
 def decode(data,labels,decoder,reps=5,outputs=None,balance=False,time_resolved=False):

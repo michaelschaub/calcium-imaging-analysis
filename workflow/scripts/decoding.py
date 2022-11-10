@@ -33,6 +33,7 @@ try:
     decoder = snakemake.params['params']['branch']  #TODO why not from wildcard?
     shuffling = ("shuffle" in decoder)
     balancing = True #snakemake.params["params"]['balance']    ### Balance cond feats
+    accumulate = False
 
     #Load feature for all conditions
     feat_list = load_feat(snakemake.wildcards["feature"],snakemake.input)
@@ -50,8 +51,13 @@ try:
         #t Iterations for every timepoint t
         t_range = range(feat_list[0].timepoints)
 
+    #Decode all timepoints
     for t in t_range:
+        if accumulate:
+            t = range(t)
+
         #Flatten feature and labels from all conditions and concat
+        print(feat_list[0].feature.shape) 
         feats_t, labels_t = flatten(feat_list,label_list,t)
         
         if shuffling:
@@ -59,7 +65,9 @@ try:
             labels_t = shuffle(labels_t)
 
         #Decode
-        perf_t, model_t = decode(feats_t, labels_t,decoder,reps)
+        print("feat shape")
+        print(feats_t.shape)
+        perf_t, confusion_t, model_t = decode(feats_t, labels_t,decoder,reps,label_order= label_list)
         perf_list.append(perf_t)
         model_list.append(model_t)
 

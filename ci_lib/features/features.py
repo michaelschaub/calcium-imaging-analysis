@@ -26,6 +26,7 @@ class Features:
         self._time_resolved = time_resolved
 
 
+
     def flatten(self):
         '''flatten contained feature to one trial and one feature dimension'''
         pass

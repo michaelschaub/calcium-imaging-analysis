@@ -12,7 +12,7 @@ Feature Overview
 
 * :doc:`Brain Alignment of different subjects and experiments<workflow/brain_alignment>`
 * :doc:`Different data-driven & anatomical parcellations (Atlas-based, locaNMF, SVD, ICA)<workflow/parcellation>`
-* :doc:`Different brain connectivity measurements (FC, EC)<workflow/brain_connectivity>`
+* :doc:`Different brain connectivity measurements (FC, EC)<workflow/feature>`
 * :doc:`Neural Decoding through simple machine learning models<workflow/neural_decoding>`
 * :doc:`Biomarker Detection through Feature Selection<workflow/biomarker_detection>`
 * :doc:`Generic & customizable selection of trials and conditions<workflow/trials_conditions>`
@@ -52,7 +52,7 @@ Getting started
    workflow/loading
    workflow/brain_alignment
    workflow/parcellation
-   workflow/brain_connectivity
+   workflow/feature
    workflow/trials_conditions
    workflow/neural_decoding
    workflow/biomarker_detection
