@@ -42,6 +42,8 @@ Getting started
 
    tutorial/installation
    tutorial/tutorial
+   tutorial/advanced
+   tutorial/snakemake
 
 .. toctree::
    :caption: Workflow

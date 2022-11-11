@@ -12,6 +12,15 @@ from snakemake_tools import getKeys, hash_config
 
 #rule brain_alignment:
 
+
+rule test:
+	input:
+		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/performances.png", session_run = session_runs+["All"],  parcellation = parcellations, trials= selected_trials),
+		expand(f"results/plots/{{session_run}}/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{feature}}/performances.png", session_run = session_runs+["All"],  feature =  features, trials= selected_trials),
+		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/performance_over_time.png", session_run = session_runs+["All"] ,parcellation = parcellations, feature =  features, trials= selected_trials),
+		expand(f"results/{{session_run}}/{{parcellation}}/visualization/combined_parcels.png", session_run = session_runs,  parcellation = parcellations),
+		expand(f"results/{{session_run}}/{{parcellation}}/data.h5", session_run = session_runs,  parcellation = parcellations) 
+
 rule parcellation: 
 	input: 
 		expand(f"results/{{session_run}}/{{parcellation}}/data.h5", session_run = session_runs,  parcellation = parcellations) #TODO add all session_run = session_runs+["All"]
@@ -25,7 +34,7 @@ rule feature:
 		dict = f"results/exports/feats_hash{hash_config(config)}.{config['export_type']}"
 	params:
 		iter = [session_runs+["All"], getKeys(parcellations), getKeys(selected_trials), getKeys(trial_conditions), getKeys(features)],
-		reorder = "feature" #TODO can you acess rule name from script context?
+		reorder = "feature" #TODO can you access rule name from script context?
 
 	conda:
 		"envs/environment.yaml"
@@ -45,7 +54,7 @@ rule biomarkers:
 		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/circle_plot.png", session_run = session_runs, parcellation = parcellations, trials = selected_trials, feature = features, rfe_n = rfe_ns)
 
 
-#output aggregation
+
 
 
 
@@ -82,13 +91,6 @@ rule decoding_performances:
 	script:
 		"scripts/run_aggregation.py"
 
-'''
-
-rule parcellation_plots:
-	input:
-		[ f"results/{'_'.join(subject_dates)}/{parcellation}/visualization/combined_parcels.png"
-			for parcellation in parcellations]
-'''
 
 module loading:
 	snakefile: "rules/loading.smk"
