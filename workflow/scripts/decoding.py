@@ -14,7 +14,8 @@ import sys
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 from ci_lib.utils import snakemake_tools
-from ci_lib.features import Features, Means, Raws, Covariances, Correlations, AutoCovariances, AutoCorrelations, Moup
+from ci_lib.features import Means, Raws, Covariances, Correlations, AutoCovariances, AutoCorrelations, Moup, Cofluctuation
+from ci_lib.decoding import load_feat, balance, flatten, shuffle, decode
 
 #Setup
 # redirect std_out to log file
@@ -26,86 +27,56 @@ try:
                                             params=['conds','params'])
     start = snakemake_tools.start_timer()
 
-    ### Load feature for all conditions
-    cond_str = snakemake.params['conds']
-    feature_dict = { "mean" : Means, "raw" : Raws, "covariance" : Covariances, "correlation" : Correlations, "autocovariance" : AutoCovariances, "autocorrelation" : AutoCorrelations, "moup" :Moup }
-    feature_class = feature_dict[snakemake.wildcards["feature"].split("_")[0]]
+    #Load params from Snakemake
+    label_list = snakemake.params['conds']
+    reps = snakemake.params["params"]['reps']
+    decoder = snakemake.params['params']['branch']  #TODO why not from wildcard?
+    shuffling = ("shuffle" in decoder)
+    balancing = True #snakemake.params["params"]['balance']    ### Balance cond feats
+    accumulate = False
 
-    cond_feats = []
-    for path in snakemake.input:
-        cond_feats.append(feature_class.load(path))
+    #Load feature for all conditions
+    feat_list = load_feat(snakemake.wildcards["feature"],snakemake.input)
+    
+    if balancing:
+        #Balances the number of trials for each condition
+        feat_list = balance(feat_list)
 
+    perf_list, model_list = [], []
 
-    ### Select decoder
-    def MLR():
-        return skppl.make_pipeline(skppc.StandardScaler(),
-                                   skllm.LogisticRegression(C=10, penalty='l2', multi_class='multinomial',
-                                                             solver='lbfgs', max_iter=500))
+    if feat_list[0].timepoints is None:
+        #1 Iteration for full feature (Timepoint = None)
+        t_range = [None]
+    else:
+        #t Iterations for every timepoint t
+        t_range = range(feat_list[0].timepoints)
 
-    def NN():
-        return sklnn.KNeighborsClassifier(n_neighbors=1, algorithm='brute', metric='correlation')
+    #Decode all timepoints
+    for t in t_range:
+        if accumulate:
+            t = range(t)
 
-    def LDA():
-        return skda.LinearDiscriminantAnalysis(n_components=None, solver='eigen', shrinkage='auto')
+        #Flatten feature and labels from all conditions and concat
+        print(feat_list[0].feature.shape) 
+        feats_t, labels_t = flatten(feat_list,label_list,t)
+        
+        if shuffling:
+            #Shuffle all labels as sanity check
+            labels_t = shuffle(labels_t)
 
-    def RF():
-        return skens.RandomForestClassifier(n_estimators=100, bootstrap=False)
+        #Decode
+        print("feat shape")
+        print(feats_t.shape)
+        perf_t, confusion_t, model_t = decode(feats_t, labels_t,decoder,reps,label_order= label_list)
+        perf_list.append(perf_t)
+        model_list.append(model_t)
 
-    decoders = {"MLR":MLR,
-                "1NN":NN,
-                "LDA":LDA,
-                "RF":RF}
-
-    decoder = decoders[snakemake.params['params']['branch']]()
-
-    ### Split
-    rep = snakemake.params["params"]['reps']
-    cv = StratifiedShuffleSplit(rep, test_size=0.2, random_state=420)
-
-    ### Balance cond feats
-    #balance = snakemake.params["params"]['balance']
-    balance = False
-    if balance:
-        min_number_trials = cond_feats[0].trials_n
-        for i in range(len(cond_feats)):
-            min_number_trials = np.min([min_number_trials,cond_feats[i].trials_n])
-
-        for i in range(len(cond_feats)):
-            cond_feats[i].subsample(min_number_trials)
-            print(cond_feats[i].trials_n)
-
-
-
-    data = np.concatenate([feat.flatten() for feat in cond_feats])
-    labels = np.concatenate([np.full((len(cond_feats[i].flatten())), cond_str[i])
-                             for i in range(len(cond_feats))])
-
-    print(data.shape)
-
-    ### Scale
-    scaler = preprocessing.StandardScaler().fit( data )
-    data = scaler.transform(data)
-    cv_split = cv.split(data, labels)
-    perf = np.zeros((rep))
-    decoders = []
-
-    ### Train & Eval
-    try:
-        for i, (train_index, test_index) in enumerate(cv_split):
-            decoder.fit(data[train_index,:],labels[train_index])
-            perf[i] = decoder.score(data[test_index,:],labels[test_index])
-            decoders.append(decoder)
-    except:
-        print("Error during training and testing")
-
-
-    #Save outputs
-    #save_h5(perf, snakemake.output[1]) can't load with corresponding load function
+    #Save results
     with open(snakemake.output[1], 'wb') as f:
-        pickle.dump(perf, f)
+        pickle.dump(perf_list, f)
 
     with open(snakemake.output[0], 'wb') as f:
-        pickle.dump(decoders, f)
+        pickle.dump(model_list, f)
 
     snakemake_tools.stop_timer(start, logger=logger)
 except Exception:

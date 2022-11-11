@@ -1,124 +1,22 @@
 branch_opts:
-  combine_sessions: False
-
-  subjects:
-    GN06:
-      - 2021-03-26_10-53-05
-      - 2021-03-29_11-51-27
-      - 2021-04-01_13-44-22
-      - 2021-03-01_13-57-39
-      - 2021-03-02_15-49-02
-      - 2021-03-03_14-02-06
-      - 2021-03-04_11-51-23
-
-    #GN08:
-    # - 2021-03-26_13-37-18
-    #  - 2021-03-29_13-37-29
-    #  - 2021-03-29_16-33-41
-    #GN09:
-    #  -2021-03-26_10-13-36
-    #  -2021-04-14_16-01-37
-    #  -2021-04-20_13-07-10
-    #GN10:
-    #  - 2021-03-29_15-41-22
-    #  - 2021-03-29_15-41-22
-    #  - 2021-04-21_11-00-51
-
-
   parcellations:
-    anatomical:
-      ROI: [['VISp-R,VISrl-R,SSp-bfd-R,MOs-R,MOs-L,SSp-bfd-L,VISrl-L,VISp-L'],[]]#FRP-R,MOp-R'],["VIS,SS"]]
-    #SVD:
-    #ICA:
-    #n_comps: [64]
-    #LocaNMF:
+      anatomical:
+        ROI: [['VISp-R,VISrl-R,SSp-bfd-R,MOs-R,MOs-L,SSp-bfd-L,VISrl-L,VISp-L'],[]] #FRP-R,MOp-R'],["VIS,SS"]]
+      #SVD:
+      #ICA:
+      #n_comps: [64]
+      #LocaNMF:
 
   selected_trials:
     All:
 
-  conditions:
-    default:
-      phase: delay #w_response
-      #n_targets: all
-      #n_distractors: none
-      auto_reward: no
-      both_spouts: yes
-
-    leftResponse_leftStim:
-      responses: left
-      sides: left
-
-    leftResponse_rightStim:
-      responses: left
-      sides: right
-
-    rightResponse_rightStim:
-      responses: right
-      sides: right
-
-    rightResponse_leftStim:
-      responses: right
-      sides: left
-
-    noResponse:
-      responses: no
-
-
-    #left_in_visual:
-    #  responses: left
-    #  modalities: visual
-    #right_in_visual:
-    #  responses: right
-    #  modalities: visual
-    #left_in_tactile:
-    #  responses: left
-    #  modalities: tactile
-    #right_in_tactile:
-    #  responses: right
-    #  modalities: tactile
-    #left_in_vistact:
-    #  responses: left
-    #  modalities: vistact
-    #right_in_vistact:
-    #  responses: right
-    #  modalities: vistact
-    #undecided:
-    #  responses: no
-
-
-
-    #visual:
-    #  modalities: visual
-    #tactile:
-    #  modalities: tactile
-    #multisensory:
-    #  modalities: vistact
-
-    #left_visual:
-    #  sides: left
-    #  modalities: visual
-    #right_visual:
-    #  sides: right
-    #  modalities: visual
-    #left_tactile:
-    #  sides: left
-    #  modalities: tactile
-    #right_tactile:
-    #  sides: right
-    #  modalities: tactile
-    #left_vistact:
-    #  sides: left
-    #  modalities: vistact
-    #right_vistact:
-    #  sides: right
-    #  modalities: vistact
 
   features:
     #raw:
     #  max_components : [64]
-    #mean:
-    #  max_components : [64]
-      #covariance:
+    mean:
+    #  window: [1]
+    #covariance:
       #max_components : [64]
     #moup:
     #  timelags: [1] #,2,3]
@@ -126,24 +24,27 @@ branch_opts:
       #  thresh:
       #    - 0.5
     #  max_components : [64]
-    autocovariance:
-      timelags: [[1]] #,[1]]
+    #autocovariance:
+    #  timelags: [[1]] #,[1]]
       #optional:
       #  thresh:
       #    - 0.5
+    #cofluctuation:
 
   decoders:
     default:
-      reps: [5]
+      reps: [10]
     MLR:
-    1NN:
-    LDA:
-    RF:
+    MLRshuffle:
+
+    #1NN:
+    #LDA:
+    #RF:
 
   rfe:
     select_features_n:
       - 1.0 #Dry run, reduces to 100% of features
-      #- 0.2 #Reduces to % of features (floats < 1.0)
+      - 2 #Reduces to % of features (floats < 1.0)
       #- 100 #Reduces to n features (integers)
     reps: 1 # Does independent repetitions, averages the feature rank and returns the highest ranked features
 
@@ -155,13 +56,13 @@ static_params:
   parcellations:
     anatomical:
     ICA:
-    #LocaNMF:
-    #  minrank: 0
-    #  maxrank: 10
-    #  min_pixels: 400
-    #  loc_thresh: 70
-    #  r2_thresh: 0.99
-    #  nonnegative_temporal: False
+    LocaNMF:
+      minrank: 0
+      maxrank: 10
+      min_pixels: 400
+      loc_thresh: 70
+      r2_thresh: 0.99
+      nonnegative_temporal: False
 
 
   selected_trials:

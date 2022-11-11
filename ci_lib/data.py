@@ -41,7 +41,7 @@ class Data(ABC):
 
 
 class DecompData(Data):
-    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, cond_filter=None, trans_params=None, savefile=None, spatial_labels=None, logger=None):
+    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, cond_filter=None, trans_params=None, savefile=None, spatial_labels=None, mean=None, stdev=None, logger=None):
         self.logger = LOGGER if logger is None else logger
         assert len(df) != trial_starts.shape[0]-1, (
             f"DataFrame df and trial_starts do not have matching length ({len(df)} != {len(trial_starts)})\n\t(maybe remove last entry?)")
@@ -52,6 +52,10 @@ class DecompData(Data):
         self._spats = spatial_comps if trans_params is None else align_spatials(spatial_comps,trans_params, logger=self.logger)
         self._starts = trial_starts
         self._spat_labels = spatial_labels
+
+        #Needed to calculate z-score based on mean and stdev over whole dataset after splitting data into conditions
+        self._mean = np.mean(self._temps,axis=0) if mean is None else mean
+        self._stdev = np.std(self._temps,axis=0) if stdev is None else stdev
 
 
         if cond_filter is None:
@@ -72,18 +76,23 @@ class DecompData(Data):
         data = self.copy()
         if temporal_comps is not None:
             data._temps = temporal_comps
+            #Needed to calculate z-score based on mean and stdev over whole dataset after splitting data into conditions
+            data._mean = np.mean(data._temps,axis=0)
+            data._stdev = np.std(data._temps,axis=0)
         if spatial_comps is not None:
             data._spats = spatial_comps
             data._spat_labels = spatial_labels
         data._savefile = None
-        return data
+        return data #TODO maybe as inplace instead?
 
     def save(self, file ):
         h5_file = save_h5( self, file, {"df"    : self._df,
                                         "temps" : self._temps,
                                         "spats" : self._spats,
                                         "starts" : self._starts,
-                                        "labels":self._spat_labels}, logger=self.logger)
+                                        "labels":self._spat_labels,
+                                        "mean":self._mean,
+                                        "stdev":self._stdev}, logger=self.logger)
         self._savefile = file
 
     @classmethod
@@ -92,8 +101,8 @@ class DecompData(Data):
         if try_loaded and data_hash is not None and data_hash in Data.LOADED_DATA:
             data = Data.LOADED_DATA[data_hash]
         else:
-            _, df, temps, spats, starts, spat_labels = load_h5( file, labels=["df", "temps", "spats", "starts","labels"], logger=logger)
-            data = Class(df, temps, spats, starts, spatial_labels=spat_labels, savefile=file, logger=logger)
+            _, df, temps, spats, starts, spat_labels, mean, stdev = load_h5( file, labels=["df", "temps", "spats", "starts","labels","mean","stdev"], logger=logger)
+            data = Class(df, temps, spats, starts, spatial_labels=spat_labels, savefile=file, mean=mean, stdev=stdev, logger=logger)
             Data.LOADED_DATA[data.hash.digest()] = data
         return data
 
@@ -162,6 +171,20 @@ class DecompData(Data):
     @property
     def t_max(self):
         return self._temps.shape[0]
+
+    #TODO both temporals only work for decompdata objects where phases have been applied to cut all trials into same length, otherwise reshaping doesnt work
+    @property
+    def temporals_z_scored(self):
+        '''
+        Get z-score of temporal components of DecompData object, reshaped into trials. Z-score is calculated using the mean and standart deviation of the full dataset, even after splitting the DecompData-object into conditions.
+        '''
+        try:
+            return np.reshape(self._temps - self._mean * (1/self._stdev), (len(self), -1, self.n_components))
+        except ValueError as err:
+            if "cannot reshape array of size 0 into shape" in err.args[0]:
+                return np.zeros((0, 0, self.n_components))
+            else:
+                raise
 
     @property
     def temporals(self):
@@ -263,7 +286,7 @@ class DecompData(Data):
         temps = self._temps[selected_temps.flatten()]
 
         try:
-            data = DecompData(df, temps, spats, new_starts, spatial_labels=self._spat_labels)
+            data = DecompData(df, temps, spats, new_starts, spatial_labels=self._spat_labels, mean=self._mean, stdev=self._stdev)
         except AssertionError:
                 self.logger.debug( starts.shape )
                 self.logger.debug( selected_temps.shape )
@@ -328,15 +351,15 @@ class DecompData(Data):
 
     def __add__( a, b ):
         a_temps, b_temps, df, spats, starts, spat_labels = Data.binary_operation( a, b )
-        return DecompData( df, a_temps+b_temps, spats, starts, spatial_labels=spat_labels)
+        return DecompData( df, a_temps+b_temps, spats, starts, spatial_labels=spat_labels, mean=self._mean, stdev=self._stdev)
 
     def __sub__( a, b ):
         a_temps, b_temps, df, spats, starts, spat_labels = Data.binary_operation( a, b )
-        return DecompData( df, a_temps-b_temps, spats, starts, spatial_labels=spat_labels)
+        return DecompData( df, a_temps-b_temps, spats, starts, spatial_labels=spat_labels, mean=self._mean, stdev=self._stdev)
 
     def __mul__( a, b ):
         a_temps, b_temps, df, spats, starts, spat_labels = Data.binary_operation( a, b )
-        return DecompData( df, a_temps*b_temps, spats, starts, spatial_labels=spat_labels)
+        return DecompData( df, a_temps*b_temps, spats, starts, spatial_labels=spat_labels, mean=self._mean, stdev=self._stdev)
 
 class ConditionalData:
     def __init__( self, data, conditions ):

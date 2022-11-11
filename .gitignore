@@ -16,3 +16,6 @@ docs/build/
 # Snakemake report
 report.zip
 report.html
+
+# Output files form nohup etc.
+*.out

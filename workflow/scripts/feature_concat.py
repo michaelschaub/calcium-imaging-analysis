@@ -5,7 +5,7 @@ sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 from ci_lib.utils import snakemake_tools
 from ci_lib import DecompData
-from ci_lib.features import Means, Raws, Covariances, Correlations, AutoCovariances, AutoCorrelations, Moup
+from ci_lib.features import Means, Raws, Covariances, Correlations, AutoCovariances, AutoCorrelations, Moup, Cofluctuation
 
 # redirect std_out to log file
 logger = snakemake_tools.start_log(snakemake)
@@ -17,7 +17,7 @@ try:
     #snakemake_tools.save_conf(snakemake, sections=["parcellations","selected_trials","conditions","features"])
     start = snakemake_tools.start_timer()
 
-    feature_dict = { "mean" : Means, "raw" : Raws, "covariance" : Covariances, "correlation" : Correlations, "autocovariance" : AutoCovariances, "autocorrelation" : AutoCorrelations, "moup" :Moup }
+    feature_dict = { "mean" : Means, "raw" : Raws, "covariance" : Covariances, "correlation" : Correlations, "autocovariance" : AutoCovariances, "autocorrelation" : AutoCorrelations, "moup" :Moup, "cofluctuation":Cofluctuation }
     feature_class = feature_dict[snakemake.wildcards["feature"].split("_")[0]]
 
 

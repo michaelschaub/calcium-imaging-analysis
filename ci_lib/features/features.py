@@ -19,14 +19,18 @@ class Feature_Type(Enum):
         return self.value == other.value
 
 class Features:
-    def __init__(self, data, feature, file=None):
+    def __init__(self, data, feature, file=None, time_resolved=False):
         self.data = data
         self._feature = feature
         self._savefile = file
+        self._time_resolved = time_resolved
+
+
 
     def flatten(self):
         '''flatten contained feature to one trial and one feature dimension'''
         pass
+
 
     def concat(self, Features, overwrite=False):
         ''' concats feature values from List of Features to this feature'''
@@ -62,9 +66,20 @@ class Features:
 
     @property
     def trials_n(self):
-        trials_n, *_ = self._feature.shape
-        return trials_n
+        ''' Returns number of trials, the first dimension of the feature array'''
+        return self._feature.shape[0]
 
+    @property
+    def timepoints(self):
+        ''' Returns number of frames, the second dimension of the feature array, if it is time resolved, otherwise None'''
+        if self._time_resolved:
+            return self._feature.shape[1]
+        else:
+            return None
+
+    @property
+    def is_time_resolved(self):
+        return self._time_resolved
 
     def subsample(self,n):
         '''
@@ -75,7 +90,7 @@ class Features:
         select_n = rng.choice(self.trials_n,size=n,replace=False)
 
         self._feature = self._feature[select_n ]
-
+        return self
 
     @property
     def mean(self):

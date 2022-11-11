@@ -72,6 +72,8 @@ try:
             with open(snakemake.input[d+f*dec_n], "rb") as file:
                 try:
                     perf = pickle.load(file)
+                    #Has dimension timepoints x reps
+                    perf = np.array(perf).flatten()
                 except:
                     perf = [0]
                 violin_plts[f,d]=plots.colored_violinplot(perf, positions=f + np.arange(1) + ((d+1)*1/(dec_n+1))-0.5, widths=[1/(dec_n+2)], color=colors(d/dec_n))

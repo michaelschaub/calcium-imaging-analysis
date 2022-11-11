@@ -1,6 +1,9 @@
 from snakemake_tools import create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match, hash_config
 
 def folder_from_wildcard(wildcard):
+    '''
+    infers the individual subjects and dates from the concatenated {subject_dates} wildcard
+    '''
     subject_date_list = wildcard.split(".")
     subjects = subject_date_list[0::3]
     dates = subject_date_list[1::3]
@@ -13,19 +16,44 @@ def folder_from_wildcard(wildcard):
     return subject_dates
 
 def sessions_input(wildcards):
+    '''
+    Matches the corresponding input files for all subjects and dates in the the concatenated {subject_dates} wildcard, task_flatten is only passed to make sure files are present. Rules uses the structured task files from the params.
+    '''
     subject_dates_dict = folder_from_wildcard(wildcards["subject_dates"])
     input = {
         #To make sure that files are present, unfortunatly gets flattened -> losing information which dates belong to which subject
-        "tasks_flatten":  [ f"resources/experiment/{subject_id}/{date}/task_data/" for subject_id,dates in subject_dates_dict.items() for date in dates ] ,
+        "tasks_flatten": taskdata_gerion(subject_dates_dict, flatten=True),
         "Vc": [  f"resources/experiment/{subject_id}/{date}/SVD_data/Vc.mat" for subject_id,dates in subject_dates_dict.items() for date in dates ],
         "trans_params": [ f"resources/experiment/{subject_id}/{date}/SVD_data/opts2.mat" for subject_id,dates in subject_dates_dict.items() for date in dates ]}
     return input
 
 def sessions_params(wildcards):
-    params = {
-        "task_structured" : {subject_id: [ f"resources/experiment/{subject_id}/{date}/task_data/" for date in dates] for subject_id,dates in folder_from_wildcard(wildcards["subject_dates"]).items()},
-    }
-    return params
+    '''
+    Matches the corresponding task input files for all subjects and dates in the the concatenated {subject_dates} wildcard, keeps task data structure as opposed to input files that are always flattened by snakemake    
+    '''
+    subject_dates_dict = folder_from_wildcard(wildcards["subject_dates"])
+    return taskdata_gerion(subject_dates_dict, flatten=False)
+
+def taskdata_gerion(subject_dates_dict, flatten=False):
+    if flatten: 
+        return  [ f"resources/experiment/{subject_id}/{date}/task_data/" for subject_id,dates in subject_dates_dict.items() for date in dates ] 
+    else:
+        return {"task_structured" : {subject_id: [ f"resources/experiment/{subject_id}/{date}/task_data/" for date in dates] for subject_id,dates in subject_dates_dict.items()}}
+
+def taskdata_simon(subject_dates_dict, flatten=False):
+    return [ f"resources/experiment/{subject_id}/{date}/SpatialDisc_Session.mat"  for subject_id,dates in subject_dates_dict.items() for date in dates ] #not tested
+
+
+rule load_Random:
+    output:
+        "results/random.random/SVD/data.h5",
+        config = "results/random.random/SVD/conf.yaml"
+    log:
+        f"results/random.random/SVD/random.log"
+    conda:
+        "../envs/environment.yaml"
+    script:
+        "../scripts/random_data.py"   
 
 rule load_GN:
     '''
@@ -63,15 +91,15 @@ rule load_mSM:
         trans_params	= [ f"resources/experiment/{subject_id}/{date}/opts2.mat"
                             for subject_id,dates in config["subjects"].items() for date in dates],
     output:
-        f"results/{{subject_dates}}/SVD/data.h5",
+        "results/{subject_dates}/SVD/data.h5",
         align_plot = report("results/{subject_dates}/SVD/alignment.png", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "mSM", "Subjects":", ".join(config["subjects"])}),
         config = f"results/{{subject_dates}}/SVD/conf.yaml",
     params:
         subject_dates_str = '_'.join(config["subject_dates"]),
         sessions_structured = {subject_id: { date: f"resources/experiment/{subject_id}/{date}/SpatialDisc_Session.mat"
                                              for date in dates} for subject_id,dates in config["subjects"].items()}
-    wildcard_constraints:
-        subject_dates	= r"mSM[a-zA-Z\d_-]+",
+    #wildcard_constraints:
+    #    subject_dates	= r"mSM[a-zA-Z\d_-]+",
     log:
         f"results/{{subject_dates}}/SVD/pipeline_entry.log"
     conda:

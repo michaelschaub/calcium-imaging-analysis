@@ -100,10 +100,16 @@ def branch_match( branches, params=True ):
 
 
 def hash_config(config):
+
     return hashlib.md5(json.dumps(deep_stringize_dict_keys(config), sort_keys=True).encode('utf-8')).hexdigest() #Json.dump to force nested dicts to be sorted
 
 def deep_stringize_dict_keys(item):
     """Converts all keys to strings in a nested dictionary"""
+
+    #sets can't be serialized
+    if isinstance(item,set):
+        item = list(item)
+
     if isinstance(item, dict):
         return {str(k): deep_stringize_dict_keys(v) for k, v in item.items()}
 
