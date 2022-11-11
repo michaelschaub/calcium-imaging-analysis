@@ -1,42 +1,12 @@
 branch_opts:
   combine_sessions: False
 
+  # Random SVD and Metadata is created as experimental data
   subjects:
-    #random:
-    #  - random
+    random:
+      - random
 
-    # Defines subjects and dates to use from Gerions Experiment
-    GN06:
-      - 2021-03-26_10-53-05
-      - 2021-03-29_11-51-27
-      #- 2021-04-01_13-44-22
-      - 2021-03-01_13-57-39
-      - 2021-03-02_15-49-02
-      - 2021-03-03_14-02-06
-      - 2021-03-04_11-51-23
-
-    GN09:
-      - 2021-03-26_10-13-36
-      - 2021-04-14_16-01-37
-      - 2021-04-15_11-12-30
-      - 2021-04-15_15-21-57
-      - 2021-04-16_15-11-45
-      - 2021-04-19_10-37-14
-      - 2021-04-20_13-07-10
-      - 2021-04-21_13-20-21
-
-
-    #GN08:
-    # - 2021-03-26_13-37-18
-    #  - 2021-03-29_13-37-29
-    #  - 2021-03-29_16-33-41
-    
-    #GN10:
-    #  - 2021-03-29_15-41-22
-    #  - 2021-03-29_15-41-22
-    #  - 2021-04-21_11-00-51
-
-  # Defines conditions for Gerions Experimental Setup
+  # Defines conditions for analog to Gerions Experimental Setup, however the corresponding metadata in the experiment is completly randomized
   conditions:
     default:
       phase: all 

@@ -49,10 +49,11 @@ try:
     plt.plot([-.5, timesteps -.5], [1/len(conditions), 1/len(conditions)], '--k')
     plt.text(timesteps-0.8,1/len(conditions)+0.01,'random chance',fontsize=7,ha='center')
 
+    offset = -30 #starting point of timepoints relative to t0
    
     plt.yticks(np.arange(0, 1.1, 0.1))
     plt.ylabel('Accuracy', fontsize=14)
-    plt.xticks(np.arange(0, 1+timesteps, 7.5),np.arange(-30, 1+timesteps-30, 7.5)) #,np.arange(0, 1+timesteps, 7.5)*(1/15))
+    plt.xticks(np.arange(0, 1+timesteps, 7.5),np.arange(offset, 1+timesteps+offset, 7.5)) #,np.arange(0, 1+timesteps, 7.5)*(1/15))
     plt.xlabel('Frames (15 Hertz)')
 
     ax = plt.gca()

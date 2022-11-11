@@ -28,7 +28,7 @@ Getting started
 
 * To get a first impression of the results you can generate with WIPAR, please have a look at an exemplary `report <https://raw.github.com/michaelschaub/calcium-imaging-analysis/blob/readthedocs/report.html>`_ that is automatically compiled.
 * To get started :ref:`install WIPAR and it's requirements <installation>`
-* For an example on how to use WIPAR and general guidelines have a look at the :ref:`tutorial <tutorial>`
+* For an example on how to run WIPAR and continue working with the results externaly :ref:`tutorial <tutorial>`
 * Detailed explanations of the configurations can be found here
 
 
