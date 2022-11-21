@@ -48,6 +48,9 @@ rule decode:
 		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/performance_over_time.png", session_run = session_runs+["All"] ,parcellation = parcellations, feature =  features, trials= selected_trials),
 		expand(f"results/{{session_run}}/{{parcellation}}/visualization/combined_parcels.png", session_run = session_runs,  parcellation = parcellations)
 
+rule load:
+	input:
+		expand("results/{session_run}/SVD/data.h5",session_run=session_runs)
 
 rule biomarkers:
 	input:
