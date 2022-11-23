@@ -19,28 +19,6 @@ def redirect_to_log(snakemake):
     print(f"[{datetime.datetime.now()}] Log of rule {snakemake.rule}")
     return std_out
 
-LOGLEVELS = {
-            "DEBUG":logging.DEBUG,
-            "INFO":logging.INFO,
-            "WARNING":logging.WARNING,
-            "ERROR":logging.ERROR,
-            "CRITICAL":logging.CRITICAL, }
-
-def start_log(snakemake):
-    # logging <3.9 does not support encoding
-    if sys.version_info[0] == 3 and sys.version_info[1] < 9 :
-        logging.basicConfig(filename=str(snakemake.log), style="{",
-                format="{asctime} {name}: {levelname}: {message}", datefmt="%b %d %H:%M:%S",
-                level=LOGLEVELS[snakemake.config["loglevel"]])
-    else:
-        logging.basicConfig(filename=str(snakemake.log), encoding='utf-8', style="{",
-                format="{asctime} {name}: {levelname}: {message}", datefmt="%b %d %H:%M:%S",
-                level=LOGLEVELS[snakemake.config["loglevel"]])
-    logger = logging.getLogger(f"{snakemake.rule}")
-    logger.info(f"Start of rule")
-    logger.info(f"Loglevel: {logger.getEffectiveLevel()}")
-    return logger
-
 def load_wildcards(snakemake):
     wildcards = []
     for path in snakemake.input["config"]:
@@ -65,32 +43,32 @@ def save_conf(snakemake, sections, params=[], additional_config=None):
 
 def save(snakemake, path, data):
     if isinstance(data, numpy.ndarray):
-        match snakemake.config['export_type']:
-            case 'csv':
-                numpy.savetxt(path, data, delimiter=',')
-            case 'npy':
-                numpy.save(path, data)
-            case 'npz':
-                numpy.savez_compressed(path, data)
-            case _:
-                pass
+        t = snakemake.config['export_type']
+        if t == 'csv':
+            numpy.savetxt(path, data, delimiter=',')
+        elif t == 'npy':
+            numpy.save(path, data)
+        elif t == 'npz':
+            numpy.savez_compressed(path, data)
+        else:
+            pass
     else:
         with open(path, 'wb') as f:
             pickle.dump(data, f)
 
 def load(snakemake, path, dtype="float"):
     _ , file_extension = os.path.splitext(path)
-    match file_extension:
-        case '.csv':
-            return numpy.loadtxt(path, delimiter=',',dtype=dtype)
-        case '.npy' | '.npz' :
-            return numpy.load(path)
-        case '.pkl':
-            with open(path, 'rb') as f:
-                data = pickle.load(f)
-            return data
-        case _:
-            pass
+    fe = file_extension
+    if fe=='.csv':
+        return numpy.loadtxt(path, delimiter=',',dtype=dtype)
+    elif fe in ('.npy', '.npz'):
+        return numpy.load(path)
+    elif fe=='.pkl':
+        with open(path, 'rb') as f:
+            data = pickle.load(f)
+        return data
+    else:
+        pass
 
 def match_conf(snakemake, sections):
     with open( snakemake.input["config"], 'r') as conf_file:

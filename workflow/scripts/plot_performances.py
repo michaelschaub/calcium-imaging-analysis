@@ -5,14 +5,16 @@ from matplotlib import cm
 
 from pathlib import Path
 import sys
+
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 import ci_lib.plotting as plots
 from ci_lib.utils import snakemake_tools
+from ci_lib.utils.logging import start_log
 
 
 ### Setup
-logger = snakemake_tools.start_log(snakemake)
+logger = start_log(snakemake)
 try:
     timer_start = snakemake_tools.start_timer()
 

@@ -3,6 +3,7 @@ from snakemake_tools import create_parameters, create_conditions, calculate_memo
 
 ###   Plotting   ###
 
+# noinspection SmkNotSameWildcardsSet
 rule plot_parcels:
     '''
     decomposes data into different parcellations

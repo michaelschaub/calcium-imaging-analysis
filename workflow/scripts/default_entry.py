@@ -8,6 +8,7 @@ import sys
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 from ci_lib.utils import snakemake_tools
+from ci_lib.utils.logging import start_log
 from ci_lib.loading import load_task_data_as_pandas_df, alignment #import extract_session_data_and_save
 from ci_lib.plotting import draw_neural_activity
 from ci_lib import DecompData
@@ -16,7 +17,7 @@ import pandas as pd
 import seaborn as sns
 
 # redirect std_out to log file
-logger = snakemake_tools.start_log(snakemake)
+logger = start_log(snakemake)
 if snakemake.config['limit_memory']:
     snakemake_tools.limit_memory(snakemake)
 try:

@@ -10,24 +10,28 @@ if config["branch_opts"].get('combine_sessions', False): #TODO fail safe config 
 else:
     session_runs = subject_dates
 
-parcells_conf	= config["branch_opts"]["parcellations"]
-parcells_static	= config["static_params"]["parcellations"]
-parcellations	= create_parameters( parcells_conf, parcells_static )
+parcells_conf   = config["branch_opts"]["parcellations"]
+parcells_static = config["static_params"]["parcellations"]
+parcellations   = create_parameters( parcells_conf, parcells_static )
 
+selected_trials = config["branch_opts"]["selected_trials"]
 
 
 selected_trials	= config["branch_opts"]["selected_trials"]
 
-conditions	= config["branch_opts"]["conditions"]
+conditions    = config["branch_opts"]["conditions"]
 trial_conditions, phase_conditions, default_conditions = create_conditions(conditions, config)
 
-feature_conf	= config["branch_opts"]["features"]
-feature_static	= config["static_params"]["features"]
-features	= create_parameters( feature_conf, feature_static )
+feature_conf    = config["branch_opts"]["features"]
+feature_static  = config["static_params"]["features"]
+features        = create_parameters( feature_conf, feature_static )
 
-decoder_conf	= config["branch_opts"]["decoders"]
-decoder_static	= config["static_params"]["decoders"]
-decoders	= create_parameters( decoder_conf, decoder_static )
+decoder_conf    = config["branch_opts"]["decoders"]
+decoder_static  = config["static_params"]["decoders"]
+decoders        = create_parameters( decoder_conf, decoder_static )
+
+rfe_ns = config["branch_opts"]["rfe"]["select_features_n"]
+rfe_reps = config["branch_opts"]["rfe"]["reps"]
 
 rfe_ns = config["branch_opts"]["rfe"]["select_features_n"]
 rfe_reps = config["branch_opts"]["rfe"]["reps"]
@@ -54,7 +58,7 @@ config["processing"] = {"trial_conditions" : trial_conditions,
 
 
 #For annotating plots
-config["plotting"] =    {"plot_subject_labels": {f"{subject_id}(#{len(dates)})" for subject_id,dates in config["branch_opts"]["subjects"].items()},
+config["plotting"] =   {"plot_subject_labels": {f"{subject_id}(#{len(dates)})" for subject_id,dates in config["branch_opts"]["subjects"].items()},
                         "parcels_n" : config['branch_opts']['plotting']['plot_parcels']['n'],
                         "decoders" : decoders,
                         "subject_dates": subject_dates,
@@ -72,11 +76,11 @@ config["plotting"] =    {"plot_subject_labels": {f"{subject_id}(#{len(dates)})" 
 #plot_feature_labels = [f"{feat_name} t={options['timelags']}" if 'timelags' in options else feat_name for feat_name,options in feature_conf.items()]
 
 wildcard_constraints:
-	subject_dates	= r"[a-zA-Z\d_.-]+",
-	parcellation	= branch_match(config["branch_opts"]["parcellations"].keys()),
-	trials		= branch_match(config["branch_opts"]["selected_trials"].keys()),
-	cond		= branch_match(config["branch_opts"]["conditions"].keys()),
-	feature		= branch_match(config["branch_opts"]["features"].keys()),
-	decoder		= branch_match(config["branch_opts"]["decoders"].keys()),
+    subject_dates	= r"[a-zA-Z\d_.-]+",
+    parcellation  = branch_match(config["branch_opts"]["parcellations"].keys()),
+    trials        = branch_match(config["branch_opts"]["selected_trials"].keys()),
+    cond          = branch_match(config["branch_opts"]["conditions"].keys()),
+    feature       = branch_match(config["branch_opts"]["features"].keys()),
+    decoder       = branch_match(config["branch_opts"]["decoders"].keys()),
 
 TRIALS_DIR = r"results/{session_runs}/{parcellation}/{trials}"
