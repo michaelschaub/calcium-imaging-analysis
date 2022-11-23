@@ -42,7 +42,7 @@ try:
         #Balances the number of trials for each condition
         feat_list = balance(feat_list)
 
-    perf_list, model_list = [], []
+
 
     if feat_list[0].timepoints is None:
         #1 Iteration for full feature (Timepoint = None)
@@ -51,13 +51,15 @@ try:
         #t Iterations for every timepoint t
         t_range = range(feat_list[0].timepoints)
 
+    perf_list, model_list = [], []
+    perf_matrix = np.zeros((len(list(t_range)),len(list(t_range)),reps))
+
     #Decode all timepoints
     for t in t_range:
         if accumulate:
             t = range(t)
 
         #Flatten feature and labels from all conditions and concat
-        print(feat_list[0].feature.shape) 
         feats_t, labels_t = flatten(feat_list,label_list,t)
         
         if shuffling:
@@ -65,11 +67,22 @@ try:
             labels_t = shuffle(labels_t)
 
         #Decode
-        print("feat shape")
-        print(feats_t.shape)
         perf_t, confusion_t, model_t = decode(feats_t, labels_t,decoder,reps,label_order= label_list)
         perf_list.append(perf_t)
         model_list.append(model_t)
+
+        #Test on other timepoints
+        for t2 in t_range:
+            feats_t2, labels_t2 = flatten(feat_list,label_list,t2)
+            perf_matrix[t,t2,:], confusion_t_not_used, _ = decode(feats_t2, labels_t2,model_t,reps,label_order= label_list)
+
+
+
+            #Bit ugly but works for debugging
+
+    
+    print("perf_matrix")
+    print(perf_matrix.shape)
 
     #Save results
     with open(snakemake.output[1], 'wb') as f:
@@ -77,6 +90,9 @@ try:
 
     with open(snakemake.output[0], 'wb') as f:
         pickle.dump(model_list, f)
+    
+    with open(snakemake.output[2], 'wb') as f:
+        pickle.dump(perf_matrix, f)
 
     snakemake_tools.stop_timer(start, logger=logger)
 except Exception:

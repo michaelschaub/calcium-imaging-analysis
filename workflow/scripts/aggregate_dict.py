@@ -19,7 +19,6 @@ def set_nested_dict_recursive(dict,keys,val=None):
     #adds the val to the dict nested under the list of keys
     print(keys)
     if len(keys) == 1:
-        print(keys)
         dict[keys[0]] = val
         return dict
     else:
@@ -45,7 +44,7 @@ def reorder_feats(generic_dict):
                         feats[parcellation][feature] = feats[parcellation].get(feature, {})
                         feats[parcellation][feature][condition] = feats[parcellation][feature].get(condition, {})
 
-                    feats[parcellation][feature][condition][session]= data 
+                        feats[parcellation][feature][condition][session]= data 
     return feats
 
 logger = snakemake_tools.start_log(snakemake)
@@ -60,8 +59,7 @@ try:
 
     # loops over all arrays in iter in occuring order [X,Y] -> (x1,y1),(x1,y2), ...
     for i, keys in enumerate(itertools.product(*snakemake.params['iter'])):
-        print(keys)
-        val = snakemake_tools.load(snakemake,snakemake.input[i]) #TODO this assumes that the order of inputs from expand is unchanged
+        val = snakemake_tools.load(snakemake,snakemake.input[i]) 
         nest = set_nested_dict_recursive(nest, list(keys), val)
 
     #Removes lambda by converting to normal dict class
@@ -74,6 +72,9 @@ try:
                 output_dict = reorder_feats(generic_dict)
             case other:
                 output_dict = generic_dict
+    #print(generic_dict)
+ 
+    #print(output_dict)
 
     snakemake_tools.save(snakemake,snakemake.output["dict"],output_dict)
 

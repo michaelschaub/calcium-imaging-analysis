@@ -12,6 +12,9 @@ from ci_lib.loading import load_task_data_as_pandas_df, alignment #import extrac
 from ci_lib.plotting import draw_neural_activity
 from ci_lib import DecompData
 
+import pandas as pd
+import seaborn as sns
+
 # redirect std_out to log file
 logger = snakemake_tools.start_log(snakemake)
 if snakemake.config['limit_memory']:
@@ -25,9 +28,46 @@ try:
     task_files = snakemake.params[0]['task_structured'] #snakemake.input["tasks"] #
     trans_paths = snakemake.input["trans_params"]
 
+    
+
 
     sessions = load_task_data_as_pandas_df.extract_session_data_and_save(
             root_paths=task_files, reextract=True, logger=logger) #reextraction needs to be done for different set of dates otherwise session will have wrong dims
+
+    
+    ###
+    
+    #ax =.plot.scatter(0,1)
+    #ax.figure.savefig(snakemake.output["stim_side"])
+    switch  = []
+    same = []
+
+    for i,trial in enumerate((sessions['target_side_left'])):
+        if i>0:
+            if prev_trial == trial:
+                same.append(trial)
+            else:
+                switch.append(trial)
+        prev_trial = trial
+    same = np.asarray(same)
+    switch = np.asarray(switch)
+
+    left_switch = len(switch[switch==1])
+    right_switch = len(switch[switch==0])
+    right_same = len(same[same==0])
+    left_same = len(same[same==1])
+
+    sns.set()
+    ax = sns.barplot(x=["left_switch","right_switch","left_same","right_same"],y=[left_switch,right_switch,left_same,right_same])
+
+
+        #ax = sns.heatmap( pd.DataFrame(sessions['target_side_left'][:100]))
+    ax.figure.savefig(snakemake.output["stim_side"])
+
+    #ax = sns.heatmap( pd.DataFrame(sessions['target_side_left'][:100]))
+    #ax.figure.savefig(snakemake.output["stim_side"])
+
+
     logger.info("Loaded task data")
 
 
@@ -39,15 +79,12 @@ try:
     U = []
     start = 0
 
-    print("Load")
-    print(snakemake.input["Vc"])
 
     for file_Vc,trans_path in zip(files_Vc,trans_paths):
         f = h5py.File(file_Vc, 'r')
 
         #Aligns spatials for each date with respective trans_params
         alignend_U, align_plot = alignment.align_spatials_path(np.array(f["U"]),trans_path,plot_alignment_path=snakemake.output["align_plot"])
-        print(alignend_U.shape)
         U.append(alignend_U)
 
         frameCnt = np.array(f['frameCnt'])
@@ -60,7 +97,6 @@ try:
 
     trial_starts = np.concatenate( trial_starts )
     Vc = np.concatenate( Vc )
-
 
 
     U = U[0]

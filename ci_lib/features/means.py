@@ -31,14 +31,12 @@ class Means(Features):
                 feat_val[:,w,:] = calc_means(data.temporals[:, window, :max_comps])
                 
             feat = Means(data, feature=feat_val, time_resolved=True)
-            print(feat.feature.shape)
 
         return feat
 
     def flatten(self, timepoints=slice(None), feat=None):
         if feat is None:
             feat = self._feature
-        print(feat.shape)
 
         feat = feat[:,timepoints,:]
         mask = np.ones((feat.shape[1:]), dtype=bool)

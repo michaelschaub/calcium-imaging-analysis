@@ -46,7 +46,6 @@ If you have a large pipeline run the resulting report is quite large, serving th
     $ python -m http.server --directory report
 
 
-
 Feature Calculation
 -------------------
 

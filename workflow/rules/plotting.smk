@@ -120,7 +120,22 @@ rule plot_performance_over_time:
     script:
         "../scripts/plot_performance_time.py"
 
-
+rule plot_performance_matrix:
+    input:
+        perf   = f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/decoder_perf_across_timepoints.pkl",
+        config = f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/conf.yaml",
+    output:
+        f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/{{decoder}}_performance_matrix.png",
+        f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/{{decoder}}/performance_matrix_model.pkl",
+    params:
+        conds=list(config['trial_conditions']),
+        decoders=config["decoders"],
+    log:
+        f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/{{decoder}}_plot_matrix_performance.log",
+    conda:
+        "../envs/environment.yaml"
+    script:
+        "../scripts/plot_performance_matrix.py"
 
 rule plot_glassbrain:
     input:

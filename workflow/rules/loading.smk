@@ -53,7 +53,7 @@ rule load_Random:
     conda:
         "../envs/environment.yaml"
     script:
-        "../scripts/random_data.py"   
+        "../scripts/random_data.py"     
 
 rule load_GN:
     '''
@@ -65,6 +65,7 @@ rule load_GN:
         "results/{subject_dates}/SVD/data.h5",
         align_plot = report("results/{subject_dates}/SVD/alignment.png", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "GN", "Subjects":"{subject_dates}"}),
         config = "results/{subject_dates}/SVD/conf.yaml",
+        stim_side = report("results/{subject_dates}/SVD/stim_side.png", caption="../report/alignment.rst", category="0 Loading", labels={"Dataset": "GN", "Subjects":"{subject_dates}"})
     params:
         sessions_params
     # so we are using this one and we can actually use a dict to make it even comfier

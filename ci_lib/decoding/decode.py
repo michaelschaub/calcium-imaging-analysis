@@ -36,7 +36,7 @@ def LDA():
     return skda.LinearDiscriminantAnalysis(n_components=None, solver='eigen', shrinkage='auto')
 
 def RF():
-    return skens.RandomForestClassifier(n_estimators=100, bootstrap=False)
+    return skens.RandomForestClassifier(n_estimators=10, bootstrap=False)
 
 ### Helper Functions
 
@@ -138,26 +138,37 @@ def decode(data, labels, decoder, reps, label_order=None):
     trained_decoders = []
     
     #Select Decoder
-    decoders = {"MLR":MLR,
-                "MLRshuffle":MLR,
+    if isinstance(decoder,str):
+        decoders = {"MLR":MLR,
+                "MLRshuffle":MLR, #TODO move to parameters
                 "1NN":NN,
                 "LDA":LDA,
-                "RF":RF}
-    decoder = decoders[decoder]()
+                "RF":RF,
+                "RFshuffle":RF}
+    
+        model = decoders[decoder]()
 
     ### Train & Eval
     try:
         for i, (train_index, test_index) in enumerate(cv_split):
-            decoder.fit(data[train_index,:],labels[train_index])
-            perf[i] = decoder.score(data[test_index,:],labels[test_index])
-            confusion[i,:,:] = confusion_matrix(data[test_index,:],labels[test_index],decoder,label_order)
-            trained_decoders.append(decoder)
+            if isinstance(decoder,str):
+                #If decoder is reference to a decoder, it wasn't trained yet
+                model.fit(data[train_index,:],labels[train_index])
+            else:
+                #Otherwise its assumed to be an array of already trained decoders
+                model = decoder[i]
+                
+            perf[i] = model.score(data[test_index,:],labels[test_index])
+            confusion[i,:,:] = confusion_matrix(data[test_index,:],labels[test_index],model,label_order)
+            trained_decoders.append(model)
     except Exception as Err:
         print("Error during training and testing")
         print(Err)
 
     
     return perf, confusion, trained_decoders
+
+
     
 '''
 def decode(data,labels,decoder,reps=5,outputs=None,balance=False,time_resolved=False):
