@@ -23,8 +23,10 @@ rule test:
 
 rule parcellation: 
 	input: 
-		expand(f"results/{{session_run}}/{{parcellation}}/data.h5", session_run = session_runs,  parcellation = parcellations) #TODO add all session_run = session_runs+["All"]
-
+		#Result of parcellations
+		expand(f"results/{{session_run}}/{{parcellation}}/data.h5", session_run = session_runs,  parcellation = parcellations), #TODO add all session_run = session_runs+["All"]
+		#Plot of parcellations
+		expand(f"results/{{session_run}}/{{parcellation}}/visualization/combined_parcels.png", session_run = session_runs,  parcellation = parcellations)
 
 
 rule feature:
@@ -43,10 +45,14 @@ rule feature:
 
 rule decode:
 	input:
+		#Decoding performance accuracy across features
 		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/performances.png", session_run = session_runs+["All"],  parcellation = parcellations, trials= selected_trials),
+		#Decoding performance across parcellation 
 		expand(f"results/plots/{{session_run}}/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{feature}}/performances.png", session_run = session_runs+["All"],  feature =  features, trials= selected_trials),
+		#Plot Train/Test across Time (on the same timepoints)
 		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/performance_over_time.png", session_run = session_runs+["All"] ,parcellation = parcellations, feature =  features, trials= selected_trials),
-		expand(f"results/{{session_run}}/{{parcellation}}/visualization/combined_parcels.png", session_run = session_runs,  parcellation = parcellations)
+		#Plot Train/Test on different Timepoints
+		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/{{decoder}}_performance_matrix.png", session_run = session_runs+["All"] ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders)
 
 rule load:
 	input:
