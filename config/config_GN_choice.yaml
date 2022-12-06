@@ -1,6 +1,5 @@
 branch_opts:
-  combine_sessions: True #True #
-  #TODO if True don't add "All" to sessions_runs in snakefile
+  combine_sessions: False
 
   subjects:
     #random:
@@ -8,23 +7,23 @@ branch_opts:
 
     # Defines subjects and dates to use from Gerions Experiment
     GN06:
-      - "2021-03-26"
-      - "2021-03-29"
+      - 2021-03-26_10-53-05
+      - 2021-03-29_11-51-27
       #- 2021-04-01_13-44-22
-      - "2021-03-01"
-      - "2021-03-02"
-      - "2021-03-03"
-      - "2021-03-04"
+      - 2021-03-01_13-57-39
+      - 2021-03-02_15-49-02
+      - 2021-03-03_14-02-06
+      - 2021-03-04_11-51-23
 
     GN09:
-      - "2021-03-26"
-      - "2021-04-14"
-      - "2021-04-15_11"
-      - "2021-04-15_15"
-      - "2021-04-16"
-      - "2021-04-19"
-      - "2021-04-20"
-      - "2021-04-21"
+      - 2021-03-26_10-13-36
+      - 2021-04-14_16-01-37
+      - 2021-04-15_11-12-30
+      - 2021-04-15_15-21-57
+      - 2021-04-16_15-11-45
+      - 2021-04-19_10-37-14
+      - 2021-04-20_13-07-10
+      - 2021-04-21_13-20-21
 
 
     #GN08:
@@ -41,28 +40,28 @@ branch_opts:
   conditions:
     default:
       phase: all
-      n_targets: all
-      n_distractors: none
+      #n_targets: all
+      #n_distractors: none
       auto_reward: no
       both_spouts: yes
 
 
     ### Choice Decoder
-    # leftResponse_leftStim:
-    #   responses: left
-    #   sides: left
+    leftResponse_leftStim:
+      responses: left
+      sides: left
 
-    # leftResponse_rightStim:
-    #   responses: left
-    #   sides: right
+    leftResponse_rightStim:
+      responses: left
+      sides: right
 
-    # rightResponse_rightStim:
-    #   responses: right
-    #   sides: right
+    rightResponse_rightStim:
+      responses: right
+      sides: right
 
-    # rightResponse_leftStim:
-    #   responses: right
-    #   sides: left
+    rightResponse_leftStim:
+      responses: right
+      sides: left
 
     # noResponse:
     #   responses: no
@@ -81,24 +80,24 @@ branch_opts:
     #  modalities: vistact
 
     #Stimulus Decoder
-    left_visual:
-      sides: left
-      modalities: visual
-    right_visual:
-      sides: right
-      modalities: visual
-    left_tactile:
-      sides: left
-      modalities: tactile
-    right_tactile:
-      sides: right
-      modalities: tactile
-    left_vistact:
-      sides: left
-      modalities: vistact
-    right_vistact:
-      sides: right
-      modalities: vistact
+    # left_visual:
+    #   sides: left
+    #   modalities: visual
+    # right_visual:
+    #   sides: right
+    #   modalities: visual
+    # left_tactile:
+    #   sides: left
+    #   modalities: tactile
+    # right_tactile:
+    #   sides: right
+    #   modalities: tactile
+    # left_vistact:
+    #   sides: left
+    #   modalities: vistact
+    # right_vistact:
+    #   sides: right
+    #   modalities: vistact
 
 
 # Defines trial phases for Gerions Experimental Setup

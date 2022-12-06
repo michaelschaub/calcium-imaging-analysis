@@ -4,11 +4,12 @@ sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 
 from ci_lib.utils import snakemake_tools
+from ci_lib.utils.logging import start_log
 from ci_lib import DecompData
 from ci_lib.features import Means, Raws, Covariances, Correlations, AutoCovariances, AutoCorrelations, Moup, Cofluctuation
 
 # redirect std_out to log file
-logger = snakemake_tools.start_log(snakemake)
+logger = start_log(snakemake)
 if snakemake.config['limit_memory']:
     snakemake_tools.limit_memory(snakemake)
 try:
@@ -24,10 +25,12 @@ try:
     feats = []
     for i in snakemake.input:
         feat = feature_class.load(i)
+        print(i)
+        print(feat.feature)
         if feat.trials_n>0:
             feats.append(feat)
 
-    feats[0].concat(feats, overwrite=True)
+    feats[0].concat(feats, overwrite=True) #TODO fails when no trials are present
 
     #feat = feature_dict[feature].create(data, max_comps=max_comps, **param_dict[feature](params))
     logger.debug(f"feature shape {feats[0].feature.shape}")

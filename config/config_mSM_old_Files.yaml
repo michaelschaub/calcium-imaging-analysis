@@ -1,0 +1,81 @@
+branch_opts:
+  combine_sessions: False
+
+  # Defines subjects and dates to use from Simons Experiment
+  subjects:
+      mSM65:
+        - 08-Sep-2018
+
+        
+
+  # Defines conditions for Simon Experimental Setup
+  conditions:
+    default:
+      phase: all
+    left_visual:
+      sides: left
+      modalities: visual
+    right_visual:
+      sides: right
+      modalities: visual
+    #left_auditory:
+    #  sides: left
+    #  modalities: auditory
+    #right_auditory:
+    #  sides: right
+    #  modalities: auditory
+
+    left_aud:
+      sides: left
+      modalities: auditory
+    right_aud:
+      sides: right
+      modalities: auditory
+
+    ##Choice Decoder
+    # leftResponse_leftStim:
+    #   responses: left
+    #   sides: left
+
+    # leftResponse_rightStim:
+    #   responses: left
+    #   sides: right
+
+    # rightResponse_rightStim:
+    #   responses: right
+    #   sides: right
+
+    # rightResponse_leftStim:
+    #   responses: right
+    #   sides: left
+
+  
+
+# Defines trial phases for Simon Experimental Setup
+trial_conditions:
+  sides:
+    column: CorrectSide
+    conds:
+      left:   1
+      right:  2
+  modalities:
+    column: StimType
+    conds:
+      visual:   1
+      auditory: 2
+  responses:
+    column: ResponseSide
+    conds:
+      left: 1.0
+      right: 2.0
+#TODO plot over time labels from her
+phase_conditions:
+  pretrial?:
+    start:  0
+    stop:   90
+  stimulus?:
+    start:  90
+    stop:   141
+  all:
+    start: 0
+    stop: 201

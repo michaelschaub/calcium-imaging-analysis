@@ -8,7 +8,7 @@ from ci_lib import Data, DecompData
 
 
 def calc_means(temps):
-    return np.mean(temps, axis=1)  # average over frames
+    return np.mean(temps, axis=1) # average over frames
 
 
 class Means(Features):
@@ -19,9 +19,9 @@ class Means(Features):
         self._time_resolved = True #only needed cause it's not properly saved
 
 
-    def create(data, max_comps=None, logger=LOGGER, window=1): #TODO pass window correctly from feature workflow script
+    def create(data, max_comps=None, logger=LOGGER, window=None): 
         if window is None:
-            feat = Means(data, feature=calc_means(data.temporals[:, :, :max_comps])) #TODO add newaxis of size 1 between trial and feat (axis=1)
+            feat = Means(data, feature=calc_means(data.temporals[:, :, :max_comps])[:,np.newaxis,:]) 
         else:
             trials , phase_length, comps  =   data.temporals.shape
             windows = [range(i,i+window) for i in range(0,phase_length-window)]
@@ -41,6 +41,9 @@ class Means(Features):
         feat = feat[:,timepoints,:]
         mask = np.ones((feat.shape[1:]), dtype=bool)
         return feat[:,mask]
+
+    def mean(self):
+        return Means(self._data, feature=calc_means(self._feature[:, :, :]))
 
 
     @property

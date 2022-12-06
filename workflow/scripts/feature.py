@@ -7,7 +7,7 @@ from ci_lib.utils import snakemake_tools
 from ci_lib.utils.logging import start_log
 from ci_lib import DecompData
 from ci_lib.features import Means, Raws, Covariances, Correlations, AutoCovariances, AutoCorrelations, Moup, Cofluctuation
-
+ 
 # redirect std_out to log file
 logger = start_log(snakemake)
 if snakemake.config['limit_memory']:
@@ -37,7 +37,9 @@ try:
     data = DecompData.load(snakemake.input[0])
 
     max_comps = params["max_components"] if "max_components" in params else None
-    feat = feature_dict[feature].create(data, max_comps=max_comps, **param_dict[feature](params))
+    window = params["window"] if "window" in params else None #TODO move param_dict , this will break for all feature that don't have window parameter!!
+
+    feat = feature_dict[feature].create(data, max_comps=max_comps, window=window, **param_dict[feature](params)) #TODO **param_dict doesn't pass anything for empty lambda expression, shouldn't it just pass everyhting + replacement options
     logger.debug(f"feature shape {feat.feature.shape}")
 
     feat.save(snakemake.output[0])

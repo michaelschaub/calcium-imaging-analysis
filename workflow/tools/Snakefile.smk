@@ -6,9 +6,11 @@ subjects = config["branch_opts"]["subjects"]
 subject_dates = [".".join([subject_id,date]) for subject_id,dates in subjects.items() for date in dates ]
 
 if config["branch_opts"].get('combine_sessions', False): #TODO fail safe config loading with defaults
-    session_runs = '.'.join(subject_dates)
+    session_runs = ['#'.join(subject_dates)] #TODO this will result in /All being redundantly calculated
 else:
     session_runs = subject_dates
+
+print(session_runs)
 
 parcells_conf   = config["branch_opts"]["parcellations"]
 parcells_static = config["static_params"]["parcellations"]
@@ -76,7 +78,7 @@ config["plotting"] =   {"plot_subject_labels": {f"{subject_id}(#{len(dates)})" f
 #plot_feature_labels = [f"{feat_name} t={options['timelags']}" if 'timelags' in options else feat_name for feat_name,options in feature_conf.items()]
 
 wildcard_constraints:
-    subject_dates	= r"[a-zA-Z\d_.-]+",
+    subject_dates	= r"[a-zA-Z\d_.#-]+",
     parcellation  = branch_match(config["branch_opts"]["parcellations"].keys()),
     trials        = branch_match(config["branch_opts"]["selected_trials"].keys()),
     cond          = branch_match(config["branch_opts"]["conditions"].keys()),

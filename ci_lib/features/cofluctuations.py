@@ -34,7 +34,7 @@ class Cofluctuation(Features):
         self._time_resolved = True
         self._include_diagonal = include_diagonal
 
-    def create(data, max_comps=None, include_diagonal=True, logger=LOGGER):
+    def create(data, max_comps=None, include_diagonal=True, logger=LOGGER,window=None):
         #zscores_over_time = scipy.stats.zscore(data.temporals[:, :, :max_comps],axis=1) 
         zscores_over_time = data.temporals_z_scored[:, :, :max_comps]
 

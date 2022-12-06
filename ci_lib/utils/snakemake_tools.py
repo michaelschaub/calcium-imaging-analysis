@@ -90,9 +90,12 @@ def check_conf(snakemake, sections, logger=None):
 def start_timer():
     return datetime.datetime.now()
 
-def stop_timer(start, logger=None):
+def stop_timer(start, logger=None, silent=False):
     delta = datetime.datetime.now() - start
-    (logging.getLogger(__name__) if logger is None else logger).info(f"Finished after {delta}")
+    if silent:
+        return delta.total_seconds()
+    else:
+        (logging.getLogger(__name__) if logger is None else logger).info(f"Finished after {delta}")
 
 def limit_memory(snakemake, soft=True):
     '''

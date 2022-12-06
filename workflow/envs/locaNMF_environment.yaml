@@ -4,7 +4,7 @@ channels:
   - defaults
   - local
 dependencies:
-  - python=3.9
+  - python=3.7
   - pip
   - numpy
   - pandas
@@ -17,7 +17,7 @@ dependencies:
   - bokeh
 
   - pyyaml
-  - pytables
+  - pytables>=3.5.1
   - opencv
   - locanmf
 

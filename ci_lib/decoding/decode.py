@@ -15,6 +15,12 @@ from sklearn.model_selection import StratifiedShuffleSplit
 import numpy as np
 import pickle
 
+#Hide convergene warning for shuffled data
+from sklearn.utils._testing import ignore_warnings
+from sklearn.exceptions import ConvergenceWarning
+from warnings import simplefilter
+simplefilter("ignore", category=ConvergenceWarning)
+
 from pathlib import Path
 import sys
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
@@ -24,18 +30,19 @@ from ci_lib.features import Means, Raws, Covariances, Correlations, AutoCovarian
 
 
 ### Select decoder
-def MLR():
+# TODO as classes
+def MLR(cores=1):
     return skppl.make_pipeline(skppc.StandardScaler(),
                                 skllm.LogisticRegression(C=10, penalty='l2', multi_class='multinomial',
-                                                            solver='lbfgs', max_iter=500))
+                                                            solver='lbfgs', max_iter=500, n_jobs=cores, warm_start=True))
 
-def NN():
+def NN(cores):
     return sklnn.KNeighborsClassifier(n_neighbors=1, algorithm='brute', metric='correlation')
 
-def LDA():
+def LDA(cores):
     return skda.LinearDiscriminantAnalysis(n_components=None, solver='eigen', shrinkage='auto')
 
-def RF():
+def RF(cores):
     return skens.RandomForestClassifier(n_estimators=10, bootstrap=False)
 
 ### Helper Functions
@@ -125,7 +132,8 @@ def decode_from_feature(feat_wildcard,feat_path_list,labels,decoder,reps=5,outpu
                     decode(data_flat,labels_flat,decoder,reps,outputs,balance,time_resolved)    
 '''
 
-def decode(data, labels, decoder, reps, label_order=None):
+@ignore_warnings(category=ConvergenceWarning)
+def decode(data, labels, decoder, reps, label_order=None,cores=1):
     ### Split
     cv = StratifiedShuffleSplit(reps, test_size=0.2, random_state=420)
 
@@ -134,9 +142,9 @@ def decode(data, labels, decoder, reps, label_order=None):
     data = scaler.transform(data)
     cv_split = cv.split(data, labels)
     perf = np.zeros((reps),dtype=float)
+    trained_decoders = np.zeros((reps),dtype=object) 
     confusion = np.zeros((reps,len(label_order),len(label_order)),dtype=float)
-    trained_decoders = []
-    
+
     #Select Decoder
     if isinstance(decoder,str):
         decoders = {"MLR":MLR,
@@ -145,8 +153,8 @@ def decode(data, labels, decoder, reps, label_order=None):
                 "LDA":LDA,
                 "RF":RF,
                 "RFshuffle":RF}
-    
-        model = decoders[decoder]()
+
+        model = decoders[decoder](cores)
 
     ### Train & Eval
     try:
@@ -160,7 +168,7 @@ def decode(data, labels, decoder, reps, label_order=None):
                 
             perf[i] = model.score(data[test_index,:],labels[test_index])
             confusion[i,:,:] = confusion_matrix(data[test_index,:],labels[test_index],model,label_order)
-            trained_decoders.append(model)
+            trained_decoders[i] = model
     except Exception as Err:
         print("Error during training and testing")
         print(Err)

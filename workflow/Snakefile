@@ -52,7 +52,10 @@ rule decode:
 		#Plot Train/Test across Time (on the same timepoints)
 		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/performance_over_time.png", session_run = session_runs+["All"] ,parcellation = parcellations, feature =  features, trials= selected_trials),
 		#Plot Train/Test on different Timepoints
-		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/{{decoder}}_performance_matrix.png", session_run = session_runs+["All"] ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders)
+		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/{{decoder}}_performance_matrix.png", session_run = session_runs+["All"] ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
+        #Decoding perfromance over time across parcellations
+        expand(f"results/plots/{{session_run}}/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{feature}}/performance_over_time_parcels.png", session_run = session_runs+["All"],  feature =  features, trials= selected_trials),
+        #expand(f"results/plots/{{session_run}}/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{feature}}/performance_over_time_parcels.png",
 
 rule load:
 	input:

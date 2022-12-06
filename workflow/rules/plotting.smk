@@ -115,7 +115,7 @@ rule plot_performance_over_time:
         conds=list(config['trial_conditions']),
         decoders=config["decoders"],
     log:
-        f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/plot_performance.log",
+        f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/plot_performance_over_time.log",
     conda:
         "../envs/environment.yaml"
     script:
@@ -155,3 +155,24 @@ rule plot_glassbrain:
         mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,16000,16000)
     script:
         "../scripts/plot_glassbrain.py"
+
+
+
+rule plot_performances_parcellations_over_time:
+    input:
+        perf = [f"results/{{subject_dates}}/{parcellation}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{decoder}/decoder_perf.pkl"
+         for decoder in config["decoders"]
+         for parcellation in config['parcellations']]
+    output:
+        f"results/plots/{{subject_dates}}/{{trials}}/Decoding/{'.'.join(config['trial_conditions'])}/{{feature}}/performance_over_time_parcels.png",
+        f"results/plots/{{subject_dates}}/{{trials}}/Decoding/{'.'.join(config['trial_conditions'])}/{{feature}}/performance_over_time_parcels.pkl",
+    params:
+        conds=list(config['trial_conditions']),
+        decoders=config["decoders"],
+        parcellations=list(config['parcellations']), #plot_feature_labels,
+    log:
+        f"results/plots/{{subject_dates}}/{{trials}}/Decoding/{'.'.join(config['trial_conditions'])}/{{feature}}/plot_performances_over_time_parcels.log",
+    conda:
+        "../envs/environment.yaml"
+    script:
+        "../scripts/plot_performance_time.py"

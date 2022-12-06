@@ -72,8 +72,8 @@ try:
     logger.info("Loaded task data")
 
 
-    if len(files_Vc) > 1:
-        warnings.warn("Combining different dates may still be buggy!")
+    #if len(files_Vc) > 1:
+    #    warnings.warn("Combining different dates may still be buggy!")
 
     trial_starts = []
     Vc = []
@@ -97,12 +97,83 @@ try:
         start += Vc[-1].shape[0]
 
     trial_starts = np.concatenate( trial_starts )
+
+    if len(U)==1:
+        U = U[0]
+    else:
+        mean_U = np.mean(U,axis=0)
+
+        spat_n, w , h = mean_U.shape
+
+        mean_U = mean_U.reshape(spat_n,w * h)
+
+        mean_U_inv = np.nan_to_num(np.linalg.pinv(np.nan_to_num(mean_U, nan=0.0)), nan=0.0)
+
+        #approx_U_error = np.matmul(mean_U_inv, mean_U)
+
+        error = np.zeros((len(U)))
+
+        for i,V in enumerate(Vc):
+            U[i] = U[i].reshape(spat_n,w * h)
+
+            V_transform = np.matmul(np.nan_to_num(U[i], nan=0.0), mean_U_inv)
+
+            Vc[i] = np.matmul(Vc[i], V_transform)
+            #V    spat_n**
+
+            #for t, frame in enumerate(V):
+
+            #    correct_frame = Vc[i][t]
+
+            #    Vc[i][t] = np.matmul(frame[np.newaxis,:] , V_transform)
+
+                #Vc[i][t] = frame * U[i] * mean_U_inv
+            #    error[i] += np.sum(np.absolute(Vc[i][t] - correct_frame))
+            #print(error[i])
+
+            #error[i] = np.linalg.norm(Vc[i]) * np.linalg.norm(U[i]) * np.linalg.norm(np.eye(spat_n)-approx_U_error)
+            
+            
+            '''error_tmp = np.zeros((h))
+            abs_val = np.zeros((h))
+            range_ws = np.arange(0,w*h,w)
+            for h_i,w_i in enumerate(range_ws):
+                print(h_i)
+                eye_vector = np.zeros((w,w*h))
+                eye_vector[:,w_i:w+w_i] = np.eye(w)
+                error_tmp[h_i] = np.sum(np.square(np.matmul(np.matmul(Vc[i],np.nan_to_num(U[i][:,w_i:w_i+w])),(eye_vector - np.matmul(mean_U_inv[w_i:w_i+w,:],np.nan_to_num(mean_U[:,:],nan=0.0))))))
+                
+                print((np.matmul(Vc[i],np.nan_to_num(U[i][:,w_i:w_i+w]))).shape)
+                print(np.matmul(Vc[i],np.nan_to_num(U[i][:,w_i:w_i+w])))
+                abs_val[i] = np.sum(np.square(np.matmul(Vc[i],np.nan_to_num(U[i][:,w_i:w_i+w]))))
+                print(error_tmp[i])
+                print(abs_val[i])
+
+            error[i] = np.sum(error_tmp) / np.sum(abs_val)'''
+            
+
+
+        # for h_i,w_i in enumerate(range_ws):
+        #     print(h_i)
+        #     eye_vector = np.zeros((w*h,w))
+        #     eye_vector[w_i:w+w_i,:] = np.eye(w)
+        #     error_tmp[h_i] = np.sum(np.square((eye_vector - np.matmul(mean_U_inv[:,:],np.nan_to_num(mean_U[:,w_i:w_i+w],nan=0.0)))))
+        #     print(error_tmp[i])
+
+
+        
+        '''print(f"Error for {snakemake.wildcards['subject_dates']}")
+        print(error)
+        print(error_tmp)'''
+        
+
+        U = mean_U.reshape(spat_n,w,h) # U[0]
+        
+        
+    #####
+    
+
     Vc = np.concatenate( Vc )
-
-
-    U = U[0]
-
-
 
     svd = DecompData( sessions, Vc, U, trial_starts)
     svd.save( snakemake.output[0] )

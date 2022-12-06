@@ -11,16 +11,23 @@ sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 import ci_lib.plotting as plots
 from ci_lib.utils import snakemake_tools
+from ci_lib.utils.logging import start_log
 
-logger = snakemake_tools.start_log(snakemake)
+logger = start_log(snakemake)
 try:
     timer_start = snakemake_tools.start_timer()
     with open(snakemake.input["perf"], "rb") as f:
         perf_matrix = np.asarray(pickle.load(f))
 
+    #print(perf_matrix)
 
+    sns.set(rc={'figure.figsize':(9 , 7.5)})
 
-    fig = plt.matshow(np.mean(perf_matrix,axis=2))
+    framerate=15
+    fig = sns.heatmap(np.mean(perf_matrix,axis=2), cmap = 'viridis',square=True, vmin =0, vmax = 1,xticklabels=framerate, yticklabels=framerate)
+
+    plt.xlabel("t (test)")
+    plt.ylabel("t (train)")
 
 
     fig.figure.savefig( snakemake.output[0] )

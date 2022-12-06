@@ -241,5 +241,8 @@ rule decoding:
         "../envs/environment.yaml"
     resources:
         mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
+    threads:
+        min(len(list(config['trial_conditions'])),workflow.cores) #For multinomial lr = job for each class
+        #workflow.cores * 0.2
     script:
         "../scripts/decoding.py"

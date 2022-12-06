@@ -1,27 +1,77 @@
 branch_opts:
-  combine_sessions: False
+  combine_sessions: True
 
   # Defines subjects and dates to use from Simons Experiment
   subjects:
       mSM65:
-        - 08-Sep-2018
+        # - 01-Jul-2018
+        # - 03-Jul-2018
+        # - 05-Jul-2018
+        # - 09-Jul-2018
+        - 11-Jul-2018
+        - 13-Jul-2018
+        #- 27-Jun-2018 #df and frameCnt doesn't match
+        #- 29-Jun-2018 #df and frameCnt doesn't match
+        #- 02-Jul-2018 #locaNMF fails due to nans (eventhough they were masked?)
+        #- 04-Jul-2018 #locaNMF fails due to nans (eventhough they were masked?)
+        #- 06-Jul-2018 #df and frameCnt doesn't match
+        #- 10-Jul-2018 #df and frameCnt doesn't match
+        - 12-Jul-2018
+        - 16-Jul-2018 #locaNMF fails due to nans (eventhough they were masked?) 
+        #- 28-Jun-2018 #locaNMF fails due to nans (eventhough they were masked?)
+        - 30-Jun-2018
+      mSM66:
+        # - 01-Jul-2018
+        # - 03-Jul-2018
+        # - 05-Jul-2018
+        # - 09-Jul-2018
+        # - 11-Jul-2018
+        # - 13-Jul-2018
+        # - 27-Jun-2018
+        #- 29-Jun-2018 #locaNMF fails due to nans (eventhough they were masked?)
+        #- 02-Jul-2018  #df and frameCnt doesn't match
+        - 04-Jul-2018
+        #- 06-Jul-2018  #df and frameCnt doesn't match
+        #- 10-Jul-2018  #locaNMF fails due to nans (eventhough they were masked?)
+        #- 12-Jul-2018 #locaNMF fails due to nans (eventhough they were masked?)
+        - 16-Jul-2018
+        - 28-Jun-2018
+        - 30-Jun-2018
 
   # Defines conditions for Simon Experimental Setup
   conditions:
     default:
       phase: all
-    left_visual:
+    # left_visual:
+    #   sides: left
+    #   modalities: visual
+    # right_visual:
+    #   sides: right
+    #   modalities: visual
+    # left_auditory:
+    #   sides: left
+    #   modalities: auditory
+    # right_auditory:
+    #   sides: right
+    #   modalities: auditory
+
+    ##Choice Decoder
+    leftResponse_leftStim:
+      responses: left
       sides: left
-      modalities: visual
-    right_visual:
+
+    leftResponse_rightStim:
+      responses: left
       sides: right
-      modalities: visual
-    left_auditory:
+
+    rightResponse_rightStim:
+      responses: right
+      sides: right
+
+    rightResponse_leftStim:
+      responses: right
       sides: left
-      modalities: auditory
-    right_auditory:
-      sides: right
-      modalities: auditory
+
   
 
 # Defines trial phases for Simon Experimental Setup
@@ -39,16 +89,16 @@ trial_conditions:
   responses:
     column: ResponseSide
     conds:
-      left: 1
-      right: 2
-
+      left: 1.0
+      right: 2.0
+#TODO plot over time labels from her
 phase_conditions:
-  pretrial:
-    start:  15
+  pretrial?:
+    start:  0
     stop:   90
-  stimulus:
+  stimulus?:
     start:  90
     stop:   141
   all:
-    start: 15
+    start: 0
     stop: 201
