@@ -3,6 +3,8 @@ import h5py
 import warnings
 from snakemake.logging import logger
 
+from sklearn.decomposition import TruncatedSVD
+
 from pathlib import Path
 import sys
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
@@ -90,8 +92,12 @@ try:
 
         frameCnt = np.array(f['frameCnt'])
         Vc.append(np.array(f["Vc"]))
-        #assert np.array_equal(U[-1], U[0], equal_nan=True), "Combining different dates with different Compositions is not yet supported"
-        # multiple dates cant have same spatials currently as they are independently created
+        
+        frames, n_components = Vc[-1].shape
+        _, width, height = U[-1].shape
+        logger.info(
+            f"Dimensions: n_trials={len(frameCnt)-2}, average frames per trial={frames/(len(frameCnt)-2)}, n_components={n_components}, width={width}, height={height}")
+        assert np.array_equal(U[-1].shape, U[0].shape, equal_nan=True), "Combining dates with different resolutions or number of components is not yet supported"
 
         trial_starts.append(np.cumsum(frameCnt[:-1, 1]) + start)
         start += Vc[-1].shape[0]
@@ -101,11 +107,19 @@ try:
     if len(U)==1:
         U = U[0]
     else:
-        mean_U = np.mean(U,axis=0)
+        svd = TruncatedSVD(n_components=n_components, random_state=42)
+        flat_U = np.nan_to_num(np.concatenate([u.reshape(n_components,width * height) for u in U]))
+        
+        svd.fit(flat_U)
+        
+        print(svd.components_.shape)
+        #mean_U = np.mean(np.nan_to_num(U),axis=0)
 
-        spat_n, w , h = mean_U.shape
 
-        mean_U = mean_U.reshape(spat_n,w * h)
+        #spat_n, w , h = mean_U.shape
+
+        mean_U = svd.components_ 
+        # mean_U = mean_U.reshape(spat_n,w * h)
 
         mean_U_inv = np.nan_to_num(np.linalg.pinv(np.nan_to_num(mean_U, nan=0.0)), nan=0.0)
 
@@ -114,7 +128,7 @@ try:
         error = np.zeros((len(U)))
 
         for i,V in enumerate(Vc):
-            U[i] = U[i].reshape(spat_n,w * h)
+            U[i] = U[i].reshape(n_components,width * height)
 
             V_transform = np.matmul(np.nan_to_num(U[i], nan=0.0), mean_U_inv)
 
@@ -167,7 +181,7 @@ try:
         print(error_tmp)'''
         
 
-        U = mean_U.reshape(spat_n,w,h) # U[0]
+        U = mean_U.reshape(n_components,width,height) # U[0]
         
         
     #####

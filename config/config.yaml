@@ -1,11 +1,11 @@
 branch_opts:
   parcellations:
       anatomical:
-        ROI: [['VISp-R,VISrl-R,SSp-bfd-R,MOs-R,MOs-L,SSp-bfd-L,VISrl-L,VISp-L'],[]] #FRP-R,MOp-R'],["VIS,SS"]]
-      #SVD:
+      #  ROI: [['VISp-R,VISrl-R,SSp-bfd-R,MOs-R,MOs-L,SSp-bfd-L,VISrl-L,VISp-L'],[]] #FRP-R,MOp-R'],["VIS,SS"]]
+      SVD:
       #ICA:
       #n_comps: [64]
-      #LocaNMF:
+      LocaNMF:
 
   selected_trials:
     All:
@@ -15,7 +15,10 @@ branch_opts:
     #raw:
     #  max_components : [64]
     mean:
-    #  window: [1]
+      window: [1]
+      #optional:
+      #  window: [1] #TODO currently needs to be in an array (should support int aswell)
+
     #covariance:
       #max_components : [64]
     #moup:
@@ -29,17 +32,19 @@ branch_opts:
       #optional:
       #  thresh:
       #    - 0.5
+    
     #cofluctuation:
 
   decoders:
     default:
-      reps: [10]
+      reps: [50]
     MLR:
     MLRshuffle:
 
     #1NN:
     #LDA:
     #RF:
+    #RFshuffle:
 
   rfe:
     select_features_n:
@@ -57,12 +62,12 @@ static_params:
     anatomical:
     ICA:
     LocaNMF:
-      minrank: 0
+      minrank: 1
       maxrank: 10
       min_pixels: 400
-      loc_thresh: 70
+      loc_thresh: 80
       r2_thresh: 0.99
-      nonnegative_temporal: False
+      nonnegative_temporal: True
 
 
   selected_trials:

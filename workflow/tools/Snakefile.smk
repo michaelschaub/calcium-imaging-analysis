@@ -5,10 +5,12 @@ from snakemake_tools import create_parameters, create_conditions, calculate_memo
 subjects = config["branch_opts"]["subjects"]
 subject_dates = [".".join([subject_id,date]) for subject_id,dates in subjects.items() for date in dates ]
 
-if config["branch_opts"].get('combine_sessions', False): #TODO fail safe config loading with defaults
-    session_runs = ['#'.join(subject_dates)] #TODO this will result in /All being redundantly calculated
+if config["branch_opts"].get('include_individual_sessions', False):  # config["branch_opts"].get('combine_sessions', False): #TODO fail safe config loading with defaults
+    session_runs = subject_dates + ['#'.join(subject_dates)] 
 else:
-    session_runs = subject_dates
+    session_runs = ['#'.join(subject_dates)]  #["All"]
+
+combine_sessions = config["branch_opts"]["combine_sessions"]
 
 print(session_runs)
 
@@ -42,12 +44,13 @@ rfe_reps = config["branch_opts"]["rfe"]["reps"]
 run_id = hash_config(config)
 
 config["loading"] = {"subjects": subjects,
-
+                    "combine_sessions":combine_sessions,
                     "subject_dates"	:subject_dates}
 
 config["output"] = {"processed_dates" :  session_runs}
 
-config["processing"] = {"trial_conditions" : trial_conditions,
+config["processing"] = {"combine_sessions":combine_sessions,
+                        "trial_conditions" : trial_conditions,
                         "phase_conditions": phase_conditions,
                         "feature_selection": {"n": rfe_ns,
                                               "reps": rfe_reps},

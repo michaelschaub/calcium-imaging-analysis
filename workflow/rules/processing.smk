@@ -1,4 +1,5 @@
 from snakemake_tools import create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match, hash_config
+from wildcard_functions import subjects_from_wildcard
 
 ###   Data processing   ###
 
@@ -23,7 +24,7 @@ rule parcellate:
         config = f"{{data_dir}}/{{parcellation}}/conf.yaml",
     wildcard_constraints:
         # exclude SVD as parcellation
-        parcellation = ".*(?!SVD)"
+        parcellation = "(?!SVD)*"
     log:
         f"{{data_dir}}/{{parcellation}}/parcellation.log"
     conda:
@@ -122,33 +123,47 @@ rule feature_calculation:
     script:
         "../scripts/feature.py"
 
+def concat_input(wildcards):
+
+    sessions = subjects_from_wildcard(wildcards["concated_sessions"])
+
+    return {"individual_sessions":[f"results/{'.'.join([subject_id,date])}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5" for subject_id,dates in sessions.items() for date in dates ]}
+
+    
+#if not config["combine_sessions"]:
+# Sessions were not combined upon loading, concat individual sessions 
 rule feature_concat:
     input:
-        expand("results/{session_run}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5", session_run = config["session_runs"])
+        unpack(concat_input)
     output:
-        f"results/All/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5",
+        f"results/{{concated_sessions}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5",
         export_raw = report(
-            f"results/All/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.{config['export_type']}",
+            f"results/{{concated_sessions}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.{config['export_type']}",
             caption="../report/alignment.rst",
             category="4 Feature Calculation",
             subcategory="{feature}",
             labels={"Condition": "{cond}", "Subject/Date": "All", "Type": "Data"}),
         export_plot = report(
-            f"results/All/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.png",
+            f"results/{{concated_sessions}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.png",
             caption="../report/alignment.rst",
             category="4 Feature Calculation",
             subcategory="{feature}",
-            labels={"Condition": "{cond}", "Subject/Date": "All", "Type": "Plot"}),
+            labels={"Condition": "{cond}", "Subject/Date": "All", "Type": "Plot"}),  
     params:
         params = lambda wildcards: config["features"][wildcards["feature"]]
+    wildcard_constraints:
+        #only allowed to resolve wildcards of combined sessions (indicated by the sessions being concat with #) if set false in config, else sessions should be loaded together instead of being concat afterwards
+        concated_sessions = r"GN[\w_.\-#]*" if not config["combine_sessions"] else r"(?!)" 
     log:
-        f"results/All/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/feature_calculation.log"
+        f"results/{{concated_sessions}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/feature_calculation.log"
     conda:
         "../envs/environment.yaml"
     resources:
         mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,2000)
     script:
         "../scripts/feature_concat.py"
+#else:
+# Sessions were combined upon loading, no concatination
 
 
 #Need prio over features

@@ -153,15 +153,17 @@ try:
     '''
     trans = accuracy_over_time_plot.get_xaxis_transform()
 
-    for i, (marker, label) in enumerate(markers.items()):
+    ordered_marker_keys = np.sort(list(markers.keys()))
+    for marker in ordered_marker_keys:
+
 
         plt.plot([marker,marker], [0,1], ':k', alpha=0.5)
 
         #accuracy_over_time_plot.annotate('Neonatal', xy=(1, -.1), xycoords=trans, ha="center", va="top")
         accuracy_over_time_plot.plot([marker,marker], [1,1.05], color="k", transform=trans, clip_on=False,alpha=0.5)
 
-        if label is not None:
-            plt.text(0.5 * (marker+prev_marker),1.015,label,fontsize=11,ha='center')
+        if markers[marker] is not None:
+            plt.text(0.5 * (marker+prev_marker),1.015,markers[marker],fontsize=11,ha='center')
 
 
         prev_marker = marker
@@ -176,11 +178,11 @@ try:
 
     #Scale & Shift axis TODO remove hardcoding
     framerate = 15# 30 #15
-    stim_start= 0  #30 67,5
+    stim_start= 30  #30 67,5
 
     xticks = list(range(0,x_lim,framerate)) #tick every second (framerate)
     xtick_labels =np.asarray(xticks)-stim_start #scale ticks to second (1/framerate)
-    if False: #Change to seconds
+    if True: #Change to seconds
         xtick_labels =  np.asarray(xtick_labels/framerate,dtype=int)
         plt.xlabel("Seconds")
 

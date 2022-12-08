@@ -86,7 +86,8 @@ try:
     reps = snakemake.params["params"]['reps']
     decoder = snakemake.params['params']['branch']  #TODO why not from wildcard?
     shuffling = ("shuffle" in decoder)
-    balancing = False #True #snakemake.params["params"]['balance']    ### Balance cond feats
+    balancing = True #True #snakemake.params["params"]['balance']    ### Balance cond feats
+    across_time = False
     accumulate = False
 
     #Load feature for all conditions
@@ -192,12 +193,13 @@ try:
             t1_time[t] = snakemake_tools.stop_timer(t1_train_testing,silent=True)
 
             #Test on other timepoints
-            t2_testing = snakemake_tools.start_timer()
-            for t2 in t_range:
-                feats_t2, labels_t2 = flatten(feat_list,label_list,t2)
-                perf_matrix[t,t2,:], confusion_t_not_used, _ = decode(feats_t2, labels_t2,model_t,reps,label_order= label_list,cores=cores) #TODo could be optimizied (run only once for each t2 on all t1)
+            if across_time:
+                t2_testing = snakemake_tools.start_timer()
+                for t2 in t_range:
+                    feats_t2, labels_t2 = flatten(feat_list,label_list,t2)
+                    perf_matrix[t,t2,:], confusion_t_not_used, _ = decode(feats_t2, labels_t2,model_t,reps,label_order= label_list,cores=cores) #TODo could be optimizied (run only once for each t2 on all t1)
 
-            t2_time[t] = snakemake_tools.stop_timer(t2_testing,silent=True)
+                t2_time[t] = snakemake_tools.stop_timer(t2_testing,silent=True)
 
     logger.info(f"Finished {len(list(t_range))} timepoints with {reps} repetitions")
     logger.info(f"Training & Testing each timepoints on average: {np.mean(t1_time)} s")

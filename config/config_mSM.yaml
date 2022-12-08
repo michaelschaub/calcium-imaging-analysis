@@ -1,17 +1,17 @@
 branch_opts:
-  combine_sessions: True
+  combine_sessions: False #True
 
   # Defines subjects and dates to use from Simons Experiment
   subjects:
       mSM65:
-        # - 01-Jul-2018
-        # - 03-Jul-2018
-        # - 05-Jul-2018
-        # - 09-Jul-2018
+        #- 01-Jul-2018 #df and Vc doesn't match
+        - 03-Jul-2018
+        #- 05-Jul-2018 #df and Vc doesn't match
+        #- 09-Jul-2018 #df and Vc doesn't match
         - 11-Jul-2018
         - 13-Jul-2018
-        #- 27-Jun-2018 #df and frameCnt doesn't match
-        #- 29-Jun-2018 #df and frameCnt doesn't match
+        #- 27-Jun-2018 #df and Vc doesn't match
+        #- 29-Jun-2018 #df and Vc doesn't match
         #- 02-Jul-2018 #locaNMF fails due to nans (eventhough they were masked?)
         #- 04-Jul-2018 #locaNMF fails due to nans (eventhough they were masked?)
         #- 06-Jul-2018 #df and frameCnt doesn't match
@@ -21,17 +21,17 @@ branch_opts:
         #- 28-Jun-2018 #locaNMF fails due to nans (eventhough they were masked?)
         - 30-Jun-2018
       mSM66:
-        # - 01-Jul-2018
-        # - 03-Jul-2018
-        # - 05-Jul-2018
-        # - 09-Jul-2018
-        # - 11-Jul-2018
-        # - 13-Jul-2018
-        # - 27-Jun-2018
+        #- 01-Jul-2018 #df and Vc doesn't match
+        #- 03-Jul-2018 #df and Vc doesn't match
+        - 05-Jul-2018
+        - 09-Jul-2018
+        - 11-Jul-2018
+        #- 13-Jul-2018 #df and Vc doesn't match
+        - 27-Jun-2018
         #- 29-Jun-2018 #locaNMF fails due to nans (eventhough they were masked?)
-        #- 02-Jul-2018  #df and frameCnt doesn't match
+        #- 02-Jul-2018  #df and Vc doesn't match
         - 04-Jul-2018
-        #- 06-Jul-2018  #df and frameCnt doesn't match
+        #- 06-Jul-2018  #df and Vc doesn't match
         #- 10-Jul-2018  #locaNMF fails due to nans (eventhough they were masked?)
         #- 12-Jul-2018 #locaNMF fails due to nans (eventhough they were masked?)
         - 16-Jul-2018
@@ -48,29 +48,29 @@ branch_opts:
     # right_visual:
     #   sides: right
     #   modalities: visual
-    # left_auditory:
-    #   sides: left
-    #   modalities: auditory
-    # right_auditory:
-    #   sides: right
-    #   modalities: auditory
+    left_auditory:
+       sides: left
+       modalities: auditory
+    right_auditory:
+       sides: right
+       modalities: auditory
 
     ##Choice Decoder
-    leftResponse_leftStim:
-      responses: left
-      sides: left
+    # leftResponse_leftStim:
+    #   responses: left
+    #   sides: left
 
-    leftResponse_rightStim:
-      responses: left
-      sides: right
+    # leftResponse_rightStim:
+    #   responses: left
+    #   sides: right
 
-    rightResponse_rightStim:
-      responses: right
-      sides: right
+    # rightResponse_rightStim:
+    #   responses: right
+    #   sides: right
 
-    rightResponse_leftStim:
-      responses: right
-      sides: left
+    # rightResponse_leftStim:
+    #   responses: right
+    #   sides: left
 
   
 
@@ -91,7 +91,7 @@ trial_conditions:
     conds:
       left: 1.0
       right: 2.0
-#TODO plot over time labels from her
+
 phase_conditions:
   pretrial?:
     start:  0

@@ -1,6 +1,6 @@
 branch_opts:
-  combine_sessions: True #True #
-  #TODO if True don't add "All" to sessions_runs in snakefile
+  combine_sessions: True #Combine sessions (upon loading) & find new spatials with PCA / Combine sessions (after feature calculation) based on original spatials (noisy if spatials are different)
+  include_individual_sessions: False #Run pipeline on individual sessions and combined sessions / just on combined session
 
   subjects:
     #random:
@@ -142,22 +142,19 @@ trial_conditions:
 phase_conditions:
   pretrial:
     start: 0
-    stop:  7
+    stop:  30
   posttrial:
-    start: 113
-    stop: 133
+    start: 112.5
+    stop: 134
   stimulus:
     start:  30
     stop:   75
   delay:
     start: 75
-    stop: 83
+    stop: 82.5
   response:
-    start: 83
-    stop: 113
-  w_response:
-    start: 30
-    stop: 83
+    start: 82.5
+    stop: 112.5
   all:
     start: 0
     stop: 134
