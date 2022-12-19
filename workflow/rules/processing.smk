@@ -1,9 +1,15 @@
 from snakemake_tools import create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match, hash_config
 from wildcard_functions import subjects_from_wildcard
 
+import re
+
 ###   Data processing   ###
 
 def parcellation_input(wildcards):
+
+    if not bool(re.match(r"^(?!SVD)(.*)$",wildcards["parcellation"])):  #TODO why is snakemake regex broken? :( ,fro now evaulate the same freaking expression within input function and require non existing files to exclude this rule....
+        return {"data":f"good/luck/finding/this/non/existing/path"}
+
     input = {
         "data"	: f"{{data_dir}}/SVD/data.h5",
         "config": f"{{data_dir}}/SVD/conf.yaml" }
@@ -17,14 +23,14 @@ rule parcellate:
     '''
     input:
         unpack(parcellation_input)
-    params:
-        params = lambda wildcards: config["parcellations"][wildcards["parcellation"]]
     output:
         f"{{data_dir}}/{{parcellation}}/data.h5",
         config = f"{{data_dir}}/{{parcellation}}/conf.yaml",
-    wildcard_constraints:
+    params:
+        params = lambda wildcards: config["parcellations"][wildcards["parcellation"]]
+    #wildcard_constraints:
         # exclude SVD as parcellation
-        parcellation = "(?!SVD)*"
+        #parcellation = r"^(?!SVD)(.*)$" #TODO Why is snakemake regex broken? :( for now evaulate the same freaking expression within input function and require non existing files to exclude this rule....
     log:
         f"{{data_dir}}/{{parcellation}}/parcellation.log"
     conda:
@@ -36,7 +42,7 @@ rule parcellate:
 
 use rule parcellate as locaNMF with:
     threads:
-        workflow.cores*0.75
+        workflow.cores*0.45
     wildcard_constraints:
         parcellation = "LocaNMF"
     conda:

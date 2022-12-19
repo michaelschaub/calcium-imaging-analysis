@@ -5,6 +5,7 @@ branch_opts:
       SVD:
       #ICA:
       #n_comps: [64]
+
       LocaNMF:
 
   selected_trials:
@@ -37,7 +38,7 @@ branch_opts:
 
   decoders:
     default:
-      reps: [50]
+      reps: [10]
     MLR:
     MLRshuffle:
 
@@ -62,12 +63,12 @@ static_params:
     anatomical:
     ICA:
     LocaNMF:
-      minrank: 1
-      maxrank: 10
+      minrank: 2
+      maxrank: 7
       min_pixels: 400
-      loc_thresh: 80
+      loc_thresh: 70
       r2_thresh: 0.99
-      nonnegative_temporal: True
+      nonnegative_temporal: False
 
 
   selected_trials:

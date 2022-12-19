@@ -12,7 +12,7 @@ def sessions_input(wildcards):
     input = {
         #To make sure that files are present, unfortunatly gets flattened -> losing information which dates belong to which subject
         "tasks_flatten": taskdata_gerion(subject_dates_dict, flatten=True),
-        "Vc": [  f"resources/experiment/{subject_id}/{date}/SVD_data/Vc.mat" for subject_id,dates in subject_dates_dict.items() for date in dates ],
+        "Vc": [  f"resources/experiment/{subject_id}/{date}/SVD_data/Vc_100s_highpass.mat" for subject_id,dates in subject_dates_dict.items() for date in dates ], #TODO only works for new vc files, currently done this way to make sure only news vcs are used
         "trans_params": [ f"resources/experiment/{subject_id}/{date}/SVD_data/opts2.mat" for subject_id,dates in subject_dates_dict.items() for date in dates ]}
     return input
 

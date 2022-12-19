@@ -1,3 +1,7 @@
+#Workaround to support python 3.7 which only supports pkl protocol <= 4
+#import pickle
+#pickle.HIGHEST_PROTOCOL = 4
+
 import numpy as np
 import pandas as pd
 import h5py
@@ -5,6 +9,8 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 from hashlib import sha1
+
+from ci_lib.utils import pickle_protocol
 
 CHECK_HASH = True
 
@@ -99,8 +105,9 @@ def save_object_h5(h5_obj, label, attr):
         file = h5_obj.file.filename
         # close file to be able to use pandas to_hdf function
         h5_obj.file.close()
-        # use pandas to_hdf function
-        attr.to_hdf(file, f"{path}/{label}", "a")
+        # use pandas to_hdf function, forced to version 4 for backwards comp. 
+        with pickle_protocol(4):
+            attr.to_hdf(file, f"{path}/{label}", "a")
         # reopen file at path
         h5_obj = h5py.File(file, "a")[path]
         # save attr type as HDF5 attribute

@@ -1,41 +1,54 @@
 branch_opts:
   combine_sessions: True #Combine sessions (upon loading) & find new spatials with PCA / Combine sessions (after feature calculation) based on original spatials (noisy if spatials are different)
-  include_individual_sessions: True #False #Run pipeline on individual sessions and combined sessions / just on combined session
+  include_individual_sessions: False #False #Run pipeline on individual sessions and combined sessions / just on combined session
 
   subjects:
     #random:
     #  - random
 
     # Defines subjects and dates to use from Gerions Experiment
-    GN06:
-      - "2021-03-26"
-      - "2021-03-29"
-      #- 2021-04-01_13-44-22
-      - "2021-03-01"
-      - "2021-03-02"
-      - "2021-03-03"
-      - "2021-03-04"
+    # GN06:
+    #   - "2021-03-26"
+    #   - "2021-03-29"
+    #   #- "2021-04-01" ###
+    #   #- "2021-03-01"
+    #   #- "2021-03-02"
+    #   #- "2021-03-03"
+    #   #- "2021-03-04"
 
     GN09:
-      - "2021-03-26"
-      - "2021-04-14"
-      - "2021-04-15_11"
-      - "2021-04-15_15"
-      - "2021-04-16"
-      - "2021-04-19"
-      - "2021-04-20"
-      - "2021-04-21"
+    #  #- 2021-04-21_13
+      - 2021-03-26_10
+      - 2021-04-14_16
+      - 2021-04-15_11
+      - 2021-04-15_15
+      - 2021-04-16_15
+      - 2021-04-19_10
+    #  #- 2021-04-20_13
 
 
     #GN08:
+    #- 2021-03-25_11 only new mat
+    #- 2021-03-25_15 only new mat
+
     # - 2021-03-26_13-37-18
     #  - 2021-03-29_13-37-29
     #  - 2021-03-29_16-33-41
     
-    #GN10:
-    #  - 2021-03-29_15-41-22
-    #  - 2021-03-29_15-41-22
-    #  - 2021-04-21_11-00-51
+    GN10:
+
+
+    - "2021-03-29_15"
+    - "2021-04-12_09"
+    - "2021-04-13_09"
+    - "2021-04-14_14"
+    - "2021-04-15_10"
+    #- "2021-04-16_12" #Vc and df mismatch
+    - "2021-04-19_09"
+    - "2021-04-20_10"
+    
+    #- "2021-04-21_11"
+    
 
   # Defines conditions for Gerions Experimental Setup
   conditions:

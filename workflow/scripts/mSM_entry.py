@@ -70,7 +70,7 @@ try:
             logger.debug(f"{k}: could not convert to float, no nan test")
     sessions = sessions.drop(sessions.index[total_nans])
     logger.info(f"Dropped {len(total_nans)} trials, because of NaN entries.")
-
+    logger.info(total_nans)
     logger.info("Loaded task data")
 
     ### Process
@@ -82,7 +82,7 @@ try:
         logger.info(f"Loaded path {file_Vc}")
         f = h5py.File(file_Vc, 'r')
         alignend_U, align_plot = alignment.align_spatials_path(np.nan_to_num(np.array(f["U"]).swapaxes(1,2)),trans_path,plot_alignment_path=snakemake.output["align_plot"])
-        U.append(np.nan_to_num(np.array(f["U"]).swapaxes(1,2))) #Don't use alignment as brains are already aligned in most cases (alignend_U)
+        U.append(alignend_U) #TODO brains are already aligned in some cases (np.array(f["U"]))
 
         Vc.append(np.nan_to_num(np.array(f["Vc"])))
         logger.debug(f"{U[-1].shape}")
@@ -113,7 +113,6 @@ try:
         
         svd.fit(flat_U)
         
-        print(svd.components_.shape)
         #mean_U = np.mean(np.nan_to_num(U),axis=0)
 
 
@@ -138,11 +137,9 @@ try:
 
     Vc = np.concatenate( Vc )
 
-    print(Vc.shape)
     logger.debug(f"{U.shape}")
     logger.debug(f"{Vc.shape}")
 
-    print(trial_starts)
     ### Save
     print(sessions)
     svd = DecompData( sessions, Vc, U, trial_starts)

@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.7
+  - python=3.10
   - pip
   - numpy
   - pandas
@@ -34,4 +34,7 @@ dependencies:
       - cython
       - versioned-hdf5
       - h5py
+
+variables:
+  SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL: True 
 

@@ -1,5 +1,5 @@
 branch_opts:
-  combine_sessions: False #True
+  combine_sessions: True #True
 
   # Defines subjects and dates to use from Simons Experiment
   subjects:

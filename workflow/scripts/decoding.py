@@ -87,12 +87,32 @@ try:
     decoder = snakemake.params['params']['branch']  #TODO why not from wildcard?
     shuffling = ("shuffle" in decoder)
     balancing = True #True #snakemake.params["params"]['balance']    ### Balance cond feats
-    across_time = False
+    across_time = True
     accumulate = False
 
     #Load feature for all conditions
     feat_list = load_feat(snakemake.wildcards["feature"],snakemake.input)
     #print(snakemake.input)
+
+    #TODO remove, just a fix check
+    left, right = [],[]
+    for i,feat in enumerate(feat_list):
+        if "leftResponse" in label_list[i]:
+            left.append(feat)
+            
+        if "rightResponse" in label_list[i]: 
+
+            right.append(feat)
+ 
+ 
+    #print(f"0 {left[0].feature.shape}")  
+    #print(f"1 {left[1].feature.shape}")
+    feat_list = [left[0].concat(balance(left),overwrite=True),right[0].concat(balance(right),overwrite=True)]
+    label_list = ["leftResponse","rightResponse"]
+
+
+    feat_list = [left[0],right[0]]
+    print(feat_list)
 
     if balancing:
         #Balances the number of trials for each condition
@@ -138,36 +158,7 @@ try:
         for thread in threads:
             thread.join()
             print(f"Thread {thread} finished")                  
-        #Old only does chunks
-        '''
-        def chunks(seq, size):
-            return (seq[pos:pos + size] for pos in range(0, len(seq), size))
-
-        for ts in chunks(t_range,threads_n):
-            logger.info(f"Iteration for {ts} started")
-            # execute all tasks in a batch
-            threads = [Thread(target=decoding_iteration, args=(t,feat_list,label_list,decoder,reps,perf_list,model_list,perf_matrix,accumulate,shuffling)) for t in ts]  
-            #start all processes 
-            for thread in threads:       
-                thread.start()        
-            # wait for all processes to complete         
-            for thread in threads:             
-                thread.join()
-                print(f"Thread {thread} finished")
-
-            #This sucks as all timesteps of a chunk need to be completly finished
-        
-        #threads = [Thread(target=decoding_iteration, args=(t,feat_list,label_list,decoder,reps,perf_list,model_list,perf_matrix,accumulate,shuffling)) for p in t_range] 
-
-        #start initial batch of threads
-        #threads_done = 
-        #for thread in active_threads:
-        #    thread.start()
-        #while threads left, start new one
-        #while len(threads)>0:
-
-        #    for 
-        '''      
+ 
     else:
         #Decode all timepoints (without multithreading)
         for t in t_range:

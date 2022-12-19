@@ -1,10 +1,15 @@
 branch_opts:
-  combine_sessions: False
+  combine_sessions: True #True
+  include_individual_sessions: True
 
   # Defines subjects and dates to use from Simons Experiment
   subjects:
       mSM65:
-        - 08-Sep-2018
+        - 08-Sep-2018_old
+      #  - 10-Sep-2018
+      #mSM66:
+        #- 08-Sep-2018
+        #- 10-Sep-2018
 
         
 
