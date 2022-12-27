@@ -24,7 +24,7 @@ from ci_lib.decoding import load_feat, balance, flatten, shuffle, decode
 
 from sklearn.exceptions import ConvergenceWarning
 from warnings import simplefilter
-simplefilter("ignore", category=ConvergenceWarning)
+simplefilter("ignore", category=ConvergenceWarning) #TODO envs don't work with multithreading
 
 threads = []
 next_thread = 0
@@ -94,7 +94,9 @@ try:
     feat_list = load_feat(snakemake.wildcards["feature"],snakemake.input)
     #print(snakemake.input)
 
+    
     #TODO remove, just a fix check
+    '''
     left, right = [],[]
     for i,feat in enumerate(feat_list):
         if "leftResponse" in label_list[i]:
@@ -103,16 +105,12 @@ try:
         if "rightResponse" in label_list[i]: 
 
             right.append(feat)
- 
- 
-    #print(f"0 {left[0].feature.shape}")  
-    #print(f"1 {left[1].feature.shape}")
-    feat_list = [left[0].concat(balance(left),overwrite=True),right[0].concat(balance(right),overwrite=True)]
+     
+    [left[0].concat(balance(left),overwrite=True),right[0].concat(balance(right),overwrite=True)]
     label_list = ["leftResponse","rightResponse"]
-
-
+   
     feat_list = [left[0],right[0]]
-    print(feat_list)
+    '''
 
     if balancing:
         #Balances the number of trials for each condition
@@ -162,6 +160,7 @@ try:
     else:
         #Decode all timepoints (without multithreading)
         for t in t_range:
+
             if accumulate:
                 t = range(t)
 
@@ -182,6 +181,7 @@ try:
             #Track stats
             iterations[t,:] = [model[-1].n_iter_[-1] for model in model_t]
             t1_time[t] = snakemake_tools.stop_timer(t1_train_testing,silent=True)
+            logger.info(f"Timepoint {t} decoded {len(feats_t)} trials with average accuracy {np.mean(perf_t)}")
 
             #Test on other timepoints
             if across_time:

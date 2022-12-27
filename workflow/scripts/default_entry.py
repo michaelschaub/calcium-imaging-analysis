@@ -38,10 +38,10 @@ try:
             root_paths=task_files, reextract=True, logger=logger) #reextraction needs to be done for different set of dates otherwise session will have wrong dims
 
     
-    ###
     
-    #ax =.plot.scatter(0,1)
-    #ax.figure.savefig(snakemake.output["stim_side"])
+    logger.info(f"{sessions}")
+
+    ###
     switch  = []
     same = []
 

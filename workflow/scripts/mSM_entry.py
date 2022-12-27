@@ -111,7 +111,7 @@ try:
         svd = TruncatedSVD(n_components=n_components, random_state=42)
         flat_U = np.concatenate([u.reshape(n_components,width * height) for u in U])
         
-        svd.fit(flat_U)
+        svd.fit(np.nan_to_num(flat_U))
         
         #mean_U = np.mean(np.nan_to_num(U),axis=0)
 

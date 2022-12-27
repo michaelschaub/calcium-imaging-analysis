@@ -17,11 +17,13 @@ try:
     snakemake_tools.save_conf(snakemake, sections=["parcellations","selected_trials","conditions","features"])
     start = snakemake_tools.start_timer()
 
-    feature_dict = { "mean" : Means, "raw" : Raws, "covariance" : Covariances, "correlation" : Correlations, "autocovariance" : AutoCovariances, "autocorrelation" : AutoCorrelations, "moup" :Moup, "cofluctuation":Cofluctuation }
+    feature_dict = { "mean" : Means, "mean-activity": Means, "spot-activity": Means, "raw" : Raws, "covariance" : Covariances, "correlation" : Correlations, "autocovariance" : AutoCovariances, "autocorrelation" : AutoCorrelations, "moup" :Moup, "cofluctuation":Cofluctuation }
 
     # Dictionary for converting parameters from workflow to parameters, that can be passed to feature creators
     param_dict = {
+            "spot-activity" : (lambda p : {"window": 1}),
             "mean"              : (lambda p : {}),
+            "mean-activity" : (lambda p : {"start":int(snakemake.config["phase"][p["phase"]]["start"]), "stop":int(snakemake.config["phase"][p["phase"]]["stop"])}),
             "raw"               : (lambda p : {}),
             "covariance"        : (lambda p : {}),
             "correlation"        : (lambda p : {}),
@@ -39,7 +41,7 @@ try:
     max_comps = params["max_components"] if "max_components" in params else None
     window = params["window"] if "window" in params else None #TODO move param_dict , this will break for all feature that don't have window parameter!!
 
-    feat = feature_dict[feature].create(data, max_comps=max_comps, window=window, **param_dict[feature](params)) #TODO **param_dict doesn't pass anything for empty lambda expression, shouldn't it just pass everyhting + replacement options
+    feat = feature_dict[feature].create(data, max_comps=max_comps, **param_dict[feature](params)) #TODO **param_dict doesn't pass anything for empty lambda expression, shouldn't it just pass everyhting + replacement options
     logger.debug(f"feature shape {feat.feature.shape}")
 
     feat.save(snakemake.output[0])

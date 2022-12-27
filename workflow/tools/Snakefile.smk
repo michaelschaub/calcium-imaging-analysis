@@ -2,6 +2,8 @@ configfile: "config/config.yaml"
 
 from snakemake_tools import create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match, hash_config
 
+
+
 subjects = config["branch_opts"]["subjects"]
 subject_dates = [".".join([subject_id,date]) for subject_id,dates in subjects.items() for date in dates ]
 
@@ -20,8 +22,7 @@ parcellations   = create_parameters( parcells_conf, parcells_static )
 
 selected_trials = config["branch_opts"]["selected_trials"]
 
-
-selected_trials	= config["branch_opts"]["selected_trials"]
+config["phase"] = config["phase_conditions"] #TODO check why phase_conditions is different from this
 
 conditions    = config["branch_opts"]["conditions"]
 trial_conditions, phase_conditions, default_conditions = create_conditions(conditions, config)
@@ -48,6 +49,8 @@ config["loading"] = {"subjects": subjects,
                     "subject_dates"	:subject_dates}
 
 config["output"] = {"processed_dates" :  session_runs}
+
+print(phase_conditions)
 
 config["processing"] = {"combine_sessions":combine_sessions,
                         "trial_conditions" : trial_conditions,

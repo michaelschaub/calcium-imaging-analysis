@@ -12,6 +12,11 @@ from hashlib import sha1
 
 from ci_lib.utils import pickle_protocol
 
+#TODO remove cue_left, cue_right arrays from cells of sessions dataframe, as numpy arrays in dataframe cells result in a mixed datatype which is inefficient for h5
+# Until then filter warning
+import warnings
+warnings.filterwarnings('ignore',category=pd.io.pytables.PerformanceWarning)
+
 CHECK_HASH = True
 
 def reproducable_hash( a, hsh=None, vtype=None ):

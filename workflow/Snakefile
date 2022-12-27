@@ -55,6 +55,11 @@ rule decode:
 		expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/{{decoder}}_performance_matrix.png", session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
         #Decoding perfromance over time across parcellations
         expand(f"results/plots/{{session_run}}/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{feature}}/performance_over_time_parcels.png", session_run = session_runs,  feature =  features, trials= selected_trials),
+        #Decoding perfromance over time across features
+        expand(f"results/plots/{{session_run}}/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{parcellation}}/performance_over_time_features.png", session_run = session_runs,  parcellation = parcellations, trials= selected_trials),
+
+        
+
         #expand(f"results/plots/{{session_run}}/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{feature}}/performance_over_time_parcels.png",
 
 rule load:

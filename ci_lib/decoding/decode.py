@@ -34,7 +34,7 @@ from ci_lib.features import Means, Raws, Covariances, Correlations, AutoCovarian
 def MLR(cores=1):
     return skppl.make_pipeline(skppc.StandardScaler(),
                                 skllm.LogisticRegression(C=10, penalty='l2', multi_class='multinomial',
-                                                            solver='lbfgs', max_iter=500, n_jobs=cores, warm_start=True))
+                                                            solver='lbfgs', max_iter=2000, n_jobs=cores, warm_start=True))
 
 def NN(cores):
     return sklnn.KNeighborsClassifier(n_neighbors=1, algorithm='brute', metric='correlation')
@@ -48,7 +48,7 @@ def RF(cores):
 ### Helper Functions
 
 def load_feat(feat_wildcard,feat_path_list):
-    feature_dict = { "mean" : Means, "raw" : Raws, "covariance" : Covariances, "correlation" : Correlations, "autocovariance" : AutoCovariances, "autocorrelation" : AutoCorrelations, "moup" :Moup, "cofluctuation":Cofluctuation }
+    feature_dict = { "mean" : Means, "mean-activity": Means, "spot-activity": Means, "raw" : Raws, "covariance" : Covariances, "correlation" : Correlations, "autocovariance" : AutoCovariances, "autocorrelation" : AutoCorrelations, "moup" :Moup, "cofluctuation":Cofluctuation }
     feature_class = feature_dict[feat_wildcard.split("_")[0]]
 
     feat_list = []

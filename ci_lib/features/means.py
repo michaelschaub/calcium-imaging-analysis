@@ -19,9 +19,9 @@ class Means(Features):
         self._time_resolved = True #only needed cause it's not properly saved
 
 
-    def create(data, max_comps=None, logger=LOGGER, window=None): 
+    def create(data, max_comps=None, logger=LOGGER, window=None, start=None, stop=None): 
         if window is None:
-            feat = Means(data, feature=calc_means(data.temporals[:, :, :max_comps])[:,np.newaxis,:]) 
+            feat = Means(data, feature=calc_means(data.temporals[:, slice(start,stop), :max_comps])[:,np.newaxis,:])  #TODO start:stop should be supported by window as well
         else:
             trials , phase_length, comps  =   data.temporals.shape
             windows = [range(i,i+window) for i in range(0,phase_length-window)]

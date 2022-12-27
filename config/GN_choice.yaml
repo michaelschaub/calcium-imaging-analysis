@@ -2,60 +2,97 @@ branch_opts:
   combine_sessions: True #Combine sessions (upon loading) & find new spatials with PCA / Combine sessions (after feature calculation) based on original spatials (noisy if spatials are different)
   include_individual_sessions: False #False #Run pipeline on individual sessions and combined sessions / just on combined session
 
+  # Defines subjects and dates to use from Gerions Experiment
+  # All Experiments are from 2021 and the dates are given as month-day_hour
   subjects:
-    #random:
-    #  - random
+    GN06:
+    # Working Datasets
+       - "03-26"
+       - "03-29"
 
-    # Defines subjects and dates to use from Gerions Experiment
-    # GN06:
-    #   - "2021-03-26"
-    #   - "2021-03-29"
-    #   #- "2021-04-01" ###
-    #   #- "2021-03-01"
-    #   #- "2021-03-02"
-    #   #- "2021-03-03"
-    #   #- "2021-03-04"
+    # Only few unsuccesful trials  
+       - "04-01"
+
+    # New Vc.mat missing
+    #  - "01-20"
+    #  - "03-01"
+    #  - "03-02"
+    #  - "03-03"
+    #  - "03-04"
+    #  - "03-05"
+
+    # Old files missing
+    # - "03-25"
 
     GN09:
-    #  #- 2021-04-21_13
-      - 2021-03-26_10
-      - 2021-04-14_16
-      - 2021-04-15_11
-      - 2021-04-15_15
-      - 2021-04-16_15
-      - 2021-04-19_10
-    #  #- 2021-04-20_13
+    # Working Datasets
+      - 03-26_10
+      - 04-14_16
+      - 04-15_15
+      - 04-16_15
+    
+    # Only few unsuccesful trials 
+      - 04-15_11 
+      - 04-19_10 
+
+    # New Vc.mat missing (currently)
+    #  #- 04-20_13
+    #  #- 04-21_13
+
+    # Old files missing
+    # - 03-25_10  
+    # - 03-25_14
+    # - 03-29_11
+    # - 03-29_15
+    # - 04-12_10 
+    # - 04-13_10
 
 
-    #GN08:
-    #- 2021-03-25_11 only new mat
-    #- 2021-03-25_15 only new mat
+    GN08:
+    # Working Datasets
+      - "03-26"
+      - "03-29_13"
 
-    # - 2021-03-26_13-37-18
-    #  - 2021-03-29_13-37-29
-    #  - 2021-03-29_16-33-41
+    # Only few unsuccesful trials 
+      - "03-29_16" 
+
+    ### Old files missing
+    #- 03-25_11 
+    #- 03-25_15 
+
+    # new Vc.mat missing
+    # - "03-01_15"
+    # - "03-02_17"
+    # - "03-03"
+    # - "03-04"
+    # - "03-05"
     
     GN10:
-
-
-    - "2021-03-29_15"
-    - "2021-04-12_09"
-    - "2021-04-13_09"
-    - "2021-04-14_14"
-    - "2021-04-15_10"
-    #- "2021-04-16_12" #Vc and df mismatch
-    - "2021-04-19_09"
-    - "2021-04-20_10"
+    # Working Datasets
+    - "03-29_15"
+    - "04-12_09"
+    - "04-14_14"
     
-    #- "2021-04-21_11"
+    # Only few unsuccesful trials 
+    - "04-13_09" 
+    - "04-15_10" 
+    
+
+    #Vc and df mismatch
+    #- "04-16_12" 
+
+    #- "04-19_09"
+    #- "04-20_10"
+    #- "04-21_11"
+    #- "04-22_10"
     
 
   # Defines conditions for Gerions Experimental Setup
   conditions:
     default:
       phase: all
-      n_targets: all
-      n_distractors: none
+      #n_targets: all
+      #n_distractors: none
       auto_reward: no
       both_spouts: yes
 
@@ -79,40 +116,6 @@ branch_opts:
 
     # noResponse:
     #   responses: no
-
-    #Stimulus Decoder
-    #left:
-    #  sides: left
-    #right:
-    #  sides: right
-
-    #visual:
-    #  modalities: visual
-    #tactile:
-    #  modalities: tactile
-    #multisensory:
-    #  modalities: vistact
-
-    #Stimulus Decoder
-    # left_visual:
-    #   sides: left
-    #   modalities: visual
-    # right_visual:
-    #   sides: right
-    #   modalities: visual
-    # left_tactile:
-    #   sides: left
-    #   modalities: tactile
-    # right_tactile:
-    #   sides: right
-    #   modalities: tactile
-    # left_vistact:
-    #   sides: left
-    #   modalities: vistact
-    # right_vistact:
-    #   sides: right
-    #   modalities: vistact
-
 
 # Defines trial phases for Gerions Experimental Setup
 trial_conditions:

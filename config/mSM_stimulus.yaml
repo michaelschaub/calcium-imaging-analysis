@@ -1,15 +1,15 @@
 branch_opts:
   combine_sessions: True #True
-  include_individual_sessions: True
+  include_individual_sessions: False
 
   # Defines subjects and dates to use from Simons Experiment
   subjects:
       mSM65:
-        - 08-Sep-2018_old
-      #  - 10-Sep-2018
+        - 08-Sep-2018
+        - 10-Sep-2018
       #mSM66:
-        #- 08-Sep-2018
-        #- 10-Sep-2018
+        #- 08-Sep-2018 #VC and df missmatch
+        #- 10-Sep-2018 #VC and df missmatch
 
         
 
@@ -17,19 +17,13 @@ branch_opts:
   conditions:
     default:
       phase: all
-    left_visual:
+
+    left_vis:
       sides: left
       modalities: visual
-    right_visual:
+    right_vis:
       sides: right
       modalities: visual
-    #left_auditory:
-    #  sides: left
-    #  modalities: auditory
-    #right_auditory:
-    #  sides: right
-    #  modalities: auditory
-
     left_aud:
       sides: left
       modalities: auditory
@@ -73,12 +67,12 @@ trial_conditions:
     conds:
       left: 1.0
       right: 2.0
-#TODO plot over time labels from her
+
 phase_conditions:
-  pretrial?:
+  pretrial:
     start:  0
     stop:   90
-  stimulus?:
+  stimulus:
     start:  90
     stop:   141
   all:

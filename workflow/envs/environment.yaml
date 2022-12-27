@@ -5,14 +5,13 @@ channels:
 dependencies:
   - python=3.10
   - pip
-  - numpy
+  - numpy=1.23.3
   - pandas
   - scipy
 
-
   - scikit-learn
 
-  - matplotlib
+  - matplotlib=3.5.3
   - bokeh
 
   - pyyaml
@@ -24,10 +23,9 @@ dependencies:
 
       - networkx
       - Shapely
-      - seaborn
-      
-      # ?
-      - psutil
+      - seaborn==0.12.1
+            
+      - psutil # ?
 
       # Windows workaround for h5py
       - wheel
@@ -36,5 +34,5 @@ dependencies:
       - h5py
 
 variables:
-  SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL: True 
+  SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL: True #While we use old pyMOU
 

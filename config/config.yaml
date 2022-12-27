@@ -6,17 +6,29 @@ branch_opts:
       #ICA:
       #n_comps: [64]
 
-      LocaNMF:
+      #LocaNMF:
 
   selected_trials:
     All:
 
 
   features:
+    mean-activity: #Mean Activity over trial
+      phase: 
+        - all
+        - pretrial
+        - stimulus
+        - delay
+        - response
+        - posttrial
+    spot-activity: #Full Timeseries for each trial
+
     #raw:
     #  max_components : [64]
-    mean:
-      window: [1]
+
+    #mean:
+    #  window: [1]
+
       #optional:
       #  window: [1] #TODO currently needs to be in an array (should support int aswell)
 
@@ -38,9 +50,9 @@ branch_opts:
 
   decoders:
     default:
-      reps: [10]
+      reps: [3]
     MLR:
-    MLRshuffle:
+    #MLRshuffle:
 
     #1NN:
     #LDA:

@@ -176,3 +176,27 @@ rule plot_performances_parcellations_over_time:
         "../envs/environment.yaml"
     script:
         "../scripts/plot_performance_time.py"
+
+rule plot_performances_features_over_time:
+    input:
+        perf = [f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{feature}/{decoder}/decoder_perf.pkl"
+         for decoder in config["decoders"]
+         for feature in config['features']]
+    output:
+        f"results/plots/{{subject_dates}}/{{trials}}/Decoding/{'.'.join(config['trial_conditions'])}/{{parcellation}}/performance_over_time_features.png",
+        f"results/plots/{{subject_dates}}/{{trials}}/Decoding/{'.'.join(config['trial_conditions'])}/{{parcellation}}/performance_over_time_features.pkl",
+    params:
+        conds=list(config['trial_conditions']),
+        decoders=config["decoders"],
+        features=list(config['features']), #plot_feature_labels,
+    log:
+        f"results/plots/{{subject_dates}}/{{trials}}/Decoding/{'.'.join(config['trial_conditions'])}/{{parcellation}}/plot_performances_over_time_features.log",
+    conda:
+        "../envs/environment.yaml"
+    script:
+        "../scripts/plot_performance_time.py"
+
+rule plot_conf_matrix:
+    input:
+
+    output:
