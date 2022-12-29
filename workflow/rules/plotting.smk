@@ -198,5 +198,15 @@ rule plot_performances_features_over_time:
 
 rule plot_conf_matrix:
     input:
-
+        conf_matrix = f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/confusion_matrix.pkl",
+        norm_conf_matrix = f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/norm_confusion_matrix.pkl",
+        class_labels = f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/class_labels.pkl",
     output:
+        f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/{{decoder}}_confusion_matrix.pdf",
+        f"results/plots/{{subject_dates}}/{{trials}}/Decoding/{'.'.join(config['trial_conditions'])}/{{parcellation}}/{{decoder}}/{{feature}}_confusion_matrix.pdf",
+    log:
+        f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/{{decoder}}_confusion_matrix.log",
+    conda:
+        "../envs/environment.yaml"
+    script:
+        "../scripts/plot_confusion_matrix.py"

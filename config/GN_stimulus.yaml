@@ -101,22 +101,26 @@ branch_opts:
     #  modalities: vistact
 
     #Stimulus Decoder
-    left_visual:
+    L-V:
       sides: left
       modalities: visual
-    right_visual:
-      sides: right
-      modalities: visual
-    left_tactile:
+
+    L-T:
       sides: left
       modalities: tactile
-    right_tactile:
-      sides: right
-      modalities: tactile
-    left_vistact:
+
+    L-VT:
       sides: left
       modalities: vistact
-    right_vistact:
+
+    R-V:
+      sides: right
+      modalities: visual
+    
+    R-T:
+      sides: right
+      modalities: tactile
+    R-VT:
       sides: right
       modalities: vistact
 

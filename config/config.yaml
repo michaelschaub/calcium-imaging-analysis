@@ -6,7 +6,7 @@ branch_opts:
       #ICA:
       #n_comps: [64]
 
-      #LocaNMF:
+      LocaNMF:
 
   selected_trials:
     All:
@@ -21,7 +21,7 @@ branch_opts:
         - delay
         - response
         - posttrial
-    spot-activity: #Full Timeseries for each trial
+    #spot-activity: #Full Timeseries for each trial
 
     #raw:
     #  max_components : [64]
@@ -50,7 +50,7 @@ branch_opts:
 
   decoders:
     default:
-      reps: [3]
+      reps: [10]
     MLR:
     #MLRshuffle:
 

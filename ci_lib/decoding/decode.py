@@ -83,7 +83,7 @@ def flatten(feat_list,label_list, timepoints = slice(None)):
 
 def confusion_matrix(x,y_true,DecoderObject, label_order):
     y_pred = DecoderObject.predict(x)
-    return metrics.confusion_matrix(y_true,y_pred,labels=label_order)
+    return metrics.confusion_matrix(y_true,y_pred,labels=label_order,normalize="true"), metrics.confusion_matrix(y_true,y_pred,labels=label_order)
 
 
 '''
@@ -143,6 +143,7 @@ def decode(data, labels, decoder, reps, label_order=None,cores=1):
     cv_split = cv.split(data, labels)
     perf = np.zeros((reps),dtype=float)
     trained_decoders = np.zeros((reps),dtype=object) 
+    norm_confusion = np.zeros((reps,len(label_order),len(label_order)),dtype=float)
     confusion = np.zeros((reps,len(label_order),len(label_order)),dtype=float)
 
     #Select Decoder
@@ -164,17 +165,19 @@ def decode(data, labels, decoder, reps, label_order=None,cores=1):
                 model.fit(data[train_index,:],labels[train_index])
             else:
                 #Otherwise its assumed to be an array of already trained decoders
-                model = decoder[i]
-                
+                model = decoder[i]  
+            
+
             perf[i] = model.score(data[test_index,:],labels[test_index])
-            confusion[i,:,:] = confusion_matrix(data[test_index,:],labels[test_index],model,label_order)
+            norm_confusion[i,:,:], confusion[i,:,:] = confusion_matrix(data[test_index,:],labels[test_index],model,label_order)
+
+
             trained_decoders[i] = model
     except Exception as Err:
         print("Error during training and testing")
         print(Err)
 
-    
-    return perf, confusion, trained_decoders
+    return perf,  confusion, norm_confusion, trained_decoders
 
 
     

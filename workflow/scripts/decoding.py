@@ -24,7 +24,7 @@ from ci_lib.decoding import load_feat, balance, flatten, shuffle, decode
 
 from sklearn.exceptions import ConvergenceWarning
 from warnings import simplefilter
-simplefilter("ignore", category=ConvergenceWarning) #TODO envs don't work with multithreading
+simplefilter("ignore", category=ConvergenceWarning) #TODO env vars don't work with multithreading
 
 threads = []
 next_thread = 0
@@ -126,14 +126,19 @@ try:
         t_range = range(feat_list[0].timepoints)
 
     #Decoding results
-    perf_list = np.zeros((len(list(t_range)),reps))
-    model_list = np.zeros((len(list(t_range)),reps),dtype=object)
-    perf_matrix = np.zeros((len(list(t_range)),len(list(t_range)),reps))
+    n_timepoints = len(list(t_range))
+    n_classes = len(feat_list)
+
+    perf_list = np.zeros((n_timepoints,reps))
+    model_list = np.zeros((n_timepoints,reps),dtype=object)
+    perf_matrix = np.zeros((n_timepoints,n_timepoints,reps))
+    conf_matrix = np.zeros((n_timepoints,reps,n_classes,n_classes))
+    norm_conf_matrix = np.zeros((n_timepoints,reps,n_classes,n_classes))
 
     #Performance stats
-    iterations = np.zeros((len(list(t_range)),reps))
-    t1_time = np.zeros((len(list(t_range))))
-    t2_time = np.zeros((len(list(t_range))))
+    iterations = np.zeros((n_timepoints,reps))
+    t1_time = np.zeros((n_timepoints))
+    t2_time = np.zeros((n_timepoints))
 
     #Multithreading
     cores = snakemake.threads
@@ -174,9 +179,12 @@ try:
             t1_train_testing = snakemake_tools.start_timer()
 
             #Decode
-            perf_t, confusion_t, model_t = decode(feats_t, labels_t,decoder,reps,label_order= label_list,cores=cores)
+            perf_t, confusion_t, norm_confusion_t, model_t = decode(feats_t, labels_t,decoder,reps,label_order= label_list,cores=cores)
             perf_list[t,:] = perf_t
+            conf_matrix[t,:,:,:] = confusion_t
+            norm_conf_matrix[t,:,:,:] = norm_confusion_t
             model_list[t]= model_t
+
 
             #Track stats
             iterations[t,:] = [model[-1].n_iter_[-1] for model in model_t]
@@ -188,15 +196,16 @@ try:
                 t2_testing = snakemake_tools.start_timer()
                 for t2 in t_range:
                     feats_t2, labels_t2 = flatten(feat_list,label_list,t2)
-                    perf_matrix[t,t2,:], confusion_t_not_used, _ = decode(feats_t2, labels_t2,model_t,reps,label_order= label_list,cores=cores) #TODo could be optimizied (run only once for each t2 on all t1)
+                    perf_matrix[t,t2,:], _ , _ , _ = decode(feats_t2, labels_t2,model_t,reps,label_order= label_list,cores=cores) #TODo could be optimizied (run only once for each t2 on all t1)
 
                 t2_time[t] = snakemake_tools.stop_timer(t2_testing,silent=True)
 
-    logger.info(f"Finished {len(list(t_range))} timepoints with {reps} repetitions")
+    logger.info(f"Finished {n_timepoints} timepoints with {reps} repetitions")
     logger.info(f"Training & Testing each timepoints on average: {np.mean(t1_time)} s")
     logger.info(f"Testing on others timepoints on average: {np.mean(t2_time)} s")
 
     #Save results
+    # TODO replace with better file format
     with open(snakemake.output[1], 'wb') as f:
         pickle.dump(perf_list, f)
 
@@ -205,6 +214,15 @@ try:
     
     with open(snakemake.output[2], 'wb') as f:
         pickle.dump(perf_matrix, f)
+
+    with open(snakemake.output["conf_m"], 'wb') as f:
+        pickle.dump(conf_matrix, f)
+
+    with open(snakemake.output["norm_conf_m"], 'wb') as f:
+        pickle.dump(norm_conf_matrix, f)
+
+    with open(snakemake.output["labels"], 'wb') as f:
+        pickle.dump(label_list, f) 
 
     snakemake_tools.stop_timer(start, logger=logger)
 except Exception:

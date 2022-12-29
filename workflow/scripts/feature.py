@@ -17,22 +17,32 @@ try:
     snakemake_tools.save_conf(snakemake, sections=["parcellations","selected_trials","conditions","features"])
     start = snakemake_tools.start_timer()
 
-    feature_dict = { "mean" : Means, "mean-activity": Means, "spot-activity": Means, "raw" : Raws, "covariance" : Covariances, "correlation" : Correlations, "autocovariance" : AutoCovariances, "autocorrelation" : AutoCorrelations, "moup" :Moup, "cofluctuation":Cofluctuation }
+    #TODO better solutions for synonyms
+    feature_dict = { "mean" : Means, "mean-activity": Means, "spot-activity": Means, "raw" : Raws, "covariance" : Covariances, "correlation" : Correlations, "autocovariance" : AutoCovariances, "autocorrelation" : AutoCorrelations, "moup" :Moup, "cofluctuation":Cofluctuation, "dFC": Cofluctuation, "FC": Cofluctuation }
 
     # Dictionary for converting parameters from workflow to parameters, that can be passed to feature creators
     param_dict = {
+            #Activity 
             "spot-activity" : (lambda p : {"window": 1}),
-            "mean"              : (lambda p : {}),
             "mean-activity" : (lambda p : {"start":int(snakemake.config["phase"][p["phase"]]["start"]), "stop":int(snakemake.config["phase"][p["phase"]]["stop"])}),
-            "raw"               : (lambda p : {}),
+
+            #Functional Connectivity
+            "cofluctuation": (lambda p : {}), 
+            "dFC": (lambda p : {}),
+            "FC": (lambda p : {"start":int(snakemake.config["phase"][p["phase"]]["start"]), "stop":int(snakemake.config["phase"][p["phase"]]["stop"]),"mean":True}),
+
+            #Effective Connectivity
+            "moup": (lambda p : {"timelag": p["timelags"]}),
+            
+            #Legacy
+            #"mean"              : (lambda p : {}), #TODO remove
+            #"raw"               : (lambda p : {}), #TODO remove
             "covariance"        : (lambda p : {}),
             "correlation"        : (lambda p : {}),
             # convert parameter "max_timelag" to range up to that timelag, if "max_timelag" does not exist, pass "timelags" (iterable)
             "autocovariance"    : (lambda p : { "timelags" : range(1,p["max_timelag"]+1) if "max_timelag" in p else p["timelags"] }), #TODO do we actually need ranges of timelags for a single feat?
             "autocorrelation"    : (lambda p : { "timelags" : range(1,p["max_timelag"]+1) if "max_timelag" in p else p["timelags"] }),
-            # no conversion needed for Moup
-            "moup"              : (lambda p : {"timelag": p["timelags"]}),
-            "cofluctuation": (lambda p : {})}
+            }
 
     feature = snakemake.params["params"]['branch']
     params = snakemake.params["params"]

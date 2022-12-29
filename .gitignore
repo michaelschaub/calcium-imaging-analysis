@@ -20,5 +20,4 @@ report/
 
 # Output files form nohup etc.
 *.out
-config/config.yaml
 .vscode/settings.json

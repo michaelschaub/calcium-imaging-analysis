@@ -34,23 +34,19 @@ class Cofluctuation(Features):
         self._time_resolved = True
         self._include_diagonal = include_diagonal
 
-    def create(data, max_comps=None, include_diagonal=True, logger=LOGGER,window=None):
-        #zscores_over_time = scipy.stats.zscore(data.temporals[:, :, :max_comps],axis=1) 
-        zscores_over_time = data.temporals_z_scored[:, :, :max_comps]
+    def create(data, max_comps=None, include_diagonal=True, logger=LOGGER,window=None,mean=False,start=None,stop=None):
+        zscores_over_time = data.temporals_z_scored[:,  slice(start,stop), :max_comps]
 
         trials, frames, comps = zscores_over_time.shape
         co_fluct = np.zeros((trials, frames, comps, comps))
         co_fluct = np.einsum('...n,...m->...nm',zscores_over_time,zscores_over_time)
 
-        # [np.matmul(f,np.transpose(f)) for f in t] for t in zscores_over_time]
-            
-        #co_fluct_slow = np.array([[i*j for j in b.T]  for i in a.T])
-        #co_fluct = zscores_over_time[:,:,:,None] * zscores_over_time[:,:,None,:]
-
-        #np.einsum('ijk,ijl->ijkl',zscores_over_time,zscores_over_time)
-        #np.tensordot(zscores_over_time,np.transpose(zscores_over_time),axis=)
-
         rss = np.sqrt(np.sum(co_fluct*co_fluct,axis=(2,3)))
+        logger.info(f"RSS: {rss}")
+
+        if mean:
+            #Take mean over all frames from start to stop
+            co_fluct = np.mean(co_fluct,axis=1)[:,np.newaxis,:]
 
 
         return Cofluctuation(data, co_fluct,include_diagonal=include_diagonal) #, )

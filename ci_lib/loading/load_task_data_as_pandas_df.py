@@ -92,15 +92,14 @@ def load_individual_session_data(date_folder, mouse_id, logger=None):
                 # h5f['cues_left_visual']
                 # h5f['cues_left_tactile']
             else:
+                temp_data['cues_left'].append(np.nan)
+                temp_data['cues_right'].append(np.nan)
                 
-                temp_data['cues_left'].append(np.int8(np.zeros((6),dtype=np.int8)))
-                temp_data['cues_right'].append(np.int8(np.zeros((6),dtype=np.int8)))
+                temp_data['cues_left_vis'].append(np.nan)
+                temp_data['cues_right_vis'].append(np.nan)
 
-                temp_data['cues_left_vis'].append(np.int8(np.zeros((6),dtype=np.int8)))
-                temp_data['cues_right_vis'].append(np.int8(np.zeros((6),dtype=np.int8)))
-
-                temp_data['cues_left_tact'].append(np.int8(np.zeros((6),dtype=np.int8)))
-                temp_data['cues_right_tact'].append(np.int8(np.zeros((6),dtype=np.int8)))
+                temp_data['cues_left_tact'].append(np.nan)
+                temp_data['cues_right_tact'].append(np.nan)
             #
 
             if 'control_condition_id' in h5f.keys():
