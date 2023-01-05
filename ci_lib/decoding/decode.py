@@ -48,7 +48,7 @@ def RF(cores):
 ### Helper Functions
 
 def load_feat(feat_wildcard,feat_path_list):
-    feature_dict = { "mean" : Means, "mean-activity": Means, "spot-activity": Means, "raw" : Raws, "covariance" : Covariances, "correlation" : Correlations, "autocovariance" : AutoCovariances, "autocorrelation" : AutoCorrelations, "moup" :Moup, "cofluctuation":Cofluctuation }
+    feature_dict = { "mean" : Means, "mean-activity": Means, "spot-activity": Means, "full-activity":Means, "raw" : Raws, "covariance" : Covariances, "correlation" : Correlations, "autocovariance" : AutoCovariances, "autocorrelation" : AutoCorrelations, "moup" :Moup, "cofluctuation":Cofluctuation, "dFC": Cofluctuation, "FC": Cofluctuation, "full-dFC": Cofluctuation }
     feature_class = feature_dict[feat_wildcard.split("_")[0]]
 
     feat_list = []

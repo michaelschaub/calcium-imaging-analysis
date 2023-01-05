@@ -2,10 +2,10 @@ import numpy as np
 
 from ci_lib import Data, DecompData
 from ci_lib.loading import reproducable_hash, load_h5, save_h5
-#from ci_lib.networks import MOU #from pymou import MOU
+from ci_lib.networks import MOU #from pymou import MOU
 from ci_lib.plotting import plot_connectivity_matrix
 
-from pymou  import MOU
+#from pymou  import MOU #TODO 
 
 import pathlib
 from enum import Enum
@@ -65,8 +65,8 @@ class Moup(Features):
         self._savefile = file
         self._time_resolved = time_resolved
 
-    def create(data, max_comps=None, timelag=None, label=None, logger=LOGGER):
-        mou_ests = fit_moup(data.temporals[:, :, :max_comps], timelag if timelag>0 else None, label, logger=logger)
+    def create(data, max_comps=None, timelag=None, label=None, start=None,stop=None,logger=LOGGER):
+        mou_ests = fit_moup(data.temporals[:, slice(start,stop), :max_comps], timelag if timelag>0 else None, label, logger=logger)
         feature = np.asarray([[mou_est.get_J()] for mou_est in mou_ests]) #TODO remove unnecessary additional dimension trials x 1 (!) x w x h, was done to fit autocov/cor but never needed
 
         for i, J in enumerate(feature[:,0,:,:]):

@@ -118,13 +118,13 @@ try:
     
     #print(feat_list[0])
     #print(feat_list[0].feature)
-    if feat_list[0].timepoints is None:
+    if feat_list[0].timepoints is None or "full" in snakemake.wildcards["feature"]: #TODO full matching just a workaround, save new full property of feature class 
         #1 Iteration for full feature (Timepoint = None)
         t_range = [None]
     else:
         #t Iterations for every timepoint t
         t_range = range(feat_list[0].timepoints)
-
+    logger.info(f"{t_range}")
     #Decoding results
     n_timepoints = len(list(t_range))
     n_classes = len(feat_list)

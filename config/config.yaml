@@ -1,27 +1,76 @@
 branch_opts:
   parcellations:
+      SVD:
+      LocaNMF:
       anatomical:
       #  ROI: [['VISp-R,VISrl-R,SSp-bfd-R,MOs-R,MOs-L,SSp-bfd-L,VISrl-L,VISp-L'],[]] #FRP-R,MOp-R'],["VIS,SS"]]
-      SVD:
+      
       #ICA:
       #n_comps: [64]
 
-      LocaNMF:
+      
 
   selected_trials:
     All:
 
 
   features:
+
+    spot-activity: #Full Timeseries for each trial
+      #phase: 
+        #- all
+        #- pretrial
+        #- stimulus
+        #- response
+        
+        #- stim1
+        #- inter_stim
+        #- stim2
+        #- delay
+        #- response
+
+    full-activity: #Full Timeseries for each trial
+      phase: 
+        #- all
+        #- pretrial
+        - stimulus
+
     mean-activity: #Mean Activity over trial
       phase: 
-        - all
-        - pretrial
+        #- all
+        #- pretrial
         - stimulus
-        - delay
-        - response
-        - posttrial
-    #spot-activity: #Full Timeseries for each trial
+        #- stim1
+        #- inter_stim
+        #- stim2
+        #- delay
+        #- response
+        #- posttrial
+
+    dFC:
+      #phase:
+      #  - pretrial
+      #  - stimulus
+      #  - response
+
+    full-dFC:
+      phase:
+        - stimulus
+    
+    FC:
+      phase:
+    #    - all
+    #    - pretrial
+        - stimulus
+    #    - "?" 
+        #- delay
+        #- response
+        #- posttrial
+
+
+    moup:
+      phase:
+        - stimulus
 
     #raw:
     #  max_components : [64]
@@ -40,17 +89,17 @@ branch_opts:
       #  thresh:
       #    - 0.5
     #  max_components : [64]
-    #autocovariance:
-    #  timelags: [[1]] #,[1]]
-      #optional:
-      #  thresh:
-      #    - 0.5
-    
-    #cofluctuation:
+
+    autocorrelation:
+      timelags: [[1]] #,[1]]
+      phase:
+        - stimulus
+
+
 
   decoders:
     default:
-      reps: [10]
+      reps: [5]
     MLR:
     #MLRshuffle:
 

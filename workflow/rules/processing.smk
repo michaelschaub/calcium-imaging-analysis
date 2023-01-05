@@ -109,7 +109,7 @@ rule feature_calculation:
             subcategory="{feature}",
             labels={"Condition": "{cond}", "Subject/Date": "{mouse_dates}", "Type": "Data"}),
         export_plot = report(
-            f"results/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.png",
+            f"results/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.pdf",
             caption="../report/alignment.rst",
             category="4 Feature Calculation",
             subcategory="{feature}",
@@ -150,7 +150,7 @@ rule feature_concat:
             subcategory="{feature}",
             labels={"Condition": "{cond}", "Subject/Date": "All", "Type": "Data"}),
         export_plot = report(
-            f"results/{{concated_sessions}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.png",
+            f"results/{{concated_sessions}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.pdf",
             caption="../report/alignment.rst",
             category="4 Feature Calculation",
             subcategory="{feature}",
@@ -187,7 +187,7 @@ rule thresholding:
             labels={"Threshold": "{thresh}", "Condition": "{cond}", "Type": "Data"}),
 
         export_plot = report(
-            f"{{data_dir}}/{{cond}}/{{feature}}_thresh~{{thresh}}/features_thresh.png",
+            f"{{data_dir}}/{{cond}}/{{feature}}_thresh~{{thresh}}/features_thresh.pdf",
             caption="../report/alignment.rst",
             category="5 Thresholding",
             subcategory="{feature}",

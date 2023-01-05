@@ -35,6 +35,7 @@ try:
 
     #Plotting
     sns.set(rc={'figure.figsize':(15,7.5)})
+    sns.set_style("whitegrid")
 
     #Plotting across parcellations
     if 'parcellations' in snakemake.params.keys():
@@ -51,7 +52,9 @@ try:
 
         hue=accuracy_df[['parcellation', 'decoder']].apply(lambda row: f"{row.parcellation}{' (Shuffle)' if 'shuffle' in row.decoder else ''}", axis=1)
         hue.name = 'Parcellation'
-        accuracy_over_time_plot  = sns.lineplot(data=accuracy_df, x="t", y="accuracy",hue=hue,errorbar=('pi',90))
+
+        #palette = 
+        accuracy_over_time_plot  = sns.lineplot(data=accuracy_df, x="t", y="accuracy",hue=hue,errorbar=('pi',90),palette='deep', err_kws={"alpha":0.25})
 
     #Plotting across features (potentially diff dims!)
     elif "features" in snakemake.params.keys():
@@ -65,6 +68,7 @@ try:
             for i,feat in enumerate(features):
                 print(feat)
                 print(len(perf[j][i]))
+                print(perf[j][i][0])
                 if "phase" in snakemake.config["features"][feat].keys():
                     runs_n = len(perf[j][i][0])
                     total_timesteps = int(snakemake.config["phase"]["all"]["stop"]) - int(snakemake.config["phase"]["all"]["start"]) - 1 

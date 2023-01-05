@@ -4,12 +4,59 @@ branch_opts:
 
   # Defines subjects and dates to use from Simons Experiment
   subjects:
+      #mSM30:
+      #  - 10-Oct-2017
+      #  - 12-Oct-2017
+      
+      #mSM34:
+      #  - 01-Dec-2017
+      #  - 02-Dec-2017  
+      
+      #mSM36:
+      #  - 05-Dec-2017
+      #  - 07-Dec-2017 
+      
+      #mSM43:
+      #  - 23-Nov-2017
+      #  - 21-Nov-2017
+      
+      #mSM44:
+      #  - 21-Nov-2017
+      #  - 29-Nov-2017
+
+      #mSM46:
+      #  - 01-Dec-2017
+      #  - 13-Jan-2018
+      
+      mSM49:
+        - 12-Mar-2018
+        - 19-Dec-2017
+
+      mSM53:
+        - 14-Mar-2018
+        - 21-Mar-2018
+      
+      mSM57:
+        - 08-Feb-2018
+        - 02-Feb-2018
+
+      mSM56:
+        - 27-Feb-2018
+        - 22-Feb-2018
+
+      mSM55:
+        - 16-Feb-2018
+        - 13-Feb-2018
+
       mSM65:
         - 08-Sep-2018
         - 10-Sep-2018
-      #mSM66:
-        #- 08-Sep-2018 #VC and df missmatch
-        #- 10-Sep-2018 #VC and df missmatch
+
+      mSM66:
+        - 08-Sep-2018
+        - 10-Sep-2018
+      
+
 
         
 

@@ -55,6 +55,7 @@ class AutoCovariances(Features):
             covs = np.copy(covs._feature)
 
         feature = calc_acovs(data.temporals[:, :, :max_comps], means, covs, timelags, label)
+
         feat = AutoCovariances(data, feature, include_diagonal= include_diagonal)
         return feat
 

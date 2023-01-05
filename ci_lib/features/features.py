@@ -19,11 +19,14 @@ class Feature_Type(Enum):
         return self.value == other.value
 
 class Features:
-    def __init__(self, data, feature, file=None, time_resolved=False):
+    def __init__(self, data, feature, file=None, time_resolved=False, full = False):
         self.data = data
         self._feature = feature
         self._savefile = file
+
         self._time_resolved = time_resolved
+        self._full = full
+
 
 
 
@@ -71,8 +74,8 @@ class Features:
 
     @property
     def timepoints(self):
-        ''' Returns number of frames, the second dimension of the feature array, if it is time resolved, otherwise None'''
-        if self._time_resolved:
+        ''' Returns number of frames, the second dimension of the feature array, if it is time resolved and not full (decode timepoints together), otherwise None'''
+        if self._time_resolved and not self._full:
             return self._feature.shape[1]
         else:
             return None

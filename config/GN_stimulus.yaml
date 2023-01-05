@@ -7,13 +7,13 @@ branch_opts:
     #  - random
 
     # Defines subjects and dates to use from Gerions Experiment
-    GN06:
+    ##GN06:
     # Working Datasets
-       - "03-26"
-       - "03-29"
+    ##   - "03-26"
+    #   - "03-29"
 
     # Only few unsuccesful trials  
-       - "04-01"
+    ##   - "04-01"
 
     # New Vc.mat missing
     #  - "01-20"
@@ -41,13 +41,13 @@ branch_opts:
     #  #- 04-20_13
     #  #- 04-21_13
 
-    GN08:
+    ##GN08:
     # Working Datasets
-      - "03-26"
-      - "03-29_13"
+    ##  - "03-26"
+    ##  - "03-29_13"
 
     # Only few unsuccesful trials 
-      - "03-29_16" 
+    ##  - "03-29_16" 
 
     ### Old files missing
     #- 03-25_11 
@@ -60,15 +60,15 @@ branch_opts:
     # - "03-04"
     # - "03-05"
     
-    GN10:
+    ##GN10:
     # Working Datasets
-    - "03-29_15"
-    - "04-12_09"
-    - "04-14_14"
+    ##- "03-29_15"
+    ##- "04-12_09"
+    ##- "04-14_14"
     
     # Only few unsuccesful trials 
-    - "04-13_09" 
-    - "04-15_10" 
+    ##- "04-13_09" 
+    ##- "04-15_10" 
     
     #Vc and df mismatch
     #- "04-16_12" 
@@ -166,18 +166,18 @@ phase_conditions:
   pretrial:
     start: 0
     stop:  30
-  posttrial:
-    start: 112.5
-    stop: 134
   stimulus:
     start:  30
     stop:   75
-  delay:
-    start: 75
-    stop: 82.5
+  #delay:
+  #  start: 75
+  #  stop: 82.5
   response:
     start: 82.5
     stop: 112.5
+  #posttrial:
+  #  start: 112.5
+  #  stop: 134
   all:
     start: 0
     stop: 134

@@ -76,9 +76,9 @@ rule load_GN:
         unpack(sessions_input)
     output:
         "results/{subject_dates}/SVD/data.h5",
-        align_plot = report("results/{subject_dates}/SVD/alignment.png", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "GN", "Subjects":"{subject_dates}"}),
+        align_plot = report("results/{subject_dates}/SVD/alignment.pdf", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "GN", "Subjects":"{subject_dates}"}),
         config = "results/{subject_dates}/SVD/conf.yaml",
-        stim_side = report("results/{subject_dates}/SVD/stim_side.png", caption="../report/alignment.rst", category="0 Loading", labels={"Dataset": "GN", "Subjects":"{subject_dates}"})
+        stim_side = report("results/{subject_dates}/SVD/stim_side.pdf", caption="../report/alignment.rst", category="0 Loading", labels={"Dataset": "GN", "Subjects":"{subject_dates}"})
     params:
         sessions_params # so we are using this one and we can actually use a dict to make it even comfier
     wildcard_constraints:
@@ -107,7 +107,7 @@ rule load_mSM:
         #                    for subject_id,dates in config["subjects"].items() for date in dates],
     output:
         "results/{subject_dates}/SVD/data.h5",
-        align_plot = report("results/{subject_dates}/SVD/alignment.png", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "mSM", "Subjects":", ".join(config["subjects"])}),
+        align_plot = report("results/{subject_dates}/SVD/alignment.pdf", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "mSM", "Subjects":", ".join(config["subjects"])}),
         config = f"results/{{subject_dates}}/SVD/conf.yaml",
     params:
         sessions_params_simon

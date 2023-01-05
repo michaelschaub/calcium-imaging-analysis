@@ -3,6 +3,7 @@ import numpy as np
 import sys
 
 
+
 import logging
 LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +68,13 @@ def locaNMF(DecompDataObject, atlas_path, logger=LOGGER,
     labels = np.asarray(atlas_file['areaLabels_wSide'],dtype=str)
 
     temporals = DecompDataObject.temporals_flat
-    spatials = np.moveaxis(DecompDataObject.spatials, 0, -1 )
+    spatials = np.moveaxis(np.nan_to_num(DecompDataObject.spatials), 0, -1 )
+    
+    #TODO remove after testing
+    #Testing if adding random noise fixes error on empty areas (with no variation)
+    print(f"Before {np.var(spatials,axis=0)}")
+    spatials = spatials + np.random.rand(*spatials.shape) * 16 * np.finfo(np.float32).eps 
+    print(f"After {np.var(spatials,axis=0)}")
 
     width = min(DecompDataObject.n_xaxis, brainmask.shape[0])
     height = min(DecompDataObject.n_yaxis, brainmask.shape[1])
