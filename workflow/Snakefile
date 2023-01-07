@@ -61,6 +61,8 @@ rule decode:
         expand(f"results/plots/{{session_run}}/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{parcellation}}/performance_over_time_features.pdf", session_run = session_runs,  parcellation = parcellations, trials= selected_trials),
         #Confusion Matrix
         expand(f"results/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/{{decoder}}_confusion_matrix.pdf",session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
+        #Plot coefs
+        expand(f"results/plots/{{session_run}}/{{trials}}/{{parcellation}}/Decoding/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/model_coef.pdf",session_run = session_runs,  parcellation = parcellations, trials= selected_trials, feature =  features, decoder=decoders),
 
         
 

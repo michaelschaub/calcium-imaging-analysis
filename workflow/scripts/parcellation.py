@@ -23,7 +23,7 @@ try:
         svd = DecompData.load(snakemake.input[0])
         ### Process
         anatomical = anatomical_parcellation(svd, atlas_path=snakemake.input["atlas"], logger=logger, **params)
-        ### Save
+        ### Save 
         anatomical.save(snakemake.output[0])
 
     def locaNMF(params):

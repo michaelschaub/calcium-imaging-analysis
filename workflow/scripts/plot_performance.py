@@ -51,9 +51,9 @@ try:
 
     plt.savefig( snakemake.output[0] )
 
-
-    with open(snakemake.output[1], 'wb') as f:
-        pickle.dump(fig, f)
+    
+    #with open(snakemake.output[1], 'wb') as f:
+    #    pickle.dump(fig, f)
 
     snakemake_tools.stop_timer(timer_start, logger=logger)
 except Exception:

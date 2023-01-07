@@ -88,7 +88,11 @@ try:
         logger.debug(f"{U[-1].shape}")
         logger.debug(f"{Vc[-1].shape}")
         n_trials, frames, n_components = Vc[-1].shape
-        _, width, height = U[-1].shape
+        U[-1] = U[-1][:n_components,:,:]      
+        n_components, width, height = U[-1].shape
+        #TODO new data from simon has 500 spatial components, but only 200 in temporals/Vc.mat
+        #
+
         frameCnt = frames * np.ones((n_trials),dtype=int)
         logger.info(
             f"Dimensions: n_trials={n_trials}, frames per trial={frames}, n_components={n_components}, width={width}, height={height}")

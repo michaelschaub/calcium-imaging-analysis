@@ -21,7 +21,7 @@ try:
 
     ### Process (Plot)
     ### Save
-    draw_neural_activity(frames=np.sum(data._spats, axis=0),path=snakemake.output['combined'],plt_title=snakemake.wildcards['parcellation'],subfig_titles="",overlay=True,logger=logger)
+    draw_neural_activity(frames=np.sum(data._spats, axis=0),path=snakemake.output['combined'],plt_title=snakemake.wildcards['parcellation'],subfig_titles="",overlay=True,outlined=True, logger=logger)
 
     os.mkdir(Path(snakemake.output['single']))
     for i in range(min(len(data._spats),snakemake.params['n'])):

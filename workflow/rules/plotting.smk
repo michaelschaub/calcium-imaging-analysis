@@ -35,13 +35,30 @@ rule plot_parcels:
     script:
         "../scripts/plot_parcels.py"
 
+rule plot_model_coef:
+    input:
+        model  = f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/decoder_model.pkl",
+        parcel = f"results/{{subject_dates}}/{{parcellation}}/data.h5"
+    output:
+        coef_plot = f"results/plots/{{subject_dates}}/{{trials}}/{{parcellation}}/Decoding/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/model_coef.pdf"
+    params:
+        conds=list(config['trial_conditions']),
+    log:
+        f"results/plots/{{subject_dates}}/{{trials}}/{{parcellation}}/Decoding/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/decoder_model.log",
+    conda:
+        "../envs/environment.yaml"
+    script:
+        "../scripts/plot_model_coef.py"
+
+
 rule plot_performance:
     input:
         perf   = [f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{decoder}/decoder_perf.pkl" for decoder in config["decoders"]],
         config = [f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{decoder}/conf.yaml" for decoder in config["decoders"]],
     output:
         f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/performance.pdf",
-        f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/performance.pkl",
+        
+        #f"results/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/performance.pkl",
     params:
         conds=list(config['trial_conditions']),
         decoders=config["decoders"],

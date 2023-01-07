@@ -66,8 +66,12 @@ try:
     group_feats = [activity_df,FC_df,EC_df] 
     rest_df = pd.concat([perfs_df]+group_feats).drop_duplicates(keep=False)
     group_feats.append(rest_df)
-
     group_labels = ["Activity","Functional Connectivity","Effective Connectivity","Other"]
+
+    for i,df in enumerate(group_feats):
+        if df.empty:
+            del group_feats[i]
+            del group_labels[i]
 
     group_n = [len(df['feature'].unique()) for df in group_feats]
     
