@@ -19,16 +19,17 @@ class Means(Features):
         self._time_resolved = True #only needed cause it's not properly saved
 
 
-    def create(data, max_comps=None, logger=LOGGER, window=None, start=None, stop=None,full=False): 
+    def create(data, max_comps=None, logger=LOGGER, window=None, start=None, stop=None,full=False,z_scored=True): #TODO z_score default ot False
         if window is None:
             feat = Means(data, feature=calc_means(data.temporals[:, slice(start,stop), :max_comps])[:,np.newaxis,:])  #TODO start:stop should be supported by window as well
         else:
             trials , phase_length, comps  =   data.temporals[:, slice(start,stop), :max_comps].shape
-            windows = [range(i,i+window) for i in range(0,phase_length-window)]
+            windows = [range(i,i+window) for i in range(0,phase_length-window+1)]
 
             feat_val = np.zeros((trials,len(windows),comps if max_comps is None else max_comps))
             for w,window in enumerate(windows):
-                feat_val[:,w,:] = calc_means(data.temporals[:, slice(start,stop), :][:, window, :max_comps])
+                feat_val[:,w,:] = calc_means(data.temporals[:, slice(start,stop), :][:, window, :max_comps] if not z_scored else data.temporals_z_scored[:, slice(start,stop), :][:, window, :max_comps])
+
                 
             feat = Means(data, feature=feat_val, time_resolved=True,full=full)
 

@@ -77,7 +77,7 @@ def align_spatials(spatials,trans_params, logger=None, plot_alignment_path=None)
     if plot_alignment_path is not None:
         alignment_plot = draw_neural_activity(frames=np.array([raw_spatials,spatials[0,:,:]]),
                                             path=plot_alignment_path,
-                                            plt_title="Brain Alignment", subfig_titles=["Raw","Aligned"], overlay=True, logger=logger) #TODO find vmin and vmax dynamically
+                                            plt_title="Brain Alignment", subfig_titles=["Raw","Aligned"], overlay=False,outlined=True,masked=False, logger=logger) #TODO find vmin and vmax dynamically
         return spatials, alignment_plot
 
     return spatials

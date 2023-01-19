@@ -33,9 +33,9 @@ class Cofluctuation(Features):
         super().__init__(data=data, feature=feature, file=file,full=full)
         self._time_resolved = True
         self._include_diagonal = include_diagonal
-        self._range = range
+        self._range = range if range else (0,feature.shape[1])
 
-    def create(data, max_comps=None, include_diagonal=True, logger=LOGGER,window=None,mean=False,start=None,stop=None,full=False):
+    def create(data, max_comps=None, include_dia=False, logger=LOGGER,window=None,mean=False,start=None,stop=None,full=False):
         zscores_over_time = data.temporals_z_scored[:,  slice(start,stop), :max_comps]
 
         trials, frames, comps = zscores_over_time.shape
@@ -49,12 +49,12 @@ class Cofluctuation(Features):
             #Take mean over all frames from start to stop
             co_fluct = np.mean(co_fluct,axis=1)[:,np.newaxis,:]
 
-        if start is None:
-            start = 0
-        if stop is None:
-            stop = frames-1
+        #if start is None:
+        #    start = 0
+        #if stop is None:
+        #    stop = frames-1
 
-        return Cofluctuation(data, co_fluct,include_diagonal=include_diagonal, range=(start,stop),full=full) #, )
+        return Cofluctuation(data, co_fluct,include_diagonal=include_dia, full=full) #, )
 
     def flatten(self, timepoints=slice(None), feat=None):
         if feat is None:

@@ -41,16 +41,20 @@ class Data(ABC):
 
 
 class DecompData(Data):
-    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, cond_filter=None, trans_params=None, savefile=None, spatial_labels=None, mean=None, stdev=None, logger=None):
+    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, allowed_overlap=0, cond_filter=None, trans_params=None, savefile=None, spatial_labels=None, mean=None, stdev=None, logger=None):
         self.logger = LOGGER if logger is None else logger
+        #TODO remove first check
         assert len(df) != trial_starts.shape[0]-1, (
             f"DataFrame df and trial_starts do not have matching length ({len(df)} != {len(trial_starts)})\n\t(maybe remove last entry?)")
+
         assert len(df) == trial_starts.shape[0], (
             f"DataFrame df and trial_starts do not have matching length ({len(df)} != {len(trial_starts)})")
         self._df = df
         self._temps = temporal_comps
         self._spats = spatial_comps if trans_params is None else align_spatials(spatial_comps,trans_params, logger=self.logger)
         self._starts = trial_starts
+        self._allowed_overlap = np.asarray(allowed_overlap) #has to be 0 if trials are not containing continous frames, currently as 0 dim array cause save function doesn't handle ints yet
+
         self._spat_labels = spatial_labels
 
         #Needed to calculate z-score based on mean and stdev over whole dataset after splitting data into conditions
@@ -68,7 +72,7 @@ class DecompData(Data):
 
     def copy(self):
         return type(self)( self._df, self._temps, self._spats, self._starts,
-                            savefile=self.savefile, spatial_labels=self._spat_labels, logger=self.logger )
+                            savefile=self.savefile, spatial_labels=self._spat_labels, logger=self.logger, allowed_overlap=self._allowed_overlap )
 
 
     #Used for parcellations
@@ -86,10 +90,12 @@ class DecompData(Data):
         return data #TODO maybe as inplace instead?
 
     def save(self, file ):
+        LOGGER.info(f"{self._allowed_overlap} has type {type(self._allowed_overlap)}")
         h5_file = save_h5( self, file, {"df"    : self._df,
                                         "temps" : self._temps,
                                         "spats" : self._spats,
                                         "starts" : self._starts,
+                                        "overlap": self._allowed_overlap,
                                         "labels":self._spat_labels,
                                         "mean":self._mean,
                                         "stdev":self._stdev}, logger=self.logger)
@@ -101,8 +107,8 @@ class DecompData(Data):
         if try_loaded and data_hash is not None and data_hash in Data.LOADED_DATA:
             data = Data.LOADED_DATA[data_hash]
         else:
-            _, df, temps, spats, starts, spat_labels, mean, stdev = load_h5( file, labels=["df", "temps", "spats", "starts","labels","mean","stdev"], logger=logger)
-            data = Class(df, temps, spats, starts, spatial_labels=spat_labels, savefile=file, mean=mean, stdev=stdev, logger=logger)
+            _, df, temps, spats, starts, allowed_overlap, spat_labels, mean, stdev = load_h5( file, labels=["df", "temps", "spats", "starts","overlap","labels","mean","stdev"], logger=logger)
+            data = Class(df, temps, spats, starts, allowed_overlap=allowed_overlap, spatial_labels=spat_labels, savefile=file, mean=mean, stdev=stdev, logger=logger)
             Data.LOADED_DATA[data.hash.digest()] = data
         return data
 
@@ -259,7 +265,7 @@ class DecompData(Data):
             try:
                 # else use it to slice from aranged array
                 #trial_frames = np.array(np.arange(np.max(np.diff(self._starts)))[keys[1]]) <- max can't work if we have some outliers in the frame length
-                trial_frames = np.array(np.arange(np.min(np.diff(self._starts)))[keys[1]])
+                trial_frames = np.array(np.arange(np.min(np.diff(self._starts))+self._allowed_overlap)[keys[1]])
             except ValueError as err:
                 if "zero-size array to reduction operation" in err.args[0]:
                     self.logger.warning("Data has size zero")
@@ -286,7 +292,7 @@ class DecompData(Data):
         temps = self._temps[selected_temps.flatten()]
 
         try:
-            data = DecompData(df, temps, spats, new_starts, spatial_labels=self._spat_labels, mean=self._mean, stdev=self._stdev)
+            data = DecompData(df, temps, spats, new_starts, spatial_labels=self._spat_labels, mean=self._mean, stdev=self._stdev, allowed_overlap=self._allowed_overlap)
         except AssertionError:
                 self.logger.debug( starts.shape )
                 self.logger.debug( selected_temps.shape )
@@ -351,15 +357,15 @@ class DecompData(Data):
 
     def __add__( a, b ):
         a_temps, b_temps, df, spats, starts, spat_labels = Data.binary_operation( a, b )
-        return DecompData( df, a_temps+b_temps, spats, starts, spatial_labels=spat_labels, mean=self._mean, stdev=self._stdev)
+        return DecompData( df, a_temps+b_temps, spats, starts, spatial_labels=spat_labels, mean=self._mean, stdev=self._stdev, allowed_overlap=self._allowed_overlap)
 
     def __sub__( a, b ):
         a_temps, b_temps, df, spats, starts, spat_labels = Data.binary_operation( a, b )
-        return DecompData( df, a_temps-b_temps, spats, starts, spatial_labels=spat_labels, mean=self._mean, stdev=self._stdev)
+        return DecompData( df, a_temps-b_temps, spats, starts, spatial_labels=spat_labels, mean=self._mean, stdev=self._stdev, allowed_overlap=self._allowed_overlap)
 
     def __mul__( a, b ):
         a_temps, b_temps, df, spats, starts, spat_labels = Data.binary_operation( a, b )
-        return DecompData( df, a_temps*b_temps, spats, starts, spatial_labels=spat_labels, mean=self._mean, stdev=self._stdev)
+        return DecompData( df, a_temps*b_temps, spats, starts, spatial_labels=spat_labels, mean=self._mean, stdev=self._stdev, allowed_overlap=self._allowed_overlap)
 
 class ConditionalData:
     def __init__( self, data, conditions ):

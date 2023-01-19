@@ -9,6 +9,7 @@ import sklearn.discriminant_analysis as skda
 import sklearn.preprocessing as skppc
 import sklearn.pipeline as skppl
 import sklearn.ensemble as skens
+from sklearn.base import clone
 from sklearn import preprocessing
 from sklearn import metrics
 from sklearn.model_selection import StratifiedShuffleSplit
@@ -33,8 +34,9 @@ from ci_lib.features import Means, Raws, Covariances, Correlations, AutoCovarian
 # TODO as classes
 def MLR(cores=1):
     return skppl.make_pipeline(skppc.StandardScaler(),
-                                skllm.LogisticRegression(C=10, penalty='l2', multi_class='multinomial',
-                                                            solver='lbfgs', max_iter=2000, n_jobs=cores, warm_start=True))
+                                skllm.LogisticRegression(C=0.1, penalty='l2', multi_class='multinomial',
+                                                        #solver='saga', max_iter=1000, n_jobs=cores))
+                                                            solver='lbfgs', max_iter=1000, n_jobs=cores))
 
 def NN(cores):
     return sklnn.KNeighborsClassifier(n_neighbors=1, algorithm='brute', metric='correlation')
@@ -48,7 +50,7 @@ def RF(cores):
 ### Helper Functions
 
 def load_feat(feat_wildcard,feat_path_list):
-    feature_dict = { "mean" : Means, "mean-activity": Means, "spot-activity": Means, "full-activity":Means, "raw" : Raws, "covariance" : Covariances, "correlation" : Correlations, "autocovariance" : AutoCovariances, "autocorrelation" : AutoCorrelations, "moup" :Moup, "cofluctuation":Cofluctuation, "dFC": Cofluctuation, "FC": Cofluctuation, "full-dFC": Cofluctuation }
+    feature_dict = {"full-activity-dFC":Cofluctuation,"mean-activity-FC":Cofluctuation,"spot-activity-dFC":Cofluctuation, "mean" : Means, "mean-activity": Means, "spot-activity": Means, "full-activity":Means, "raw" : Raws, "covariance" : Covariances, "correlation" : Correlations, "autocovariance" : AutoCovariances, "autocorrelation" : AutoCorrelations, "moup" :Moup, "cofluctuation":Cofluctuation, "dFC": Cofluctuation, "FC": Cofluctuation, "full-dFC": Cofluctuation }
     feature_class = feature_dict[feat_wildcard.split("_")[0]]
 
     feat_list = []
@@ -133,7 +135,7 @@ def decode_from_feature(feat_wildcard,feat_path_list,labels,decoder,reps=5,outpu
 '''
 
 @ignore_warnings(category=ConvergenceWarning)
-def decode(data, labels, decoder, reps, label_order=None,cores=1):
+def decode(data, labels, decoder, reps, label_order=None,cores=1,logger=None):
     ### Split
     cv = StratifiedShuffleSplit(reps, test_size=0.2, random_state=420)
 
@@ -143,36 +145,39 @@ def decode(data, labels, decoder, reps, label_order=None,cores=1):
     cv_split = cv.split(data, labels)
     perf = np.zeros((reps),dtype=float)
     trained_decoders = np.zeros((reps),dtype=object) 
+    models = np.zeros((reps),dtype=object) 
+
     norm_confusion = np.zeros((reps,len(label_order),len(label_order)),dtype=float)
     confusion = np.zeros((reps,len(label_order),len(label_order)),dtype=float)
 
     #Select Decoder
     if isinstance(decoder,str):
         decoders = {"MLR":MLR,
-                "MLRshuffle":MLR, #TODO move to parameters
-                "1NN":NN,
-                "LDA":LDA,
-                "RF":RF,
-                "RFshuffle":RF}
+                    "MLRshuffle":MLR, #TODO move to parameters
+                    "1NN":NN,
+                    "LDA":LDA,
+                    "RF":RF,
+                    "RFshuffle":RF}
 
         model = decoders[decoder](cores)
+
 
     ### Train & Eval
     try:
         for i, (train_index, test_index) in enumerate(cv_split):
             if isinstance(decoder,str):
                 #If decoder is reference to a decoder, it wasn't trained yet
-                model.fit(data[train_index,:],labels[train_index])
+                models[i] = clone(model)
+                models[i].fit(data[train_index,:],labels[train_index])
             else:
                 #Otherwise its assumed to be an array of already trained decoders
-                model = decoder[i]  
+                models[i] = decoder[i]  
             
 
-            perf[i] = model.score(data[test_index,:],labels[test_index])
-            norm_confusion[i,:,:], confusion[i,:,:] = confusion_matrix(data[test_index,:],labels[test_index],model,label_order)
-
-
-            trained_decoders[i] = model
+            perf[i] = models[i].score(data[test_index,:],labels[test_index])
+            norm_confusion[i,:,:], confusion[i,:,:] = confusion_matrix(data[test_index,:],labels[test_index],models[i],label_order)
+            
+            trained_decoders[i] = models[i]
     except Exception as Err:
         print("Error during training and testing")
         print(Err)

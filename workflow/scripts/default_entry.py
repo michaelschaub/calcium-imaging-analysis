@@ -1,5 +1,6 @@
 import numpy as np
 import h5py
+import scipy
 import warnings
 from snakemake.logging import logger
 
@@ -84,7 +85,20 @@ try:
 
 
     for file_Vc,trans_path in zip(files_Vc,trans_paths):
-        f = h5py.File(file_Vc, 'r')
+        print(file_Vc)
+        try:
+            f = h5py.File(file_Vc, 'r')
+        except OSError as err:
+            if "Unable to open file (file signature not found)" in str(err):
+                f = scipy.io.loadmat(file_Vc)
+                warnings.warn("You are using an old mat format (<Matlab 7.3 from 2015), please switch to HDF5 to improve perfromance")
+                for key,data in f.items():
+                    if isinstance(data, (list, tuple, np.ndarray)):
+                        f[key] = np.transpose(np.squeeze(data))
+
+            else:
+                raise Exception("Your mat file has problems... Please ensure it is not corrupted")
+                
 
         #Aligns spatials for each date with respective trans_params
         alignend_U, align_plot = alignment.align_spatials_path(np.array(f["U"]),trans_path,plot_alignment_path=snakemake.output["align_plot"])
@@ -95,6 +109,7 @@ try:
         
         frames, n_components = Vc[-1].shape
         _, width, height = U[-1].shape
+        logger.info(f"{frameCnt.shape}")
         logger.info(
             f"Dimensions: n_trials={len(frameCnt)-2}, average frames per trial={frames/(len(frameCnt)-2)}, n_components={n_components}, width={width}, height={height}")
         assert np.array_equal(U[-1].shape, U[0].shape, equal_nan=True), "Combining dates with different resolutions or number of components is not yet supported"
@@ -185,11 +200,13 @@ try:
         
         
     #####
-    
+    if "pretrial" in snakemake.config["phase_conditions"]:
+        overlap = int(snakemake.config["phase"]["pretrial"]["stop"]) - int(snakemake.config["phase"]["pretrial"]["start"]) #pretrial of following trial is attached to posttrial of previous trial
+    else:
+        overlap = 0
 
-    Vc = np.concatenate( Vc )
-
-    svd = DecompData( sessions, Vc, U, trial_starts)
+    Vc = np.concatenate( Vc )    
+    svd = DecompData( sessions, Vc, U, trial_starts, allowed_overlap=0) #TODO remove hardcode
     svd.save( snakemake.output[0] )
 
     snakemake_tools.stop_timer(timer_start, logger=logger)

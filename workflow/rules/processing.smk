@@ -98,30 +98,30 @@ rule condition:
 
 rule feature_calculation:
     input:
-        data = f"results/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/data.h5",
-        config = f"results/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/conf.yaml",
+        data = f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/data.h5",
+        config = f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/conf.yaml",
     output:
-        f"results/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5",
+        f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5",
         export_raw = report(
-            f"results/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.{config['export_type']}",
+            f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.{config['export_type']}",
             caption="../report/alignment.rst",
             category="4 Feature Calculation",
             subcategory="{feature}",
             labels={"Condition": "{cond}", "Subject/Date": "{mouse_dates}", "Type": "Data"}),
         export_plot = report(
-            f"results/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.pdf",
+            f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.pdf",
             caption="../report/alignment.rst",
             category="4 Feature Calculation",
             subcategory="{feature}",
             labels={"Condition": "{cond}", "Subject/Date": "{mouse_dates}", "Type": "Plot"}),
 
-        config = f"results/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/conf.yaml",
+        config = f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/conf.yaml",
     wildcard_constraints:
         feature = r'(?!thresh).+'
     params:
         params = lambda wildcards: config["features"][wildcards["feature"]]
     log:
-        f"results/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/feature_calculation.log"
+        f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/feature_calculation.log"
     conda:
         "../envs/environment.yaml"
     resources:
@@ -133,7 +133,7 @@ def concat_input(wildcards):
 
     sessions = subjects_from_wildcard(wildcards["concated_sessions"])
 
-    return {"individual_sessions":[f"results/{'.'.join([subject_id,date])}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5" for subject_id,dates in sessions.items() for date in dates ]}
+    return {"individual_sessions":[f"results/data/{'.'.join([subject_id,date])}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5" for subject_id,dates in sessions.items() for date in dates ]}
 
     
 #if not config["combine_sessions"]:
@@ -142,15 +142,15 @@ rule feature_concat:
     input:
         unpack(concat_input)
     output:
-        f"results/{{concated_sessions}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5",
+        f"results/data/{{concated_sessions}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5",
         export_raw = report(
-            f"results/{{concated_sessions}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.{config['export_type']}",
+            f"results/data/{{concated_sessions}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.{config['export_type']}",
             caption="../report/alignment.rst",
             category="4 Feature Calculation",
             subcategory="{feature}",
             labels={"Condition": "{cond}", "Subject/Date": "All", "Type": "Data"}),
         export_plot = report(
-            f"results/{{concated_sessions}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.pdf",
+            f"results/data/{{concated_sessions}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.pdf",
             caption="../report/alignment.rst",
             category="4 Feature Calculation",
             subcategory="{feature}",
@@ -161,7 +161,7 @@ rule feature_concat:
         #only allowed to resolve wildcards of combined sessions (indicated by the sessions being concat with #) if set false in config, else sessions should be loaded together instead of being concat afterwards
         concated_sessions = r"GN[\w_.\-#]*" if not config["combine_sessions"] else r"(?!)" 
     log:
-        f"results/{{concated_sessions}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/feature_calculation.log"
+        f"results/data/{{concated_sessions}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/feature_calculation.log"
     conda:
         "../envs/environment.yaml"
     resources:

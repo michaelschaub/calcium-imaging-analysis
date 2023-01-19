@@ -124,6 +124,182 @@ branch_opts:
       sides: right
       modalities: vistact
 
+  parcellations:
+      SVD:
+      LocaNMF:
+      anatomical:
+    
+  selected_trials:
+    All:
+
+
+  features:
+
+    spot-activity: #Full Timeseries for each trial
+      phase: 
+        #- all
+        #- pretrial
+        - stimulus
+        #- response
+        
+        #- stim1
+        #- inter_stim
+        #- stim2
+        #- delay
+        #- response
+
+    full-activity: #Full Timeseries for each trial
+      phase: 
+        #- all
+        #- pretrial
+        - stimulus
+        #- response
+
+    mean-activity: #Mean Activity over trial
+      phase: 
+        #- all
+        #- pretrial
+        - stimulus
+        #- stim1
+        #- inter_stim
+        #- stim2
+        #- delay
+        #- response
+        #- posttrial
+
+    dFC:
+      phase:
+      #  - pretrial
+        - stimulus
+      #  - response
+
+    full-dFC:
+      phase:
+        - stimulus
+    #  - response
+    
+    FC:
+      phase:
+    #    - all
+    #    - pretrial
+        - stimulus
+    #    - "?" 
+        #- delay
+    #    - response
+        #- posttrial
+
+    #spot-activity-dFC:
+    #  phase:
+      #  - pretrial
+    #    - stimulus
+      #  - response
+
+    #full-activity-dFC:
+    #  phase:
+    #    - stimulus
+      #- response
+    
+    #mean-activity-FC:
+    #  phase:
+    #  - stimulus
+    #    - all
+    #    - pretrial
+
+
+    ##moup:
+    ##  phase:
+    ##    - stimulus
+
+    #raw:
+    #  max_components : [64]
+
+    #mean:
+    #  window: [1]
+
+      #optional:
+      #  window: [1] #TODO currently needs to be in an array (should support int aswell)
+
+    #covariance:
+      #max_components : [64]
+    #moup:
+    #  timelags: [1] #,2,3]
+      #optional:
+      #  thresh:
+      #    - 0.5
+    #  max_components : [64]
+
+    #autocorrelation:
+    #  timelags: [[1]] #,[1]]
+    #  phase:
+    #    - stimulus
+
+
+
+  decoders:
+    default:
+      reps: [20]
+    MLR:
+    MLRshuffle:
+
+    #1NN:
+    #LDA:
+    #RF:
+    #RFshuffle:
+
+  rfe:
+    select_features_n:
+      - 1.0 #Dry run, reduces to 100% of features
+      - 2 #Reduces to % of features (floats < 1.0)
+      #- 100 #Reduces to n features (integers)
+    reps: 1 # Does independent repetitions, averages the feature rank and returns the highest ranked features
+
+  plotting:
+    plot_parcels:
+      n: 64
+
+static_params:
+  parcellations:
+    anatomical:
+    ICA:
+    LocaNMF:
+      minrank: 2
+      maxrank: 7
+      min_pixels: 400
+      loc_thresh: 90
+      r2_thresh: 0.99
+      nonnegative_temporal: False
+
+
+  selected_trials:
+    All:
+
+  features:
+    mean:
+
+  decoders:
+    MLR:
+    1NN:
+    LDA:
+    RF:
+
+paths:
+  parcellations:
+    ICA: {}
+    anatomical:
+      atlas: resources/meta/anatomical.mat
+    LocaNMF:
+      atlas: resources/meta/anatomical.mat
+
+different_config_inputs: 1
+
+limit_memory: 1
+
+loglevel: INFO
+
+export_type: 'npy'
+
+
+
 # Defines trial phases for Gerions Experimental Setup
 trial_conditions:
   sides:

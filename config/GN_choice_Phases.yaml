@@ -152,10 +152,10 @@ phase_conditions:
     stop:   75
   delay:
     start: 75
-    stop: 82.5
+    stop: 82
   response:
-    start: 82.5
-    stop: 112.5
+    start: 82
+    stop: 112
   #posttrial:
   #  start: 112.5
   #  stop: 134

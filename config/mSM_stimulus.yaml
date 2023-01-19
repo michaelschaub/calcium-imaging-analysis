@@ -72,14 +72,14 @@ phase_conditions:
   pretrial:
     start:  0
     stop:   90
-  stim1:
+  stimulus:
     start:  90
-    stop:   107
-  inter_stim:
-    start: 107
-    stop: 122
-  stim2:
-    start:  122
+  #  stop:   107
+  #inter_stim:
+  #  start: 107
+  #  stop: 122
+  #stim2:
+  #  start:  122
     stop:   140
   delay:
     start: 140

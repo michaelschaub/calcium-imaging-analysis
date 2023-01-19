@@ -161,7 +161,7 @@ try:
         for thread in threads:
             thread.join()
             print(f"Thread {thread} finished")                  
- 
+    
     else:
         #Decode all timepoints (without multithreading)
         for t in t_range:
@@ -178,13 +178,13 @@ try:
 
             t1_train_testing = snakemake_tools.start_timer()
 
+            ###
             #Decode
-            perf_t, confusion_t, norm_confusion_t, model_t = decode(feats_t, labels_t,decoder,reps,label_order= label_list,cores=cores)
+            perf_t, confusion_t, norm_confusion_t, model_t = decode(feats_t, labels_t,decoder,reps,label_order= label_list,cores=cores,logger=logger)
             perf_list[t,:] = perf_t
             conf_matrix[t,:,:,:] = confusion_t
             norm_conf_matrix[t,:,:,:] = norm_confusion_t
             model_list[t]= model_t
-
 
             #Track stats
             iterations[t,:] = [model[-1].n_iter_[-1] for model in model_t]
@@ -196,7 +196,7 @@ try:
                 t2_testing = snakemake_tools.start_timer()
                 for t2 in t_range:
                     feats_t2, labels_t2 = flatten(feat_list,label_list,t2)
-                    perf_matrix[t,t2,:], _ , _ , _ = decode(feats_t2, labels_t2,model_t,reps,label_order= label_list,cores=cores) #TODo could be optimizied (run only once for each t2 on all t1)
+                    perf_matrix[t,t2,:], _ , _ , _ = decode(feats_t2, labels_t2,model_t,reps,label_order= label_list,cores=cores,logger=logger) #TODo could be optimizied (run only once for each t2 on all t1)
 
                 t2_time[t] = snakemake_tools.stop_timer(t2_testing,silent=True)
 

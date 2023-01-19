@@ -40,20 +40,26 @@ try:
     perfs = perfs.reshape((len(features),len(parcellations),len(decoders)))
 
     #Construct long df
-    perfs_dict = [{"decoder": decoder, "eval_point": i, "accuracy": perf, "parcellation":parcel, "feature":feat} 
+    perfs_dict = [{"decoder": decoder, "eval_point": i, "accuracy": perf, "Parcellation":parcel, "feature":feat} 
                     for d,decoder in enumerate(decoders)
                     for p, parcel in enumerate(parcellations)
                     for f, feat in enumerate(feature_labels)
                     for i,perf in enumerate(perfs[f,p,d])]
     perfs_df =  pd.json_normalize(perfs_dict)
 
-    #Define hue for parcellations & decoder
-    hue=perfs_df[['parcellation', 'decoder']].apply(lambda row: f"{row.parcellation}{' (Shuffle)' if 'shuffle' in row.decoder else ''}", axis=1)
-    hue.name = 'Parcellation'
+    #Define hue for parcellations & decoder , not needed when shuffle is grouped
+    #hue=perfs_df[['parcellation', 'decoder']].apply(lambda row: f"{row.parcellation}{' (Shuffle)' if 'shuffle' in row.decoder else ''}", axis=1)
+    #hue.name = 'Parcellation'
+    
+    #treat shuffle like additional parcellation
+    shuffle_df = perfs_df[perfs_df['decoder'].str.contains('shuffle')]
+    non_shuffle_df = pd.concat([perfs_df, shuffle_df]).drop_duplicates(keep=False)
+
+    shuffle_df['Parcellation'] = "Shuffle (∀Parcellations)" 
+    perfs_df = pd.concat([non_shuffle_df,shuffle_df])
 
     #decoders = [ dec.split('_')[0] for dec in snakemake.params['decoders']]
-    sns.set(rc={'figure.figsize':(15,7.5)})
-    sns.set_style("whitegrid")
+
 
     #group of features
     activity_df = perfs_df[perfs_df["feature"].str.contains("activity")]
@@ -68,22 +74,36 @@ try:
     group_feats.append(rest_df)
     group_labels = ["Activity","Functional Connectivity","Effective Connectivity","Other"]
 
+    remove = []
     for i,df in enumerate(group_feats):
-        if df.empty:
-            del group_feats[i]
-            del group_labels[i]
+        if len(df['feature'].unique())==0:
+            remove.append(i)
+            print(f"removed {i}")
+        else:
+            print(len(df['feature'].unique()))
+
+    for offset,remove_ind in enumerate(remove):
+        group_feats.pop(remove_ind-offset)
+        group_labels.pop(remove_ind-offset)
 
     group_n = [len(df['feature'].unique()) for df in group_feats]
     
     #[len([feat for feat in features if "activity" in feat]),len([feat for feat in features if "FC" in feat]),len([feat for feat in features if "moup" in feat])] #better
 
-    print(group_n)
+    sns.set_style("whitegrid")
+    sns.set(rc={'figure.figsize':(2*np.sum(group_n),6)})
+    
+    sns.set(font_scale=snakemake.config["font_scale"])
+    sns.set_style("whitegrid")
 
-    fig, axs = plt.subplots(1, len(group_feats), sharey=True, gridspec_kw={'width_ratios':group_n}) #, width_ratios=np.array(group_n,dtype=int))
+    fig, axs = plt.subplots(1, len(group_feats), sharey=True, gridspec_kw={'width_ratios':group_n},squeeze=False) #, width_ratios=np.array(group_n,dtype=int))
+    axs = axs[0] #manually squeeze along first dim
     j=0
 
     for i,ax in enumerate(axs):
-        sns.violinplot(data=group_feats[i], x="feature", y="accuracy", hue=hue, cut=0, palette='deep',linewidth=1,saturation=1,ax=axs[i],legend=None)
+        #sns.violinplot(data=group_feats[i], x="feature", y="accuracy", hue=hue, cut=0, palette='deep',linewidth=1,saturation=1,ax=axs[i],legend=None) #with shuffle seperate
+        sns.violinplot(data=group_feats[i], x="feature", y="accuracy", scale="area",hue="Parcellation", cut=0, palette='deep',linewidth=1,saturation=1,ax=axs[i],legend=None)
+        axs[i].set(ylim=(0,1))
 
         #Axis labels
         axs[i].set_xlabel(group_labels[i])
@@ -98,14 +118,17 @@ try:
         #Remove right spine(True), except for last element (False) / or always
         sns.despine(ax=axs[i],left=(i>0),right=True) #(i<len(group_feats)-1))
 
-
+        sns.despine(ax=axs[i],bottom=False, left=True, right=False, top=True) #, offset=5)
+        axs[i].yaxis.set_label_position("right")
+        axs[i].yaxis.tick_right()
+        fig.subplots_adjust(left=0.15)
 
     #for violin in axs.collections[::2]:
     #    violin.set_alpha(0.9)
 
         #Draw random chance
         axs[i].plot([-.5, group_n[i]-.5], [1/len(conditions), 1/len(conditions)], '--k')
-        axs[i].text(group_n[i]-0.8,1/len(conditions)+0.01,'random chance',fontsize=7,ha='center')
+        axs[i].text(group_n[i]-0.8,1/len(conditions)+0.01,'random chance',fontsize=7*snakemake.config["font_scale"],ha='center')
 
         #Draw background
         for f in range(group_n[i]):

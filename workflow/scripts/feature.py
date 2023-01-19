@@ -16,9 +16,9 @@ try:
     snakemake_tools.check_conf(snakemake, sections=["parcellations","selected_trials","conditions"])
     snakemake_tools.save_conf(snakemake, sections=["parcellations","selected_trials","conditions","features"])
     start = snakemake_tools.start_timer()
-
+    ####
     #TODO better solutions for synonyms
-    feature_dict = { "mean" : Means, "mean-activity": Means, "spot-activity": Means, "full-activity":Means, "raw" : Raws, "covariance" : Covariances, "correlation" : Correlations, "autocovariance" : AutoCovariances, "autocorrelation" : AutoCorrelations, "moup" :Moup, "cofluctuation":Cofluctuation, "dFC": Cofluctuation, "FC": Cofluctuation, "full-dFC": Cofluctuation }
+    feature_dict = {"full-activity-dFC":Cofluctuation,"mean-activity-FC":Cofluctuation,"spot-activity-dFC":Cofluctuation, "mean" : Means, "mean-activity": Means, "spot-activity": Means, "full-activity":Means, "raw" : Raws, "covariance" : Covariances, "correlation" : Correlations, "autocovariance" : AutoCovariances, "autocorrelation" : AutoCorrelations, "moup" :Moup, "cofluctuation":Cofluctuation, "dFC": Cofluctuation, "FC": Cofluctuation, "full-dFC": Cofluctuation }
 
     # Dictionary for converting parameters from workflow to parameters, that can be passed to feature creators
     param_dict = {
@@ -32,6 +32,10 @@ try:
             "dFC": (lambda p : {"start":int(snakemake.config["phase"][p["phase"]]["start"]) if "phase" in p else None, "stop":int(snakemake.config["phase"][p["phase"]]["stop"]) if "phase" in p else None, "mean":False}),
             "FC": (lambda p : {"start":int(snakemake.config["phase"][p["phase"]]["start"]) if "phase" in p else None, "stop":int(snakemake.config["phase"][p["phase"]]["stop"]) if "phase" in p else None,"mean":True}),
             "full-dFC": (lambda p : {"start":int(snakemake.config["phase"][p["phase"]]["start"]) if "phase" in p else None, "stop":int(snakemake.config["phase"][p["phase"]]["stop"]) if "phase" in p else None, "mean":False, "full":True}),
+
+            "spot-activity-dFC":  (lambda p : {"start":int(snakemake.config["phase"][p["phase"]]["start"]) if "phase" in p else None, "stop":int(snakemake.config["phase"][p["phase"]]["stop"]) if "phase" in p else None, "mean":False, "include_dia":True}),
+            "full-activity-dFC": (lambda p : {"start":int(snakemake.config["phase"][p["phase"]]["start"]) if "phase" in p else None, "stop":int(snakemake.config["phase"][p["phase"]]["stop"]) if "phase" in p else None, "mean":False, "full":True,"include_dia":True}),
+            "mean-activity-FC": (lambda p : {"start":int(snakemake.config["phase"][p["phase"]]["start"]) if "phase" in p else None, "stop":int(snakemake.config["phase"][p["phase"]]["stop"]) if "phase" in p else None,"mean":True, "include_dia":True}),
 
             #Effective Connectivity
             "moup": (lambda p : {"start":int(snakemake.config["phase"][p["phase"]]["start"]), "stop":int(snakemake.config["phase"][p["phase"]]["stop"]),"timelag": p["timelags"] if "timelags" in p else 1}),

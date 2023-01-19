@@ -16,11 +16,11 @@ try:
     snakemake_tools.check_conf(snakemake, sections=["parcellations"])
     timer_start = snakemake_tools.start_timer()
 
+    ##
     ### Load
     data = DecompData.load(snakemake.input[0])
 
-    ### Process (Plot)
-    ### Save
+    ### Plot & Save
     draw_neural_activity(frames=np.sum(data._spats, axis=0),path=snakemake.output['combined'],plt_title=snakemake.wildcards['parcellation'],subfig_titles="",overlay=True,outlined=True, logger=logger)
 
     os.mkdir(Path(snakemake.output['single']))

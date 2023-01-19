@@ -1,8 +1,8 @@
 branch_opts:
   parcellations:
       SVD:
-      LocaNMF:
       anatomical:
+      LocaNMF:
       #  ROI: [['VISp-R,VISrl-R,SSp-bfd-R,MOs-R,MOs-L,SSp-bfd-L,VISrl-L,VISp-L'],[]] #FRP-R,MOp-R'],["VIS,SS"]]
       
       #ICA:
@@ -14,9 +14,9 @@ branch_opts:
     All:
 
 
-  features:
+  #features:
 
-    spot-activity: #Full Timeseries for each trial
+    #spot-activity: #Full Timeseries for each trial
       #phase: 
         #- all
         #- pretrial
@@ -29,17 +29,18 @@ branch_opts:
         #- delay
         #- response
 
-    full-activity: #Full Timeseries for each trial
-      phase: 
+    #full-activity: #Full Timeseries for each trial
+      #phase: 
         #- all
         #- pretrial
-        - stimulus
+        #- stimulus
+        #- response
 
-    mean-activity: #Mean Activity over trial
-      phase: 
+    #mean-activity: #Mean Activity over trial
+      #phase: 
         #- all
         #- pretrial
-        - stimulus
+        #- stimulus
         #- stim1
         #- inter_stim
         #- stim2
@@ -47,30 +48,48 @@ branch_opts:
         #- response
         #- posttrial
 
-    dFC:
+    #dFC:
       #phase:
       #  - pretrial
-      #  - stimulus
-      #  - response
+    #    - stimulus
+        #- response
 
-    full-dFC:
-      phase:
-        - stimulus
+    #full-dFC:
+      #phase:
+    #    - stimulus
+      #- response
     
-    FC:
-      phase:
+    #FC:
+      #phase:
     #    - all
     #    - pretrial
-        - stimulus
+    #    - stimulus
     #    - "?" 
         #- delay
         #- response
         #- posttrial
 
+    #spot-activity-dFC:
+    #  phase:
+      #  - pretrial
+    #    - stimulus
+      #  - response
 
-    moup:
-      phase:
-        - stimulus
+    #full-activity-dFC:
+    #  phase:
+    #    - stimulus
+      #- response
+    
+    #mean-activity-FC:
+    #  phase:
+    #  - stimulus
+    #    - all
+    #    - pretrial
+
+
+    ##moup:
+    ##  phase:
+    ##    - stimulus
 
     #raw:
     #  max_components : [64]
@@ -90,16 +109,16 @@ branch_opts:
       #    - 0.5
     #  max_components : [64]
 
-    autocorrelation:
-      timelags: [[1]] #,[1]]
-      phase:
-        - stimulus
+    #autocorrelation:
+    #  timelags: [[1]] #,[1]]
+    #  phase:
+    #    - stimulus
 
 
 
   decoders:
     default:
-      reps: [5]
+      reps: [20]
     MLR:
     #MLRshuffle:
 
@@ -127,7 +146,7 @@ static_params:
       minrank: 2
       maxrank: 7
       min_pixels: 400
-      loc_thresh: 70
+      loc_thresh: 90
       r2_thresh: 0.99
       nonnegative_temporal: False
 
@@ -159,3 +178,10 @@ limit_memory: 1
 loglevel: INFO
 
 export_type: 'npy'
+
+####Plot styling #TODO encapsulate 
+font_scale: 1.5
+plot_format: "pdf" 
+colormap: "tab10"
+contrast_colormap: "dark" #same colormap as above with increased saturation
+

@@ -7,13 +7,13 @@ branch_opts:
     #  - random
 
     # Defines subjects and dates to use from Gerions Experiment
-    GN06:
+    #GN06:
     # Working Datasets
-       - "03-26"
-       - "03-29"
+    #   - "03-26"
+    #   - "03-29"
 
     # Only few unsuccesful trials  
-       - "04-01"
+    #   - "04-01"
 
     # New Vc.mat missing
     #  - "01-20"
@@ -26,28 +26,28 @@ branch_opts:
     # Old files missing
     # - "03-25"
 
-    GN09:
+    #GN09:
     # Working Datasets
-      - 03-26_10
-      - 04-14_16
-      - 04-15_15
-      - 04-16_15
+    #  - 03-26_10
+    #  - 04-14_16
+    #  - 04-15_15
+    #  - 04-16_15
     
     # Only few unsuccesful trials 
-      - 04-15_11 
-      - 04-19_10 
+    #  - 04-15_11 
+    #  - 04-19_10 
 
     # New Vc.mat missing (currently)
     #  #- 04-20_13
     #  #- 04-21_13
 
-    GN08:
+    #GN08:
     # Working Datasets
-      - "03-26"
-      - "03-29_13"
+    #  - "03-26"
+    #  - "03-29_13"
 
     # Only few unsuccesful trials 
-      - "03-29_16" 
+    #  - "03-29_16" 
 
     # Old files missing
     #- 03-25_11 
@@ -124,6 +124,166 @@ branch_opts:
       sides: right
       modalities: vistact
 
+  parcellations:
+      SVD:
+      LocaNMF:
+      anatomical:
+    
+  selected_trials:
+    All:
+
+
+  features:
+
+    spot-activity: #Full Timeseries for each trial
+      #phase: 
+        #- all
+        #- pretrial
+        #- stimulus
+        #- response
+        
+        #- stim1
+        #- inter_stim
+        #- stim2
+        #- delay
+        #- response
+
+    full-activity: #Full Timeseries for each trial
+      phase: 
+        #- all
+        #- pretrial
+        - stimulus
+        #- response
+
+    mean-activity: #Mean Activity over trial
+      phase: 
+        #- all
+        #- pretrial
+        - stimulus
+        #- stim1
+        #- inter_stim
+        #- stim2
+        #- delay
+        #- response
+        #- posttrial
+
+    #dFC:
+    #  phase:
+      #  - pretrial
+    #    - stimulus
+      #  - response
+
+    #full-dFC:
+    #  phase:
+    #    - stimulus
+    #  - response
+    
+    #FC:
+    #  phase:
+    #    - all
+    #    - pretrial
+    #    - stimulus
+    #    - "?" 
+        #- delay
+    #    - response
+        #- posttrial
+
+    #spot-activity-dFC:
+    #  phase:
+      #  - pretrial
+    #    - stimulus
+      #  - response
+
+    #full-activity-dFC:
+    #  phase:
+    #    - stimulus
+      #- response
+    
+    #mean-activity-FC:
+    #  phase:
+    #    - stimulus
+    #    - all
+    #    - pretrial
+
+
+    ##moup:
+    ##  phase:
+    ##    - stimulus
+
+    #raw:
+    #  max_components : [64]
+
+    #mean:
+    #  window: [1]
+
+      #optional:
+      #  window: [1] #TODO currently needs to be in an array (should support int aswell)
+
+    #covariance:
+      #max_components : [64]
+    #moup:
+    #  timelags: [1] #,2,3]
+      #optional:
+      #  thresh:
+      #    - 0.5
+    #  max_components : [64]
+
+    #autocorrelation:
+    #  timelags: [[1]] #,[1]]
+    #  phase:
+    #    - stimulus
+
+
+
+  decoders:
+    default:
+      reps: [5]
+    MLR:
+    #MLRshuffle:
+
+static_params:
+  parcellations:
+    anatomical:
+    ICA:
+    LocaNMF:
+      minrank: 2
+      maxrank: 7
+      min_pixels: 400
+      loc_thresh: 300
+      r2_thresh: 0.99
+      nonnegative_temporal: False
+
+
+  selected_trials:
+    All:
+
+  features:
+    mean:
+
+  decoders:
+    MLR:
+    1NN:
+    LDA:
+    RF:
+
+paths:
+  parcellations:
+    ICA: {}
+    anatomical:
+      atlas: resources/meta/anatomical.mat
+    LocaNMF:
+      atlas: resources/meta/anatomical.mat
+
+different_config_inputs: 1
+
+limit_memory: 1
+
+loglevel: INFO
+
+export_type: 'npy'
+
+
+
 # Defines trial phases for Gerions Experimental Setup
 trial_conditions:
   sides:
@@ -172,12 +332,12 @@ phase_conditions:
   delay:
     start: 75
     stop: 82
-  #response:
-  #  start: 82
-  #  stop: 113
-  #posttrial:
-  #  start: 113
-  #  stop: 134
+  response:
+    start: 82
+    stop: 113
+  posttrial:
+    start: 113
+    stop: 134
   all:
     start: 0
     stop: 134
