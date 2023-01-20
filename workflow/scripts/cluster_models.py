@@ -8,6 +8,7 @@ import matplotlib.colors as cm
 import seaborn as sns
 import yaml
 import warnings
+from sklearn.base import clone
 
 from pathlib import Path
 import sys
@@ -30,6 +31,7 @@ try:
     #only works for models within a sklearn pipeline (including something like scaler and model as second step, hence pipeline[1] = decoder)
     classes = np.asarray([[pipeline[1].classes_ for pipeline in pipelines] for pipelines in timepoints_models]) # timespoints x n_splits x n_classes 
     coefs = np.asarray([[pipeline[1].coef_ for pipeline in pipelines] for pipelines in timepoints_models],dtype=float) # timespoints x n_splits x n_classes x n_features
+    intercept = np.asarray([[pipeline[1].intercept_ for pipeline in pipelines] for pipelines in timepoints_models],dtype=float) 
 
     n_timepoints, n_splits, n_classes, n_weights = coefs.shape
 
@@ -162,12 +164,12 @@ try:
                 "left": a,
                 "right": b,
                 "height": ha if ha > hb else hb,
+                "distance": merge[2] 
             }
         
         #reconstruct ordering, thanks for nothing Sklearn
 
-
-        logger.info(clusters)
+        #first add node as parent node to all children of that node
         for i, (id , cluster) in enumerate(clusters.items()):
             a, b = cluster["child_id"]
             if a > len(linkage):
@@ -258,20 +260,123 @@ try:
             
         ordered_dict = dict(sorted(clusters.items()))
         
-        logger.info(ordered_dict)
             # ^ you could optionally store other info here (e.g distances)
-        return reorder_data,list(ordered_dict.values())
+        return reorder_data,ordered_dict,root
 
-    reorder, trees=create_index_tree(model_linkage,flat_coefs)
-    logger.info(trees)
+    reorder, trees, root=create_index_tree(model_linkage,flat_coefs)
+    
     #logger.info(trees[-1]["left"])
-    logger.info(model_linkage)
+    #logger.info(model_linkage)
+
+    def check_parent_selected(id):
+        if trees[id]["parent_id"] == -1:
+            return False
+        if "selected" in trees[id]:
+            return True
+        else:
+            return check_parent_selected(trees[id]["parent_id"])
 
     bkpts = []
-    for tree in trees:
-        logger.info(tree)
-        if tree["depth"] <= 3:
-            bkpts.append(tree["left_start"])
+    ranges = []
+    selected_clusters = []
+
+    def threshold_clusters(node,tresh):
+            if node <= len(model_linkage):
+                #Leaf, return empty cluster (no cluster of size 1)
+                return []
+            elif trees[node]["distance"] * np.sqrt(n_weights*n_classes) / (n_weights*n_classes) < thresh : #Account for increased euclidean distance in higher dimensional space 
+                #Cluster with thresh reached, all subtrees will have a smaller distance
+                return [trees[node]]
+            else:
+                #thresh not reached, recursion on children
+                return threshold_clusters(trees[node]["child_id"][0],tresh) + threshold_clusters(trees[node]["child_id"][1],tresh)
+
+
+            
+    '''
+    for id,tree in trees.items():
+        
+        #if tree["depth"] <= 3:
+        #parent_selected = check_parent_selected(id)
+        if tree["distance"] < 3: # and not check_parent_selected(id):
+            #trees[id]["selected"]=True
+            new_range = np.arange(tree["left_start"], tree["left_start"]+len(tree["children"])+1)
+            
+            cont = False
+            for i,range in enumerate(ranges):
+                if set(range).issubset(set(new_range)):
+                    del ranges[i]
+                    del selected_clusters[i]
+                if set(new_range).issubset(set(range)):
+                    cont = True
+
+            if cont:
+                continue
+
+            ranges.append(new_range)  
+            selected_clusters.append(tree)                              
+
+
+    logger.info(f"trees {trees[id]}")
+    logger.info(f"ranges {ranges}") 
+    logger.info(f"selected_clusters {selected_clusters}") 
+    '''
+    #remove subsets
+    #is_subset = []
+    #for i,range in enumerate(ranges):
+    #    for j,other_range in enumerate(ranges):
+    #        if j != i and set(range).issubset(other_range):
+    #            is_subset.append(i)
+    selected_clusters = False
+    for thresh in np.logspace(0,0.1,num=100)-1:
+        tmp_clusters= threshold_clusters(root,thresh)
+        if len(tmp_clusters) < 10 and not selected_clusters:
+            selected_clusters=tmp_clusters
+
+        logger.info(f"thresh {thresh} {len(tmp_clusters)}")
+
+    for cluster in selected_clusters:
+        #if i not in is_subset:
+        bkpts.append([cluster["left_start"],cluster["left_start"]+len(cluster["children"])])  
+
+    #mean_cluster_weights = {}
+    
+    mean_cluster_model = []
+    for c,clusters in enumerate(selected_clusters):
+        child_ind = clusters['children']    
+        
+        #
+
+        #mean_cluster_weights[start_ind_redoredered ] = np.mean(coefs[child_ind],axis=(0,1))
+
+        #get arbitrary instance of trained model and overwrite learned coefs and intercept
+        new_model = clone(timepoints_models[0][0][1])
+
+        new_model.classes_ = timepoints_models[-1][0][1].classes_ #check if classes need to be sorted
+
+        new_model.coef_ = np.mean(coefs.reshape(-1, n_classes, n_weights)[child_ind],axis=(0))
+
+        new_model.intercept_ = np.mean(intercept.reshape(-1, n_classes)[child_ind],axis=(0))
+        new_model.penalty = timepoints_models[-1][0][1].penalty
+        new_model.C = timepoints_models[-1][0][1].C
+
+
+
+        logger.info(new_model.coef_.shape)
+        mean_cluster_model.append(new_model)
+            #[start_ind_redoredered])
+     
+    #sorted_cluster_model = dict(sorted(mean_cluster_model.items()))
+    #logger.info(sorted_cluster_model)
+
+    #for id,tree in trees.items():
+    #    logger.info(trees[id])
+    #    if "selected" in tree and not check_parent_selected(id):
+            
+
+    #        bkpts.append(tree["left_start"])
+    #        bkpts.append(tree["left_start"]+len(tree["children"]))
+
 
 
     #np.cumsum([len(trees[-3]["left"]),len(trees[-3]["right"]),len(trees[-2]["left"])])
@@ -355,7 +460,10 @@ try:
     #for class_border in np.arange(1,n_classes)*n_weights:
     #    fig.ax_heatmap.plot([0,  n_timepoints*n_splits], [class_border,class_border], 'w-',alpha=1)
     logger.info(bkpts)
-    fig.ax_heatmap.vlines(bkpts, *fig.ax_heatmap.get_ylim(),colors=["black"]*len(bkpts))
+    fig.ax_heatmap.vlines(np.asarray(bkpts).flatten(), *fig.ax_heatmap.get_ylim(),colors=["black"]*len(bkpts))
+    for i,cluster_border in enumerate(bkpts):
+        fig.ax_heatmap.text(0.5 * (cluster_border[0]+cluster_border[1]),0.015,str(i),fontsize=15,ha='center')
+
     fig.ax_heatmap.hlines(np.arange(1,n_classes)*n_weights, *fig.ax_heatmap.get_xlim(),colors=['black']*(n_classes-1))
     
 
@@ -371,6 +479,12 @@ try:
         #fig.ax_heatmap.plot([marker,marker], [0,  n_weights], 'w-',alpha=1)
 
     fig.figure.savefig( snakemake.output["cluster"] )
+
+    logger.info([m.coef_ for m in mean_cluster_model])
+    with open(snakemake.output['models'], 'wb') as f:
+        pickle.dump(mean_cluster_model, f)
+
+
 
 
 

@@ -78,6 +78,10 @@ rule decode:
 
         #Plot clustered coefs
         expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(trial_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.pdf", session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
+
+        #Create models from clusters and test over time
+        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(trial_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.pdf", session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
+         
 '''
 rule decode:
 	input:

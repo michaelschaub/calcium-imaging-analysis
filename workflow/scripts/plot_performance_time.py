@@ -125,6 +125,17 @@ try:
         #hue.name = 'Features'
         accuracy_over_time_plot  = sns.lineplot(data=accuracy_df, x="t", y="accuracy",hue="Feature",errorbar=('pi',90)) #hue,errorbar=('pi',90))
 
+    elif "clusters" in snakemake.params.keys():
+        perf = np.asarray(perf,dtype=float)
+        logger.info(perf.shape)
+        timepoints_n, n_models, runs_n = perf[0].shape
+
+        accuracy_dict = np.asarray([{"t": t, "cluster":c, "run":rep, "accuracy":accuracy} for t,perf_t in enumerate(perf[0]) for c,cluster in enumerate(perf_t) for rep,accuracy in enumerate(cluster)])
+        logger.info(accuracy_dict)
+        accuracy_df =  pd.json_normalize(accuracy_dict)
+        
+
+        accuracy_over_time_plot  = sns.lineplot(data=accuracy_df, x="t", y="accuracy",hue="cluster",errorbar=('pi',90)) 
 
     #Plotting for 1 parcellation and 1 feature
     else:
@@ -193,7 +204,7 @@ try:
     #accuracy_over_time_plot.xaxis.set_major_formatter(FormatStrFormatter('%.1f'))
     
 
-    middle_plot = True
+    middle_plot = False
     if middle_plot:
         sns.despine(ax=accuracy_over_time_plot,left=True,right=True)
         accuracy_over_time_plot.set(yticklabels=[])  

@@ -51,6 +51,7 @@ rule plot_model_coef:
     script:
         "../scripts/plot_model_coef.py"
 
+### move to processing
 rule cluster_coef:
     input:
         model  = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/decoder_model.pkl",
@@ -58,6 +59,7 @@ rule cluster_coef:
     output:
         no_cluster = f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime.pdf",
         cluster    = f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.pdf",
+        models     = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/ClusterModels.pkl",
     params:
         phases = config["phase_conditions"]
     log:
@@ -67,6 +69,55 @@ rule cluster_coef:
     script:
         "../scripts/cluster_models.py"
 
+
+rule decoding_with_existing_model:
+    input:
+        feat = [f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Features/{cond}/{{feature}}/features.h5" for cond in config['trial_conditions']],
+        models = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/ClusterModels.pkl",
+    output:
+        perf =f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/cluster_perf.pkl"
+    params:
+        conds = list(config['trial_conditions']),
+        decoders=[f"{{decoder}}"],
+        params = lambda wildcards: config["decoders"][wildcards["decoder"]], #TODO actually we just need number of reps, or we could also just test once on whole dataset
+    log:
+        f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/cluster_perf.log",
+    conda:
+        "../envs/environment.yaml"
+    resources:
+        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
+    script:
+        "../scripts/test_models.py"
+
+rule plot_performances_clusters_time:
+    input:
+        perf   =[f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/cluster_perf.pkl"],
+
+    output:
+        f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.pdf"
+        
+
+        #report(f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{parcellation}}_perf.pdf",
+        #    caption="../report/decode_features.rst",
+        #    category="6 Decoding",
+        #    subcategory="Compare Features",
+        #    labels={"Parcellation":"{parcellation}","Subject/Date": "{subject_dates}"}),
+        #f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/performances_anno.pdf"
+    params:
+        clusters="",
+        decoders=[f"{{decoder}}"],
+        conds=list(config['trial_conditions']),
+    log:
+        f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.log"
+        
+    conda:
+        "../envs/environment.yaml"
+    script:
+       "../scripts/plot_performance_time.py"
+
+
+    
+########
 
 rule plot_performance:
     input:
