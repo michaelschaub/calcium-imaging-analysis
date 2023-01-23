@@ -81,7 +81,14 @@ rule decode:
 
         #Create models from clusters and test over time
         expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(trial_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.pdf", session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
-         
+
+rule decode_generalized:
+    input:
+        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(trial_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/from_{generalize_from}/ClusturedModels_perf.pdf",
+                session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
+        expand(f"results/data/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/from_{generalize_from}/cluster_perf.pkl",
+                session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
+
 '''
 rule decode:
 	input:

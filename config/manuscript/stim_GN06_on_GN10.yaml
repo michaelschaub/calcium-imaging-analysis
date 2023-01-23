@@ -1,58 +1,130 @@
 branch_opts:
   combine_sessions: True #Combine sessions (upon loading) & find new spatials with PCA / Combine sessions (after feature calculation) based on original spatials (noisy if spatials are different)
   include_individual_sessions: False #False #Run pipeline on individual sessions and combined sessions / just on combined session
+  generalize_from: "GN06.01-20#GN06.03-01#GN06.03-02#GN06.03-03#GN06.03-04#GN06.03-05#GN06.03-26#GN06.03-29"
 
   subjects:
     #random:
     #  - random
 
     # Defines subjects and dates to use from Gerions Experiment
-    GN06:
+    #GN06:
     # New Vc.mat missing
-      - "01-20"
-      - "03-01"
-      - "03-02"
-      - "03-03"
-      - "03-04"
-      - "03-05"
+    #  - "01-20"
+    #  - "03-01"
+    #  - "03-02"
+    #  - "03-03"
+    #  - "03-04"
+    #  - "03-05"
 
     # Working Datasets
-      - "03-26"
-      - "03-29"
+    #  - "03-26"
+    #  - "03-29"
 
     # Only few unsuccesful trials  
     #  - "04-01"
 
     # Old files missing
-    # - "03-25"   
+    # - "03-25"
+
+    #GN09:
+    # Working Datasets
+    #  - 03-26_10
+    #  - 04-14_16
+    #  - 04-15_15
+    #  - 04-16_15
+    
+    # Only few unsuccesful trials 
+    #  - 04-15_11 
+    #  - 04-19_10 
+
+    # New Vc.mat missing (currently)
+    #  #- 04-20_13
+    #  #- 04-21_13
+
+    #GN08:
+    # Working Datasets
+    #  - "03-26"
+    #  - "03-29_13"
+
+    # Only few unsuccesful trials 
+    #  - "03-29_16" 
+
+    # Old files missing
+    #- 03-25_11 
+    #- 03-25_15 
+
+    # new Vc.mat missing
+    # - "03-01_15"
+    # - "03-02_17"
+    # - "03-03"
+    # - "03-04"
+    # - "03-05"
+    
+    GN10:
+    # Working Datasets
+    - "03-29_15"
+    - "04-12_09"
+    - "04-14_14"
+    
+    # Only few unsuccesful trials 
+    - "04-13_09" 
+    - "04-15_10" 
+    
+    #Vc and df mismatch
+    #- "04-16_12" 
+
+    #- "04-19_09"
+    #- "04-20_10"
+    #- "04-21_11"
+    #- "04-22_10"
 
   # Defines conditions for Gerions Experimental Setup
   conditions:
     default:
       phase: all
-      #n_targets: all
-      #n_distractors: none
+      n_targets: all
+      n_distractors: none
       auto_reward: no
       both_spouts: yes
 
+    #Stimulus Decoder
+    #left:
+    #  sides: left
+    #right:
+    #  sides: right
 
-    ### Choice Decoder
-    LR-LS:
-      responses: left
+    #visual:
+    #  modalities: visual
+    #tactile:
+    #  modalities: tactile
+    #multisensory:
+    #  modalities: vistact
+
+    #Stimulus Decoder
+    L-V:
       sides: left
+      modalities: visual
 
-    RR-LS:
-      responses: right
+    L-T:
       sides: left
+      modalities: tactile
 
-    LR-RS:
-      responses: left
-      sides: right
+    L-VT:
+      sides: left
+      modalities: vistact
 
-    RR-RS:
-      responses: right
+    R-V:
       sides: right
-  
+      modalities: visual
+    
+    R-T:
+      sides: right
+      modalities: tactile
+    R-VT:
+      sides: right
+      modalities: vistact
+
   parcellations:
       SVD:
       LocaNMF:
@@ -81,35 +153,41 @@ branch_opts:
       phase: 
         #- all
         #- pretrial
-        #- stimulus
-        - response
+        - stimulus
+        #- response
 
     mean-activity: #Mean Activity over trial
       phase: 
         #- all
         #- pretrial
-        #- stimulus
+        - stimulus
         #- stim1
         #- inter_stim
         #- stim2
         #- delay
-        - response
+        #- response
         #- posttrial
 
     #dFC:
-      #phase:
+    #  phase:
       #  - pretrial
-      #  - stimulus
+    #    - stimulus
       #  - response
 
     #full-dFC:
     #  phase:
-    
-    #    - response
+    #    - stimulus
+    #  - response
     
     #FC:
     #  phase:
+    #    - all
+    #    - pretrial
+    #    - stimulus
+    #    - "?" 
+        #- delay
     #    - response
+        #- posttrial
 
     #spot-activity-dFC:
     #  phase:
@@ -124,7 +202,7 @@ branch_opts:
     
     #mean-activity-FC:
     #  phase:
-    #  - stimulus
+    #    - stimulus
     #    - all
     #    - pretrial
 
@@ -160,30 +238,52 @@ branch_opts:
 
   decoders:
     default:
-      reps: [5]
+      reps: [20]
     MLR:
-    MLRshuffle:
+    #MLRshuffle:
 
-    #1NN:
-    #LDA:
-    #RF:
-    #RFshuffle:
-
-  rfe:
-    select_features_n:
-      - 1.0 #Dry run, reduces to 100% of features
-      - 2 #Reduces to % of features (floats < 1.0)
-      #- 100 #Reduces to n features (integers)
-    reps: 1 # Does independent repetitions, averages the feature rank and returns the highest ranked features
-
-  plotting:
-    plot_parcels:
-      n: 64
+static_params:
+  parcellations:
+    anatomical:
+    ICA:
+    LocaNMF:
+      minrank: 3
+      maxrank: 3
+      min_pixels: 400
+      loc_thresh: 300
+      r2_thresh: 0.99
+      nonnegative_temporal: False
 
 
+  selected_trials:
+    All:
 
-    # noResponse:
-    #   responses: no
+  features:
+    mean:
+
+  decoders:
+    MLR:
+    1NN:
+    LDA:
+    RF:
+
+paths:
+  parcellations:
+    ICA: {}
+    anatomical:
+      atlas: resources/meta/anatomical.mat
+    LocaNMF:
+      atlas: resources/meta/anatomical.mat
+
+different_config_inputs: 1
+
+limit_memory: 1
+
+loglevel: INFO
+
+export_type: 'npy'
+
+
 
 # Defines trial phases for Gerions Experimental Setup
 trial_conditions:

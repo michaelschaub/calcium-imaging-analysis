@@ -1,6 +1,7 @@
 branch_opts:
   combine_sessions: True #Combine sessions (upon loading) & find new spatials with PCA / Combine sessions (after feature calculation) based on original spatials (noisy if spatials are different)
   include_individual_sessions: False #False #Run pipeline on individual sessions and combined sessions / just on combined session
+  generalize_from: "GN06.01-20#GN06.03-01#GN06.03-02#GN06.03-03#GN06.03-04#GN06.03-05#GN06.03-26#GN06.03-29"
 
   subjects:
     #random:
@@ -246,8 +247,8 @@ static_params:
     anatomical:
     ICA:
     LocaNMF:
-      minrank: 2
-      maxrank: 7
+      minrank: 3
+      maxrank: 3
       min_pixels: 400
       loc_thresh: 300
       r2_thresh: 0.99
