@@ -2,6 +2,7 @@ import pickle
 import numpy as np
 import scipy
 
+import os
 from matplotlib import pyplot as plt
 import matplotlib as mpl
 import matplotlib.colors as cm
@@ -14,9 +15,10 @@ from pathlib import Path
 import sys
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
-import ci_lib.plotting as plots
+from ci_lib.plotting import draw_coefs_models
 from ci_lib.utils import snakemake_tools
 from ci_lib.utils.logging import start_log
+from ci_lib import DecompData
 
 logger = start_log(snakemake)
 try:
@@ -25,6 +27,8 @@ try:
     #### Load & Format
     with open(snakemake.input["model"], "rb") as f:
         timepoints_models = pickle.load(f) #TODO decoding timesteps x n_splits, currently only works for 1 timestep
+
+    decomp_object = DecompData.load(snakemake.input["parcel"])
 
 
     logger.info(timepoints_models.shape)
@@ -278,7 +282,6 @@ try:
 
     bkpts = []
     ranges = []
-    selected_clusters = []
 
     def threshold_clusters(node,tresh):
             if node <= len(model_linkage):
@@ -327,13 +330,20 @@ try:
     #    for j,other_range in enumerate(ranges):
     #        if j != i and set(range).issubset(other_range):
     #            is_subset.append(i)
-    selected_clusters = False
-    for thresh in np.logspace(0,0.1,num=100)-1:
+    min = 6
+    max = 12
+    selected_clusters= [trees[root]]
+    for thresh in reversed(2*(np.logspace(0,0.1,num=100)-1)):
         tmp_clusters= threshold_clusters(root,thresh)
-        if len(tmp_clusters) < 10 and not selected_clusters:
-            selected_clusters=tmp_clusters
-
         logger.info(f"thresh {thresh} {len(tmp_clusters)}")
+
+        if len(tmp_clusters) in list(range(min,max)):
+            selected_clusters=tmp_clusters
+        elif len(selected_clusters)>max:
+            break
+            
+
+       
 
     for cluster in selected_clusters:
         #if i not in is_subset:
@@ -479,16 +489,21 @@ try:
         #fig.ax_heatmap.plot([marker,marker], [0,  n_weights], 'w-',alpha=1)
 
     fig.figure.savefig( snakemake.output["cluster"] )
+    fig.figure.savefig( snakemake.output["cluster_small"] )
 
     logger.info([m.coef_ for m in mean_cluster_model])
     with open(snakemake.output['models'], 'wb') as f:
         pickle.dump(mean_cluster_model, f)
 
+    os.mkdir(Path(snakemake.output['coef_plots']))
+    for i,model in enumerate(mean_cluster_model):
+        path = Path(snakemake.output['coef_plots'])/f"{i}Cluster_coef.pdf"
+        path.touch()
+        draw_coefs_models([model],decomp_object, snakemake, mean_path=path)
+        
+    #for snakemake.output['models']:
+    #    coefs = np.asarray([pipeline[1].coef_ for pipeline in pipelines[0]],dtype=float)
 
-
-
-
-    
 
 
 

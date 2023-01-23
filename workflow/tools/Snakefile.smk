@@ -6,6 +6,7 @@ print(config)
 
 subjects = config["branch_opts"]["subjects"]
 subject_dates = [".".join([subject_id,date]) for subject_id,dates in subjects.items() for date in dates ]
+generalize_from = config["branch_opts"]["generalize_from"]
 
 if config["branch_opts"].get('include_individual_sessions', False):  # config["branch_opts"].get('combine_sessions', False): #TODO fail safe config loading with defaults
     session_runs = subject_dates + ['#'.join(subject_dates)] 
@@ -73,7 +74,8 @@ config["plotting"] =   {"plot_subject_labels": {f"{subject_id}(#{len(dates)})" f
                         "trial_conditions": trial_conditions,
                         "features": features,
                         "parcellations" :parcellations,
-                        "default_conditions":default_conditions}
+                        "default_conditions":default_conditions,
+                        "generalize_from":generalize_from}
 
 #config["generic"] = {"loglevel": config["loglevel"],
 #                    "export_type": export_type,

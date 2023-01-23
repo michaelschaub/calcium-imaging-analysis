@@ -16,6 +16,7 @@ import sys
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 from ci_lib.utils import snakemake_tools
+from ci_lib import DecompData
 
 from ci_lib.utils.logging import start_log
 from ci_lib.features import Means, Raws, Covariances, Correlations, AutoCovariances, AutoCorrelations, Moup, Cofluctuation
@@ -52,7 +53,32 @@ try:
     feat_list = load_feat(snakemake.wildcards["feature"],snakemake.input["feat"])
     logger.info(feat_list)
     #print(snakemake.input)
+
+           
+    ####
+    #
+    #
+    #
+
     ##
+    if "org_decomp" in snakemake.input.keys():
+        org_decomp = DecompData.load(snakemake.input["org_decomp"])
+        new_decomp = DecompData.load(snakemake.input["new_decomp"])
+        U = new_decomp._spats
+        Vc = new_decomp._temps
+        target_U = org_decomp._spats
+        n_components, width, height = target_U.shape
+        #U, Vc, target_U
+        target_U = target_U.reshape(n_components,width * height)
+        target_U_inv = np.nan_to_num(np.linalg.pinv(np.nan_to_num(target_U, nan=0.0)), nan=0.0)
+        U = U.reshape(n_components,width * height)
+        V_transform = np.matmul(np.nan_to_num(U, nan=0.0), target_U_inv)
+        #Vc = np.matmul(Vc, V_transform)
+        #U = target_U.reshape(n_components,width,height)
+
+        for feat in feat_list:
+            feat.feature = np.matmul(feat.feature, V_transform)
+
 
     if balancing:
         #Balances the number of trials for each condition
@@ -79,6 +105,8 @@ try:
 
     #Decode all timepoints (without multithreading)
     for t in t_range:
+        
+
 
         #Flatten feature and labels from all conditions and concat
         feats_t, labels_t = flatten(feat_list,label_list,t)

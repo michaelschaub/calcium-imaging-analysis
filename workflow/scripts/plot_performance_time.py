@@ -135,7 +135,7 @@ try:
         accuracy_df =  pd.json_normalize(accuracy_dict)
         
 
-        accuracy_over_time_plot  = sns.lineplot(data=accuracy_df, x="t", y="accuracy",hue="cluster",errorbar=('pi',90)) 
+        accuracy_over_time_plot  = sns.lineplot(data=accuracy_df, x="t", y="accuracy",hue="cluster",errorbar=('pi',90),legend="full",palette= "tab20") 
 
     #Plotting for 1 parcellation and 1 feature
     else:
