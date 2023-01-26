@@ -3,16 +3,15 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python>=3.10
+  - python=3.10
   - pip
-  - numpy
+  - numpy=1.23.3
   - pandas
   - scipy
 
-
   - scikit-learn
 
-  - matplotlib
+  - matplotlib=3.5.3
   - bokeh
 
   - pyyaml
@@ -24,13 +23,16 @@ dependencies:
 
       - networkx
       - Shapely
-
-      # ?
-      - psutil
+      - seaborn==0.12.1
+            
+      - psutil # ?
 
       # Windows workaround for h5py
       - wheel
       - cython
       - versioned-hdf5
       - h5py
+
+variables:
+  SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL: True #While we use old pyMOU
 

@@ -1,8 +1,15 @@
 from snakemake_tools import create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match, hash_config
+from wildcard_functions import subjects_from_wildcard
+
+import re
 
 ###   Data processing   ###
 
 def parcellation_input(wildcards):
+
+    if not bool(re.match(r"^(?!SVD)(.*)$",wildcards["parcellation"])):  #TODO why is snakemake regex broken? :( ,fro now evaulate the same freaking expression within input function and require non existing files to exclude this rule....
+        return {"data":f"good/luck/finding/this/non/existing/path"}
+
     input = {
         "data"	: f"{{data_dir}}/SVD/data.h5",
         "config": f"{{data_dir}}/SVD/conf.yaml" }
@@ -10,20 +17,20 @@ def parcellation_input(wildcards):
     input.update( config["parcellation_wildcard_matching"][branch] )
     return input
 
-rule parcellation:
+rule parcellate:
     '''
     decomposes data into different parcellations
     '''
     input:
         unpack(parcellation_input)
-    params:
-        params = lambda wildcards: config["parcellations"][wildcards["parcellation"]]
     output:
         f"{{data_dir}}/{{parcellation}}/data.h5",
         config = f"{{data_dir}}/{{parcellation}}/conf.yaml",
-    wildcard_constraints:
+    params:
+        params = lambda wildcards: config["parcellations"][wildcards["parcellation"]]
+    #wildcard_constraints:
         # exclude SVD as parcellation
-        parcellation = "(?!SVD).+"
+        #parcellation = r"^(?!SVD)(.*)$" #TODO Why is snakemake regex broken? :( for now evaulate the same freaking expression within input function and require non existing files to exclude this rule....
     log:
         f"{{data_dir}}/{{parcellation}}/parcellation.log"
     conda:
@@ -33,9 +40,9 @@ rule parcellation:
     script:
         "../scripts/parcellation.py"
 
-use rule parcellation as locaNMF with:
+use rule parcellate as locaNMF with:
     threads:
-        workflow.cores*0.75
+        workflow.cores*0.45
     wildcard_constraints:
         parcellation = "LocaNMF"
     conda:
@@ -91,37 +98,79 @@ rule condition:
 
 rule feature_calculation:
     input:
-        data = f"{{data_dir}}/{{cond}}/data.h5",
-        config = f"{{data_dir}}/{{cond}}/conf.yaml",
+        data = f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/data.h5",
+        config = f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/conf.yaml",
     output:
-        f"{{data_dir}}/{{cond}}/{{feature}}/features.h5",
+        f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5",
         export_raw = report(
-            f"{{data_dir}}/{{cond}}/{{feature}}/features.{config['export_type']}",
+            f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.{config['export_type']}",
             caption="../report/alignment.rst",
             category="4 Feature Calculation",
             subcategory="{feature}",
-            labels={"Condition": "{cond}", "Type": "Data"}),
+            labels={"Condition": "{cond}", "Subject/Date": "{mouse_dates}", "Type": "Data"}),
+        export_plot = report(
+            f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.pdf",
+            caption="../report/alignment.rst",
+            category="4 Feature Calculation",
+            subcategory="{feature}",
+            labels={"Condition": "{cond}", "Subject/Date": "{mouse_dates}", "Type": "Plot"}),
 
-        #export_plot = report(
-        #    f"{{data_dir}}/{{cond}}/{{feature}}/features.png",
-        #    caption="report/alignment.rst",
-        #    category="4 Feature Calculation",
-        #    subcategory="{feature}",
-        #    labels={"Condition": "{cond}", "Type": "Plot"}),
-
-        config = f"{{data_dir}}/{{cond}}/{{feature}}/conf.yaml",
+        config = f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/conf.yaml",
     wildcard_constraints:
         feature = r'(?!thresh).+'
     params:
         params = lambda wildcards: config["features"][wildcards["feature"]]
     log:
-        f"{{data_dir}}/{{cond}}/{{feature}}/feature_calculation.log"
+        f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/feature_calculation.log"
     conda:
         "../envs/environment.yaml"
     resources:
         mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,2000)
     script:
         "../scripts/feature.py"
+
+def concat_input(wildcards):
+
+    sessions = subjects_from_wildcard(wildcards["concated_sessions"])
+
+    return {"individual_sessions":[f"results/data/{'.'.join([subject_id,date])}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5" for subject_id,dates in sessions.items() for date in dates ]}
+
+    
+#if not config["combine_sessions"]:
+# Sessions were not combined upon loading, concat individual sessions 
+rule feature_concat:
+    input:
+        unpack(concat_input)
+    output:
+        f"results/data/{{concated_sessions}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5",
+        export_raw = report(
+            f"results/data/{{concated_sessions}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.{config['export_type']}",
+            caption="../report/alignment.rst",
+            category="4 Feature Calculation",
+            subcategory="{feature}",
+            labels={"Condition": "{cond}", "Subject/Date": "All", "Type": "Data"}),
+        export_plot = report(
+            f"results/data/{{concated_sessions}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.pdf",
+            caption="../report/alignment.rst",
+            category="4 Feature Calculation",
+            subcategory="{feature}",
+            labels={"Condition": "{cond}", "Subject/Date": "All", "Type": "Plot"}),  
+    params:
+        params = lambda wildcards: config["features"][wildcards["feature"]]
+    wildcard_constraints:
+        #only allowed to resolve wildcards of combined sessions (indicated by the sessions being concat with #) if set false in config, else sessions should be loaded together instead of being concat afterwards
+        concated_sessions = r"GN[\w_.\-#]*" if not config["combine_sessions"] else r"(?!)" 
+    log:
+        f"results/data/{{concated_sessions}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/feature_calculation.log"
+    conda:
+        "../envs/environment.yaml"
+    resources:
+        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,2000)
+    script:
+        "../scripts/feature_concat.py"
+#else:
+# Sessions were combined upon loading, no concatination
+
 
 #Need prio over features
 rule thresholding:
@@ -138,7 +187,7 @@ rule thresholding:
             labels={"Threshold": "{thresh}", "Condition": "{cond}", "Type": "Data"}),
 
         export_plot = report(
-            f"{{data_dir}}/{{cond}}/{{feature}}_thresh~{{thresh}}/features_thresh.png",
+            f"{{data_dir}}/{{cond}}/{{feature}}_thresh~{{thresh}}/features_thresh.pdf",
             caption="../report/alignment.rst",
             category="5 Thresholding",
             subcategory="{feature}",
@@ -175,6 +224,7 @@ rule feature_elimination:
     script:
         "../scripts/feature_elimination.py"
 
+'''
 rule decoding:
     input:
         [f"{{data_dir}}/Features/{cond}/{{feature}}/features.h5" for cond in config['trial_conditions']],
@@ -193,3 +243,32 @@ rule decoding:
         mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
     script:
         "../scripts/decoding.py"
+'''
+
+rule decoding:
+    input:
+        [f"{{data_dir}}/Features/{cond}/{{feature}}/features.h5" for cond in config['trial_conditions']],
+    output:
+        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/decoder_model.pkl",
+        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/decoder_perf.pkl",
+        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/decoder_perf_across_timepoints.pkl",
+        conf_m = f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/confusion_matrix.pkl",
+        norm_conf_m = f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/norm_confusion_matrix.pkl",
+        labels = f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/class_labels.pkl",
+        config = f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/conf.yaml",
+    params:
+        conds = list(config['trial_conditions']),
+        params = lambda wildcards: config["decoders"][wildcards["decoder"]]
+    log:
+        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/decoding.log",
+    conda:
+        "../envs/environment.yaml"
+    resources:
+        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
+    threads:
+        min(len(list(config['trial_conditions'])),workflow.cores) #For multinomial lr = job for each class
+        #workflow.cores * 0.2
+    script:
+        "../scripts/decoding.py"
+
+

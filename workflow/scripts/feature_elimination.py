@@ -2,12 +2,15 @@ from pathlib import Path
 import sys
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
+
 from ci_lib.utils import snakemake_tools
-from ci_lib.features import Features, Means, Raws, Covariances, AutoCovariances, Moup, AutoCorrelations, Feature_Type
+from ci_lib.utils.logging import start_log
+
+from ci_lib.features import Features, Means, Raws, Covariances, AutoCovariances, Moup, AutoCorrelations, Cofluctuation, Feature_Type
 from ci_lib.feature_selection import RFE_pipeline, construct_rfe_graph, rec_feature_elimination
 
 # redirect std_out to log file
-logger = snakemake_tools.start_log(snakemake)
+logger = start_log(snakemake)
 if snakemake.config['limit_memory']:
     snakemake_tools.limit_memory(snakemake)
 try:
@@ -18,7 +21,7 @@ try:
     ### Load features and labels for all conditions
     class_labels = snakemake.params['conds']
     feature = snakemake.wildcards["feature"]
-    feature_dict = { "mean" : Means, "raw" : Raws, "covariance" : Covariances, "autocovariance" : AutoCovariances, "moup" :Moup,"autocorrelation" : AutoCorrelations } #TODO We need a function for this
+    feature_dict = { "mean" : Means, "raw" : Raws, "covariance" : Covariances, "autocovariance" : AutoCovariances, "moup" :Moup,"autocorrelation" : AutoCorrelations, "cofluctuation":Cofluctuation} #TODO We need a function for this
     feature_class = feature_dict[snakemake.wildcards["feature"].split("_")[0]]
 
     class_feats = []

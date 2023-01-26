@@ -5,14 +5,16 @@ from matplotlib import cm
 
 from pathlib import Path
 import sys
+
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 import ci_lib.plotting as plots
 from ci_lib.utils import snakemake_tools
+from ci_lib.utils.logging import start_log
 
 
 ### Setup
-logger = snakemake_tools.start_log(snakemake)
+logger = start_log(snakemake)
 try:
     timer_start = snakemake_tools.start_timer()
 
@@ -72,6 +74,8 @@ try:
             with open(snakemake.input[d+f*dec_n], "rb") as file:
                 try:
                     perf = pickle.load(file)
+                    #Has dimension timepoints x reps
+                    perf = np.array(perf).flatten()
                 except:
                     perf = [0]
                 violin_plts[f,d]=plots.colored_violinplot(perf, positions=f + np.arange(1) + ((d+1)*1/(dec_n+1))-0.5, widths=[1/(dec_n+2)], color=colors(d/dec_n))

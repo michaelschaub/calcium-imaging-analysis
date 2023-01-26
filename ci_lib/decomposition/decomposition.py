@@ -70,11 +70,20 @@ def anatomical_parcellation(DecompDataObject, atlas_path=None, ROI=[], logger=LO
     svd_segments_bitmasks = np.broadcast_to(spatials,(n_svd,*spatials.shape)) #repeats spatials for every frame (not in memory, just simulates it by setting a stride )
 
     svd_segment_mean = np.zeros((n_svd,n_segments))
-    svd_segment_mean = np.moveaxis([np.nanmean(DecompDataObject.spatials[:,:h,:w][svd_segments_bitmasks[:,i,:h,:w]].reshape(n_svd,-1),axis=-1) for i in range(n_segments)],-1,0)
+
+    svd_spatials = DecompDataObject.spatials
+
+    #Add random noise to avoid Var=0 for empty areas
+    svd_spatials = np.nan_to_num(svd_spatials) + np.random.rand(*svd_spatials.shape) * 16 * np.finfo(np.float32).eps
+
+    svd_segment_mean = np.moveaxis([np.nanmean(svd_spatials[:,:h,:w][svd_segments_bitmasks[:,i,:h,:w]].reshape(n_svd,-1),axis=-1) for i in range(n_segments)],-1,0)
     np.nan_to_num(svd_segment_mean,copy=False)
 
     new_temporals = np.tensordot(DecompDataObject.temporals_flat, svd_segment_mean, 1)
     new_spatials = spatials
+
+    logger.info(f"NaNs in spatials: {np.isnan(new_spatials).any()}, NaNs in temporals: {np.isnan(new_temporals).any()}")
+    logger.info(f"0 Vars in spatials: {np.count_nonzero(np.var(new_spatials,axis=0))}, 0 Vars in temporals: {np.count_nonzero(np.var(new_temporals,axis=0)==0)}")
 
     return DecompDataObject.update(new_temporals,new_spatials, spatial_labels=labels)
 

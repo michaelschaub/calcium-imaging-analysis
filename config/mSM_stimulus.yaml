@@ -1,0 +1,101 @@
+branch_opts:
+  combine_sessions: True #True
+  include_individual_sessions: False
+
+  # Defines subjects and dates to use from Simons Experiment
+  subjects:
+      mSM65:
+        - 08-Sep-2018
+        - 10-Sep-2018
+      #mSM66:
+        #- 08-Sep-2018 #VC and df missmatch
+        #- 10-Sep-2018 #VC and df missmatch
+
+        
+
+  # Defines conditions for Simon Experimental Setup
+  conditions:
+    default:
+      phase: all
+
+    left_vis:
+      sides: left
+      modalities: visual
+    right_vis:
+      sides: right
+      modalities: visual
+    left_aud:
+      sides: left
+      modalities: auditory
+    right_aud:
+      sides: right
+      modalities: auditory
+
+    ##Choice Decoder
+    # leftResponse_leftStim:
+    #   responses: left
+    #   sides: left
+
+    # leftResponse_rightStim:
+    #   responses: left
+    #   sides: right
+
+    # rightResponse_rightStim:
+    #   responses: right
+    #   sides: right
+
+    # rightResponse_leftStim:
+    #   responses: right
+    #   sides: left
+
+  
+
+# Defines trial phases for Simon Experimental Setup
+trial_conditions:
+  sides:
+    column: CorrectSide
+    conds:
+      left:   1
+      right:  2
+  modalities:
+    column: StimType
+    conds:
+      visual:   1
+      auditory: 2
+  responses:
+    column: ResponseSide
+    conds:
+      left: 1.0
+      right: 2.0
+
+phase_conditions:
+  pretrial:
+    start:  0
+    stop:   90
+  stimulus:
+    start:  90
+  #  stop:   107
+  #inter_stim:
+  #  start: 107
+  #  stop: 122
+  #stim2:
+  #  start:  122
+    stop:   140
+  delay:
+    start: 140
+    stop: 170
+  response:
+    start: 170
+    stop: 201
+  #delay: #?
+  #  start: 150
+  #  stop: 160
+  #response: #?
+  #  start: 160
+  #  stop: 170
+  #posttrial:
+  #  start: 170
+  #  stop: 201
+  all:
+    start: 0
+    stop: 201

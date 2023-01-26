@@ -7,6 +7,8 @@ from .features import Features, Feature_Type
 from .means import Means, calc_means
 from .covariances import Covariances, calc_covs, flat_covs
 
+from ci_lib.plotting import plot_connectivity_matrix
+
 
 def calc_acovs(temps, means, covs, n_tau_range, label):
     n_taus = np.array(n_tau_range)
@@ -53,6 +55,7 @@ class AutoCovariances(Features):
             covs = np.copy(covs._feature)
 
         feature = calc_acovs(data.temporals[:, :, :max_comps], means, covs, timelags, label)
+
         feat = AutoCovariances(data, feature, include_diagonal= include_diagonal)
         return feat
 
@@ -64,3 +67,7 @@ class AutoCovariances(Features):
     @property
     def ncomponents(self):
         return self._feature.shape[-1]
+
+    def plot(self,path):
+        plot_connectivity_matrix([np.mean(self._feature,axis=0)[0],np.std(self._feature,axis=0)[0]],title="mean|std",path=path) #TODO why is it trial x 1 (?) x w x h
+

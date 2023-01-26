@@ -6,6 +6,7 @@ import sys
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 from ci_lib.utils import snakemake_tools
+from ci_lib.utils.logging import start_log
 from ci_lib import DecompData
 import shutil
 import time
@@ -14,7 +15,7 @@ import time
 def rec_iter_link(input,output):
     for i,o in zip(input,output):
         if isinstance(i,str) and isinstance(o,str):
-            #os.symlink(src=str(i) , dst=str(o))
+
             #print(f"copy {r'{}'.format(i)} - > {r'{}'.format(o)}")
             print(Path(r'{}'.format(o)).parent)
             Path(r'{}'.format(o)).parent.touch()
@@ -24,6 +25,7 @@ def rec_iter_link(input,output):
 
 
             shutil.copy2(Path(r'{}'.format(i)),Path(r'{}'.format(o)))
+            #os.symlink(src=str(i) , dst=str(o))
 
             time.sleep(1)
 
@@ -33,7 +35,7 @@ def rec_iter_link(input,output):
             print("error")
             raise TypeError('Input/Output structure missmatched')
 
-logger = snakemake_tools.start_log(snakemake)
+logger = start_log(snakemake)
 if snakemake.config['limit_memory']:
     snakemake_tools.limit_memory(snakemake)
 try:

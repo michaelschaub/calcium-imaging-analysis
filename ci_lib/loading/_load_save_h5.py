@@ -1,3 +1,7 @@
+#Workaround to support python 3.7 which only supports pkl protocol <= 4
+#import pickle
+#pickle.HIGHEST_PROTOCOL = 4
+
 import numpy as np
 import pandas as pd
 import h5py
@@ -5,6 +9,13 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 from hashlib import sha1
+
+from ci_lib.utils import pickle_protocol
+
+#TODO remove cue_left, cue_right arrays from cells of sessions dataframe, as numpy arrays in dataframe cells result in a mixed datatype which is inefficient for h5
+# Until then filter warning
+import warnings
+warnings.filterwarnings('ignore',category=pd.io.pytables.PerformanceWarning)
 
 CHECK_HASH = True
 
@@ -99,8 +110,9 @@ def save_object_h5(h5_obj, label, attr):
         file = h5_obj.file.filename
         # close file to be able to use pandas to_hdf function
         h5_obj.file.close()
-        # use pandas to_hdf function
-        attr.to_hdf(file, f"{path}/{label}", "a")
+        # use pandas to_hdf function, forced to version 4 for backwards comp. 
+        with pickle_protocol(4):
+            attr.to_hdf(file, f"{path}/{label}", "a")
         # reopen file at path
         h5_obj = h5py.File(file, "a")[path]
         # save attr type as HDF5 attribute
@@ -168,9 +180,14 @@ def save_h5(data, file, attributes={}, logger=LOGGER ):
 
     for label, attr in attributes.items():
         if attr is not None:
+            logger.info(label)
             h5_file = save_object_h5( h5_file, label, attr)
+            
             logger.debug(h5_file)
-            logger.debug(h5_file[label].attrs)
+            try:
+                logger.debug(h5_file[label].attrs)
+            except Exception as err:
+                print(Exception)
             h5_file[label].attrs["hash"] = reproducable_hash(attr).hexdigest()
 
     return h5_file

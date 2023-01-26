@@ -27,10 +27,8 @@ def create_parameters( branch_conf, static_conf={} ):
         ### From here
         # create a pattern of form "branchname_{}_{}_...", with # of params replacement fields
         pattern    = "_".join( [f"{branch}"] +  ["{}"]*len(params) )
-        print(pattern)
         # insert parameter names and parameter name replacement fields into pattern
         pattern    = pattern.format(*map( "{0}~{{{0}}}".format, params.keys() ))
-        print(pattern)
         # create cartesian product over all parameter values
         values    = iterproduct( *params.values() )
         # create list parameter dictionaries from cartesian product
@@ -49,10 +47,8 @@ def create_parameters( branch_conf, static_conf={} ):
 
             # create a pattern of form "branchname_{}_{}_...", with # of params replacement fields
             pattern    = "_".join( [f"{branch}"] +  ["{}"]*len(params) )
-            print(pattern)
             # insert parameter names and parameter name replacement fields into pattern
             pattern    = pattern.format(*map( "{0}~{{{0}}}".format, params.keys() ))
-            print(pattern)
             # create cartesian product over all parameter values
             values    = iterproduct( *params.values() )
             # create list parameter dictionaries from cartesian product
@@ -64,7 +60,6 @@ def create_parameters( branch_conf, static_conf={} ):
                 parameters[ pattern.format(**vals) ] = {"branch" : branch} | vals
         ### TODO this is just checking if it works  COPY PASTA
 
-    print(parameters)
     return parameters
 
 def create_conditions(conditions, config):
@@ -105,10 +100,16 @@ def branch_match( branches, params=True ):
 
 
 def hash_config(config):
+
     return hashlib.md5(json.dumps(deep_stringize_dict_keys(config), sort_keys=True).encode('utf-8')).hexdigest() #Json.dump to force nested dicts to be sorted
 
 def deep_stringize_dict_keys(item):
     """Converts all keys to strings in a nested dictionary"""
+
+    #sets can't be serialized
+    if isinstance(item,set):
+        item = list(item)
+
     if isinstance(item, dict):
         return {str(k): deep_stringize_dict_keys(v) for k, v in item.items()}
 
@@ -122,3 +123,10 @@ def deep_stringize_dict_keys(item):
     # I don't care about tuples, since they don't exist in JSON
 
     return item
+
+def getKeys(dict):
+    ''' Returns keys of dict. Failsafe for nested dicts where dict.keys() throws errors.'''
+    list = []
+    for key in dict.keys():
+        list.append(key)
+    return list

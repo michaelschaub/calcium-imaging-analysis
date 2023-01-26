@@ -3,13 +3,17 @@ import numpy as np
 import sys
 
 
-if sys.version_info[:2] == (1,6): ##Guard locanmf
-    from locanmf import LocaNMF
-    import torch
-
 
 import logging
 LOGGER = logging.getLogger(__name__)
+
+from ci_lib.utils.logging import StreamToLogger
+
+try:
+    from locanmf import LocaNMF
+    import torch
+except:
+    LOGGER.warn("locanmf could not be imported")
 
 ## [OPTIONAL] if cuda support, uncomment following lines
 #import os
@@ -51,6 +55,11 @@ def locaNMF(DecompDataObject, atlas_path, logger=LOGGER,
     :return: DecompDataObject with Data-driven Spatials constrained to the Brain Regions in the Atlas.
     :rtype: DecompDataObject
     """
+    stdout = sys.stdout
+    stderr = sys.stderr
+    sys.stdout = StreamToLogger(logger,logging.INFO)
+    sys.stderr = StreamToLogger(logger,logging.ERROR)
+
     rank_range = (minrank, maxrank, 1)
 
     atlas_file = sio.loadmat(atlas_path,simplify_cells=True)
@@ -59,7 +68,13 @@ def locaNMF(DecompDataObject, atlas_path, logger=LOGGER,
     labels = np.asarray(atlas_file['areaLabels_wSide'],dtype=str)
 
     temporals = DecompDataObject.temporals_flat
-    spatials = np.moveaxis(DecompDataObject.spatials, 0, -1 )
+    spatials = np.moveaxis(np.nan_to_num(DecompDataObject.spatials), 0, -1 )
+    
+    #TODO remove after testing
+    #Testing if adding random noise fixes error on empty areas (with no variation)
+    print(f"Before {np.var(spatials,axis=0)}")
+    spatials = spatials + np.random.rand(*spatials.shape) * 16 * np.finfo(np.float32).eps 
+    print(f"After {np.var(spatials,axis=0)}")
 
     width = min(DecompDataObject.n_xaxis, brainmask.shape[0])
     height = min(DecompDataObject.n_yaxis, brainmask.shape[1])
@@ -165,4 +180,6 @@ def locaNMF(DecompDataObject, atlas_path, logger=LOGGER,
     logger.debug("new_labels {}".format(new_labels))
 
 
+    sys.stdout = stdout
+    sys.stderr = stderr
     return DecompDataObject.update(new_temporals, new_spatials, spatial_labels=new_labels)

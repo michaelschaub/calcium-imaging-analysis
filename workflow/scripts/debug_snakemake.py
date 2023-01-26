@@ -6,10 +6,11 @@ sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 #Logging
 from snakemake.logging import logger
 
+from ci_lib.utils.logging import start_log
 from ci_lib.utils import snakemake_tools
 
 # redirect std_out to log file
-logger = snakemake_tools.start_log(snakemake)
+logger = start_log(snakemake)
 #snakemake_tools.save_conf(snakemake, sections=[])
 
 def dict_from_NamedList(nlist):

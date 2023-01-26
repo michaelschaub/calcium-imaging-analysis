@@ -15,16 +15,37 @@ class Feature_Type(Enum):
     UNDIRECTED = 1
     DIRECTED = 2
     TIMESERIES = 3
+    def __eq__(self, other):
+        return self.value == other.value
 
 class Features:
-    def __init__(self, data, feature, file=None):
+    def __init__(self, data, feature, file=None, time_resolved=False, full = False):
         self.data = data
         self._feature = feature
         self._savefile = file
 
+        self._time_resolved = time_resolved
+        self._full = full
+
+
+
+
     def flatten(self):
         '''flatten contained feature to one trial and one feature dimension'''
         pass
+
+
+    def concat(self, Features, overwrite=False):
+        ''' concats feature values from List of Features to this feature'''
+        if not isinstance(Features, list):
+            Features = [Features]
+        print(self._feature.shape)
+        if overwrite:
+            self._feature = np.concatenate([f._feature for f in Features],axis=0)
+        else:
+            self._feature = np.concatenate([self._feature,[f._feature for f in Features]],axis=0)
+
+        print(self._feature.shape)
 
     def expand(self, data=None):
         '''expand feature into same shape as temporals in Data (for computation)'''
@@ -45,6 +66,34 @@ class Features:
     @feature.setter
     def feature(self,value):
         self._feature = value
+
+    @property
+    def trials_n(self):
+        ''' Returns number of trials, the first dimension of the feature array'''
+        return self._feature.shape[0]
+
+    @property
+    def timepoints(self):
+        ''' Returns number of frames, the second dimension of the feature array, if it is time resolved and not full (decode timepoints together), otherwise None'''
+        if self._time_resolved and not self._full:
+            return self._feature.shape[1]
+        else:
+            return None
+
+    @property
+    def is_time_resolved(self):
+        return self._time_resolved
+
+    def subsample(self,n):
+        '''
+        Subsampling Trials to balance number of datapoints between different conditions
+        :param n: Number of trials to sample
+        '''
+        rng = np.random.default_rng()
+        select_n = rng.choice(self.trials_n,size=n,replace=False)
+
+        self._feature = self._feature[select_n ]
+        return self
 
     @property
     def mean(self):
@@ -159,6 +208,10 @@ class Features:
     @property
     def type(self):
         return self._type
+
+    def plot(self, path):
+        #Create empty fi    le if inheritingfeature class doesn't define a visualization
+        open(path, 'a').close()
 
 
 class Raws(Features):

@@ -15,7 +15,7 @@ LOGGER = logging.getLogger(__name__)
 #def draw_neural_activity(temps,spatials,plt_title,subfig_titles):
 #    pass
 
-def draw_neural_activity(frames,path,plt_title,subfig_titles=None,overlay=False,cortex_map=False,logger=LOGGER,vmin=None,vmax=None):
+def draw_neural_activity(frames,path=None,plt_title="",subfig_titles=None,overlay=False,cortex_map=False,logger=LOGGER,vmin=None,vmax=None):
     #Single Frame is wrapped
     if frames.ndim == 2:
         frames = frames[np.newaxis, ...]
@@ -47,6 +47,8 @@ def draw_neural_activity(frames,path,plt_title,subfig_titles=None,overlay=False,
 
     fig, ax = plt.subplots(x_dims , y_dims, constrained_layout=True, squeeze=False)
     fig.suptitle(plt_title)
+
+
     for j in range(y_dims):
         for i in range(x_dims):
             if j*x_dims + i < len(frames):
@@ -62,8 +64,12 @@ def draw_neural_activity(frames,path,plt_title,subfig_titles=None,overlay=False,
                 ax[i, j].set_title(subfig_titles[j*x_dims + i])
                 ax[i, j].set_xticks([])
                 ax[i, j].set_yticks([])
+
                 #plt.draw()
                 #plt.pause(0.1)
     #plt.show()
-    plt.savefig(path, format='png')
+    if path is not None:
+        plt.savefig(path, format='png')
+    else:
+        plt.show()
     plt.close()

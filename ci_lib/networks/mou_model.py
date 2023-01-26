@@ -10,6 +10,9 @@ You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2
 Main class to deal with construction, simulation and estimation for the 
 multivariate Ornstein-Uhlenbeck (MOU) process.
 """
+#Workaround to support python 3.7 which only supports pkl protocol <= 4
+import pickle
+#pickle.HIGHEST_PROTOCOL = 4
 
 import numpy as np
 import scipy.linalg as spl

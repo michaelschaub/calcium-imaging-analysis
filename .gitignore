@@ -9,3 +9,15 @@ output*
 !resources/.gitkeep
 !resources/meta/*
 !results/.gitkeep
+
+# Sphinx documentation
+docs/build/
+
+# Snakemake report
+report.zip
+report.html
+report/
+
+# Output files form nohup etc.
+*.out
+.vscode/settings.json

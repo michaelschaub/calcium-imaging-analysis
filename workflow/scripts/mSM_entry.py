@@ -5,16 +5,19 @@ import warnings
 from snakemake.logging import logger
 import pandas as pd
 
+from sklearn.decomposition import TruncatedSVD
+
 from pathlib import Path
 import sys
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 from ci_lib.utils import snakemake_tools
+from ci_lib.utils.logging import start_log
 from ci_lib.loading import load_task_data_as_pandas_df, alignment #import extract_session_data_and_save
 from ci_lib import DecompData
 
 ### Setup
-logger = snakemake_tools.start_log(snakemake) # redirect std_out to log file
+logger = start_log(snakemake) # redirect std_out to log file
 if snakemake.config['limit_memory']:
     snakemake_tools.limit_memory(snakemake)
 try:
@@ -24,8 +27,7 @@ try:
     ### Load
     files_Vc = snakemake.input["Vc"]
     trans_paths = snakemake.input["trans_params"]
-    files_sessions = snakemake.params["sessions_structured"] #snakemake.input["tasks"]
-    subject_dates_str = snakemake.params["subject_dates_str"]
+    files_sessions = snakemake.params[0]["sessions_structured"] #snakemake.input["tasks"]
 
     initial_call = True
     for subject_id, fs in files_sessions.items():
@@ -68,11 +70,8 @@ try:
             logger.debug(f"{k}: could not convert to float, no nan test")
     sessions = sessions.drop(sessions.index[total_nans])
     logger.info(f"Dropped {len(total_nans)} trials, because of NaN entries.")
-
+    logger.info(total_nans)
     logger.info("Loaded task data")
-
-    if len(files_Vc) > 1:
-        warnings.warn("Combining different dates may still be buggy!")
 
     ### Process
     trial_starts = []
@@ -80,22 +79,26 @@ try:
     U = []
     start = 0
     for file_Vc,trans_path in zip(files_Vc,trans_paths):
+        logger.info(f"Loaded path {file_Vc}")
         f = h5py.File(file_Vc, 'r')
+        alignend_U, align_plot = alignment.align_spatials_path(np.nan_to_num(np.array(f["U"]).swapaxes(1,2)),trans_path,plot_alignment_path=snakemake.output["align_plot"])
+        U.append(alignend_U) #TODO brains are already aligned in some cases (np.array(f["U"]))
 
-        alignend_U, align_plot = alignment.align_spatials_path(np.array(f["U"]).swapaxes(1,2),trans_path,plot_alignment_path=snakemake.output["align_plot"])
-        U.append(alignend_U)
-
-        Vc.append(np.array(f["Vc"]))
+        Vc.append(np.nan_to_num(np.array(f["Vc"])))
         logger.debug(f"{U[-1].shape}")
         logger.debug(f"{Vc[-1].shape}")
         n_trials, frames, n_components = Vc[-1].shape
-        _, width, height = U[-1].shape
+        U[-1] = U[-1][:n_components,:,:]      
+        n_components, width, height = U[-1].shape
+        #TODO new data from simon has 500 spatial components, but only 200 in temporals/Vc.mat
+        #
+
         frameCnt = frames * np.ones((n_trials),dtype=int)
         logger.info(
             f"Dimensions: n_trials={n_trials}, frames per trial={frames}, n_components={n_components}, width={width}, height={height}")
         frameCnt[0] = 0
-        #assert np.array_equal(U[-1], U[0], equal_nan=True), "Combining different dates with different Compositions is not yet supported"
-        #TODO
+        assert np.array_equal(U[-1].shape, U[0].shape, equal_nan=True), "Combining dates with different resolutions or number of components is not yet supported"
+        
 
         trial_starts.append(np.cumsum(frameCnt) + start)
         logger.debug(repr(trial_starts))
@@ -103,13 +106,46 @@ try:
         start += Vc[-1].shape[0]
 
     trial_starts = np.concatenate( trial_starts )
+    
+
+    if len(U)==1:
+        U = U[0]
+    else:
+
+        svd = TruncatedSVD(n_components=n_components, random_state=42)
+        flat_U = np.concatenate([u.reshape(n_components,width * height) for u in U])
+        
+        svd.fit(np.nan_to_num(flat_U))
+        
+        #mean_U = np.mean(np.nan_to_num(U),axis=0)
+
+
+        #spat_n, w , h = mean_U.shape
+
+        mean_U = svd.components_  #mean_U.reshape(spat_n,w * h)
+
+        mean_U_inv = np.nan_to_num(np.linalg.pinv(np.nan_to_num(mean_U, nan=0.0)), nan=0.0)
+
+        #approx_U_error = np.matmul(mean_U_inv, mean_U)
+
+        error = np.zeros((len(U)))
+
+        for i,V in enumerate(Vc):
+            U[i] = U[i].reshape(n_components,width * height)
+
+            V_transform = np.matmul(np.nan_to_num(U[i], nan=0.0), mean_U_inv)
+
+            Vc[i] = np.matmul(Vc[i], V_transform)
+
+        U = mean_U.reshape(n_components,width,height) # U[0]
+
     Vc = np.concatenate( Vc )
-    U = U[0]
+
     logger.debug(f"{U.shape}")
     logger.debug(f"{Vc.shape}")
 
-
     ### Save
+    print(sessions)
     svd = DecompData( sessions, Vc, U, trial_starts)
     logger.debug(f"svd dataframe:\n{str(svd._df)}")
     svd.save( snakemake.output[0] )
