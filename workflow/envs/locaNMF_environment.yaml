@@ -2,24 +2,37 @@ name: locanmf
 channels:
   - conda-forge
   - defaults
-  - ss5513
-  - pytorch
+  - local
 dependencies:
-  - python=3.6
+  - python=3.7
   - pip
-  # Data handling
   - numpy
   - pandas
-  #- h5py=2.8 #doesn't work on win
-  # Learning
+  - scipy
+
+
   - scikit-learn
 
-  # Plotting and visualization
   - matplotlib
   - bokeh
-  - hdf5
+
   - pyyaml
-  - pytables
+  - pytables>=3.5.1
   - opencv
   - locanmf
-  - h5py # conda h5py doesn't work for me
+
+  - pip:
+      - pyMou@git+https://github.com/mb-BCA/pyMOU.git@master
+
+      - networkx
+      - Shapely
+
+      # ?
+      - psutil
+
+      # Windows workaround for h5py
+      - wheel
+      - cython
+      - versioned-hdf5
+      - h5py
+

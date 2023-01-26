@@ -8,10 +8,10 @@ LOGGER = logging.getLogger(__name__)
 
 def anatomical_parcellation(data, atlas_path=None, ROI=[], logger=LOGGER, ):
     '''
-    Decomposes a DecompDataObject into a anatomical parcellation based on a Brain Atlas
+    Decomposes a DecompData object into a anatomical parcellation based on a Brain Atlas
 
-    :param data: DecompDataObject with abitrary parcellation (Usually SVD)
-    :type data: DecompDataObject
+    :param data: DecompData object with abitrary parcellation (Usually SVD)
+    :type data: DecompData
 
     :param atlas_path: Path to Dict containing the Brain Atlas (TODO Specify Format)
     :type atlas_path: String or pathlib.Path or None
@@ -22,8 +22,8 @@ def anatomical_parcellation(data, atlas_path=None, ROI=[], logger=LOGGER, ):
     :param logger: The LOGGER object that all console outputs are piped into
     :type logger: LOGGER
 
-    :return: Anatomically parcellated DecompDataObject with Spatials corresponding to the given Atlas.
-    :rtype: DecompDataObject
+    :return: Anatomically parcellated DecompData object with Spatials corresponding to the given Atlas.
+    :rtype: DecompData
     '''
 
     ### Loading meta data for parcellation, masks and labels for each area
@@ -70,26 +70,35 @@ def anatomical_parcellation(data, atlas_path=None, ROI=[], logger=LOGGER, ):
     svd_segments_bitmasks = np.broadcast_to(spatials,(n_svd,*spatials.shape)) #repeats spatials for every frame (not in memory, just simulates it by setting a stride )
 
     svd_segment_mean = np.zeros((n_svd,n_segments))
-    svd_segment_mean = np.moveaxis([np.nanmean(data.spatials[:,:h,:w][svd_segments_bitmasks[:,i,:h,:w]].reshape(n_svd,-1),axis=-1) for i in range(n_segments)],-1,0)
+
+    svd_spatials = data.spatials
+
+    #Add random noise to avoid Var=0 for empty areas
+    svd_spatials = np.nan_to_num(svd_spatials) + np.random.rand(*svd_spatials.shape) * 16 * np.finfo(np.float32).eps
+
+    svd_segment_mean = np.moveaxis([np.nanmean(svd_spatials[:,:h,:w][svd_segments_bitmasks[:,i,:h,:w]].reshape(n_svd,-1),axis=-1) for i in range(n_segments)],-1,0)
     np.nan_to_num(svd_segment_mean,copy=False)
 
     new_temporals = np.tensordot(data.temporals_flat, svd_segment_mean, 1)
     new_spatials = spatials
 
+    logger.info(f"NaNs in spatials: {np.isnan(new_spatials).any()}, NaNs in temporals: {np.isnan(new_temporals).any()}")
+    logger.info(f"0 Vars in spatials: {np.count_nonzero(np.var(new_spatials,axis=0))}, 0 Vars in temporals: {np.count_nonzero(np.var(new_temporals,axis=0)==0)}")
+
     return data.recreate(new_temporals,new_spatials, spatial_labels=labels)
 
 def fastICA(data, n_components):
     """
-    Decomposes an DecompDataObject with Independet Component Analysis
+    Decomposes an DecompData object with Independet Component Analysis
 
-    :param data: DecompDataObject with abitrary parcellation (Usually SVD)
-    :type data: DecompDataObject
+    :param data: DecompData object with abitrary parcellation (Usually SVD)
+    :type data: DecompData
 
     :param n_components: Number of independent components (w.r.t. time).
     :type n_components: int
 
-    :return: DecompDataObject with Spatials corresponding to the independent components (w.r.t. time) obtianed by ICA.
-    :rtype: DecompDataObject
+    :return: DecompData object with Spatials corresponding to the independent components (w.r.t. time) obtianed by ICA.
+    :rtype: DecompData
     """
     #Eventually add mask?
 
@@ -105,16 +114,16 @@ def fastICA(data, n_components):
 
 def postprocess_SVD(data, n_components):
     """
-    Modifies an SVD DecompDataObject, for example to crop to the number of components
+    Modifies an SVD DecompData object, for example to crop to the number of components
 
-    :param data: DecompDataObject with SVD parcellation
-    :type data: DecompDataObject
+    :param data: DecompData object with SVD parcellation
+    :type data: DecompData
 
     :param n_components: Number of components (w.r.t. time).
     :type n_components: int
 
-    :return: DecompDataObject containing the processes SVD
-    :rtype: DecompDataObject
+    :return: DecompData object containing the processes SVD
+    :rtype: DecompData
     """
 
     return data.recreate(data.temporals_flat[:,:n_components], data.spatials[:n_components,:,:])

@@ -1,1 +1,1 @@
-from .snakemake_tools import *
+from .pickle_protocol import pickle_protocol

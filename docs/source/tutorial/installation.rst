@@ -19,7 +19,7 @@ Currently WIPAR is only available on `Github <https://github.com/michaelschaub/c
 
 .. code-block:: console
 
-    $ git pull git@github.com:michaelschaub/calcium-imaging-analysis.git
+    $ git clone https://github.com/michaelschaub/calcium-imaging-analysis.git
 
 You should have the following file structure in your ``/WIPAR`` folder.
 
@@ -28,7 +28,6 @@ You should have the following file structure in your ``/WIPAR`` folder.
     .
     ├── config (▶)     | config files for pipeline runs
     ├── resources (▶)  | experimental data and brain atlases
-    ├── results (▶)    | processed data and plots
     ├── ci_lib (🛠)     | python package containing all custom functions for the pipeline steps
     ├── workflow (🛠)   | Snakemake logic like rules, envs and entry scripts
     └── SLURM           | batch files to run on computational clusters

@@ -14,7 +14,7 @@ def align_spatials(spatials,trans_params, logger=None, plot_alignment_path=None)
     logger = LOGGER if logger is None else logger.getChild(__name__)
 
     f , h , w = spatials.shape #org shape
-    raw_spatials = np.mean(spatials[:,:,:],axis=0)
+    raw_spatials = spatials[0,:,:]#np.mean(spatials[:,:,:],axis=0)
 
     #Append bitmap as last frame
     spatials = np.append(spatials,np.ones((1,h,w)),axis=0)
@@ -75,9 +75,9 @@ def align_spatials(spatials,trans_params, logger=None, plot_alignment_path=None)
         spatials = spatials[:,trim_h:trim_h + h, trim_w:trim_w+w]
 
     if plot_alignment_path is not None:
-        alignment_plot = draw_neural_activity(frames=np.array([raw_spatials,np.mean(spatials[:,:,:],axis=0)]),
+        alignment_plot = draw_neural_activity(frames=np.array([raw_spatials,spatials[0,:,:]]),
                                             path=plot_alignment_path,
-                                            plt_title="Brain Alignment", subfig_titles=["Raw","Aligned"], overlay=True, logger=logger,vmin=-0.0004,vmax=0.0004) #TODO find vmin and vmax dynamically
+                                            plt_title="Brain Alignment", subfig_titles=["Raw","Aligned"], overlay=False,outlined=True,masked=False, logger=logger) #TODO find vmin and vmax dynamically
         return spatials, alignment_plot
 
     return spatials

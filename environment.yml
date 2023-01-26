@@ -4,8 +4,8 @@ channels:
   - conda-forge
   - bioconda 
 dependencies:
-  - pyyaml
   - python[version='>=3.10']
+  
   - matplotlib
   - numpy
   - scikit-learn
@@ -16,7 +16,10 @@ dependencies:
   - bokeh
   - scipy
   - snakemake
+  - docutils<0.17
   - pip:
+      - pyyaml
+      
       - sphinx
       - sphinx-autoapi
       - torch

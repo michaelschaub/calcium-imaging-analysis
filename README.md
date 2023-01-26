@@ -1,4 +1,4 @@
-![Wipar Logo](https://github.com/michaelschaub/calcium-imaging-analysis/blob/pipeline/doc/Wipar--Logo-Transparent-v2.png?raw=true)
+![Wipar Logo](https://github.com/michaelschaub/calcium-imaging-analysis/blob/pipeline/docs/source/_images/wipar_logo.png?raw=true)
 
 
 

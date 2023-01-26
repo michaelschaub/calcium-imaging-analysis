@@ -12,7 +12,7 @@ Feature Overview
 
 * :doc:`Brain Alignment of different subjects and experiments<workflow/brain_alignment>`
 * :doc:`Different data-driven & anatomical parcellations (Atlas-based, locaNMF, SVD, ICA)<workflow/parcellation>`
-* :doc:`Different brain connectivity measurements (FC, EC)<workflow/brain_connectivity>`
+* :doc:`Different brain connectivity measurements (FC, EC)<workflow/feature>`
 * :doc:`Neural Decoding through simple machine learning models<workflow/neural_decoding>`
 * :doc:`Biomarker Detection through Feature Selection<workflow/biomarker_detection>`
 * :doc:`Generic & customizable selection of trials and conditions<workflow/trials_conditions>`
@@ -28,7 +28,7 @@ Getting started
 
 * To get a first impression of the results you can generate with WIPAR, please have a look at an exemplary `report <https://raw.github.com/michaelschaub/calcium-imaging-analysis/blob/readthedocs/report.html>`_ that is automatically compiled.
 * To get started :ref:`install WIPAR and it's requirements <installation>`
-* For an example on how to use WIPAR and general guidelines have a look at the :ref:`tutorial <tutorial>`
+* For an example on how to run WIPAR and continue working with the results externaly :ref:`tutorial <tutorial>`
 * Detailed explanations of the configurations can be found here
 
 
@@ -42,6 +42,8 @@ Getting started
 
    tutorial/installation
    tutorial/tutorial
+   tutorial/advanced
+   tutorial/snakemake
 
 .. toctree::
    :caption: Workflow
@@ -52,7 +54,7 @@ Getting started
    workflow/loading
    workflow/brain_alignment
    workflow/parcellation
-   workflow/brain_connectivity
+   workflow/feature
    workflow/trials_conditions
    workflow/neural_decoding
    workflow/biomarker_detection

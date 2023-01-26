@@ -3,6 +3,9 @@ import numpy as np
 from ci_lib import Data, DecompData
 from ci_lib.loading import reproducable_hash, load_h5, save_h5
 from ci_lib.networks import MOU #from pymou import MOU
+from ci_lib.plotting import plot_connectivity_matrix
+
+#from pymou  import MOU #TODO 
 
 import pathlib
 from enum import Enum
@@ -50,17 +53,18 @@ def recompose_mou_ests( attr_arrays, mou_ests=None ):
 class Moup(Features):
     _type = Feature_Type.DIRECTED
 
-    def __init__(self, data, feature, mou_ests, label=None, file=None):
+    def __init__(self, data, feature, mou_ests, label=None, file=None,time_resolved=False):
         self.data = data
         self._feature = feature
         self._mou_ests = mou_ests
         self._label = label
         self._savefile = file
+        self._time_resolved = time_resolved
 
-    def create(data, max_comps=None, timelag=1, label=None, logger=LOGGER):
+    def create(data, max_comps=None, timelag=None, label=None, start=None,stop=None,logger=LOGGER):
         if max_comps is not None:
             logger.warn("DEPRECATED: max_comps parameter in features can not garanty sensible choice of components, use n_components parameter for parcellations instead")
-        mou_ests = fit_moup(data.temporals[:, :, :max_comps], timelag, label, logger=logger)
+        mou_ests = fit_moup(data.temporals[:, slice(start,stop), :max_comps], timelag, logger=logger)
         feature = np.asarray([[mou_est.get_J()] for mou_est in mou_ests]) #TODO remove unnecessary additional dimension trials x 1 (!) x w x h, was done to fit autocov/cor but never needed
 
         for i, J in enumerate(feature[:,0,:,:]):
@@ -79,6 +83,8 @@ class Moup(Features):
 
         return flat_params
 
+    def plot(self,path):
+        plot_connectivity_matrix([np.mean(self._feature,axis=0)[0],np.std(self._feature,axis=0)[0]],title="mean|std",path=path) #TODO why is it trial x 1 (?) x w x h
     '''
     def export(self, path, feat=None):
         feats = np.empty((len(self._mou_ests),*(self._mou_ests[0].get_J().shape[0]))

@@ -73,10 +73,11 @@ def load_individual_session_data(date_folder, mouse_id, logger=None):
                     temp_data['n_targets'].append(int(max(h5f['cues_left_visual'][:].sum(), h5f['cues_right_visual'][:].sum())))
                 #
             #
-            temp_data['mouse_id'].append(mouse_id)
-            temp_data['date_time'].append(path.basename(date_folder))
+            temp_data['mouse_id'].append(str(mouse_id))
+            temp_data['date_time'].append(str(path.basename(date_folder)))
             temp_data['trial_id'].append(int(path.splitext(path.basename(trial_file))[0][-6:]))
 
+            #TODO performance warning originates here, numpy ararys in dataframe cells result in a mixed datatype which is inefficient for h5
             if 'cues_left_visual' in h5f.keys():
                 temp_data['cues_left'].append(np.int8(np.logical_or(np.array(h5f['cues_left_visual']) > 0,
                                               np.array(h5f['cues_left_tactile']) > 0)))
@@ -93,7 +94,7 @@ def load_individual_session_data(date_folder, mouse_id, logger=None):
             else:
                 temp_data['cues_left'].append(np.nan)
                 temp_data['cues_right'].append(np.nan)
-
+                
                 temp_data['cues_left_vis'].append(np.nan)
                 temp_data['cues_right_vis'].append(np.nan)
 
@@ -129,13 +130,14 @@ def load_individual_session_data(date_folder, mouse_id, logger=None):
     # plt.imshow(data, interpolation='nearest', aspect='auto')
     # plt.show()
 
+
     return data
 
 
 #
 
 
-def extract_session_data_and_save(root_paths,  mouse_dates_str , reextract=False, logger=None):
+def extract_session_data_and_save(root_paths,  reextract=False, logger=None):
     # if type(root_paths) is str:
     #     root_paths = [root_paths]
     # #
@@ -170,10 +172,14 @@ def extract_session_data_and_save(root_paths,  mouse_dates_str , reextract=False
                 sessions = pd.DataFrame.from_dict(data)
                 initial_call = False
             else:
-                sessions = sessions.append(pd.DataFrame.from_dict(data), ignore_index=True)
-            #
+                #deprecated method ("append")
+                #sessions = sessions.append(pd.DataFrame.from_dict(data), ignore_index=True) 
+
+                #equivalent line using concat
+                sessions = pd.concat([sessions,pd.DataFrame.from_dict(data)], ignore_index=True) 
+            
         logger.info(f"Processed {date_paths[-1]} ({n_paths}/{n_paths})")
-        #
+        
 
     # Some of the old files have a mixup of "_" and "-"
     #sessions = fix_dates(sessions)

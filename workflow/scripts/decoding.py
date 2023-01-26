@@ -9,16 +9,71 @@ from sklearn.model_selection import StratifiedShuffleSplit
 import numpy as np
 import pickle
 
+#Multithreading
+from threading import Thread
+
 from pathlib import Path
 import sys
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 from ci_lib.utils import snakemake_tools
+
+from ci_lib.utils.logging import start_log
 from ci_lib.features import Features, from_string as feat_from_string
+from ci_lib.decoding import load_feat, balance, flatten, shuffle, decode
+
+from sklearn.exceptions import ConvergenceWarning
+from warnings import simplefilter
+simplefilter("ignore", category=ConvergenceWarning) #TODO env vars don't work with multithreading
+
+threads = []
+next_thread = 0
+thread_semaphore = False
+
+def start_thread():
+    global thread_semaphore, next_thread
+    while thread_semaphore:
+        pass
+    thread_semaphore = True
+    if(next_thread<len(threads)):
+        threads[next_thread].start()
+        next_thread += 1
+    else:
+        print("No more threads to start, waiting for other threads to finish")
+    thread_semaphore = False
+
+def decoding_iteration(t,feat_list,label_list,decoder,reps,perf_list,model_list,perf_matrix,accumulate=False,shuffling=False):
+    #logger.info(f"Thread {t} started")
+
+    if accumulate:
+        t = range(t)
+
+    #Flatten feature and labels from all conditions and concat
+    feats_t, labels_t = flatten(feat_list,label_list,t)
+    
+    if shuffling:
+        #Shuffle all labels as sanity check
+        labels_t = shuffle(labels_t)
+
+    #Decode
+    perf_t, confusion_t, model_t = decode(feats_t, labels_t,decoder,reps,label_order= label_list)
+    perf_list[t,:] = perf_t
+    model_list[t]= model_t
+
+    #Test on other timepoints
+    for t2 in t_range:
+        feats_t2, labels_t2 = flatten(feat_list,label_list,t2)
+        perf_matrix[t,t2,:], confusion_t_not_used, _ = decode(feats_t2, labels_t2,model_t,reps,label_order= label_list)
+
+    logger.info(f"Timepoint {t} finished")
+    start_thread()
+
+
+
 
 #Setup
 # redirect std_out to log file
-logger = snakemake_tools.start_log(snakemake)
+logger = start_log(snakemake)
 if snakemake.config['limit_memory']:
     snakemake_tools.limit_memory(snakemake)
 try:
@@ -26,69 +81,148 @@ try:
                                             params=['conds','params'])
     start = snakemake_tools.start_timer()
 
-    ### Load feature for all conditions
-    cond_str = snakemake.params['conds']
-    feature_class = feat_from_string(snakemake.wildcards["feature"].split("_")[0])
+    #Load params from Snakemake
+    label_list = snakemake.params['conds']
+    reps = snakemake.params["params"]['reps']
+    decoder = snakemake.params['params']['branch']  #TODO why not from wildcard?
+    shuffling = ("shuffle" in decoder)
+    balancing = True #True #snakemake.params["params"]['balance']    ### Balance cond feats
+    across_time = True
+    accumulate = False
 
-    cond_feats = []
-    for path in snakemake.input:
-        cond_feats.append(feature_class.load(path))
+    #Load feature for all conditions
+    feat_list = load_feat(snakemake.wildcards["feature"],snakemake.input)
+    #print(snakemake.input)
 
+    
+    #TODO remove, just a fix check
+    '''
+    left, right = [],[]
+    for i,feat in enumerate(feat_list):
+        if "leftResponse" in label_list[i]:
+            left.append(feat)
+            
+        if "rightResponse" in label_list[i]: 
 
-    ### Select decoder
-    def MLR():
-        return skppl.make_pipeline(skppc.StandardScaler(),
-                                   skllm.LogisticRegression(C=10, penalty='l2', multi_class='multinomial',
-                                                             solver='lbfgs', max_iter=500))
+            right.append(feat)
+     
+    [left[0].concat(balance(left),overwrite=True),right[0].concat(balance(right),overwrite=True)]
+    label_list = ["leftResponse","rightResponse"]
+   
+    feat_list = [left[0],right[0]]
+    '''
 
-    def NN():
-        return sklnn.KNeighborsClassifier(n_neighbors=1, algorithm='brute', metric='correlation')
+    if balancing:
+        #Balances the number of trials for each condition
+        feat_list = balance(feat_list)
+    
+    #print(feat_list[0])
+    #print(feat_list[0].feature)
+    if feat_list[0].timepoints is None or "full" in snakemake.wildcards["feature"]: #TODO full matching just a workaround, save new full property of feature class 
+        #1 Iteration for full feature (Timepoint = None)
+        t_range = [None]
+    else:
+        #t Iterations for every timepoint t
+        t_range = range(feat_list[0].timepoints)
+    logger.info(f"{t_range}")
+    #Decoding results
+    n_timepoints = len(list(t_range))
+    n_classes = len(feat_list)
 
-    def LDA():
-        return skda.LinearDiscriminantAnalysis(n_components=None, solver='eigen', shrinkage='auto')
+    perf_list = np.zeros((n_timepoints,reps))
+    model_list = np.zeros((n_timepoints,reps),dtype=object)
+    perf_matrix = np.zeros((n_timepoints,n_timepoints,reps))
+    conf_matrix = np.zeros((n_timepoints,reps,n_classes,n_classes))
+    norm_conf_matrix = np.zeros((n_timepoints,reps,n_classes,n_classes))
 
-    def RF():
-        return skens.RandomForestClassifier(n_estimators=100, bootstrap=False)
+    #Performance stats
+    iterations = np.zeros((n_timepoints,reps))
+    t1_time = np.zeros((n_timepoints))
+    t2_time = np.zeros((n_timepoints))
 
-    decoders = {"MLR":MLR,
-                "1NN":NN,
-                "LDA":LDA,
-                "RF":RF}
+    #Multithreading
+    cores = snakemake.threads
+    multithreading = False #False# T
 
-    decoder = decoders[snakemake.params['params']['branch']]()
+    if multithreading:
+        threads_n = snakemake.threads -1 
+        threads = [Thread(target=decoding_iteration, args=(t,feat_list,label_list,decoder,reps,perf_list,model_list,perf_matrix,accumulate,shuffling)) for t in t_range]
 
-    ### Split
-    rep = snakemake.params["params"]['reps']
-    cv = StratifiedShuffleSplit(rep, test_size=0.2, random_state=420)
+        #start intitial_threads, each thread will start a new one after it is finished
+        next_thread = threads_n
+        for t in t_range[:threads_n]:
+            threads[t].start()
 
-    data = np.concatenate([feat.flatten() for feat in cond_feats])
-    labels = np.concatenate([np.full((len(cond_feats[i].flatten())), cond_str[i])
-                             for i in range(len(cond_feats))])
+        #Busy waiting until all threads started
+        while next_thread<len(threads):
+            pass
 
-    ### Scale
-    scaler = preprocessing.StandardScaler().fit( data )
-    data = scaler.transform(data)
-    cv_split = cv.split(data, labels)
-    perf = np.zeros((rep))
-    decoders = []
+        #Wait for all threads to finish
+        for thread in threads:
+            thread.join()
+            print(f"Thread {thread} finished")                  
+    
+    else:
+        #Decode all timepoints (without multithreading)
+        for t in t_range:
 
-    ### Train & Eval
-    try:
-        for i, (train_index, test_index) in enumerate(cv_split):
-            decoder.fit(data[train_index,:],labels[train_index])
-            perf[i] = decoder.score(data[test_index,:],labels[test_index])
-            decoders.append(decoder)
-    except:
-        print("Error during training and testing")
+            if accumulate:
+                t = range(t)
 
+            #Flatten feature and labels from all conditions and concat
+            feats_t, labels_t = flatten(feat_list,label_list,t)
+            
+            if shuffling:
+                #Shuffle all labels as sanity check
+                labels_t = shuffle(labels_t)
 
-    #Save outputs
-    #save_h5(perf, snakemake.output[1]) can't load with corresponding load function
+            t1_train_testing = snakemake_tools.start_timer()
+
+            ###
+            #Decode
+            perf_t, confusion_t, norm_confusion_t, model_t = decode(feats_t, labels_t,decoder,reps,label_order= label_list,cores=cores,logger=logger)
+            perf_list[t,:] = perf_t
+            conf_matrix[t,:,:,:] = confusion_t
+            norm_conf_matrix[t,:,:,:] = norm_confusion_t
+            model_list[t]= model_t
+
+            #Track stats
+            iterations[t,:] = [model[-1].n_iter_[-1] for model in model_t]
+            t1_time[t] = snakemake_tools.stop_timer(t1_train_testing,silent=True)
+            logger.info(f"Timepoint {t} decoded {len(feats_t)} trials with average accuracy {np.mean(perf_t)}")
+
+            #Test on other timepoints
+            if across_time:
+                t2_testing = snakemake_tools.start_timer()
+                for t2 in t_range:
+                    feats_t2, labels_t2 = flatten(feat_list,label_list,t2)
+                    perf_matrix[t,t2,:], _ , _ , _ = decode(feats_t2, labels_t2,model_t,reps,label_order= label_list,cores=cores,logger=logger) #TODo could be optimizied (run only once for each t2 on all t1)
+
+                t2_time[t] = snakemake_tools.stop_timer(t2_testing,silent=True)
+
+    logger.info(f"Finished {n_timepoints} timepoints with {reps} repetitions")
+    logger.info(f"Training & Testing each timepoints on average: {np.mean(t1_time)} s")
+    logger.info(f"Testing on others timepoints on average: {np.mean(t2_time)} s")
+
+    #Save results
+    # TODO replace with better file format
     with open(snakemake.output[1], 'wb') as f:
-        pickle.dump(perf, f)
+        pickle.dump(perf_list, f)
 
     with open(snakemake.output[0], 'wb') as f:
-        pickle.dump(decoders, f)
+        pickle.dump(model_list, f)
+    
+    with open(snakemake.output[2], 'wb') as f:
+        pickle.dump(perf_matrix, f)
+
+    with open(snakemake.output["conf_m"], 'wb') as f:
+        pickle.dump(conf_matrix, f)
+
+    with open(snakemake.output["norm_conf_m"], 'wb') as f:
+        pickle.dump(norm_conf_matrix, f)
+
+    with open(snakemake.output["labels"], 'wb') as f:
+        pickle.dump(label_list, f) 
 
     snakemake_tools.stop_timer(start, logger=logger)
 except Exception:

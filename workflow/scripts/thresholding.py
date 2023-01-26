@@ -5,12 +5,13 @@ sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 import numpy as np
 
 from ci_lib.utils import snakemake_tools
+from ci_lib.utils.logging import start_log
 from ci_lib.plotting import plot_connectivity_matrix
 from ci_lib import DecompData
 from ci_lib.features import from_string as feat_from_string
 
 ### Setup
-logger = snakemake_tools.start_log(snakemake)
+logger = start_log(snakemake)
 if snakemake.config['limit_memory']:
     snakemake_tools.limit_memory(snakemake)
 try:
