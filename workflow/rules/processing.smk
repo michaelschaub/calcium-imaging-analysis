@@ -244,8 +244,7 @@ rule decoding:
         mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
     script:
         "../scripts/decoding.py"
-<<<<<<< HEAD
-=======
+
 '''
 
 rule decoding:
@@ -274,5 +273,3 @@ rule decoding:
     script:
         "../scripts/decoding.py"
 
-
->>>>>>> pipeline
