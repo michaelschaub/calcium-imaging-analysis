@@ -95,8 +95,9 @@ try:
                         row_cluster=False,col_cluster=False) 
 
     #Axis labels
-    fig.ax_heatmap.set_yticks(np.arange(0,n_classes)*n_weights+0.5*n_weights) #not supported in clustermap/heatmap, has to be set manually
-    fig.ax_heatmap.set_yticklabels(flat_classes[0])
+    if n_classes >1:
+        fig.ax_heatmap.set_yticks(np.arange(0,n_classes)*n_weights+0.5*n_weights) #not supported in clustermap/heatmap, has to be set manually
+        fig.ax_heatmap.set_yticklabels(flat_classes[0])
     #fig.ax_heatmap.set_xticks(np.arange(0,n_timepoints)*n_splits+0.5*n_splits) #not supported in clustermap/heatmap, has to be set manually
     #fig.ax_heatmap.set_xticklabels(np.arange(0,n_timepoints))
     fig.ax_heatmap.set(xlabel = f"{n_splits} Splits of {n_timepoints} Frames)",ylabel =f"{n_weights} Weights for {n_classes} Classes)")
@@ -339,7 +340,7 @@ try:
 
         if len(tmp_clusters) in list(range(min,max)):
             selected_clusters=tmp_clusters
-        elif len(selected_clusters)>max:
+        elif len(tmp_clusters)>max:
             break
             
 
@@ -462,8 +463,9 @@ try:
                         col_linkage=model_linkage, row_cluster=False) #row_cluster=False,xticklabels=framerate, yticklabels=framerate,
 
     #Axis labels
-    fig.ax_heatmap.set_yticks(np.arange(0,n_classes)*n_weights+0.5*n_weights) #not supported in clustermap/heatmap, has to be set manually
-    fig.ax_heatmap.set_yticklabels(flat_classes[0])
+    if n_classes >1:
+        fig.ax_heatmap.set_yticks(np.arange(0,n_classes)*n_weights+0.5*n_weights) #not supported in clustermap/heatmap, has to be set manually
+        fig.ax_heatmap.set_yticklabels(flat_classes[0])
     #fig.ax_heatmap.set_xticks(np.arange(0,n_timepoints)*n_splits+0.5*n_splits) #not supported in clustermap/heatmap, has to be set manually
     #fig.ax_heatmap.set_xticklabels(np.arange(0,n_timepoints))
     fig.ax_heatmap.set(xlabel = f"{n_splits} Splits of {n_timepoints} Frames)",ylabel =f"{n_weights} Weights for {n_classes} Classes)")
@@ -473,8 +475,9 @@ try:
     fig.ax_heatmap.vlines(np.asarray(bkpts).flatten(), *fig.ax_heatmap.get_ylim(),colors=["black"]*len(bkpts))
     for i,cluster_border in enumerate(bkpts):
         fig.ax_heatmap.text(0.5 * (cluster_border[0]+cluster_border[1]),0.015,str(i),fontsize=15,ha='center')
-
-    fig.ax_heatmap.hlines(np.arange(1,n_classes)*n_weights, *fig.ax_heatmap.get_xlim(),colors=['black']*(n_classes-1))
+    
+    if n_classes >1:
+        fig.ax_heatmap.hlines(np.arange(1,n_classes)*n_weights, *fig.ax_heatmap.get_xlim(),colors=['black']*(n_classes-1))
     
 
     #Legend for Phases

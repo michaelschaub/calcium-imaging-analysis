@@ -44,7 +44,7 @@ try:
     # spatials
     # timepoints x spatials x spatials
     # spatials
-
+    
     try:
         #coefs.reshape((classes, -1, n_comps))  
         logger.info(snakemake.wildcards["feature"])
@@ -62,7 +62,7 @@ try:
         means=np.mean(spatials,axis=0)
         dispersion =np.std(spatials,axis=0)
         
-    labels=classes[0]
+    labels=classes[0] if n_classes>1 else [""]
     
     draw_neural_activity(frames=means,path=snakemake.output['coef_plot'],plt_title=f"Mean Coef for {snakemake.wildcards['feature']} across Splits",subfig_titles= labels,overlay=True,outlined=True, logger=logger,font_scale=snakemake.config["font_scale"])
     draw_neural_activity(frames=dispersion,path=snakemake.output['var_plot'],plt_title=f"Std Coef for {snakemake.wildcards['feature']} across Splits",subfig_titles= labels,overlay=True,outlined=True, logger=logger,font_scale=snakemake.config["font_scale"])

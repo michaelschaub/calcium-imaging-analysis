@@ -73,10 +73,10 @@ def draw_neural_activity(frames,path=None,plt_title="",subfig_titles=None,overla
     logger.info(f"x_dim {x_dims} y_dim {y_dims}")
 
     #
-    mpl.rcParams.update({'font.size': 10*font_scale})
+    mpl.rcParams.update({'font.size': 5*font_scale})
     fig, ax = plt.subplots(x_dims , y_dims, squeeze=False, constrained_layout=True)
-    fig.suptitle(plt_title,y=1.02)
-    plt.subplots_adjust(wspace=0)
+    fig.suptitle(plt_title)
+    #plt.subplots_adjust(wspace=0)
 
     #Uniform vmax,vmin over all subfigures, diverging color map centered at 0, scales ind. to both sides, if one sign is larger by magnitude 2, cut off that sign
     vmin, vmax = (np.nanmin(frames) if vmin is None else vmin,np.nanmax(frames) if vmax is None else vmax)
@@ -174,10 +174,10 @@ def draw_coefs_models(models,decomp_object, snakemake, mean_path=None, var_path=
         means=np.mean(spatials,axis=0)
         dispersion =np.std(spatials,axis=0)
         
-    labels=classes[0]
+    labels=classes[0] if n_classes>1 else " vs. ".join(classes[0])
+
     
     if mean_path is not None:
-        logger.info(mean_path)
         draw_neural_activity(frames=means,path=mean_path,plt_title=f"Mean Coef for {snakemake.wildcards['feature']} across Splits",subfig_titles= labels,overlay=True,outlined=True, logger=logger,font_scale=fontscale)
     if var_path is not None:
         draw_neural_activity(frames=dispersion,path=var_path,plt_title=f"Std Coef for {snakemake.wildcards['feature']} across Splits",subfig_titles= labels,overlay=True,outlined=True, logger=logger,font_scale=fontscale)
