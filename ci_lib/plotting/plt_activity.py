@@ -174,7 +174,8 @@ def draw_coefs_models(models,decomp_object, snakemake, mean_path=None, var_path=
         means=np.mean(spatials,axis=0)
         dispersion =np.std(spatials,axis=0)
         
-    labels=classes[0] if n_classes>1 else " vs. ".join(classes[0])
+    labels=classes[0] if n_classes>1 else classes[0][1]
+    logger.info(classes[0][1])
 
     
     if mean_path is not None:

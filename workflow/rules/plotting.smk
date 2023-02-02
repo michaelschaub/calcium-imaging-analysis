@@ -59,6 +59,7 @@ rule cluster_coef:
     output:
         no_cluster = f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime.pdf",
         cluster    = f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.pdf",
+        cluster_3d = f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered_3D.html",
         cluster_small    = f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.png",
         models     = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/ClusterModels.pkl",
         coef_plots  = directory(f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/Clusters/")
@@ -67,9 +68,9 @@ rule cluster_coef:
     log:
          f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.log",
     conda:
-        "../envs/environment.yaml"
+        "../envs/environment_clustering.yaml"
     script:
-        "../scripts/cluster_models.py"
+        "../scripts/cluster_models_UMAP.py"
 
 
 rule decoding_with_existing_model:
