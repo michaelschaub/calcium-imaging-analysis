@@ -6,7 +6,7 @@ LOGGER = logging.getLogger(__name__)
 from .features import Features, Feature_Type
 from .means import Means, calc_means
 from .covariances import Covariances, calc_covs, flat_covs
-from .autocovariances import AutoCovariances, calc_acovs, DEFAULT_TIMELAG
+from .autocovariances import AutoCovariances, calc_acovs
 
 
 def calc_acorrs(covs, acovs):
@@ -17,13 +17,15 @@ def calc_acorrs(covs, acovs):
 class AutoCorrelations(Features):
     _type = Feature_Type.UNDIRECTED
 
-    def create(data, means=None, covs=None, acovs=None, max_comps=None, max_time_lag=None, timelags=None, label = None, logger=LOGGER):
+    def create(data, means=None, covs=None, acovs=None, max_comps=None, timelag=1, logger=LOGGER):
+        if max_comps is not None:
+            logger.warn("DEPRECATED: max_comps parameter in features can not garanty sensible choice of components, use n_components parameter for parcellations instead")
         if covs is None:
             covs = Covariances.create(data, means, max_comps, True, logger)._feature
         elif isinstance(covs, Covariances):
             covs = np.copy(acovs._feature)
         if acovs is None:
-            acovs = AutoCovariances.create(data, means, covs, max_comps, max_time_lag, timelags, None, True, logger)._feature
+            acovs = AutoCovariances.create(data, means, covs, max_comps, timelag, True, logger)._feature
         elif isinstance(acovs, AutoCovariances):
             acovs = np.copy(acovs._feature)
 

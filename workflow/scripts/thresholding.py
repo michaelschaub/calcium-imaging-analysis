@@ -8,7 +8,7 @@ from ci_lib.utils import snakemake_tools
 from ci_lib.utils.logging import start_log
 from ci_lib.plotting import plot_connectivity_matrix
 from ci_lib import DecompData
-from ci_lib.features import Means, Raws, Covariances, Correlations, AutoCovariances, AutoCorrelations, Moup
+from ci_lib.features import from_string as feat_from_string
 
 ### Setup
 logger = start_log(snakemake)
@@ -18,8 +18,7 @@ try:
     start = snakemake_tools.start_timer()
 
     ### Load
-    feature_dict = { "mean" : Means, "raw" : Raws, "covariance" : Covariances, "correlation" : Correlations, "autocovariance" : AutoCovariances, "autocorrelation" : AutoCorrelations, "moup" :Moup }
-    feature_class = feature_dict[snakemake.wildcards["feature"].split("_")[0]]
+    feature_class = feat_from_string(snakemake.wildcards["feature"].split("_")[0])
     feat = feature_class.load(snakemake.input["data"])
 
     threshold = snakemake.params["params"]["thresh"]

@@ -165,6 +165,7 @@ static_params:
 
 paths:
   parcellations:
+    SVD: {}
     ICA: {}
     anatomical:
       atlas: resources/meta/anatomical.mat

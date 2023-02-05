@@ -19,7 +19,7 @@ sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 from ci_lib.utils import snakemake_tools
 
 from ci_lib.utils.logging import start_log
-from ci_lib.features import Means, Raws, Covariances, Correlations, AutoCovariances, AutoCorrelations, Moup, Cofluctuation
+from ci_lib.features import Features, from_string as feat_from_string
 from ci_lib.decoding import load_feat, balance, flatten, shuffle, decode
 
 from sklearn.exceptions import ConvergenceWarning
