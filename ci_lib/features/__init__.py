@@ -14,15 +14,16 @@ def from_string(feat):
     try:
         return getattr(module, feat)
     except AttributeError:
-        return getattr(module, FEATURE_ALIASES[feat])
+        pass
+    return getattr(module, FEATURE_ALIASES[feat])
 
 FEATURE_ALIASES = {
         "full-activity-dFC" : "Cofluctuation",
         "mean-activity-FC" : "Cofluctuation",
         "spot-activity-dFC" : "Cofluctuation",
         "mean" : "Means",
-        "mean-activity" : " Means",
-        "spot-activity" : " Means",
+        "mean-activity" : "Means",
+        "spot-activity" : "Means",
         "full-activity" : "Means",
         "raw" : "Raws",
         "covariance" : "Covariances",

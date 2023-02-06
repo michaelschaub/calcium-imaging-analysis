@@ -12,8 +12,6 @@ class Feature_Type(Enum): #
     def __eq__(self, other):
         return self.value == other.value
 
-from snakemake.logging import logger
-
 '''
 def construct_rfe_graph(selected_feats, n_nodes, feat_type, labels=None):
     
