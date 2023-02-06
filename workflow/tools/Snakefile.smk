@@ -73,7 +73,6 @@ config["plotting"] =   {"plot_subject_labels": {f"{subject_id}(#{len(dates)})" f
                         "parcels_n" : config['branch_opts']['plotting']['plot_parcels']['n'],
                         "decoders" : decoders,
                         "subject_dates": subject_dates,
-                        #"trial_conditions": trial_conditions,
                         "aggr_conditions" : aggr_conditions,
                         "features": features,
                         "parcellations" :parcellations,

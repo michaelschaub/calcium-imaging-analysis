@@ -2,7 +2,7 @@ include: "tools/Snakefile.smk"
 
 report: "report/workflow.rst"
 
-ruleorder:  load_GN > load_mSM  > locaNMF > feature_concat > parcellate >  thresholding > feature_calculation
+ruleorder:  load_GN > load_mSM  > locaNMF > feature_concat > parcellate >  thresholding > feature_grouping > feature_calculation
 
 from snakemake_tools import getKeys, hash_config
 
@@ -15,11 +15,11 @@ from snakemake_tools import getKeys, hash_config
         #Fig 2: Timeseries Activity, Spatial Activity Maps, Frames
 
         #Fig 3: Framewise Decoding, Comparison FEatures: Framewise, Phasewide, Mean (Temporal + Across Parcel), Conf Matrizes, Class Coefs, Across Time
-        #expand(f"results/paper/{{session_run}}/{{trials}}/{'.'.join(trial_conditions)}/perf_all.feats.parcels.pdf", session_run = session_runs, trials= selected_trials),
+        #expand(f"results/paper/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/perf_all.feats.parcels.pdf", session_run = session_runs, trials= selected_trials),
 
         #Decoding performance over time across: parcellations, features
-        #expand(f"results/paper/{{session_run}}/{{trials}}/{{feature}}/{'.'.join(trial_conditions)}/performance_over_time_parcels.pdf", session_run = session_runs,  feature =  features, trials= selected_trials), # (3a)
-        #expand(f"results/paper/{{session_run}}/{{trials}}/{{parcellation}}/{'.'.join(trial_conditions)}/performance_over_time_features.pdf", session_run = session_runs,  parcellation = parcellations, trials= selected_trials), # (3b)
+        #expand(f"results/paper/{{session_run}}/{{trials}}/{{feature}}/{'.'.join(aggr_conditions)}/performance_over_time_parcels.pdf", session_run = session_runs,  feature =  features, trials= selected_trials), # (3a)
+        #expand(f"results/paper/{{session_run}}/{{trials}}/{{parcellation}}/{'.'.join(aggr_conditions)}/performance_over_time_features.pdf", session_run = session_runs,  parcellation = parcellations, trials= selected_trials), # (3b)
 
 #rule subdivided_svd:
 
@@ -27,9 +27,9 @@ from snakemake_tools import getKeys, hash_config
 
 rule test:
 	input:
-		expand(f"results/data/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/performances.pdf", session_run = session_runs,  parcellation = parcellations, trials= selected_trials),
-		expand(f"results/plots/{{session_run}}/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{feature}}/performances.pdf", session_run = session_runs,  feature =  features, trials= selected_trials),
-		expand(f"results/data/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/plots/performance_over_time.pdf", session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials),
+		expand(f"results/data/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(aggr_conditions)}/performances.pdf", session_run = session_runs,  parcellation = parcellations, trials= selected_trials),
+		expand(f"results/plots/{{session_run}}/{{trials}}/Decoding/{'.'.join(aggr_conditions)}/{{feature}}/performances.pdf", session_run = session_runs,  feature =  features, trials= selected_trials),
+		expand(f"results/data/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(aggr_conditions)}/{{feature}}/plots/performance_over_time.pdf", session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials),
 		expand(f"results/data/{{session_run}}/{{parcellation}}/visualization/combined_parcels.pdf", session_run = session_runs,  parcellation = parcellations),
 		expand(f"results/data/{{session_run}}/{{parcellation}}/data.h5", session_run = session_runs,  parcellation = parcellations) 
 
@@ -58,62 +58,62 @@ rule feature:
 rule decode:
 	input:
 		#Decoding performance across: features, parcellation and both
-		expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(trial_conditions)}/{{parcellation}}_perf.pdf", session_run = session_runs,  parcellation = parcellations, trials= selected_trials),
-		expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(trial_conditions)}/{{feature}}_perf.pdf", session_run = session_runs,  feature =  features, trials= selected_trials),
-        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(trial_conditions)}/all_perf.pdf", session_run = session_runs, trials= selected_trials),
+		expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/{{parcellation}}_perf.pdf", session_run = session_runs,  parcellation = parcellations, trials= selected_trials),
+		expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/{{feature}}_perf.pdf", session_run = session_runs,  feature =  features, trials= selected_trials),
+        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/all_perf.pdf", session_run = session_runs, trials= selected_trials),
 
 		#Plot Train/Test across time: on the same timepoints, on different timepoints	
-        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(trial_conditions)}/{{feature}}/{{parcellation}}/performance_over_time.pdf", session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials),
-        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(trial_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/performance_matrix.pdf", session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
+        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/performance_over_time.pdf", session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials),
+        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/performance_matrix.pdf", session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
         
         #Decoding performance over time across: parcellations, features
-        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(trial_conditions)}/{{feature}}_performance_over_time.pdf", session_run = session_runs,  feature =  features, trials= selected_trials),
-        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(trial_conditions)}/{{parcellation}}_performance_over_time.pdf", session_run = session_runs,  parcellation = parcellations, trials= selected_trials),
+        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/{{feature}}_performance_over_time.pdf", session_run = session_runs,  feature =  features, trials= selected_trials),
+        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/{{parcellation}}_performance_over_time.pdf", session_run = session_runs,  parcellation = parcellations, trials= selected_trials),
         
         #Confusion Matrix
-        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(trial_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/confusion_matrix.pdf",session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
+        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/confusion_matrix.pdf",session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
         
         #Plot coefs
-        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(trial_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/model_coef_mean.pdf",session_run = session_runs,  parcellation = parcellations, trials= selected_trials, feature =  features, decoder=decoders),
+        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/model_coef_mean.pdf",session_run = session_runs,  parcellation = parcellations, trials= selected_trials, feature =  features, decoder=decoders),
 
         #Plot clustered coefs
-        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(trial_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.pdf", session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
+        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.pdf", session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
 
         #Create models from clusters and test over time
-        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(trial_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.pdf", session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
+        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.pdf", session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
 
 rule decode_generalized:
     input:
-        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(trial_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/from_{generalize_from}/ClusturedModels_perf.pdf",
+        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/from_{generalize_from}/ClusturedModels_perf.pdf",
                 session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
-        expand(f"results/data/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/from_{generalize_from}/cluster_perf.pkl",
+        expand(f"results/data/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(aggr_conditions)}/{{feature}}/{{decoder}}/from_{generalize_from}/cluster_perf.pkl",
                 session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
 
 '''
 rule decode:
 	input:
 		#Decoding performance across: features, parcellation and both
-		expand(f"results/plots/{{session_run}}/{{trials}}/{{parcellation}}/{'.'.join(trial_conditions)}/perf_all.feats.pdf", session_run = session_runs,  parcellation = parcellations, trials= selected_trials),
-		expand(f"results/plots/{{session_run}}/{{trials}}/{{feature}}/{'.'.join(trial_conditions)}/perf_all.parcels.pdf", session_run = session_runs,  feature =  features, trials= selected_trials),
-        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(trial_conditions)}/perf_all.feats.parcels.pdf", session_run = session_runs, trials= selected_trials),
+		expand(f"results/plots/{{session_run}}/{{trials}}/{{parcellation}}/{'.'.join(aggr_conditions)}/perf_all.feats.pdf", session_run = session_runs,  parcellation = parcellations, trials= selected_trials),
+		expand(f"results/plots/{{session_run}}/{{trials}}/{{feature}}/{'.'.join(aggr_conditions)}/perf_all.parcels.pdf", session_run = session_runs,  feature =  features, trials= selected_trials),
+        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/perf_all.feats.parcels.pdf", session_run = session_runs, trials= selected_trials),
 
 		#Plot Train/Test across time: on the same timepoints, on different timepoints	
-        expand(f"results/plots/{{session_run}}/{{trials}}/{{parcellation}}/{'.'.join(trial_conditions)}/{{feature}}/performance_over_time.pdf", session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials),
-        expand(f"results/plots/{{session_run}}/{{trials}}/{{parcellation}}/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/performance_matrix.pdf", session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
+        expand(f"results/plots/{{session_run}}/{{trials}}/{{parcellation}}/{'.'.join(aggr_conditions)}/{{feature}}/performance_over_time.pdf", session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials),
+        expand(f"results/plots/{{session_run}}/{{trials}}/{{parcellation}}/{'.'.join(aggr_conditions)}/{{feature}}/{{decoder}}/performance_matrix.pdf", session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
         
         #Decoding performance over time across: parcellations, features
-        expand(f"results/plots/{{session_run}}/{{trials}}/{{feature}}/{'.'.join(trial_conditions)}/performance_over_time_parcels.pdf", session_run = session_runs,  feature =  features, trials= selected_trials),
-        expand(f"results/plots/{{session_run}}/{{trials}}/{{parcellation}}/{'.'.join(trial_conditions)}/performance_over_time_features.pdf", session_run = session_runs,  parcellation = parcellations, trials= selected_trials),
+        expand(f"results/plots/{{session_run}}/{{trials}}/{{feature}}/{'.'.join(aggr_conditions)}/performance_over_time_parcels.pdf", session_run = session_runs,  feature =  features, trials= selected_trials),
+        expand(f"results/plots/{{session_run}}/{{trials}}/{{parcellation}}/{'.'.join(aggr_conditions)}/performance_over_time_features.pdf", session_run = session_runs,  parcellation = parcellations, trials= selected_trials),
         
         #Confusion Matrix
-        expand(f"results/plots/{{session_run}}/{{trials}}/{{parcellation}}/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/confusion_matrix.pdf",session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
+        expand(f"results/plots/{{session_run}}/{{trials}}/{{parcellation}}/{'.'.join(aggr_conditions)}/{{feature}}/{{decoder}}/confusion_matrix.pdf",session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
         
         #Plot coefs
-        expand(f"results/plots/{{session_run}}/{{trials}}/{{parcellation}}/{'.'.join(trial_conditions)}/{{feature}}/{{decoder}}/model_coef_mean.pdf",session_run = session_runs,  parcellation = parcellations, trials= selected_trials, feature =  features, decoder=decoders),
+        expand(f"results/plots/{{session_run}}/{{trials}}/{{parcellation}}/{'.'.join(aggr_conditions)}/{{feature}}/{{decoder}}/model_coef_mean.pdf",session_run = session_runs,  parcellation = parcellations, trials= selected_trials, feature =  features, decoder=decoders),
 '''
         
 
-        #expand(f"results/plots/{{session_run}}/{{trials}}/Decoding/{'.'.join(trial_conditions)}/{{feature}}/performance_over_time_parcels.pdf",
+        #expand(f"results/plots/{{session_run}}/{{trials}}/Decoding/{'.'.join(aggr_conditions)}/{{feature}}/performance_over_time_parcels.pdf",
 
 rule load:
 	input:
@@ -121,7 +121,7 @@ rule load:
 
 rule biomarkers:
 	input:
-		expand(f"results/data/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/rfe/{'.'.join(trial_conditions)}/{{rfe_n}}/{{feature}}/circle_plot.pdf", session_run = session_runs, parcellation = parcellations, trials = selected_trials, feature = features, rfe_n = rfe_ns)
+		expand(f"results/data/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/rfe/{'.'.join(aggr_conditions)}/{{rfe_n}}/{{feature}}/circle_plot.pdf", session_run = session_runs, parcellation = parcellations, trials = selected_trials, feature = features, rfe_n = rfe_ns)
 
 
 
@@ -132,25 +132,25 @@ rule biomarkers:
 #TODO remove
 rule decoding_performances:
     input:
-        [ f"results/{config['output']['processed_dates']}/{parcellation}/{trials}/Decoding/decoder/{'.'.join(trial_conditions)}/performances.pdf"
+        [ f"results/{config['output']['processed_dates']}/{parcellation}/{trials}/Decoding/decoder/{'.'.join(aggr_conditions)}/performances.pdf"
             for parcellation in parcellations
             for trials in selected_trials],
-        #[ f"results/{'_'.join(subject_dates)}/{parcellation}/{trials}/Decoding/decoder/{'.'.join(trial_conditions)}/{feature}/plots/performance.pdf"
+        #[ f"results/{'_'.join(subject_dates)}/{parcellation}/{trials}/Decoding/decoder/{'.'.join(aggr_conditions)}/{feature}/plots/performance.pdf"
         #    for parcellation in parcellations
         #    for trials in selected_trials
         #    for feature in features],
-        [ f"results/plots/{config['output']['processed_dates']}/{trials}/Decoding/{'.'.join(trial_conditions)}/{feature}/performances.pdf"
+        [ f"results/plots/{config['output']['processed_dates']}/{trials}/Decoding/{'.'.join(aggr_conditions)}/{feature}/performances.pdf"
               for feature in features
                for trials in selected_trials],
     output:
-        decoders = [ f"results/runs/{run_id}/features_{parcellation}_{trials}_{config['output']['processed_dates']}_{'.'.join(trial_conditions)}_decoding_performances.pdf"
+        decoders = [ f"results/runs/{run_id}/features_{parcellation}_{trials}_{config['output']['processed_dates']}_{'.'.join(aggr_conditions)}_decoding_performances.pdf"
             for parcellation in parcellations
             for trials in selected_trials],
-        #decoder = [ f"results/runs/{run_id}/Features/{'_'.join(subject_dates)}_{parcellation}_{trials}_{'.'.join(trial_conditions)}_{feature}_performance.pdf"
+        #decoder = [ f"results/runs/{run_id}/Features/{'_'.join(subject_dates)}_{parcellation}_{trials}_{'.'.join(aggr_conditions)}_{feature}_performance.pdf"
         #    for parcellation in parcellations
         #    for trials in selected_trials
         #    for feature in features],
-        parcellations = [ f"results/runs/{run_id}/parcellations_{feature}_{trials}_{config['output']['processed_dates']}_{'.'.join(trial_conditions)}_decoding_performances.pdf"
+        parcellations = [ f"results/runs/{run_id}/parcellations_{feature}_{trials}_{config['output']['processed_dates']}_{'.'.join(aggr_conditions)}_decoding_performances.pdf"
             for feature in features
             for trials in selected_trials],
     log:
