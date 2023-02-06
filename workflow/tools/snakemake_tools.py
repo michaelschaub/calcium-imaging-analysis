@@ -71,14 +71,26 @@ def create_conditions(conditions, config):
                         {
                                 trial_condition[condition]["column"] : [trial_condition[condition]["conds"][vals] for vals in value] if isinstance(value,list) else trial_condition[condition]["conds"][value]
                         for condition, value in (defaults | conds).items() if condition != "phase"}
-                    for label, conds in conditions.items() if label != "default" }
+                    for label, conds in conditions.items() if label != "default" and "group" not in conds }
 
+    # create list of conditions, that should be used for aggregration
+    aggr_conditions = list(trial_conditions.keys())
 
     # lookup specified phases in phase_conditions
-    phase_condition        = config["phase_conditions"]
+    phase_condition     = config["phase_conditions"]
     phase_conditions    = { label : phase_condition[(defaults | conds)["phase"]] if "phase" in (defaults | conds) else None
-                    for label, conds in conditions.items() if label != "default" }
-    return trial_conditions, phase_conditions, defaults
+                    for label, conds in conditions.items() if label != "default" and "group" not in conds }
+
+    # create group conditions
+    group_conditions    = { label : list(conds["group"])
+                    for label, conds in conditions.items() if "group" in conds }
+    grouped_conditions  = [ l for conds in group_conditions.values() for l in conds ]
+    # remove grouped conditions from list conditions to aggregrate
+    aggr_conditions = [ label for label in aggr_conditions if label not in grouped_conditions ]
+    # add new group conditions
+    aggr_conditions.extend(group_conditions.keys())
+
+    return aggr_conditions, trial_conditions, phase_conditions, group_conditions, defaults
 
 #TODO fix this mess / find a snakemake version, that fixes it
 # taking input as an argument creates all kinds of bugs in snakemake...
