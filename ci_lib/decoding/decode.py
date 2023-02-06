@@ -27,7 +27,7 @@ import sys
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 from ci_lib.utils import snakemake_tools
-from ci_lib.features import from_string as feat_from_string, feature_
+from ci_lib.features import from_string as feat_from_string
 
 
 ### Select decoder
