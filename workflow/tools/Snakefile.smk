@@ -26,7 +26,7 @@ selected_trials = config["branch_opts"]["selected_trials"]
 config["phase"] = config["phase_conditions"] #TODO check why phase_conditions is different from this
 
 conditions    = config["branch_opts"]["conditions"]
-trial_conditions, phase_conditions, default_conditions = create_conditions(conditions, config)
+aggr_conditions, trial_conditions, phase_conditions, group_conditions, default_conditions = create_conditions(conditions, config)
 
 feature_conf    = config["branch_opts"]["features"]
 feature_static  = config["static_params"]["features"]
@@ -54,8 +54,10 @@ config["output"] = {"processed_dates" :  session_runs}
 print(phase_conditions)
 
 config["processing"] = {"combine_sessions":combine_sessions,
+                        "aggr_conditions" : aggr_conditions,
                         "trial_conditions" : trial_conditions,
                         "phase_conditions": phase_conditions,
+                        "group_conditions" : group_conditions,
                         "feature_selection": {"n": rfe_ns,
                                               "reps": rfe_reps},
                         "parcellations": parcellations,
@@ -72,6 +74,7 @@ config["plotting"] =   {"plot_subject_labels": {f"{subject_id}(#{len(dates)})" f
                         "decoders" : decoders,
                         "subject_dates": subject_dates,
                         "trial_conditions": trial_conditions,
+                        "aggr_conditions" : aggr_conditions,
                         "features": features,
                         "parcellations" :parcellations,
                         "default_conditions":default_conditions,
