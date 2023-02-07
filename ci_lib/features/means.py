@@ -20,6 +20,8 @@ class Means(Features):
 
 
     def create(data, max_comps=None, logger=LOGGER, window=None, start=None, stop=None,full=False,z_scored=True): #TODO z_score default ot False
+        if max_comps is not None:
+            logger.warn("DEPRECATED: max_comps parameter in features can not garanty sensible choice of components, use n_components parameter for parcellations instead")
         if window is None:
             feat = Means(data, feature=calc_means(data.temporals[:, slice(start,stop), :max_comps])[:,np.newaxis,:])  #TODO start:stop should be supported by window as well
         else:

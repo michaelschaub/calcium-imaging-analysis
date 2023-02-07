@@ -27,7 +27,7 @@ import sys
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
 from ci_lib.utils import snakemake_tools
-from ci_lib.features import Means, Raws, Covariances, Correlations, AutoCovariances, AutoCorrelations, Moup, Cofluctuation
+from ci_lib.features import from_string as feat_from_string
 
 
 ### Select decoder
@@ -50,8 +50,7 @@ def RF(cores):
 ### Helper Functions
 
 def load_feat(feat_wildcard,feat_path_list):
-    feature_dict = {"full-activity-dFC":Cofluctuation,"mean-activity-FC":Cofluctuation,"spot-activity-dFC":Cofluctuation, "mean" : Means, "mean-activity": Means, "spot-activity": Means, "full-activity":Means, "raw" : Raws, "covariance" : Covariances, "correlation" : Correlations, "autocovariance" : AutoCovariances, "autocorrelation" : AutoCorrelations, "moup" :Moup, "cofluctuation":Cofluctuation, "dFC": Cofluctuation, "FC": Cofluctuation, "full-dFC": Cofluctuation }
-    feature_class = feature_dict[feat_wildcard.split("_")[0]]
+    feature_class = feat_from_string(feat_wildcard.split("_")[0])
 
     feat_list = []
     for path in feat_path_list:

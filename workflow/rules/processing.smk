@@ -7,8 +7,8 @@ import re
 
 def parcellation_input(wildcards):
 
-    if not bool(re.match(r"^(?!SVD)(.*)$",wildcards["parcellation"])):  #TODO why is snakemake regex broken? :( ,fro now evaulate the same freaking expression within input function and require non existing files to exclude this rule....
-        return {"data":f"good/luck/finding/this/non/existing/path"}
+    #if not bool(re.match(r"^(?!SVD)(.*)$",wildcards["parcellation"])):  #TODO why is snakemake regex broken? :( ,fro now evaulate the same freaking expression within input function and require non existing files to exclude this rule....
+        #return {"data":f"good/luck/finding/this/non/existing/path"}
 
     input = {
         "data"	: f"{{data_dir}}/SVD/data.h5",
@@ -28,9 +28,10 @@ rule parcellate:
         config = f"{{data_dir}}/{{parcellation}}/conf.yaml",
     params:
         params = lambda wildcards: config["parcellations"][wildcards["parcellation"]]
-    #wildcard_constraints:
+    wildcard_constraints:
         # exclude SVD as parcellation
-        #parcellation = r"^(?!SVD)(.*)$" #TODO Why is snakemake regex broken? :( for now evaulate the same freaking expression within input function and require non existing files to exclude this rule....
+        #TODO check if this really works
+        parcellation = "(?!SVD$).+"
     log:
         f"{{data_dir}}/{{parcellation}}/parcellation.log"
     conda:
@@ -245,6 +246,7 @@ rule decoding:
         mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
     script:
         "../scripts/decoding.py"
+
 '''
 
 rule decoding:
@@ -272,5 +274,4 @@ rule decoding:
         #workflow.cores * 0.2
     script:
         "../scripts/decoding.py"
-
 

@@ -15,22 +15,18 @@ LOGGER = logging.getLogger(__name__)
 
 from .features import Features, Feature_Type
 
-
-def fit_moup(temps, tau, label, logger=LOGGER):
+def fit_moup(temps, tau, logger=LOGGER):
     mou_ests = np.empty((len(temps)),dtype=np.object_)
 
     for i,trial in enumerate(temps):
         mou_est = MOU()
-        if tau is None:
-            raise RuntimeWarning("Moup without lag (integer) given; set i_opt_tau to 1")
-            mou_ests[i] = mou_est.fit(trial, i_tau_opt=1, epsilon_C=0.01, epsilon_Sigma=0.01)
-        else:
-            mou_ests[i] = mou_est.fit(trial, i_tau_opt=tau, epsilon_C=0.01, epsilon_Sigma=0.01) #, regul_C=0.1
-            # print number of iterations and model error in log
-            logger.info('iter {}, err {}'.format( mou_est.d_fit['iterations'], mou_est.d_fit['distance']))
-
+        if tau is None or tau <= 0:
+            logger.warn("Moup without lag (positive integer) given; set i_opt_tau to 1")
+            tau = 1
+        mou_ests[i] = mou_est.fit(trial, i_tau_opt=tau, epsilon_C=0.01, epsilon_Sigma=0.01) #, regul_C=0.1
+        # print number of iterations and model error in log
+        logger.info('iter {}, err {}'.format( mou_est.d_fit['iterations'], mou_est.d_fit['distance']))
         # regularization may be helpful here to "push" small weights to zero here
-
     return mou_ests
 '''
 def decompose_mou_ests( mou_ests ):
@@ -66,7 +62,9 @@ class Moup(Features):
         self._time_resolved = time_resolved
 
     def create(data, max_comps=None, timelag=None, label=None, start=None,stop=None,logger=LOGGER):
-        mou_ests = fit_moup(data.temporals[:, slice(start,stop), :max_comps], timelag if timelag>0 else None, label, logger=logger)
+        if max_comps is not None:
+            logger.warn("DEPRECATED: max_comps parameter in features can not garanty sensible choice of components, use n_components parameter for parcellations instead")
+        mou_ests = fit_moup(data.temporals[:, slice(start,stop), :max_comps], timelag, logger=logger)
         feature = np.asarray([[mou_est.get_J()] for mou_est in mou_ests]) #TODO remove unnecessary additional dimension trials x 1 (!) x w x h, was done to fit autocov/cor but never needed
 
         for i, J in enumerate(feature[:,0,:,:]):

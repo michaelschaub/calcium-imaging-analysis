@@ -24,7 +24,7 @@ except:
 # else, if on cpu
 DEVICE='cpu'
 
-def locaNMF(DecompDataObject, atlas_path, logger=LOGGER,
+def locaNMF(data, atlas_path, logger=LOGGER,
         minrank = 1, maxrank = 10,
         min_pixels = 100,
         loc_thresh = 70,
@@ -32,12 +32,12 @@ def locaNMF(DecompDataObject, atlas_path, logger=LOGGER,
         nonnegative_temporal = False,
     ):
     """
-    Decomposes a DecompDataObject with locaNMF with seeds based on a Brain Atlas (TODO cite)
+    Decomposes a DecompData object with locaNMF with seeds based on a Brain Atlas (TODO cite)
     TODO a bit more formal
     TODO types
 
-    :param DecompDataObject: DecompDataObject with abitrary parcellation (Usually SVD)
-    :type DecompDataObject: DecompDataObject
+    :param data: DecompData object with abitrary parcellation (Usually SVD)
+    :type data: DecompData
 
     :param atlas_path: Path to Dict containing the Brain Atlas (TODO Specify Format)
     :type atlas_path: String or pathlib.Path or None
@@ -52,8 +52,8 @@ def locaNMF(DecompDataObject, atlas_path, logger=LOGGER,
     :param logger: The LOGGER object that all console outputs are piped into
     :type logger: LOGGER
 
-    :return: DecompDataObject with Data-driven Spatials constrained to the Brain Regions in the Atlas.
-    :rtype: DecompDataObject
+    :return: DecompData object with Data-driven Spatials constrained to the Brain Regions in the Atlas.
+    :rtype: DecompData
     """
     stdout = sys.stdout
     stderr = sys.stderr
@@ -67,8 +67,8 @@ def locaNMF(DecompDataObject, atlas_path, logger=LOGGER,
     atlas_msk = np.asarray(atlas_file['areaMasks'], dtype='bool')
     labels = np.asarray(atlas_file['areaLabels_wSide'],dtype=str)
 
-    temporals = DecompDataObject.temporals_flat
-    spatials = np.moveaxis(np.nan_to_num(DecompDataObject.spatials), 0, -1 )
+    temporals = data.temporals_flat
+    spatials = np.moveaxis(np.nan_to_num(data.spatials), 0, -1 )
     
     #TODO remove after testing
     #Testing if adding random noise fixes error on empty areas (with no variation)
@@ -76,8 +76,8 @@ def locaNMF(DecompDataObject, atlas_path, logger=LOGGER,
     spatials = spatials + np.random.rand(*spatials.shape) * 16 * np.finfo(np.float32).eps 
     print(f"After {np.var(spatials,axis=0)}")
 
-    width = min(DecompDataObject.n_xaxis, brainmask.shape[0])
-    height = min(DecompDataObject.n_yaxis, brainmask.shape[1])
+    width = min(data.n_xaxis, brainmask.shape[0])
+    height = min(data.n_yaxis, brainmask.shape[1])
     brainmask = brainmask[:width,:height]
     atlas_msk = atlas_msk[:,:width,:height]
     spatials = spatials[:width,:height,:]
@@ -182,4 +182,4 @@ def locaNMF(DecompDataObject, atlas_path, logger=LOGGER,
 
     sys.stdout = stdout
     sys.stderr = stderr
-    return DecompDataObject.update(new_temporals, new_spatials, spatial_labels=new_labels)
+    return data.recreate(new_temporals, new_spatials, spatial_labels=new_labels)

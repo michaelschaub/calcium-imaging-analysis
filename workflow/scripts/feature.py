@@ -6,8 +6,8 @@ sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 from ci_lib.utils import snakemake_tools
 from ci_lib.utils.logging import start_log
 from ci_lib import DecompData
-from ci_lib.features import Means, Raws, Covariances, Correlations, AutoCovariances, AutoCorrelations, Moup, Cofluctuation
- 
+from ci_lib.features import from_string as feat_from_string
+
 # redirect std_out to log file
 logger = start_log(snakemake)
 if snakemake.config['limit_memory']:
@@ -18,8 +18,6 @@ try:
     start = snakemake_tools.start_timer()
     ####
     #TODO better solutions for synonyms
-    feature_dict = {"full-activity-dFC":Cofluctuation,"mean-activity-FC":Cofluctuation,"spot-activity-dFC":Cofluctuation, "mean" : Means, "mean-activity": Means, "spot-activity": Means, "full-activity":Means, "raw" : Raws, "covariance" : Covariances, "correlation" : Correlations, "autocovariance" : AutoCovariances, "autocorrelation" : AutoCorrelations, "moup" :Moup, "cofluctuation":Cofluctuation, "dFC": Cofluctuation, "FC": Cofluctuation, "full-dFC": Cofluctuation }
-
     # Dictionary for converting parameters from workflow to parameters, that can be passed to feature creators
     param_dict = {
             #Activity 
@@ -38,26 +36,28 @@ try:
             "mean-activity-FC": (lambda p : {"start":int(snakemake.config["phase"][p["phase"]]["start"]) if "phase" in p else None, "stop":int(snakemake.config["phase"][p["phase"]]["stop"]) if "phase" in p else None,"mean":True, "include_dia":True}),
 
             #Effective Connectivity
-            "moup": (lambda p : {"start":int(snakemake.config["phase"][p["phase"]]["start"]), "stop":int(snakemake.config["phase"][p["phase"]]["stop"]),"timelag": p["timelags"] if "timelags" in p else 1}),
+            "moup": (lambda p : {"start":int(snakemake.config["phase"][p["phase"]]["start"]), "stop":int(snakemake.config["phase"][p["phase"]]["stop"]),"timelag": p["timelag"] if 'timelag' in p else 1}),
             
             #Legacy
             #"mean"              : (lambda p : {}), #TODO remove
             #"raw"               : (lambda p : {}), #TODO remove
             "covariance"        : (lambda p : {}),
             "correlation"        : (lambda p : {}),
-            # convert parameter "max_timelag" to range up to that timelag, if "max_timelag" does not exist, pass "timelags" (iterable)
-            "autocovariance"    : (lambda p : { "timelags" : range(1,p["max_timelag"]+1) if "max_timelag" in p else p["timelags"] }), #TODO do we actually need ranges of timelags for a single feat?
-            "autocorrelation"    : (lambda p : { "timelags" : range(1,p["max_timelag"]+1) if "max_timelag" in p else p["timelags"] }),
+            "autocovariance"    : (lambda p : { "timelag" :  p['timelag'] if 'timelag' in p else 1 }),
+            "autocorrelation"    : (lambda p : { "timelag" :  p['timelag'] if 'timelag' in p else 1 }),
             }
 
     feature = snakemake.params["params"]['branch']
     params = snakemake.params["params"]
-    data = DecompData.load(snakemake.input[0])
-
     max_comps = params["max_components"] if "max_components" in params else None
     window = params["window"] if "window" in params else None #TODO move param_dict , this will break for all feature that don't have window parameter!!
+    params.pop("branch",None)
+    params.pop("max_components",None)
+    params.pop("window",None)
 
-    feat = feature_dict[feature].create(data, max_comps=max_comps, **param_dict[feature](params)) #TODO **param_dict doesn't pass anything for empty lambda expression, shouldn't it just pass everyhting + replacement options
+
+    data = DecompData.load(snakemake.input[0])
+    feat = feat_from_string(feature).create(data, max_comps=max_comps, **param_dict[feature](params)) #TODO **param_dict doesn't pass anything for empty lambda expression, shouldn't it just pass everyhting + replacement options
     logger.debug(f"feature shape {feat.feature.shape}")
 
     feat.save(snakemake.output[0])
