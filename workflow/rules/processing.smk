@@ -7,8 +7,8 @@ import re
 
 def parcellation_input(wildcards):
 
-    #if not bool(re.match(r"^(?!SVD)(.*)$",wildcards["parcellation"])):  #TODO why is snakemake regex broken? :( ,fro now evaulate the same freaking expression within input function and require non existing files to exclude this rule....
-        #return {"data":f"good/luck/finding/this/non/existing/path"}
+    if not bool(re.match(r"(?!SVD$).+",wildcards["parcellation"])):  #TODO why is snakemake regex broken? :( ,fro now evaulate the same freaking expression within input function and require non existing files to exclude this rule....
+        return {"data":f"good/luck/finding/this/non/existing/path"}
 
     input = {
         "data"	: f"{{data_dir}}/SVD/data.h5",
@@ -31,7 +31,8 @@ rule parcellate:
     wildcard_constraints:
         # exclude SVD as parcellation
         #TODO check if this really works
-        parcellation = "(?!SVD$).+"
+        parcellation = "(?!SVD$).+",
+	#data_dir = 'results/data/GN06.03-26#GN06.03-29'
     log:
         f"{{data_dir}}/{{parcellation}}/parcellation.log"
     conda:
@@ -88,6 +89,8 @@ rule condition:
         config = f"{{data_dir}}/Features/{{cond}}/conf.yaml",
     params:
         condition_params
+    wildcard_constraints:
+        cond = branch_match(list(config['trial_conditions'].keys()), params=False)
     log:
         f"{{data_dir}}/Features/{{cond}}/conditionals.log"
     conda:
@@ -204,20 +207,55 @@ rule thresholding:
     script:
         "../scripts/thresholding.py"
 
+rule feature_grouping:
+    input:
+        lambda wildcards: [
+		f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{sub_cond}/{{feature}}/features.h5"
+		for sub_cond in config['group_conditions'][wildcards['cond']]
+	]
+    output:
+        f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5",
+        export_raw = report(
+            f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.{config['export_type']}",
+            caption="../report/alignment.rst",
+            category="4 Feature Calculation",
+            subcategory="{feature}",
+            labels={"Condition": "{cond}", "Subject/Date": "{mouse_dates}", "Type": "Data"}),
+        export_plot = report(
+            f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.pdf",
+            caption="../report/alignment.rst",
+            category="4 Feature Calculation",
+            subcategory="{feature}",
+            labels={"Condition": "{cond}", "Subject/Date": "{mouse_dates}", "Type": "Plot"}),
+
+        config = f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/conf.yaml",
+    wildcard_constraints:
+        cond = branch_match(list(config['group_conditions'].keys()), params=False)
+    params:
+        params = lambda wildcards: config["features"][wildcards["feature"]]
+    log:
+        f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/feature_grouping.log"
+    conda:
+        "../envs/environment.yaml"
+    resources:
+        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,2000)
+    script:
+        "../scripts/group_features.py"
+
 
 rule feature_elimination:
     input:
-        feats = [f"{{data_dir}}/Features/{cond}/{{feature}}/features.h5" for cond in config['trial_conditions']],
+        feats = [f"{{data_dir}}/Features/{cond}/{{feature}}/features.h5" for cond in config['aggr_conditions']],
     output:
-        best_feats	= f"{{data_dir}}/Decoding/rfe/{'.'.join(config['trial_conditions'])}/{{rfe_n}}/{{feature}}/best_feats.{config['export_type']}",
-        model		= f"{{data_dir}}/Decoding/rfe/{'.'.join(config['trial_conditions'])}/{{rfe_n}}/{{feature}}/decoder_model.pkl",
-        perf		= f"{{data_dir}}/Decoding/rfe/{'.'.join(config['trial_conditions'])}/{{rfe_n}}/{{feature}}/decoder_perf.{config['export_type']}",
-        config		= f"{{data_dir}}/Decoding/rfe/{'.'.join(config['trial_conditions'])}/{{rfe_n}}/{{feature}}/conf.yaml",
+        best_feats	= f"{{data_dir}}/Decoding/rfe/{'.'.join(config['aggr_conditions'])}/{{rfe_n}}/{{feature}}/best_feats.{config['export_type']}",
+        model		= f"{{data_dir}}/Decoding/rfe/{'.'.join(config['aggr_conditions'])}/{{rfe_n}}/{{feature}}/decoder_model.pkl",
+        perf		= f"{{data_dir}}/Decoding/rfe/{'.'.join(config['aggr_conditions'])}/{{rfe_n}}/{{feature}}/decoder_perf.{config['export_type']}",
+        config		= f"{{data_dir}}/Decoding/rfe/{'.'.join(config['aggr_conditions'])}/{{rfe_n}}/{{feature}}/conf.yaml",
     params:
-        conds = list(config["trial_conditions"]),
+        conds = list(config["aggr_conditions"]),
         reps = config['feature_selection']['reps']
     log:
-        f"{{data_dir}}/Decoding/rfe/{'.'.join(config['trial_conditions'])}/{{rfe_n}}/{{feature}}/feature_calculation.log"
+        f"{{data_dir}}/Decoding/rfe/{'.'.join(config['aggr_conditions'])}/{{rfe_n}}/{{feature}}/feature_calculation.log"
     conda:
         "../envs/environment.yaml"
     resources:
@@ -228,16 +266,16 @@ rule feature_elimination:
 '''
 rule decoding:
     input:
-        [f"{{data_dir}}/Features/{cond}/{{feature}}/features.h5" for cond in config['trial_conditions']],
+        [f"{{data_dir}}/Features/{cond}/{{feature}}/features.h5" for cond in config['aggr_conditions']],
     output:
-        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/decoder_model.pkl",
-        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/decoder_perf.pkl",
-        config = f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/conf.yaml",
+        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/decoder_model.pkl",
+        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/decoder_perf.pkl",
+        config = f"{{data_dir}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/conf.yaml",
     params:
-        conds = list(config['trial_conditions']),
+        conds = list(config['aggr_conditions']),
         params = lambda wildcards: config["decoders"][wildcards["decoder"]]
     log:
-        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/decoding.log",
+        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/decoding.log",
     conda:
         "../envs/environment.yaml"
     resources:
@@ -249,26 +287,26 @@ rule decoding:
 
 rule decoding:
     input:
-        [f"{{data_dir}}/Features/{cond}/{{feature}}/features.h5" for cond in config['trial_conditions']],
+        [f"{{data_dir}}/Features/{cond}/{{feature}}/features.h5" for cond in config['aggr_conditions']],
     output:
-        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/decoder_model.pkl",
-        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/decoder_perf.pkl",
-        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/decoder_perf_across_timepoints.pkl",
-        conf_m = f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/confusion_matrix.pkl",
-        norm_conf_m = f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/norm_confusion_matrix.pkl",
-        labels = f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/class_labels.pkl",
-        config = f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/conf.yaml",
+        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/decoder_model.pkl",
+        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/decoder_perf.pkl",
+        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/decoder_perf_across_timepoints.pkl",
+        conf_m = f"{{data_dir}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/confusion_matrix.pkl",
+        norm_conf_m = f"{{data_dir}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/norm_confusion_matrix.pkl",
+        labels = f"{{data_dir}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/class_labels.pkl",
+        config = f"{{data_dir}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/conf.yaml",
     params:
-        conds = list(config['trial_conditions']),
+        conds = list(config['aggr_conditions']),
         params = lambda wildcards: config["decoders"][wildcards["decoder"]]
     log:
-        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/decoding.log",
+        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/decoding.log",
     conda:
         "../envs/environment.yaml"
     resources:
         mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
     threads:
-        min(len(list(config['trial_conditions'])),workflow.cores) #For multinomial lr = job for each class
+        min(len(list(config['aggr_conditions'])),workflow.cores) #For multinomial lr = job for each class
         #workflow.cores * 0.2
     script:
         "../scripts/decoding.py"

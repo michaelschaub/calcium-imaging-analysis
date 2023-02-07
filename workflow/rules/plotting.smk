@@ -37,15 +37,13 @@ rule plot_parcels:
 
 rule plot_model_coef:
     input:
-        model  = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/decoder_model.pkl",
+        model  = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{{conditions}}/{{feature}}/{{decoder}}/decoder_model.pkl",
         parcel = f"results/data/{{subject_dates}}/{{parcellation}}/data.h5"
     output:
-        coef_plot = f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/model_coef_mean.pdf",
-        var_plot = f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/model_coef_std.pdf"
-    params:
-        conds=list(config['trial_conditions']),
+        coef_plot = f"results/plots/{{subject_dates}}/{{trials}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/model_coef_mean.pdf",
+        var_plot = f"results/plots/{{subject_dates}}/{{trials}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/model_coef_std.pdf"
     log:
-        f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/decoder_model.log",
+        f"results/plots/{{subject_dates}}/{{trials}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/decoder_model.log",
     conda:
         "../envs/environment.yaml"
     script:
@@ -54,18 +52,18 @@ rule plot_model_coef:
 ### move to processing
 rule cluster_coef:
     input:
-        model  = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/decoder_model.pkl",
+        model  = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{{conditions}}/{{feature}}/{{decoder}}/decoder_model.pkl",
         parcel = f"results/data/{{subject_dates}}/{{parcellation}}/data.h5"
     output:
-        no_cluster = f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime.pdf",
-        cluster    = f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.pdf",
-        cluster_small    = f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.png",
-        models     = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/ClusterModels.pkl",
-        coef_plots  = directory(f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/Clusters/")
+        no_cluster = f"results/plots/{{subject_dates}}/{{trials}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime.pdf",
+        cluster    = f"results/plots/{{subject_dates}}/{{trials}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.pdf",
+        cluster_small    = f"results/plots/{{subject_dates}}/{{trials}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.png",
+        models     = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{{conditions}}/{{feature}}/{{decoder}}/ClusterModels.pkl",
+        coef_plots  = directory(f"results/plots/{{subject_dates}}/{{trials}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/Clusters/")
     params:
         phases = config["phase_conditions"]
     log:
-         f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.log",
+         f"results/plots/{{subject_dates}}/{{trials}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.log",
     conda:
         "../envs/environment.yaml"
     script:
@@ -74,16 +72,16 @@ rule cluster_coef:
 
 rule decoding_with_existing_model:
     input:
-        feat = [f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Features/{cond}/{{feature}}/features.h5" for cond in config['trial_conditions']],
-        models = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/ClusterModels.pkl",
+        feat = [f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Features/{cond}/{{feature}}/features.h5" for cond in config['aggr_conditions']],
+        models = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/ClusterModels.pkl",
     output:
-        perf =f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/cluster_perf.pkl"
+        perf =f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/cluster_perf.pkl"
     params:
-        conds = list(config['trial_conditions']),
+        conds = list(config['aggr_conditions']),
         decoders=[f"{{decoder}}"],
         params = lambda wildcards: config["decoders"][wildcards["decoder"]], #TODO actually we just need number of reps, or we could also just test once on whole dataset
     log:
-        f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/cluster_perf.log",
+        f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/cluster_perf.log",
     conda:
         "../envs/environment.yaml"
     resources:
@@ -95,19 +93,19 @@ rule decoding_with_existing_model:
 
 rule decoding_with_existing_model_different_subject:
     input:
-        feat = [f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Features/{cond}/{{feature}}/features.h5" for cond in config['trial_conditions']],
-        models = f"results/data/{config['generalize_from']}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/ClusterModels.pkl",
+        feat = [f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Features/{cond}/{{feature}}/features.h5" for cond in config['aggr_conditions']],
+        models = f"results/data/{config['generalize_from']}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/ClusterModels.pkl",
         org_decomp = f"results/data/{config['generalize_from']}/{{parcellation}}/data.h5",
         new_decomp = f"results/data/{{subject_dates}}/{{parcellation}}/data.h5",
     output:
-        perf =f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/from_{config['generalize_from']}/cluster_perf.pkl"
+        perf =f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/from_{config['generalize_from']}/cluster_perf.pkl"
     params:
-        conds = list(config['trial_conditions']),
+        conds = list(config['aggr_conditions']),
 
         decoders=[f"{{decoder}}"],
         params = lambda wildcards: config["decoders"][wildcards["decoder"]], #TODO actually we just need number of reps, or we could also just test once on whole dataset
     log:
-        f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/from_{config['generalize_from']}/cluster_perf.log",
+        f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/from_{config['generalize_from']}/cluster_perf.log",
     conda:
         "../envs/environment.yaml"
     resources:
@@ -118,25 +116,25 @@ rule decoding_with_existing_model_different_subject:
 
 rule plot_performances_clusters_time:
     input:
-        perf   =[f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/cluster_perf.pkl"],
+        perf   =[f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/cluster_perf.pkl"],
 
     output:
-        f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.pdf"
+        f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.pdf"
         
         
 
-        #report(f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{parcellation}}_perf.pdf",
+        #report(f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['aggr_conditions'])}/{{parcellation}}_perf.pdf",
         #    caption="../report/decode_features.rst",
         #    category="6 Decoding",
         #    subcategory="Compare Features",
         #    labels={"Parcellation":"{parcellation}","Subject/Date": "{subject_dates}"}),
-        #f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/performances_anno.pdf"
+        #f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/performances_anno.pdf"
     params:
         clusters="",
         decoders=[f"{{decoder}}"],
-        conds=list(config['trial_conditions']),
+        conds=list(config['aggr_conditions']),
     log:
-        f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.log"
+        f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.log"
         
     conda:
         "../envs/environment.yaml"
@@ -146,23 +144,23 @@ rule plot_performances_clusters_time:
 
 rule plot_performances_clusters_time_different_subject:
     input:
-        perf   =[f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/from_{config['generalize_from']}/cluster_perf.pkl"],
+        perf   =[f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/from_{config['generalize_from']}/cluster_perf.pkl"],
     output:
-        f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/from_{config['generalize_from']}/ClusturedModels_perf.pdf"
+        f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/from_{config['generalize_from']}/ClusturedModels_perf.pdf"
         
 
-        #report(f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{parcellation}}_perf.pdf",
+        #report(f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['aggr_conditions'])}/{{parcellation}}_perf.pdf",
         #    caption="../report/decode_features.rst",
         #    category="6 Decoding",
         #    subcategory="Compare Features",
         #    labels={"Parcellation":"{parcellation}","Subject/Date": "{subject_dates}"}),
-        #f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/performances_anno.pdf"
+        #f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/performances_anno.pdf"
     params:
         clusters="",
         decoders=[f"{{decoder}}"],
-        conds=list(config['trial_conditions']),
+        conds=list(config['aggr_conditions']),
     log:
-        f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.log"
+        f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.log"
         
     conda:
         "../envs/environment.yaml"
@@ -174,17 +172,17 @@ rule plot_performances_clusters_time_different_subject:
 
 rule plot_performance:
     input:
-        perf   = [f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{decoder}/decoder_perf.pkl" for decoder in config["decoders"]],
-        config = [f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{decoder}/conf.yaml" for decoder in config["decoders"]],
+        perf   = [f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{decoder}/decoder_perf.pkl" for decoder in config["decoders"]],
+        config = [f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{decoder}/conf.yaml" for decoder in config["decoders"]],
     output:
-        f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/performance.pdf",
+        f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/performance.pdf",
         
-        #f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/performance.pkl",
+        #f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/performance.pkl",
     params:
-        conds=list(config['trial_conditions']),
+        conds=list(config['aggr_conditions']),
         decoders=config["decoders"],
     log:
-        f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/plot_performance.log",
+        f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/plot_performance.log",
     conda:
         "../envs/environment.yaml"
     script:
@@ -192,27 +190,27 @@ rule plot_performance:
 
 rule plot_performances_features:
     input:
-        perf   = [f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{feature}/{decoder}/decoder_perf.pkl"
+        perf   = [f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{feature}/{decoder}/decoder_perf.pkl"
                   for feature in config['features']
                   for decoder in config["decoders"]],
-        config = [f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{feature}/{decoder}/conf.yaml"
+        config = [f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{feature}/{decoder}/conf.yaml"
                   for feature in config['features']
                   for decoder in config["decoders"]],
     output:
-        report(f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{parcellation}}_perf.pdf",
+        report(f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['aggr_conditions'])}/{{parcellation}}_perf.pdf",
             caption="../report/decode_features.rst",
             category="6 Decoding",
             subcategory="Compare Features",
             labels={"Parcellation":"{parcellation}","Subject/Date": "{subject_dates}"}),
-        f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/performances_anno.pdf"
+        f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/performances_anno.pdf"
     params:
-        conds=list(config['trial_conditions']),
+        conds=list(config['aggr_conditions']),
         decoders=config["decoders"],
         features=config['features'], #plot_feature_labels,
         subjects=config["plot_subject_labels"],
         trials=config['default_conditions'],
     log:
-        f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/plot_performances.log",
+        f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/plot_performances.log",
     conda:
         "../envs/environment.yaml"
     script:
@@ -220,21 +218,21 @@ rule plot_performances_features:
 
 rule plot_performances_parcellations:
     input:
-        [f"results/data/{{mouse_dates}}/{parcellation}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{decoder}/decoder_perf.pkl"
+        [f"results/data/{{mouse_dates}}/{parcellation}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{decoder}/decoder_perf.pkl"
          for parcellation in config['parcellations']
          for decoder in config["decoders"]],
     output:
-        report(f"results/plots/{{mouse_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}_perf.pdf", caption="../report/decode_features.rst", category="6 Decoding", subcategory="Compare Parcellation", labels={"Feature":"{feature}"}),
+        report(f"results/plots/{{mouse_dates}}/{{trials}}/{'.'.join(config['aggr_conditions'])}/{{feature}}_perf.pdf", caption="../report/decode_features.rst", category="6 Decoding", subcategory="Compare Parcellation", labels={"Feature":"{feature}"}),
 
-        f"results/plots/{{mouse_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/performances_anno.pdf",
+        f"results/plots/{{mouse_dates}}/{{trials}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/performances_anno.pdf",
     params:
-        conds=list(config['trial_conditions']),
+        conds=list(config['aggr_conditions']),
         decoders=config["decoders"],
         features=config['parcellations'], #plot_feature_labels,
         subjects=config["plot_subject_labels"],
         trials=config['default_conditions'],
     log:
-        f"results/plots/{{mouse_dates}}/{{trials}}/{{feature}}/{'.'.join(config['trial_conditions'])}/plot_performances.log",
+        f"results/plots/{{mouse_dates}}/{{trials}}/{{feature}}/{'.'.join(config['aggr_conditions'])}/plot_performances.log",
     conda:
         "../envs/environment.yaml"
     script:
@@ -242,19 +240,19 @@ rule plot_performances_parcellations:
 
 rule plot_performances_features_parcellations:
     input:
-        [f"results/data/{{subject_dates}}/{parcellation}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{feature}/{decoder}/decoder_perf.pkl"
+        [f"results/data/{{subject_dates}}/{parcellation}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{feature}/{decoder}/decoder_perf.pkl"
             for feature in config['features']
             for parcellation in config['parcellations']
             for decoder in config["decoders"]]
     output:
-        report(f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/all_perf.pdf",
+        report(f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['aggr_conditions'])}/all_perf.pdf",
             caption="../report/decode_features.rst",
             category="6 Decoding",
             subcategory="Compare Features & Parcellation",
             labels={"Subject/Date": "{subject_dates}"}),
         
     params:
-        conds=list(config['trial_conditions']),
+        conds=list(config['aggr_conditions']),
         features=config['features'],
         parcellations=config['parcellations'],
         decoders=config["decoders"],
@@ -262,7 +260,7 @@ rule plot_performances_features_parcellations:
         #subjects=config["plot_subject_labels"],
         #trials=config['default_conditions'],
     log:
-        f"results/data/{{subject_dates}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/plot_performances.log",
+        f"results/data/{{subject_dates}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/plot_performances.log",
     conda:
         "../envs/environment.yaml"
     script:
@@ -270,18 +268,18 @@ rule plot_performances_features_parcellations:
 
 rule plot_performance_over_time:
     input:
-        perf   = [f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{decoder}/decoder_perf.pkl" for decoder in config["decoders"]],
-        config = [f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{decoder}/conf.yaml" for decoder in config["decoders"]],
+        perf   = [f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{decoder}/decoder_perf.pkl" for decoder in config["decoders"]],
+        config = [f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{decoder}/conf.yaml" for decoder in config["decoders"]],
     output:
-        #f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/{{subject_dates}}_{{parcellation}}_{{feature}}_{'.'.join(config['trial_conditions'])}_over_time.pdf",
-        #f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/{{subject_dates}}_{{parcellation}}_{{feature}}_{'.'.join(config['trial_conditions'])}_over_time.pkl",
-        f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/performance_over_time.pdf",
-        #f"results/plots/{{subject_dates}}/{{trials}}/{{parcellation}}/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/performance_over_time.pkl",
+        #f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/{{subject_dates}}_{{parcellation}}_{{feature}}_{'.'.join(config['aggr_conditions'])}_over_time.pdf",
+        #f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/{{subject_dates}}_{{parcellation}}_{{feature}}_{'.'.join(config['aggr_conditions'])}_over_time.pkl",
+        f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/performance_over_time.pdf",
+        #f"results/plots/{{subject_dates}}/{{trials}}/{{parcellation}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/performance_over_time.pkl",
     params:
-        conds=list(config['trial_conditions']),
+        conds=list(config['aggr_conditions']),
         decoders=config["decoders"],
     log:
-        f"results/plots/{{subject_dates}}/{{trials}}/{{parcellation}}/{'.'.join(config['trial_conditions'])}/{{feature}}/plot_performance_over_time.log",
+        f"results/plots/{{subject_dates}}/{{trials}}/{{parcellation}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/plot_performance_over_time.log",
     conda:
         "../envs/environment.yaml"
     script:
@@ -289,18 +287,18 @@ rule plot_performance_over_time:
 
 rule plot_performance_matrix:
     input:
-        perf   = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/decoder_perf_across_timepoints.pkl",
-        config = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/conf.yaml",
+        perf   = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/decoder_perf_across_timepoints.pkl",
+        config = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/conf.yaml",
     output:
-        f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/{{decoder}}_performance_matrix.pdf",
-        f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/performance_matrix.pdf",
-        cluster = f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/performance_clustered.pdf",
-        model = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/{{decoder}}/performance_matrix_model.pkl",
+        f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/{{decoder}}_performance_matrix.pdf",
+        f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/performance_matrix.pdf",
+        cluster = f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/performance_clustered.pdf",
+        model = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/{{decoder}}/performance_matrix_model.pkl",
     params:
-        conds=list(config['trial_conditions']),
+        conds=list(config['aggr_conditions']),
         decoders=config["decoders"],
     log:
-        f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/{{decoder}}_plot_matrix_performance.log",
+        f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/{{decoder}}_plot_matrix_performance.log",
     conda:
         "../envs/environment.yaml"
     script:
@@ -309,14 +307,14 @@ rule plot_performance_matrix:
 rule plot_glassbrain:
     input:
         parcellation      = f"results/data/{{subject_dates}}/{{parcellation}}/data.h5",
-        original_features = [f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Features/{cond}/{{feature}}/features.h5" for cond in config['trial_conditions']],
-        features          = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/rfe/{'.'.join(config['trial_conditions'])}/{{rfe_n}}/{{feature}}/best_feats.{config['export_type']}",
+        original_features = [f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Features/{cond}/{{feature}}/features.h5" for cond in config['aggr_conditions']],
+        features          = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/rfe/{'.'.join(config['aggr_conditions'])}/{{rfe_n}}/{{feature}}/best_feats.{config['export_type']}",
 
     output:
-        plot              = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/rfe/{'.'.join(config['trial_conditions'])}/{{rfe_n}}/{{feature}}/circle_plot.pdf",
-        interactive_plot  = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/rfe/{'.'.join(config['trial_conditions'])}/{{rfe_n}}/{{feature}}/glassbrain.html",
+        plot              = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/rfe/{'.'.join(config['aggr_conditions'])}/{{rfe_n}}/{{feature}}/circle_plot.pdf",
+        interactive_plot  = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/rfe/{'.'.join(config['aggr_conditions'])}/{{rfe_n}}/{{feature}}/glassbrain.html",
     log:
-        f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/rfe/{'.'.join(config['trial_conditions'])}/{{rfe_n}}/{{feature}}/plot_glassbrain.log",
+        f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/rfe/{'.'.join(config['aggr_conditions'])}/{{rfe_n}}/{{feature}}/plot_glassbrain.log",
     conda:
         "../envs/environment.yaml"
     resources:
@@ -328,18 +326,18 @@ rule plot_glassbrain:
 
 rule plot_performances_parcellations_over_time:
     input:
-        perf = [f"results/data/{{subject_dates}}/{parcellation}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{decoder}/decoder_perf.pkl"
+        perf = [f"results/data/{{subject_dates}}/{parcellation}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{decoder}/decoder_perf.pkl"
          for decoder in config["decoders"]
          for parcellation in config['parcellations']]
     output:
-        f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}_performance_over_time.pdf",
-        #f"results/plots/{{subject_dates}}/{{trials}}/{{feature}}/{'.'.join(config['trial_conditions'])}/performance_over_time_parcels.pkl",
+        f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['aggr_conditions'])}/{{feature}}_performance_over_time.pdf",
+        #f"results/plots/{{subject_dates}}/{{trials}}/{{feature}}/{'.'.join(config['aggr_conditions'])}/performance_over_time_parcels.pkl",
     params:
-        conds=list(config['trial_conditions']),
+        conds=list(config['aggr_conditions']),
         decoders=config["decoders"],
         parcellations=list(config['parcellations']), #plot_feature_labels,
     log:
-        f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{feature}}_performances_over_time.log",
+        f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{feature}}_performances_over_time.log",
     conda:
         "../envs/environment.yaml"
     script:
@@ -347,18 +345,18 @@ rule plot_performances_parcellations_over_time:
 
 rule plot_performances_features_over_time:
     input:
-        perf = [f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{feature}/{decoder}/decoder_perf.pkl"
+        perf = [f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{feature}/{decoder}/decoder_perf.pkl"
          for decoder in config["decoders"]
          for feature in config['features']]
     output:
-        f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{parcellation}}_performance_over_time.pdf",
-        #f"results/plots/{{subject_dates}}/{{trials}}/{{parcellation}}/{'.'.join(config['trial_conditions'])}/performance_over_time_features.pkl",
+        f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['aggr_conditions'])}/{{parcellation}}_performance_over_time.pdf",
+        #f"results/plots/{{subject_dates}}/{{trials}}/{{parcellation}}/{'.'.join(config['aggr_conditions'])}/performance_over_time_features.pkl",
     params:
-        conds=list(config['trial_conditions']),
+        conds=list(config['aggr_conditions']),
         decoders=config["decoders"],
         features=list(config['features']), #plot_feature_labels,
     log:
-        f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{parcellation}}/{{parcellation}}_performances_over_time.log",
+        f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['aggr_conditions'])}/{{parcellation}}/{{parcellation}}_performances_over_time.log",
     conda:
         "../envs/environment.yaml"
     script:
@@ -366,16 +364,16 @@ rule plot_performances_features_over_time:
 
 rule plot_conf_matrix:
     input:
-        conf_matrix = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/confusion_matrix.pkl",
-        norm_conf_matrix = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/norm_confusion_matrix.pkl",
-        class_labels = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/class_labels.pkl",
+        conf_matrix = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/confusion_matrix.pkl",
+        norm_conf_matrix = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/norm_confusion_matrix.pkl",
+        class_labels = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/class_labels.pkl",
     output:
-        f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/{{decoder}}_confusion_matrix.pdf",
-        f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/confusion_matrix.pdf",
+        f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/{{decoder}}_confusion_matrix.pdf",
+        f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/confusion_matrix.pdf",
     params:
         phases = config["phase_conditions"]
     log:
-        f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/plots/{{decoder}}_confusion_matrix.log",
+        f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/{{decoder}}_confusion_matrix.log",
     conda:
         "../envs/environment.yaml"
     script:
