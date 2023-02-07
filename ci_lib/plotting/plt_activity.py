@@ -11,6 +11,7 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 from .utils import polygons_from_mask,plt_polygons
+from .colormaps import cmap_blueblackred
 
 ##Assumes that spatial is identical for all given temps
 
@@ -20,7 +21,7 @@ from .utils import polygons_from_mask,plt_polygons
 def plot_spatial_activity(activity,decomp_object,overlay=False):
     pass
 
-def draw_neural_activity(frames,path=None,plt_title="",subfig_titles=None,overlay=True,outlined=True,masked=True,logger=LOGGER,vmin=None,vmax=None,font_scale=1):
+def draw_neural_activity(frames,path=None,plt_title="",subfig_titles=None,overlay=True,outlined=True,masked=True,logger=LOGGER,share_v=True,vmin=None,vmax=None,font_scale=1,cmap=cmap_blueblackred()):
     """ Draws multiple frames of neural activity in the spatial context of the brain with optional Atlas-Overlay and Cutout.
 
     Args:
@@ -34,6 +35,10 @@ def draw_neural_activity(frames,path=None,plt_title="",subfig_titles=None,overla
         vmin (_type_, optional): _description_. Defaults to None.
         vmax (_type_, optional): _description_. Defaults to None.
     """    
+
+    #cmap2 = cmap_blueblackred()
+    ##logger.info(cmap2)
+    #logger.info(cmap2(0))
 
     #Single Frame is wrapped
     frames=np.asarray(frames,dtype=float)
@@ -89,7 +94,7 @@ def draw_neural_activity(frames,path=None,plt_title="",subfig_titles=None,overla
     #frames[frames>vmax]=0
     #vmin = -1
     #vmax = 1
-
+    
     vmin,vmax = (np.amin([vmin,-vmax]),np.amax([vmax,-vmin])) #vmin is too close to 0, 0 values will be plotted with a value != 0 due to floating point precision
     #logger.info(f"vmin,vmax {(np.nanmin(frames) if vmin is None else vmin,np.nanmax(frames) if vmax is None else vmax)}")
 
@@ -106,11 +111,14 @@ def draw_neural_activity(frames,path=None,plt_title="",subfig_titles=None,overla
                     frame = frame[:mask_h,:mask_w]
 
                 logger.info(f"vmin {vmin},vmax {vmax}")
-                im = ax[i, j].imshow(frame,cmap="seismic",norm=mpl.colors.TwoSlopeNorm(vcenter=0,vmin=vmin if vmin<0 else None,vmax=vmax if vmax>0 else None))
-
+                if share_v:
+                    norm = mpl.colors.TwoSlopeNorm(vcenter=0,vmin=vmin if vmin<0 else None,vmax=vmax if vmax>0 else None)
+                else:
+                    norm = mpl.colors.TwoSlopeNorm(vcenter=0,vmin=np.amin(frame) if np.amin(frame)<0 else None,vmax=np.amax(frame) if np.amax(frame)>0 else None)
+                im = ax[i, j].imshow(frame,cmap=cmap,norm=norm)
 
                 if overlay:
-                    plt_polygons(ax[i, j],region_outlines ,edgecolor=(1,1,1,0.8),fill=False,linewidth=0.5)
+                    plt_polygons(ax[i, j],region_outlines ,edgecolor=(1,1,1,0.7),fill=False,linewidth=0.5)
 
                 if outlined:
                     plt_polygons(ax[i, j],outline,edgecolor="black",fill=False,linewidth=2) #facecolor=None,

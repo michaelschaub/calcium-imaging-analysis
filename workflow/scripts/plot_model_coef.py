@@ -8,7 +8,7 @@ import sys
 
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
-from ci_lib.plotting import draw_neural_activity
+from ci_lib.plotting import draw_neural_activity, cmap_blueblackred
 from ci_lib.utils import snakemake_tools
 from ci_lib.utils.logging import start_log
 from ci_lib import DecompData

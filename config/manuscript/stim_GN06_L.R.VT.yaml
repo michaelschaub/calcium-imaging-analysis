@@ -137,10 +137,10 @@ branch_opts:
   features:
 
     spot-activity: #Full Timeseries for each trial
-      phase: 
+    #  phase: 
         #- all
         #- pretrial
-        - stimulus
+        #- stimulus
         #- response
         
         #- stim1

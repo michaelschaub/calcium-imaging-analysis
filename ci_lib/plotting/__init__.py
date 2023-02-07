@@ -5,3 +5,5 @@ from .connectivity import *
 from .plt_activity import draw_neural_activity, draw_coefs_models
 
 from .utils import *
+
+from .colormaps import *

@@ -34,7 +34,7 @@ sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 def cluster_UMAP():
     pass
 
-def plot_DimRed(data, data_phases, data_annot, method="PCA", colorlist=None,cmap=None, comps = 3, path=None):
+def plot_DimRed(data, data_phases, data_annot, color="t",symbol="Phase",method="PCA", colorlist=None,cmap=None, comps = 3, path=None):
     if "PCA" in method:
             PCA_comps, total_var = PCA_(data,comps)
     elif "UMAP" in method:
@@ -42,9 +42,7 @@ def plot_DimRed(data, data_phases, data_annot, method="PCA", colorlist=None,cmap
 
 
     PCA_df = pd.DataFrame(PCA_comps)
-    LOGGER.info(PCA_df.columns)
     PCA_df=PCA_df.rename(columns={0: "PC1",1: "PC2",2:"PC3"})
-    LOGGER.info(PCA_df.columns)
     PCA_df["Phase"] = data_phases
 
     for annot,data in data_annot.items():
@@ -76,12 +74,13 @@ def plot_DimRed(data, data_phases, data_annot, method="PCA", colorlist=None,cmap
     #fig.write_image(path)
     '''
 
-    fig = px.scatter_3d(PCA_df, x="PC1", y="PC2", z="PC3", color="t",symbol="Phase",title=f'Total Explained Variance: {total_var:.2f}%',hover_data=data_annot.keys())
+    fig = px.scatter_3d(PCA_df, x="PC1", y="PC2", z="PC3", color=color,symbol=symbol,title=f'Total Explained Variance: {total_var:.2f}%',hover_data=data_annot.keys())
 
     # move colorbar
     fig.update_layout(coloraxis_colorbar=dict(yanchor="top", y=1, x=0,
-                                            ticks="outside",
-                                            tickprefix="Frame "))
+                                                ticks="outside",
+                                                tickprefix="Frame "))
+
     #h = [plt.plot([],[], color=cmap_phases((p+1)/(n_phases+1)) , marker="s", ms=i, ls="")[0] for p,_ in enumerate(phases.keys())]
     #ax.legend(handles=h, labels=list(phases.keys()), title="Trial Phase") #,loc=(-.27,.7),frameon=False)
     if "html" in path:

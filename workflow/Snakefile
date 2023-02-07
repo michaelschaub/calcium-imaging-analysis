@@ -40,6 +40,9 @@ rule parcellation:
 		#Plot of parcellations
 		expand(f"results/data/{{session_run}}/{{parcellation}}/visualization/combined_parcels.pdf", session_run = session_runs,  parcellation = parcellations)
 
+rule conditions:
+    input:
+        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(trial_conditions)}/b-maps/{{parcellation}}/all_cond_difference_b-maps.pdf",session_run = session_runs,  parcellation = parcellations, trials= selected_trials)
 
 rule feature:
 	input:

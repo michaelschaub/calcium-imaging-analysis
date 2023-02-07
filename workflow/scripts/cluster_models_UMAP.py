@@ -118,21 +118,15 @@ try:
 
     ###
     #Cluster
-    labels = hdbscan.HDBSCAN(
-    min_samples=n_splits,
-    min_cluster_size=100,
-    ).fit_predict(embedding)
+    #labels = hdbscan.HDBSCAN(
+    #min_samples=n_splits,
+    #min_cluster_size=100,
+    #).fit_predict(embedding)
 
-    clustered_points = (labels >= 0)
-
-    clusters = np.unique(labels[clustered_points])
-
-    clusters_inds = [[i for i,label in enumerate(labels) if label == cluster] for cluster in clusters] # results in clusters x ind
-    if len(clusters_inds) == 0:
-        #No clusters found, combine all models to one single cluster
-        clusters_inds = [list(range(0,len(labels)))] 
+    
 
     #plot clustured
+    '''
     fig, ax = plt.subplots(1)
     ax.scatter(
         embedding[~clustered_points, 0],
@@ -150,6 +144,7 @@ try:
     plt.gca().set_aspect('equal', 'datalim')
 
     ax.plot(embedding[:, 0], embedding[:, 1],alpha=0.2,color="black") #,linestyle=":")
+    '''
 
     #Legend for Phases
     #h = [plt.plot([],[], color=cmap_phases((p+1)/(n_phases+1)) , marker="s", ms=i, ls="")[0] for p,_ in enumerate(phases.keys())]
@@ -169,7 +164,29 @@ try:
         "split":flat_split_count,
         "t":flat_timepoint_count}
 
-    plot_DimRed(flat_coefs,flat_coef_phases, data_annot, path= snakemake.output["cluster_3d"])
+    
+
+    plot_DimRed(flat_coefs,flat_coef_phases, data_annot, path= snakemake.output["PCA_3D"])
+
+
+    ####Clustering 
+    labels = hdbscan.HDBSCAN(
+    min_samples=n_splits,
+    min_cluster_size=250,
+    ).fit_predict(flat_coefs)
+    data_annot["cluster"] = labels
+     
+    plot_DimRed(flat_coefs,flat_coef_phases, data_annot, color="cluster",path= snakemake.output["Cluster_3D"])
+
+
+    #Group clusters
+    clustered_points = (labels >= 0)
+    clusters = np.unique(labels[clustered_points])
+    clusters_inds = [[i for i,label in enumerate(labels) if label == cluster] for cluster in clusters] # results in clusters x ind
+    if len(clusters_inds) == 0:
+        #No clusters found, combine all models to one single cluster
+        clusters_inds = [list(range(0,len(labels)))] 
+
 
     ####
     #### Create model from cluster

@@ -19,7 +19,7 @@ branch_opts:
 
     # Working Datasets
       - "03-26"
-      - "03-29"
+    #  - "03-29"
 
     # Only few unsuccesful trials  
     #  - "04-01"
@@ -81,12 +81,14 @@ branch_opts:
 
   # Defines conditions for Gerions Experimental Setup
   conditions:
+  
     default:
       phase: all
-      n_targets: all
-      n_distractors: none
+      #n_targets: all
+      #n_distractors: none
       auto_reward: no
       both_spouts: yes
+      
 
     #Stimulus Decoder
     #left:
@@ -102,28 +104,31 @@ branch_opts:
     #  modalities: vistact
 
     #Stimulus Decoder
-    L-V:
-      sides: left
-      modalities: visual
+    #L-V:
+    #  sides: left
+    #  modalities: visual
 
-    L-T:
+    LR-LS:
+      responses: left
       sides: left
-      modalities: tactile
 
-    L-VT:
+    RR-LS:
+      responses: right
       sides: left
-      modalities: vistact
 
-    R-V:
-      sides: right
-      modalities: visual
     
-    R-T:
-      sides: right
-      modalities: tactile
-    R-VT:
-      sides: right
-      modalities: vistact
+
+    #LR-RS:
+    #  responses: left
+    #  sides: right
+
+    #RR-RS:
+    #  responses: right
+    #  sides: right
+
+    #R-VT:
+    #  sides: right
+    #  modalities: vistact
 
   parcellations:
       SVD:
@@ -140,7 +145,7 @@ branch_opts:
       #phase: 
         #- all
         #- pretrial
-        #- stimulus
+      #  - stimulu s
         #- response
         
         #- stim1

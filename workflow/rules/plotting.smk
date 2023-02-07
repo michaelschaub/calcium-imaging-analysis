@@ -59,7 +59,9 @@ rule cluster_coef:
     output:
         no_cluster = f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime.pdf",
         cluster    = f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.pdf",
-        cluster_3d = f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered_3D.html",
+        PCA_3D = f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_PCA_3D.html",
+        Cluster_3D = f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_Clustered_3D.html",
+
         cluster_small    = f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.png",
         models     = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['trial_conditions'])}/{{feature}}/{{decoder}}/ClusterModels.pkl",
         coef_plots  = directory(f"results/plots/{{subject_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/Clusters/")
@@ -240,6 +242,22 @@ rule plot_performances_parcellations:
         "../envs/environment.yaml"
     script:
         "../scripts/plot_performances.py"
+
+
+rule plot_condition_diff:
+    input:
+        [f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{cond}/data.h5" for cond in config['trial_conditions']],
+    output:
+        directory(f"results/plots/{{mouse_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/b-maps/{{parcellation}}/Phases/"),
+        static = f"results/plots/{{mouse_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/b-maps/{{parcellation}}/all_cond_difference_b-maps.pdf"
+    params:
+        conds = config['trial_conditions']
+    log:
+        f"results/plots/{{mouse_dates}}/{{trials}}/{'.'.join(config['trial_conditions'])}/b-maps/{{parcellation}}/cond_difference_b-maps.log"
+    conda:
+        "../envs/environment.yaml"
+    script:
+        "../scripts/plotting/plot_cond_b-maps.py"
 
 rule plot_performances_features_parcellations:
     input:

@@ -96,6 +96,8 @@ rule condition:
     script:
         "../scripts/conditional.py"
 
+
+
 rule feature_calculation:
     input:
         data = f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/data.h5",
