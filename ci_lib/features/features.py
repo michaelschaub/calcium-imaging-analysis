@@ -88,10 +88,12 @@ class Features:
         '''
         Subsampling Trials to balance number of datapoints between different conditions
         :param n: Number of trials to sample
+        :param seed: The seed for the rng
         '''
         rng = np.random.default_rng(seed)
         select_n = rng.choice(self.trials_n,size=n,replace=False)
 
+        #TODO: either use a clone of self or do not return anything, doing both can cause confusion
         self._feature = self._feature[select_n ]
         return self
 

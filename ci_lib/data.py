@@ -178,6 +178,11 @@ class DecompData(Data):
     def t_max(self):
         return self._temps.shape[0]
 
+    @property
+    def trials_n(self):
+        ''' Returns number of trials, the first dimension of the feature array'''
+        return self._df.shape[0]
+
     #TODO both temporals only work for decompdata objects where phases have been applied to cut all trials into same length, otherwise reshaping doesnt work
     @property
     def temporals_z_scored(self):
@@ -237,6 +242,17 @@ class DecompData(Data):
                 spats = self._spats
             return np.tensordot(temps, spats, (-1, 0))
 
+    def subsample(self,n,seed=None):
+        '''
+        Subsampling Trials to balance number of datapoints between different conditions
+        :param n: Number of trials to sample
+        :param seed: The seed for the rng
+        '''
+        rng = np.random.default_rng(seed)
+        select_n = rng.choice(self.trials_n,size=n,replace=False)
+        data = self[select_n]
+        return data
+
     @property
     def pixel(self):
         '''
@@ -254,7 +270,7 @@ class DecompData(Data):
             keys = (keys, slice(None, None, None))
         elif len(keys) < 2:
             keys = (keys[0], slice(None,None,None))
-        df = self._df[keys[0]]
+        df = self._df.iloc[keys[0]]
         spats = self._spats
         try:
             # if keys[1] is bool us it as mask on aranged array to create array of frames to keep
