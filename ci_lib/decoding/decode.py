@@ -58,11 +58,12 @@ def load_feat(feat_wildcard,feat_path_list):
 
     return feat_list
 
-def balance(feat_list):
+def balance(feat_list, seed=None):
     ''' Balance number of trials between conditions'''
     min_number_trials = np.min([feats.trials_n for feats in feat_list])
 
-    return [feat.subsample(min_number_trials) for feat in feat_list]   
+    return [feat.subsample(min_number_trials, seed=seed*i if seed is not None else None)
+                                                for i,feat in enumerate(feat_list,start=1)]
 
 def shuffle(labels):
     ### Shuffle     #TODO shuffle better integrated

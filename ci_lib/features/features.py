@@ -84,12 +84,12 @@ class Features:
     def is_time_resolved(self):
         return self._time_resolved
 
-    def subsample(self,n):
+    def subsample(self,n,seed=None):
         '''
         Subsampling Trials to balance number of datapoints between different conditions
         :param n: Number of trials to sample
         '''
-        rng = np.random.default_rng()
+        rng = np.random.default_rng(seed)
         select_n = rng.choice(self.trials_n,size=n,replace=False)
 
         self._feature = self._feature[select_n ]

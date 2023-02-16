@@ -9,6 +9,8 @@ from ci_lib import DecompData
 from ci_lib.features import from_string as FeatFromString
 from ci_lib.decoding import balance
 
+SEED = 1242
+
 # redirect std_out to log file
 logger = start_log(snakemake)
 if snakemake.config['limit_memory']:
@@ -30,7 +32,7 @@ try:
         if feat.trials_n>0:
             feats.append(feat)
 
-    balance(feats)
+    balance(feats, seed=SEED)
     feat = feats[0]
     feat.concat(feats, overwrite=True) #TODO fails when no trials are present
 
