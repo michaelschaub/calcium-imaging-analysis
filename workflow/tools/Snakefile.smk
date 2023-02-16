@@ -51,7 +51,7 @@ config["loading"] = {"subjects": subjects,
 
 config["output"] = {"processed_dates" :  session_runs}
 
-print(phase_conditions)
+print('phases:', phase_conditions)
 
 config["processing"] = {"combine_sessions":combine_sessions,
                         "aggr_conditions" : aggr_conditions,

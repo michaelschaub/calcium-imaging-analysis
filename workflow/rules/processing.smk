@@ -100,6 +100,27 @@ rule condition:
     script:
         "../scripts/conditional.py"
 
+rule condition_grouping:
+    input:
+        lambda wildcards: [
+		f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{sub_cond}/data.h5"
+		for sub_cond in config['group_conditions'][wildcards['cond']]
+	]
+    output:
+        f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/data.h5",
+        config = f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/conf.yaml",
+    wildcard_constraints:
+        cond = branch_match(list(config['group_conditions'].keys()), params=False)
+    params:
+    log:
+        f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/condition_grouping.log"
+    conda:
+        "../envs/environment.yaml"
+    resources:
+        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,2000)
+    script:
+        "../scripts/group_conditions.py"
+
 rule feature_calculation:
     input:
         data = f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/data.h5",
