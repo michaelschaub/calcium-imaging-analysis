@@ -31,7 +31,7 @@ try:
         input_path = Path(snakemake.input[0])
         output_path = Path(snakemake.output[0])
         base_path = input_path.parent.parent.parent.parent
-        raise ValueError
+        raise NotImplemented("Aliasing not yet implemented")
 
         snakemake_tools.stop_timer(timer_start, logger=logger)
         sys.exit(0)

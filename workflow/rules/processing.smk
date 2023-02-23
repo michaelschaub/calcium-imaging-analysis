@@ -50,19 +50,42 @@ use rule parcellate as locaNMF with:
     conda:
         "../envs/locaNMF_environment.yaml"
 
+def input_trial_selection(wildcards):
+    selection_id = wildcards["selection_id"]
+    if selection_id in config['dataset_aliases']:
+        selection_id = config['dataset_aliases'].get(selection_id)
+        input = [ f"results/data/{{dataset_id}}/{{parcellation}}/{selection_id}/data.h5" ]
+    else:
+        input = [ "{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/data.h5" ]
+    return input
+
+def trial_selection_params(wildcards):
+    selection_id = wildcards["selection_id"]
+    if selection_id in config['dataset_aliases']:
+        selection_id = config['dataset_aliases'].get(selection_id)
+        alias = True
+    else:
+        alias = False
+    params = config["trial_selection"].get(selection_id, {'branch':selection_id, 'is_dataset':False})
+    params['alias'] = alias
+    return params
+
 rule trial_selection:
     '''
-    can select trials through predefined filters
+    can select trials from a dataset and (TODO) apply through predefined filters
     '''
     input:
-        data = f"{{data_dir}}/data.h5",
-        config = f"{{data_dir}}/conf.yaml",
+        #data = "{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/data.h5",
+        #config = "{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/conf.yaml",
+        input_trial_selection
     output:
-        f"{{data_dir}}/{{trials}}/data.h5",
-        #report = report(f"{{data_dir}}/{{trials}}/conf.yaml"),
-        config = f"{{data_dir}}/{{trials}}/conf.yaml",
+        "{data_dir}/{dataset_id}/{parcellation}/{selection_id}/data.h5",
+        #report = report("{data_dir}/{dataset_id}/{parcellation}/{selection_id}/conf.yaml"),
+        config = "{data_dir}/{dataset_id}/{parcellation}/{selection_id}/conf.yaml",
+    params:
+        trial_selection_params
     log:
-        f"{{data_dir}}/{{trials}}/trial_selection.log"
+        "{data_dir}/{dataset_id}/{parcellation}/{selection_id}/trial_selection.log"
     conda:
         "../envs/environment.yaml"
     resources:
