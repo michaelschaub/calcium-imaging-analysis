@@ -4,56 +4,31 @@ from wildcard_functions import subjects_from_wildcard
 ### Todo unify simon and gerions inout functions (easy)
 
 
-def sessions_input(wildcards):
+def sessions_input_gerion(wildcards):
     '''
-    Matches the corresponding input files for all subjects and dates in the the concatenated {subject_dates} wildcard, task_flatten is only passed to make sure files are present. Rules uses the structured task files from the params.
+    Matches the corresponding input files for one subject and date in the the {session_id} wildcard, task_flatten is only passed to make sure files are present. Rules uses the structured task files from the params.
     '''
-    subject_dates_dict = subjects_from_wildcard(wildcards["subject_dates"])
+    session_id = wildcards['session_id'].split('-')
+    subject_id = session_id[0]
+    date = '-'.join(session_id[1:])
     input = {
-        #To make sure that files are present, unfortunatly gets flattened -> losing information which dates belong to which subject
-        "tasks_flatten": taskdata_gerion(subject_dates_dict, flatten=True),
-        "Vc": [  f"resources/experiment/{subject_id}/{date}/SVD_data/Vc_100s_highpass.mat" for subject_id,dates in subject_dates_dict.items() for date in dates ], #TODO only works for new vc files, currently done this way to make sure only news vcs are used
-        "trans_params": [ f"resources/experiment/{subject_id}/{date}/SVD_data/opts2.mat" for subject_id,dates in subject_dates_dict.items() for date in dates ]}
+        "tasks": f"resources/experiment/{subject_id}/{date}/task_data/",
+        "Vc": f"resources/experiment/{subject_id}/{date}/SVD_data/Vc_100s_highpass.mat", #TODO only works for new vc files, currently done this way to make sure only news vcs are used
+        "trans_params": f"resources/experiment/{subject_id}/{date}/SVD_data/opts2.mat"}
     return input
-
-def sessions_params(wildcards):
-    '''
-    Matches the corresponding task input files for all subjects and dates in the the concatenated {subject_dates} wildcard, keeps task data structure as opposed to input files that are always flattened by snakemake    
-    '''
-    subject_dates_dict = subjects_from_wildcard(wildcards["subject_dates"])
-    return taskdata_gerion(subject_dates_dict, flatten=False)
-
-def taskdata_gerion(subject_dates_dict, flatten=False):
-    if flatten: 
-        return  [ f"resources/experiment/{subject_id}/{date}/task_data/" for subject_id,dates in subject_dates_dict.items() for date in dates ] 
-    else:
-        return {"task_structured" : {subject_id: [ f"resources/experiment/{subject_id}/{date}/task_data/" for date in dates] for subject_id,dates in subject_dates_dict.items()}}
-
-def taskdata_simon(subject_dates_dict, flatten=False):
-    if flatten: 
-        return [ f"resources/experiment/{subject_id}/{date}/SpatialDisc_Session.mat"  for subject_id,dates in subject_dates_dict.items() for date in dates ] #not tested
-    else:
-        return {"sessions_structured" :{subject_id: { date: f"resources/experiment/{subject_id}/{date}/SpatialDisc_Session.mat"
-                                             for date in dates} for subject_id,dates in subject_dates_dict.items()}}
 
 def sessions_input_simon(wildcards):
     '''
-    Matches the corresponding input files for all subjects and dates in the the concatenated {subject_dates} wildcard, task_flatten is only passed to make sure files are present. Rules uses the structured task files from the params.
+    Matches the corresponding input files for one subject and date in the the {subject_date} wildcard, task_flatten is only passed to make sure files are present. Rules uses the structured task files from the params.
     '''
-    subject_dates_dict = subjects_from_wildcard(wildcards["subject_dates"])
+    session_id = wildcards['session_id'].split('-')
+    subject_id = session_id[0]
+    date = session_id[1:]
     input = {
-        #To make sure that files are present, unfortunatly gets flattened -> losing information which dates belong to which subject
-        "sessions": taskdata_simon(subject_dates_dict, flatten=True),
-        "Vc":[ f"resources/experiment/{subject_id}/{date}/Vc.mat" for subject_id,dates in subject_dates_dict.items() for date in dates ],
-        "trans_params": [ f"resources/experiment/{subject_id}/{date}/opts2.mat" for subject_id,dates in subject_dates_dict.items() for date in dates ]}
+        "tasks": f"resources/experiment/{subject_id}/{date}/SpatialDisc_Session.mat",
+        "Vc": f"resources/experiment/{subject_id}/{date}/Vc.mat",
+        "trans_params": f"resources/experiment/{subject_id}/{date}/opts2.mat"}
     return input
-
-def sessions_params_simon(wildcards):
-    '''
-    Matches the corresponding task input files for all subjects and dates in the the concatenated {subject_dates} wildcard, keeps task data structure as opposed to input files that are always flattened by snakemake    
-    '''
-    subject_dates_dict = subjects_from_wildcard(wildcards["subject_dates"])
-    return taskdata_simon(subject_dates_dict, flatten=False)
 
 ####
 
@@ -73,25 +48,22 @@ rule load_GN:
     aggregates all task and svd data from one session with one animal
     '''
     input:
-        unpack(sessions_input)
+        unpack(sessions_input_gerion)
     output:
-        "results/data/{subject_dates}/SVD/data.h5",
-        align_plot = report("results/data/{subject_dates}/SVD/alignment.pdf", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "GN", "Subjects":"{subject_dates}"}),
-        config = "results/data/{subject_dates}/SVD/conf.yaml",
-        stim_side = report("results/data/{subject_dates}/SVD/stim_side.pdf", caption="../report/alignment.rst", category="0 Loading", labels={"Dataset": "GN", "Subjects":"{subject_dates}"})
-    params:
-        sessions_params # so we are using this one and we can actually use a dict to make it even comfier
+        "results/data/{session_id}/SVD/{session_id}/data.h5",
+        align_plot = report("results/data/{session_id}/{session_id}}/SVD/alignment.pdf", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "GN", "Subjects":"{session_id}"}),
+        config = "results/data/{session_id}/{session_id}}/SVD/conf.yaml",
+        stim_side = report("results/data/{session_id}/{session_id}}/SVD/stim_side.pdf", caption="../report/alignment.rst", category="0 Loading", labels={"Dataset": "GN", "Subjects":"{session_id}"})
     wildcard_constraints:
-        #only allowed to resolve wildcards of combined sessions (indicated by the sessions being concat with #) if set true in config, else only indivdual sessions can be loaded
-        subject_dates = r"GN[\w_.\-#]*" if config["combine_sessions"] else r"GN[\w_.\-]*"
+        session_id = r"GN[\w_.\-]*"
     log:
-        f"results/data/{{subject_dates}}/SVD/pipeline_entry.log"
+        "results/data/{session_id}/SVD/{session_id}/pipeline_entry.log"
     conda:
         "../envs/environment.yaml"
     resources:
         mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,1000)
     script:
-        "../scripts/default_entry.py"
+        "../scripts/loading/load_GN.py"
 
 rule load_mSM:
     '''
@@ -99,29 +71,50 @@ rule load_mSM:
     '''
     input:
         unpack(sessions_input_simon)
-        #sessions	= [ f"resources/experiment/{subject_id}/{date}/SpatialDisc_Session.mat"
-        #                for subject_id,dates in config["subjects"].items() for date in dates],
-        #Vc		= [ f"resources/experiment/{subject_id}/{date}/Vc.mat"
-        #              for subject_id,dates in config["subjects"].items() for date in dates],
-        #trans_params	= [ f"resources/experiment/{subject_id}/{date}/opts2.mat"
-        #                    for subject_id,dates in config["subjects"].items() for date in dates],
     output:
-        "results/data/{subject_dates}/SVD/data.h5",
-        align_plot = report("results/data/{subject_dates}/SVD/alignment.pdf", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "mSM", "Subjects":", ".join(config["subjects"])}),
-        config = f"results/data/{{subject_dates}}/SVD/conf.yaml",
-    params:
-        sessions_params_simon
-        #subject_dates_str = '_'.join(config["subject_dates"]),
-        #sessions_structured = 
+        "results/data/{session_id}/{session_id}}/SVD/data.h5",
+        align_plot = report("results/data/{session_id}/{session_id}}/SVD/alignment.pdf", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "mSM", "Subjects":"{session_id}"}),
+        config = "results/data/{session_id}/SVD/{session_id}/conf.yaml",
     wildcard_constraints:
-        subject_dates = r"mSM[\w_.\-#]*" if config["combine_sessions"] else r"mSM[\w_.\-]*"
-    #wildcard_constraints:
-    #    subject_dates	= r"mSM[a-zA-Z\d_-]+",
+        session_id = r"mSM[\w_.\-]*"
     log:
-        f"results/data/{{subject_dates}}/SVD/pipeline_entry.log"
+        "results/data/{session_id}/SVD/{session_id}/pipeline_entry.log"
     conda:
         "../envs/environment.yaml"
     resources:
         mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,1000)
     script:
-        "../scripts/mSM_entry.py"
+        "../scripts/loading/load_mSM.py"
+
+def input_unification(wildcards):
+    dataset_id = wildcards['dataset_id']
+    # if dataset_id is a defined alias, replace it with the canonical (hash) id, else leave it be
+    if dataset_id in config['dataset_aliases']:
+        dataset_id = config['dataset_aliases'].get(dataset_id)
+        input = [ f"results/data/{dataset_id}/SVD/{dataset_id}/data.h5" ]
+    else:
+        digest_lng = config.get('hash_digest_length', 8)
+        matched_ids = [ id for id in config['datasets'].keys() if dataset_id[:digest_lng] == id[:digest_lng] ]
+        assert (len(matched_ids) == 1), f"Did not match exactly one dataset for {dataset_id=}, but instead {matched_ids=}"
+        input = [ f"results/data/{subj}-{date}/SVD/{subj}-{date}/data.h5" for subj, date in config['datasets'].get(matched_ids[0])]
+    return input
+
+rule unify:
+    '''
+    Unifies multiple sessions into a single dataset, within a shared SVD space
+    '''
+    input:
+        unpack(input_unification)
+    output:
+        "results/data/{dataset_id}/SVD/{dataset_id}/data.h5",
+        config = "results/data/{dataset_id}/SVD/{dataset_id}/conf.yaml",
+    log:
+        "results/data/{dataset_id}/SVD/{dataset_id}/pipeline_entry.log"
+    params:
+       alias=lambda wildcards: wildcards['dataset_id'] in config['dataset_aliases']
+    conda:
+        "../envs/environment.yaml"
+    resources:
+        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,1000)
+    script:
+        "../scripts/loading/unify_sessions.py"
