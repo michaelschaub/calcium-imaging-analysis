@@ -65,6 +65,7 @@ rule load_GN:
     script:
         "../scripts/loading/load_GN.py"
 
+#TODO fix this!
 rule load_mSM:
     '''
     aggregates all task and svd data from one session with one animal

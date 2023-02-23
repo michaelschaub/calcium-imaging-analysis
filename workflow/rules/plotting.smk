@@ -9,17 +9,17 @@ rule plot_parcels:
     plots spatial compoenents of parcellation 
     '''
     input:
-        f"{{data_dir}}/{{parcellation}}/data.h5",
-        config = f"{{data_dir}}/{{parcellation}}/conf.yaml",
+        "{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/data.h5",
+        config = "{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/conf.yaml",
     output:
         combined = report(
-                    f"{{data_dir}}/{{parcellation}}/visualization/combined_parcels.pdf",
+                    "{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/visualization/combined_parcels.pdf",
                     caption="../report/alignment.rst",
                     category="2 Parcellation",
                     subcategory="Overview",
                     labels={"Method":"{parcellation}"}),
         single = report(
-                    directory(f"{{data_dir}}/{{parcellation}}/visualization/single_parcel/"),
+                    directory("{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/visualization/single_parcel/"),
                     patterns =["parcel_{name}.pdf"],
                     caption="../report/alignment.rst",
                     category="2 Parcellation",
@@ -29,7 +29,7 @@ rule plot_parcels:
     params:
         n = config["parcels_n"],
     log:
-        f"{{data_dir}}/{{parcellation}}/visualization/parcellation.log"
+        "{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/visualization/parcellation.log"
     conda:
         "../envs/environment.yaml"
     script:
@@ -38,7 +38,7 @@ rule plot_parcels:
 rule plot_model_coef:
     input:
         model  = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{{conditions}}/{{feature}}/{{decoder}}/decoder_model.pkl",
-        parcel = f"results/data/{{subject_dates}}/{{parcellation}}/data.h5"
+        parcel = f"results/data/{{subject_dates}}/{{parcellation}}/{{subject_dates}}/data.h5"
     output:
         coef_plot = f"results/plots/{{subject_dates}}/{{trials}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/model_coef_mean.pdf",
         var_plot = f"results/plots/{{subject_dates}}/{{trials}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/model_coef_std.pdf"
@@ -53,7 +53,7 @@ rule plot_model_coef:
 rule cluster_coef:
     input:
         model  = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{{conditions}}/{{feature}}/{{decoder}}/decoder_model.pkl",
-        parcel = f"results/data/{{subject_dates}}/{{parcellation}}/data.h5"
+        parcel = f"results/data/{{subject_dates}}/{{parcellation}}/{{subject_dates}}/data.h5"
     output:
         no_cluster = f"results/plots/{{subject_dates}}/{{trials}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime.pdf",
         cluster    = f"results/plots/{{subject_dates}}/{{trials}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.pdf",
@@ -96,7 +96,7 @@ rule decoding_with_existing_model_different_subject:
         feat = [f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Features/{cond}/{{feature}}/features.h5" for cond in config['aggr_conditions']],
         models = f"results/data/{config['generalize_from']}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/ClusterModels.pkl",
         org_decomp = f"results/data/{config['generalize_from']}/{{parcellation}}/data.h5",
-        new_decomp = f"results/data/{{subject_dates}}/{{parcellation}}/data.h5",
+        new_decomp = f"results/data/{{subject_dates}}/{{parcellation}}/{{subject_dates}}/data.h5",
     output:
         perf =f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/from_{config['generalize_from']}/cluster_perf.pkl"
     params:
@@ -306,7 +306,7 @@ rule plot_performance_matrix:
 
 rule plot_glassbrain:
     input:
-        parcellation      = f"results/data/{{subject_dates}}/{{parcellation}}/data.h5",
+        parcellation      = f"results/data/{{subject_dates}}/{{parcellation}}/{{subject_dates}}/data.h5",
         original_features = [f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Features/{cond}/{{feature}}/features.h5" for cond in config['aggr_conditions']],
         features          = f"results/data/{{subject_dates}}/{{parcellation}}/{{trials}}/Decoding/rfe/{'.'.join(config['aggr_conditions'])}/{{rfe_n}}/{{feature}}/best_feats.{config['export_type']}",
 
@@ -381,11 +381,11 @@ rule plot_conf_matrix:
 
 rule plot_activity:
     input:
-        f"{{data_dir}}/{{parcellation}}/data.h5"
+        "{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/data.h5"
     output:
-        f"{{data_dir}}/{{parcellation}}/activity.pdf"
+        "{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/activity.pdf"
     log:
-         f"{{data_dir}}/{{parcellation}}/activity.log"
+         "{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/activity.log"
     conda:
         "../envs/environment.yaml"
     script:

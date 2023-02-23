@@ -12,15 +12,15 @@ datasets, dataset_aliases = create_datasets(datasets, config)
 #print(f"{dataset_aliases=}")
 
 #TODO repair
-#if config["branch_opts"].get('include_individual_sessions', False):  # config["branch_opts"].get('combine_sessions', False): #TODO fail safe config loading with defaults
-    #session_runs = subject_dates + ['#'.join(subject_dates)]
-#else:
-    #session_runs = ['#'.join(subject_dates)]  #["All"]
-session_runs = ["All"]
+if config["branch_opts"].get('include_individual_sessions', False):  # config["branch_opts"].get('combine_sessions', False): #TODO fail safe config loading with defaults
+    session_runs = list(datasets.keys())
+else:
+    session_runs = [dataset_aliases['All']]
 
-combine_sessions = config["branch_opts"]["combine_sessions"]
+#TODO remove?
+combine_sessions = True
 
-#print(f"{session_runs=}")
+print(f"{session_runs=}")
 
 parcells_conf   = config["branch_opts"]["parcellations"]
 parcells_static = config["static_params"]["parcellations"]
@@ -31,8 +31,13 @@ parcellations   = create_parameters( parcells_conf, parcells_static )
 # selected_trials = config["branch_opts"]["selected_trials"]
 # selected_trials = create_parameters( selected_trials, {})
 '''Create a parameter dictionary for trial selection; the only parameters, appart from branch, is_dataset indicates, whether a single trial or a dataset is selected'''
-selected_trials = { dataset_id: { "branch": dataset_id, "sessions": sessions, "is_dataset":True} for dataset_id, sessions in datasets.items() }
-#print(f"{selected_trials=}")
+trial_selection = { dataset_id: { "branch": dataset_id, "sessions": sessions, "is_dataset":True} for dataset_id, sessions in datasets.items() }
+print(f"{trial_selection=}")
+
+selected_trials = { session: [session] for session in session_runs }
+if dataset_aliases["All"] in selected_trials.keys():
+    selected_trials[dataset_aliases["All"]] = list(datasets.keys())
+print(f"{selected_trials=}")
 
 config["phase"] = config["phase_conditions"] #TODO check why phase_conditions is different from this
 
@@ -73,7 +78,7 @@ config["processing"] = {"combine_sessions":combine_sessions,
                                               "reps": rfe_reps},
                         "parcellations": parcellations,
                         "parcellation_wildcard_matching": config["paths"]["parcellations"], #TODO what is this?
-                        "trial_selection" : selected_trials,
+                        "trial_selection" : trial_selection,
                         "dataset_aliases" : dataset_aliases,
                         "features":features,
                         "decoders":decoders,
@@ -105,7 +110,7 @@ config["plotting"] =   {
 wildcard_constraints:
     subject_dates = r"[a-zA-Z\d_.#-]+",
     parcellation  = branch_match(config["branch_opts"]["parcellations"].keys()),
-    trials        = branch_match(config["branch_opts"]["selected_trials"].keys()),
+    #trials        = branch_match(config["branch_opts"][""].keys()),
     cond          = branch_match(config["branch_opts"]["conditions"].keys()),
     feature       = branch_match(config["branch_opts"]["features"].keys()),
     decoder       = branch_match(config["branch_opts"]["decoders"].keys()),

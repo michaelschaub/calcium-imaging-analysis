@@ -53,9 +53,8 @@ use rule parcellate as locaNMF with:
 def input_trial_selection(wildcards):
     dataset_id = wildcards['dataset_id']
     selection_id = wildcards["selection_id"]
-    if dataset_id == selection_id:
-        return ["good/luck/finding/this/non/existing/path"]
-        #raise ValueError
+    if dataset_id == selection_id or '/' in selection_id:
+        raise ValueError("Trial selection can not produce these outputs.")
     if selection_id in config['dataset_aliases']:
         selection_id = config['dataset_aliases'].get(selection_id)
         input = [ f"results/data/{{dataset_id}}/{{parcellation}}/{selection_id}/data.h5" ]
