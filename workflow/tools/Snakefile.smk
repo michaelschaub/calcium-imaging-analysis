@@ -31,7 +31,7 @@ parcellations   = create_parameters( parcells_conf, parcells_static )
 # selected_trials = config["branch_opts"]["selected_trials"]
 # selected_trials = create_parameters( selected_trials, {})
 '''Create a parameter dictionary for trial selection; the only parameters, appart from branch, is_dataset indicates, whether a single trial or a dataset is selected'''
-selected_trials = { set: { "branch": set, "is_dataset":True} for set in datasets.keys() }
+selected_trials = { dataset_id: { "branch": dataset_id, "sessions": sessions, "is_dataset":True} for dataset_id, sessions in datasets.items() }
 #print(f"{selected_trials=}")
 
 config["phase"] = config["phase_conditions"] #TODO check why phase_conditions is different from this

@@ -34,6 +34,8 @@ try:
     sessions = load_task_data_as_pandas_df.extract_session_data_and_save(
             root_paths=task_paths, reextract=True, logger=logger) #reextraction needs to be done for different set of dates otherwise session will have wrong dims
 
+    sessions['subject_id'] = sessions['mouse_id']
+
     logger.info(f"{sessions}")
 
     ###

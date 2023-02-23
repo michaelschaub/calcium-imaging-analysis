@@ -11,8 +11,8 @@ def parcellation_input(wildcards):
         return {"data":f"good/luck/finding/this/non/existing/path"}
 
     input = {
-        "data"	: f"{{data_dir}}/SVD/data.h5",
-        "config": f"{{data_dir}}/SVD/conf.yaml" }
+        "data"	: "{data_dir}/{dataset_id}/SVD/{dataset_id}/data.h5",
+        "config": "{data_dir}/{dataset_id}/SVD/{dataset_id}/conf.yaml" }
     branch = config["parcellations"][wildcards["parcellation"]]["branch"]
     input.update( config["parcellation_wildcard_matching"][branch] )
     return input
@@ -24,8 +24,8 @@ rule parcellate:
     input:
         unpack(parcellation_input)
     output:
-        f"{{data_dir}}/{{parcellation}}/data.h5",
-        config = f"{{data_dir}}/{{parcellation}}/conf.yaml",
+        "{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/data.h5",
+        config = "{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/conf.yaml",
     params:
         params = lambda wildcards: config["parcellations"][wildcards["parcellation"]]
     wildcard_constraints:
@@ -34,7 +34,7 @@ rule parcellate:
         parcellation = "(?!SVD$).+",
 	#data_dir = 'results/data/GN06.03-26#GN06.03-29'
     log:
-        f"{{data_dir}}/{{parcellation}}/parcellation.log"
+        "{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/parcellation.log"
     conda:
         "../envs/environment.yaml"
     resources:
@@ -51,7 +51,11 @@ use rule parcellate as locaNMF with:
         "../envs/locaNMF_environment.yaml"
 
 def input_trial_selection(wildcards):
+    dataset_id = wildcards['dataset_id']
     selection_id = wildcards["selection_id"]
+    if dataset_id == selection_id:
+        return ["good/luck/finding/this/non/existing/path"]
+        #raise ValueError
     if selection_id in config['dataset_aliases']:
         selection_id = config['dataset_aliases'].get(selection_id)
         input = [ f"results/data/{{dataset_id}}/{{parcellation}}/{selection_id}/data.h5" ]
