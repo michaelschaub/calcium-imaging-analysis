@@ -28,7 +28,7 @@ class CrossCorrelations(Features):
             acovs = np.copy(acovs._feature)
 
         feature = calc_acorrs(covs, acovs)
-        feat = AutoCorrelations(data, feature)
+        feat = AutoCorrelations(data.frame, data, feature)
         return feat
 
     def flatten(self, feat=None):

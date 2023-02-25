@@ -19,8 +19,9 @@ class Feature_Type(Enum):
         return self.value == other.value
 
 class Features:
-    def __init__(self, data, feature, file=None, time_resolved=False, full = False):
+    def __init__(self, frame, data, feature, file=None, time_resolved=False, full = False):
         self.data = data
+        self._df = frame
         self._feature = feature
         self._savefile = file
 
@@ -58,6 +59,14 @@ class Features:
         for i in range(len(starts) - 1):
             feat[starts[i]:starts[i + 1]] = feats[i]
         return feat
+
+    @property
+    def frame(self):
+        return self._df
+
+    @frame.setter
+    def frame(self,frame):
+        self._df = frame
 
     @property
     def feature(self):
@@ -178,7 +187,7 @@ class Features:
     def save(self, file, data_file=None):
         '''
         '''
-        h5_file = save_h5( self, file, { "feature": self._feature } )
+        h5_file = save_h5( self, file, { "df": self._df, "feature": self._feature } )
         h5_file.attrs["data_hash"] = self.data_hash.hex()
         if self.data.savefile is None:
             if data_file is None:
@@ -194,13 +203,13 @@ class Features:
         if try_loaded and feature_hash is not None and feature_hash in Features.LOADED_FEATURES:
             feat = Features.LOADED_FEATURES[feature_hash]
         else:
-            h5_file, feature = load_h5( file, labels=["feature"] )
+            h5_file, frame, feature = load_h5( file, labels=["df", "feature"] )
             data_hash = bytes.fromhex(h5_file.attrs["data_hash"])
             if try_loaded and data_hash in Data.LOADED_DATA:
                 data = Data.LOADED_DATA[data_hash]
             elif data_file is None:
                 data = h5_file.attrs["data_file"]
-            feat = Class(data, feature, file)
+            feat = Class(frame, data, feature, file)
             feat.data_hash = bytes.fromhex(h5_file.attrs["data_hash"])
             Features.LOADED_FEATURES[feat.hash.digest()] = feat
         return feat
@@ -222,7 +231,7 @@ class Raws(Features):
     def create(data, max_comps=None, logger=LOGGER):
         if max_comps is not None:
             logger.warn("DEPRECATED: max_comps parameter in features can not garanty sensible choice of components, use n_components parameter for parcellations instead")
-        feat = Raws(data, data.temporals[:, :, :max_comps])
+        feat = Raws(data.frame, data, , data.temporals[:, :, :max_comps])
         return feat
 
     def flatten(self, feat=None):
@@ -243,7 +252,7 @@ class Raws(Features):
 class FeatureMean(Features):
     def create(base, logger=LOGGER):
         feature = np.mean(base.feature, axis=0)[None,:].reshape((1, *base.feature.shape[1:]))
-        feat = FeatureMean(base.data, feature )
+        feat = FeatureMean(base.frame, base.data, feature )
         feat._base_feature = base
         return feat
 

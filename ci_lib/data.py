@@ -194,8 +194,12 @@ class DecompData(Data):
 
     @property
     def trials_n(self):
-        ''' Returns number of trials, the first dimension of the feature array'''
+        ''' Returns number of trials'''
         return self._df.shape[0]
+
+    @property
+    def frame(self):
+        return self._df
 
     #TODO both temporals only work for decompdata objects where phases have been applied to cut all trials into same length, otherwise reshaping doesnt work
     @property
