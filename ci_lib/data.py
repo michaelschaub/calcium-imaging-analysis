@@ -42,7 +42,7 @@ class Data(ABC):
 
 
 class DecompData(Data):
-    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, allowed_overlap=0, cond_filter=None, trans_params=None, savefile=None, spatial_labels=None, mean=None, stdev=None, dataset_column="dataset", logger=None):
+    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, allowed_overlap=0, cond_filter=None, trans_params=None, savefile=None, spatial_labels=None, mean=None, stdev=None, dataset_id_column="dataset_id", logger=None):
         self.logger = LOGGER if logger is None else logger
         #TODO remove first check
         assert len(df) != trial_starts.shape[0]-1, (
@@ -387,7 +387,7 @@ class DecompData(Data):
         #else:
             #return None
 
-    def dataset_from(self, sessions, dataset_id):
+    def dataset_from_sessions(self, sessions, dataset_id):
         '''
         Creates a DecompData object, only containing specified sessions and sets its datas_column to the specified dataset_id
         sessions should be a list of dicts, each containing a `subject_id` string and a `datetime` `numpy.datetime64` value

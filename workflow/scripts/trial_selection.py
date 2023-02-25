@@ -58,14 +58,14 @@ try:
     if params['is_dataset']:
         sessions = [ {'subject_id':subj, 'datetime':parse_datetime(date)} for subj, date in params['sessions']]
         logger.debug(f"{sessions=}")
-        data = data.dataset_from( sessions, selection_id )
+        data = data.dataset_from_sessions( sessions, selection_id )
     else:
         selection_split = selection_id.split('-')
         subject_id = selection_split[0]
         date = '-'.join(selection_split[1:])
         sessions = [ {'subject_id':subject_id, 'datetime':parse_datetime(date)} ]
         logger.debug(f"session={sessions[0]}")
-        data = data.dataset_from( sessions, selection_id )
+        data = data.dataset_from_sessions( sessions, selection_id )
     logger.info(f"Applied selection {selection_id}")
     logger.debug(f"{data._df=}")
 
