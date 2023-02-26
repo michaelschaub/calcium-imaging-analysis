@@ -57,7 +57,7 @@ class DecompData(Data):
         self._allowed_overlap = np.asarray(allowed_overlap) #has to be 0 if trials are not containing continous frames, currently as 0 dim array cause save function doesn't handle ints yet
 
         self._spat_labels = spatial_labels
-        self.dataset_column = dataset_column
+        self.dataset_id_column = dataset_id_column
 
         #Needed to calculate z-score based on mean and stdev over whole dataset after splitting data into conditions
         self._mean = np.mean(self._temps,axis=0) if mean is None else mean
@@ -401,7 +401,7 @@ class DecompData(Data):
                                                     for date, data in zip(dates, session_data)]
         data = session_data[0]
         data.concat(session_data, overwrite=True)
-        data._df[self.dataset_column] = dataset_id
+        data._df[self.dataset_id_column] = dataset_id
         return session_data[0]
 
     def _op_data(self, a):
