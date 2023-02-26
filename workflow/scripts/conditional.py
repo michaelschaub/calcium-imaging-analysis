@@ -35,6 +35,7 @@ try:
         # Save output
         conditional = data.conditions[cond, :, start:stop]
         conditional.frame['condition'] = cond
+        logger.debug(f'{conditional.frame=}')
         conditional.save(file)
 
 
