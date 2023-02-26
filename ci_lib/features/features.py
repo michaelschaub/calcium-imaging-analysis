@@ -231,7 +231,7 @@ class Raws(Features):
     def create(data, max_comps=None, logger=LOGGER):
         if max_comps is not None:
             logger.warn("DEPRECATED: max_comps parameter in features can not garanty sensible choice of components, use n_components parameter for parcellations instead")
-        feat = Raws(data.frame, data, , data.temporals[:, :, :max_comps])
+        feat = Raws(data.frame, data, data.temporals[:, :, :max_comps])
         return feat
 
     def flatten(self, feat=None):

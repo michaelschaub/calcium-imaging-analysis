@@ -33,7 +33,9 @@ try:
             stop = phase["stop"] if "stop" in phase else None
      
         # Save output
-        data.conditions[cond, :, start:stop].save(file)
+        conditional = data.conditions[cond, :, start:stop]
+        conditional.frame['condition'] = cond
+        conditional.save(file)
 
 
     snakemake_tools.stop_timer(timer_start, logger=logger)
