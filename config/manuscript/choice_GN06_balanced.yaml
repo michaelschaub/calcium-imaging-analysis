@@ -94,13 +94,13 @@ branch_opts:
       responses: left
       sides: left
 
-    RR-LS:
-      responses: right
-      sides: left
-
     LR-RS:
       responses: left
       sides: right
+
+    RR-LS:
+      responses: right
+      sides: left
 
     RR-RS:
       responses: right
@@ -128,6 +128,7 @@ branch_opts:
   
   parcellations:
       SVD:
+      #  n_components: 50
       LocaNMF:
       anatomical:
     
@@ -161,12 +162,12 @@ branch_opts:
       phase: 
         #- all
         #- pretrial
-        - stimulus
+        #- stimulus
         #- stim1
         #- inter_stim
         #- stim2
         #- delay
-        #- response
+        - response
         #- posttrial
 
     #dFC:

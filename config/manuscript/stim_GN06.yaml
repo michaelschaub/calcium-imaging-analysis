@@ -238,7 +238,7 @@ branch_opts:
 
   decoders:
     default:
-      reps: [5]
+      reps: [20]
     MLR:
     #MLRshuffle:
 

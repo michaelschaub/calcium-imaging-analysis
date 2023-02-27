@@ -149,7 +149,7 @@ try:
     #Legend for Phases
     #h = [plt.plot([],[], color=cmap_phases((p+1)/(n_phases+1)) , marker="s", ms=i, ls="")[0] for p,_ in enumerate(phases.keys())]
     #ax.legend(handles=h, labels=list(phases.keys()), title="Trial Phase") #,loc=(-.27,.7),frameon=False)
-    #plt.colorbar(fig)
+    
     ax.set_title('Clustering in UMAP space of learned models')
     ###
 
@@ -157,38 +157,58 @@ try:
     fig.figure.savefig( snakemake.output["cluster"] )
     fig.figure.savefig( snakemake.output["cluster_small"] )
 
-
     flat_split_count = np.asarray([np.arange(n_splits)] * n_timepoints).flatten() #0,1,2.... 0,1,2...
     flat_timepoint_count = np.repeat(np.arange(n_timepoints), n_splits) # 0,0,0, ... 1,1,1,
     data_annot= {
         "split":flat_split_count,
-        "t":flat_timepoint_count}
+        "t":flat_timepoint_count,
+        "phase":flat_coef_phases,
+        }
 
-    
-
-    plot_DimRed(flat_coefs,flat_coef_phases, data_annot, path= snakemake.output["PCA_3D"])
-
+    #Plot projection
+    plot_DimRed(flat_coefs, data_annot, path= snakemake.output["PCA_3D"])
 
     ####Clustering 
     labels = hdbscan.HDBSCAN(
     min_samples=n_splits,
-    min_cluster_size=250,
+    min_cluster_size=10,
     ).fit_predict(flat_coefs)
-    data_annot["cluster"] = labels
-     
-    plot_DimRed(flat_coefs,flat_coef_phases, data_annot, color="cluster",path= snakemake.output["Cluster_3D"])
+
+    #labels = labels.astype(float)
+    #labels[labels == -1] = np.nan
+
 
 
     #Group clusters
     clustered_points = (labels >= 0)
-    clusters = np.unique(labels[clustered_points])
-    clusters_inds = [[i for i,label in enumerate(labels) if label == cluster] for cluster in clusters] # results in clusters x ind
+    clusters = np.sort(np.unique(labels[clustered_points]))
+    clusters_inds = np.asarray([[i for i,label in enumerate(labels) if label == cluster] for cluster in clusters],dtype=object) # results in clusters x ind
     if len(clusters_inds) == 0:
-        #No clusters found, combine all models to one single cluster
+        #No clusters found, combine all models to one single cluster , no reordering required
         clusters_inds = [list(range(0,len(labels)))] 
+        data_annot["cluster"] = labels
+    else:
+        ##Order cluster chronologically
+        average_cluster_t = np.asarray([np.mean(cluster_ind) for cluster_ind in clusters_inds])
+        redorder_by_t = np.argsort(average_cluster_t,axis=0)
+        
+        clusters_inds  = np.take_along_axis(clusters_inds,redorder_by_t,axis=0)
+
+        ordered_labels = np.copy(labels)
+
+        logger.info(labels)
+        logger.info(average_cluster_t)
+        logger.info(np.take_along_axis(average_cluster_t,redorder_by_t,axis=0))
+        for new_cluster_i,old_cluster_i in enumerate(redorder_by_t):
+            logger.info(f"replaced {old_cluster_i} by {new_cluster_i}")
+            ordered_labels[labels==old_cluster_i] = new_cluster_i
 
 
-    ####
+        logger.info(ordered_labels)
+        data_annot["cluster"] = ordered_labels
+
+    plot_DimRed(flat_coefs, data_annot, discrete_color=True, symbol=None, color="cluster",path= snakemake.output["Cluster_3D"])
+
     #### Create model from cluster
     mean_cluster_model = []
     for c,cluster_inds in enumerate(clusters_inds):

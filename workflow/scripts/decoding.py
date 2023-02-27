@@ -94,23 +94,6 @@ try:
     feat_list = load_feat(snakemake.wildcards["feature"],snakemake.input)
     #print(snakemake.input)
 
-    
-    #TODO remove, just a fix check
-    '''
-    left, right = [],[]
-    for i,feat in enumerate(feat_list):
-        if "leftResponse" in label_list[i]:
-            left.append(feat)
-            
-        if "rightResponse" in label_list[i]: 
-
-            right.append(feat)
-     
-    [left[0].concat(balance(left),overwrite=True),right[0].concat(balance(right),overwrite=True)]
-    label_list = ["leftResponse","rightResponse"]
-   
-    feat_list = [left[0],right[0]]
-    '''
 
     if balancing:
         #Balances the number of trials for each condition
@@ -178,7 +161,6 @@ try:
 
             t1_train_testing = snakemake_tools.start_timer()
 
-            ###
             #Decode
             perf_t, confusion_t, norm_confusion_t, model_t = decode(feats_t, labels_t,decoder,reps,label_order= label_list,cores=cores,logger=logger)
             perf_list[t,:] = perf_t
@@ -187,7 +169,7 @@ try:
             model_list[t]= model_t
 
             #Track stats
-            iterations[t,:] = [model[-1].n_iter_[-1] for model in model_t]
+            #iterations[t,:] = [model[-1].n_iter_[-1] for model in model_t]
             t1_time[t] = snakemake_tools.stop_timer(t1_train_testing,silent=True)
             logger.info(f"Timepoint {t} decoded {len(feats_t)} trials with average accuracy {np.mean(perf_t)}")
 

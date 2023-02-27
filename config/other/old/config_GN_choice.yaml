@@ -1,0 +1,162 @@
+branch_opts:
+  combine_sessions: False
+
+  subjects:
+    #random:
+    #  - random
+
+    # Defines subjects and dates to use from Gerions Experiment
+    GN06:
+      - 2021-03-26_10-53-05
+      - 2021-03-29_11-51-27
+      #- 2021-04-01_13-44-22
+      - 2021-03-01_13-57-39
+      - 2021-03-02_15-49-02
+      - 2021-03-03_14-02-06
+      - 2021-03-04_11-51-23
+
+    GN09:
+      - 2021-03-26_10-13-36
+      - 2021-04-14_16-01-37
+      - 2021-04-15_11-12-30
+      - 2021-04-15_15-21-57
+      - 2021-04-16_15-11-45
+      - 2021-04-19_10-37-14
+      - 2021-04-20_13-07-10
+      - 2021-04-21_13-20-21
+
+
+    #GN08:
+    # - 2021-03-26_13-37-18
+    #  - 2021-03-29_13-37-29
+    #  - 2021-03-29_16-33-41
+    
+    #GN10:
+    #  - 2021-03-29_15-41-22
+    #  - 2021-03-29_15-41-22
+    #  - 2021-04-21_11-00-51
+
+  # Defines conditions for Gerions Experimental Setup
+  conditions:
+    default:
+      phase: all
+      #n_targets: all
+      #n_distractors: none
+      auto_reward: no
+      both_spouts: yes
+
+
+    ### Choice Decoder
+    leftResponse_leftStim:
+      responses: left
+      sides: left
+
+    leftResponse_rightStim:
+      responses: left
+      sides: right
+
+    rightResponse_rightStim:
+      responses: right
+      sides: right
+
+    rightResponse_leftStim:
+      responses: right
+      sides: left
+
+    # noResponse:
+    #   responses: no
+
+    #Stimulus Decoder
+    #left:
+    #  sides: left
+    #right:
+    #  sides: right
+
+    #visual:
+    #  modalities: visual
+    #tactile:
+    #  modalities: tactile
+    #multisensory:
+    #  modalities: vistact
+
+    #Stimulus Decoder
+    # left_visual:
+    #   sides: left
+    #   modalities: visual
+    # right_visual:
+    #   sides: right
+    #   modalities: visual
+    # left_tactile:
+    #   sides: left
+    #   modalities: tactile
+    # right_tactile:
+    #   sides: right
+    #   modalities: tactile
+    # left_vistact:
+    #   sides: left
+    #   modalities: vistact
+    # right_vistact:
+    #   sides: right
+    #   modalities: vistact
+
+
+# Defines trial phases for Gerions Experimental Setup
+trial_conditions:
+  sides:
+    column: target_side_left
+    conds:
+      left:   1
+      right:  0
+  modalities:
+    column: modality
+    conds:
+      visual:   0
+      tactile:  1
+      vistact:  2
+  responses:
+    column: response_left
+    conds:
+      left: 1
+      right: 0
+      no: -1
+  n_targets:
+    column: n_targets
+    conds:
+      all: 6
+  n_distractors:
+    column: n_distractors
+    conds:
+      none: 0
+  auto_reward:
+    column: auto_reward
+    conds:
+      no: 0
+      yes: 1
+  both_spouts:
+    column: both_spouts
+    conds:
+      no: 0
+      yes: 1
+
+phase_conditions:
+  pretrial:
+    start: 0
+    stop:  7
+  posttrial:
+    start: 113
+    stop: 133
+  stimulus:
+    start:  30
+    stop:   75
+  delay:
+    start: 75
+    stop: 83
+  response:
+    start: 83
+    stop: 113
+  w_response:
+    start: 30
+    stop: 83
+  all:
+    start: 0
+    stop: 134

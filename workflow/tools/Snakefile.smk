@@ -2,8 +2,6 @@ configfile: "config/config.yaml"
 
 from snakemake_tools import create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match, hash_config
 
-print(config)
-
 subjects = config["branch_opts"]["subjects"]
 subject_dates = [".".join([subject_id,date]) for subject_id,dates in subjects.items() for date in dates ]
 generalize_from = config["branch_opts"]["generalize_from"]
@@ -15,7 +13,6 @@ else:
 
 combine_sessions = config["branch_opts"]["combine_sessions"]
 
-print(session_runs)
 
 parcells_conf   = config["branch_opts"]["parcellations"]
 parcells_static = config["static_params"]["parcellations"]
@@ -51,7 +48,6 @@ config["loading"] = {"subjects": subjects,
 
 config["output"] = {"processed_dates" :  session_runs}
 
-print(phase_conditions)
 
 config["processing"] = {"combine_sessions":combine_sessions,
                         "aggr_conditions" : aggr_conditions,

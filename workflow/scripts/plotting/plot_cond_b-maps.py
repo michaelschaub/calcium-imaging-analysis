@@ -78,15 +78,18 @@ try:
                 if x==y:
                     cond_diff_matrix[x,y,:] = cond_mean_temp[x,:] 
                     label_matrix [x,y] = f"Mean {cond_labels[x]}"
+                    cond_diff_frame[x,y,:,:] = np.einsum('k,kjl->jl',cond_diff_matrix[x,y,:],spatials) 
                 else:
                     if x<y:
-                        cond_diff_matrix[x,y,:] = np.absolute(np.subtract(cond_mean_temp[x,:], cond_mean_temp[y,:]))
+                        cond_diff_matrix[x,y,:] = np.subtract(cond_mean_temp[x,:], cond_mean_temp[y,:])
                         label_matrix [x,y] = f"AbsDiff: {cond_labels[x]} − {cond_labels[y]}"
+                        cond_diff_frame[x,y,:,:] = np.absolute(np.einsum('k,kjl->jl',cond_diff_matrix[x,y,:],spatials))
                     else:
                         cond_diff_matrix[x,y,:] = np.subtract(cond_mean_temp[x,:], cond_mean_temp[y,:])
                         label_matrix [x,y] = f"Diff: {cond_labels[x]} − {cond_labels[y]}"
+                        cond_diff_frame[x,y,:,:] = np.einsum('k,kjl->jl',cond_diff_matrix[x,y,:],spatials) 
 
-                cond_diff_frame[x,y,:,:] = np.einsum('k,kjl->jl',cond_diff_matrix[x,y,:],spatials) 
+                
 
         #Flatten matrix
         #TODO draw_neural_activity should support 2D matrix of frames (currently only 0D and 1D)
@@ -95,11 +98,11 @@ try:
 
         path = f"{snakemake.output[0]}/{snakemake.wildcards['parcellation']}_{phase_name}_cond_difference_b-maps.pdf"
         Path(path).touch()
-        draw_neural_activity(frames=flat_cond_frames,path=path,plt_title=phase_name,subfig_titles=flat_labels,overlay=True,outlined=True,masked=True,logger=logger,share_v=False, vmin=None,vmax=None,font_scale=1)
+        draw_neural_activity(frames=flat_cond_frames,path=path,plt_title=phase_name,subfig_titles=flat_labels,overlay=True,outlined=True,masked=True,logger=logger,share_v=True, vmin=None,vmax=None,font_scale=1)
 
 
     Path(snakemake.output["static"]).touch()
-    draw_neural_activity(frames=flat_cond_frames,path=snakemake.output["static"],plt_title="",subfig_titles=flat_labels,overlay=True,outlined=True,masked=True,logger=logger,share_v=False, vmin=None,vmax=None,font_scale=1)
+    draw_neural_activity(frames=flat_cond_frames,path=snakemake.output["static"],plt_title="",subfig_titles=flat_labels,overlay=True,outlined=True,masked=True,logger=logger,share_v=True, vmin=None,vmax=None,font_scale=1)
     with open(snakemake.output["static"], 'w') as fp:
         pass
     

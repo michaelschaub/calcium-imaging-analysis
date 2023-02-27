@@ -34,15 +34,16 @@ from ci_lib.features import from_string as feat_from_string
 # TODO as classes
 def MLR(cores=1):
     return skppl.make_pipeline(skppc.StandardScaler(),
-                                skllm.LogisticRegression(C=0.1, penalty='l2', multi_class='multinomial',
+                                skllm.LogisticRegression(C=0.1, penalty='l1', multi_class='multinomial',
                                                         #solver='saga', max_iter=1000, n_jobs=cores))
-                                                            solver='lbfgs', max_iter=1000, n_jobs=cores))
+                                                        solver='saga', max_iter=1000, n_jobs=cores))
 
 def NN(cores):
     return sklnn.KNeighborsClassifier(n_neighbors=1, algorithm='brute', metric='correlation')
 
 def LDA(cores):
-    return skda.LinearDiscriminantAnalysis(n_components=None, solver='eigen', shrinkage='auto')
+    return skppl.make_pipeline(skppc.StandardScaler(),
+                                skda.LinearDiscriminantAnalysis(n_components=None, solver='eigen', shrinkage='auto'))
 
 def RF(cores):
     return skens.RandomForestClassifier(n_estimators=10, bootstrap=False)
@@ -178,8 +179,8 @@ def decode(data, labels, decoder, reps, label_order=None,cores=1,logger=None):
             
             trained_decoders[i] = models[i]
     except Exception as Err:
-        print("Error during training and testing")
-        print(Err)
+        logger.error("Error during training and testing")
+        logger.error(Err)
 
     return perf,  confusion, norm_confusion, trained_decoders
 

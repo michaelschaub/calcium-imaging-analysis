@@ -34,7 +34,7 @@ sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 def cluster_UMAP():
     pass
 
-def plot_DimRed(data, data_phases, data_annot, color="t",symbol="Phase",method="PCA", colorlist=None,cmap=None, comps = 3, path=None):
+def plot_DimRed(data, data_annot, discrete_color=False, color="t",symbol="phase",method="PCA", colorlist=None,cmap=None, comps = 3, path=None):
     if "PCA" in method:
             PCA_comps, total_var = PCA_(data,comps)
     elif "UMAP" in method:
@@ -43,7 +43,6 @@ def plot_DimRed(data, data_phases, data_annot, color="t",symbol="Phase",method="
 
     PCA_df = pd.DataFrame(PCA_comps)
     PCA_df=PCA_df.rename(columns={0: "PC1",1: "PC2",2:"PC3"})
-    PCA_df["Phase"] = data_phases
 
     for annot,data in data_annot.items():
         PCA_df[annot] = data
@@ -73,8 +72,28 @@ def plot_DimRed(data, data_phases, data_annot, color="t",symbol="Phase",method="
     #fig.update_traces(diagonal_visible=False)
     #fig.write_image(path)
     '''
+    PCA_df = PCA_df.sort_values(color)
 
-    fig = px.scatter_3d(PCA_df, x="PC1", y="PC2", z="PC3", color=color,symbol=symbol,title=f'Total Explained Variance: {total_var:.2f}%',hover_data=data_annot.keys())
+    def rgb_to_hex(r, g, b, a=1):
+        return '#{:02x}{:02x}{:02x}'.format(int(255*r), int(255*g), int(255*b))
+
+    if discrete_color:
+        PCA_df = PCA_df.astype({color: str})
+        colors_n = PCA_df[color].unique().size
+        if "-1" in PCA_df[color].values:
+            colors_n -= 1
+            PCA_df = PCA_df.replace({color: "-1"},"unassigned")
+
+        print(colors_n)
+        color_list = sns.color_palette("tab20",20,as_cmap=True) #, 20)
+        color_discrete_map = {str(i):rgb_to_hex(*color_list(i/20)) for i in range(colors_n)}
+        color_discrete_map["unassigned"] = rgb_to_hex(*(0,0,0,0.5))
+        print(color_discrete_map)
+
+        fig = px.scatter_3d(PCA_df, x="PC1", y="PC2", z="PC3", color=color,color_discrete_map=color_discrete_map,symbol=symbol,title=f'Total Explained Variance: {total_var:.2f}%',hover_data=data_annot.keys())
+    else:
+
+        fig = px.scatter_3d(PCA_df, x="PC1", y="PC2", z="PC3", color=color,symbol=symbol,title=f'Total Explained Variance: {total_var:.2f}%',hover_data=data_annot.keys())
 
     # move colorbar
     fig.update_layout(coloraxis_colorbar=dict(yanchor="top", y=1, x=0,
