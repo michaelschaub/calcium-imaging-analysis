@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod, abstractproperty
 import numpy as np
+import pandas as pd
 import h5py
 import pathlib
 import logging
@@ -41,7 +42,7 @@ class Data(ABC):
 
 
 class DecompData(Data):
-    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, allowed_overlap=0, cond_filter=None, trans_params=None, savefile=None, spatial_labels=None, mean=None, stdev=None, logger=None):
+    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, allowed_overlap=0, cond_filter=None, trans_params=None, savefile=None, spatial_labels=None, mean=None, stdev=None, dataset_id_column="dataset_id", logger=None):
         self.logger = LOGGER if logger is None else logger
         #TODO remove first check
         assert len(df) != trial_starts.shape[0]-1, (
@@ -56,6 +57,7 @@ class DecompData(Data):
         self._allowed_overlap = np.asarray(allowed_overlap) #has to be 0 if trials are not containing continous frames, currently as 0 dim array cause save function doesn't handle ints yet
 
         self._spat_labels = spatial_labels
+        self.dataset_id_column = dataset_id_column
 
         #Needed to calculate z-score based on mean and stdev over whole dataset after splitting data into conditions
         self._mean = np.mean(self._temps,axis=0) if mean is None else mean
@@ -71,8 +73,9 @@ class DecompData(Data):
             self.logger.warning("Created DecompData is empty")
 
     def copy(self):
-        return type(self)( self._df, self._temps, self._spats, self._starts,
-                            savefile=self.savefile, spatial_labels=self._spat_labels, logger=self.logger, allowed_overlap=self._allowed_overlap )
+        return type(self)( self._df, self._temps, self._spats, self._starts, allowed_overlap=self._allowed_overlap,
+                            savefile=self.savefile, spatial_labels=self._spat_labels,
+                            mean=self._mean, stdev=self._stdev, logger=self.logger )
 
 
     #Used for parcellations
@@ -88,6 +91,17 @@ class DecompData(Data):
             data._spat_labels = spatial_labels
         data._savefile = None
         return data #TODO maybe as inplace instead?
+
+    def concat(self, data, overwrite=False):
+        ''' concats trials from List of DecompData to this DecompData'''
+        if not isinstance(data, list):
+            data = [data]
+        if not overwrite:
+            data = [self, *data]
+        self._df = pd.concat([d._df for d in data], axis=0)
+        time_offs = [0, *[ d.t_max for d in data ][:-1]]
+        self._starts = np.concatenate([d._starts + t for d,t in zip(data,time_offs)], axis=0)
+        self._temps = np.concatenate([d._temps for d in data], axis=0)
 
     def save(self, file ):
         LOGGER.info(f"{self._allowed_overlap} has type {type(self._allowed_overlap)}")
@@ -178,6 +192,15 @@ class DecompData(Data):
     def t_max(self):
         return self._temps.shape[0]
 
+    @property
+    def trials_n(self):
+        ''' Returns number of trials'''
+        return self._df.shape[0]
+
+    @property
+    def frame(self):
+        return self._df
+
     #TODO both temporals only work for decompdata objects where phases have been applied to cut all trials into same length, otherwise reshaping doesnt work
     @property
     def temporals_z_scored(self):
@@ -237,6 +260,17 @@ class DecompData(Data):
                 spats = self._spats
             return np.tensordot(temps, spats, (-1, 0))
 
+    def subsample(self,n,seed=None):
+        '''
+        Subsampling Trials to balance number of datapoints between different conditions
+        :param n: Number of trials to sample
+        :param seed: The seed for the rng
+        '''
+        rng = np.random.default_rng(seed)
+        select_n = rng.choice(self.trials_n,size=n,replace=False)
+        data = self[select_n]
+        return data
+
     @property
     def pixel(self):
         '''
@@ -254,13 +288,16 @@ class DecompData(Data):
             keys = (keys, slice(None, None, None))
         elif len(keys) < 2:
             keys = (keys[0], slice(None,None,None))
-        df = self._df[keys[0]]
+        try:
+            df = self._df.iloc[keys[0]]
+        except NotImplementedError:
+            df = self._df.loc[keys[0]]
         spats = self._spats
         try:
             # if keys[1] is bool us it as mask on aranged array to create array of frames to keep
             assert np.array(keys[1]).dtype == bool
             trial_frames = np.array(np.arange(len(keys[1]))[keys[1]])
-            self.logger.debug(f"frames {trial_frames}")
+            #self.logger.debug(f"frames {trial_frames}")
         except:
             try:
                 # else use it to slice from aranged array
@@ -274,11 +311,11 @@ class DecompData(Data):
                     raise
         # starts of selected frames in old temps
         starts = np.array(self._starts[keys[0]])
-        self.logger.debug(f"starts {starts}")
+        #self.logger.debug(f"starts {starts=}")
 
         # indices of temps in all selected frames (2d)
         selected_temps = np.array(trial_frames[np.newaxis, :] + starts[:, np.newaxis], dtype=int)
-        self.logger.debug("frames + starts {selected_temps}")
+        #self.logger.debug(f"(frames + starts)={selected_temps}")
 
         # starts of selected frames in new temps
         if 0 == selected_temps.shape[1]:
@@ -288,7 +325,7 @@ class DecompData(Data):
         else:
             new_starts = np.insert(np.cumsum(np.diff(selected_temps[:-1, (0, -1)]) + 1), 0, 0)
 
-        self.logger.debug(self._temps.shape)
+        #self.logger.debug(f"{self._temps.shape=}")
         temps = self._temps[selected_temps.flatten()]
 
         try:
@@ -332,20 +369,44 @@ class DecompData(Data):
         '''
         returns slice of self, containing all trials, where the trial data given by the keys of conditions match their corresponding values
         '''
+        def check_attr(df, attr, val):
+            if callable(val):
+                return val(getattr( df, attr ))
+            else:
+                return getattr( df, attr ) == val
+
         select = True
         for attr, val in conditions.items():
-            self.logger.debug(f"dataframe columns {self._df.columns}")
+            #self.logger.debug(f"dataframe columns {self._df.columns}")
             if isinstance(val,list):
                 any = False
                 for v in val:
-                     any = any | (getattr( self._df, attr ) == v)
+                     any = any | check_attr(self._df, attr, v)
                 select = select & any
             else:
-                select = select & (getattr( self._df, attr ) == val)
+                #self.logger.debug(f"{attr=} {val=} {self._df.loc[check_attr(self._df, attr, val)]}")
+                select = select & check_attr(self._df, attr, val)
         #if(np.any(select)):
         return self[select]
         #else:
             #return None
+
+    def dataset_from_sessions(self, sessions, dataset_id):
+        '''
+        Creates a DecompData object, only containing specified sessions and sets its datas_column to the specified dataset_id
+        sessions should be a list of dicts, each containing a `subject_id` string and a `datetime` `numpy.datetime64` value
+        '''
+        subject_ids = [s['subject_id'] for s in sessions]
+        dates = [s['datetime'] for s in sessions]
+        def date_compare(d, date):
+            return np.array(d, dtype=date.dtype) == date
+        session_data = [self.get_conditional({'subject_id': subject_id}) for subject_id in subject_ids]
+        session_data = [data.get_conditional({'date_time' : lambda d: date_compare(d,date) })
+                                                    for date, data in zip(dates, session_data)]
+        data = session_data[0]
+        data.concat(session_data, overwrite=True)
+        data._df[self.dataset_id_column] = dataset_id
+        return session_data[0]
 
     def _op_data(self, a):
         df = self._df

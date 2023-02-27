@@ -23,8 +23,8 @@ def flat_covs(covs, diagonal):
 class Covariances(Features):
     _type = Feature_Type.UNDIRECTED
 
-    def __init__(self, data, feature, file=None, include_diagonal=True):
-        super().__init__(data=data, feature=feature, file=file)
+    def __init(self, frame, data, feature, file=None, include_diagonal=True):
+        super().__init(frame=frame, data=data, feature=feature, file=file)
         self._include_diagonal = include_diagonal
 
     def create(data, means=None, max_comps=None, include_diagonal=True, logger=LOGGER):
@@ -35,7 +35,7 @@ class Covariances(Features):
         elif isinstance(means, Means):
             means = means._feature
         feature = calc_covs(data.temporals[:, :, :max_comps], means)
-        feat = Covariances(data, feature, include_diagonal=include_diagonal)
+        feat = Covariances(data.frame, data, feature, include_diagonal=include_diagonal)
         return feat
 
     def flatten(self, feat=None):

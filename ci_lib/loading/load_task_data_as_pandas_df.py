@@ -6,6 +6,7 @@ import copy
 from os import path
 import pickle as pkl
 from pathlib import Path
+from datetime import datetime
 import logging
 LOGGER = logging.getLogger(__name__)
 
@@ -74,7 +75,8 @@ def load_individual_session_data(date_folder, mouse_id, logger=None):
                 #
             #
             temp_data['mouse_id'].append(str(mouse_id))
-            temp_data['date_time'].append(str(path.basename(date_folder)))
+            date_time = path.splitext(path.basename(trial_file))[0][-26:-7]
+            temp_data['date_time'].append(datetime.strptime(date_time, '%Y-%m-%d_%H-%M-%S'))
             temp_data['trial_id'].append(int(path.splitext(path.basename(trial_file))[0][-6:]))
 
             #TODO performance warning originates here, numpy ararys in dataframe cells result in a mixed datatype which is inefficient for h5
@@ -117,11 +119,12 @@ def load_individual_session_data(date_folder, mouse_id, logger=None):
 
             # only accept temp_data if the file could be read correctly
             data = copy.deepcopy(temp_data)
-        except ValueError:
+        except ValueError as e:
+            logger.debug('A trial is probaby incomplete and being skipped:',exc_info=e)
             # this occurs when the session was interrupted during a trial. Usually the last trial in a session.
             pass
         except Exception as e:
-            logger.info(e)
+            logger.debug('Something went wrong and trial extraction is stopped at this point!', exc_info=e)
             break
         #
     #
@@ -169,6 +172,7 @@ def extract_session_data_and_save(root_paths,  reextract=False, logger=None):
                     with open(session_pkl, 'wb') as handle:
                         pkl.dump(data, handle, protocol=pkl.HIGHEST_PROTOCOL)
             if initial_call:
+                logger.debug({ k:len(v) for k,v in data.items()})
                 sessions = pd.DataFrame.from_dict(data)
                 initial_call = False
             else:

@@ -28,7 +28,7 @@ class Correlations(Features):
         elif isinstance(covs, Covariances):
             covs = np.copy(covs._feature)
         feature = calc_corrs(covs)
-        feat = Correlations(data, feature)
+        feat = Correlations(data.frame, data, feature)
         return feat
 
     def flatten(self, feat=None):

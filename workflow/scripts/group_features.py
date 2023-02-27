@@ -30,9 +30,11 @@ try:
         if feat.trials_n>0:
             feats.append(feat)
 
-    balance(feats)
+    seed = snakemake.config['seed'] if 'seed' in snakemake.config else None
+    feats = balance(feats, seed=seed)
     feat = feats[0]
     feat.concat(feats, overwrite=True) #TODO fails when no trials are present
+    feat.frame['condition'] = snakemake.wildcards['cond']
 
     #feat = feature_dict[feature].create(data, max_comps=max_comps, **param_dict[feature](params))
     logger.debug(f"feature shape {feat.feature.shape}")

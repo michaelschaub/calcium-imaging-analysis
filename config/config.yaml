@@ -178,6 +178,10 @@ limit_memory: 1
 
 loglevel: INFO
 
+seed: 1423
+
+#hash_digest_length: 8
+
 export_type: 'npy'
 
 ####Plot styling #TODO encapsulate 

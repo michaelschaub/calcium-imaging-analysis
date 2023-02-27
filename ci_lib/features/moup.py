@@ -53,7 +53,7 @@ def recompose_mou_ests( attr_arrays, mou_ests=None ):
 class Moup(Features):
     _type = Feature_Type.DIRECTED
 
-    def __init__(self, data, feature, mou_ests, label=None, file=None,time_resolved=False):
+    def __init(self, frame, data, feature, mou_ests, label=None, file=None,time_resolved=False):
         self.data = data
         self._feature = feature
         self._mou_ests = mou_ests
@@ -70,7 +70,7 @@ class Moup(Features):
         for i, J in enumerate(feature[:,0,:,:]):
             np.fill_diagonal(feature[i,0,:,:], -1.0 / np.diagonal(J))
 
-        return Moup(data, feature, mou_ests, label)
+        return Moup(data.frame, data, feature, mou_ests, label)
 
 
     def flatten(self, feat=None):
@@ -119,7 +119,7 @@ class Moup(Features):
         attr_arrays = decompose_mou_ests( self._mou_ests )
         attr_arrays["d_fit"] = { key: np.array([ a[key] for a in attr_arrays["d_fit"]]) for key in attr_arrays["d_fit"][0].keys() }
 
-        h5_file = save_h5( self, file, attr_arrays )
+        h5_file = save_h5( self, file, { 'df':self._df, **attr_arrays} )
         h5_file.attrs["data_hash"] = self.data_hash.hex()
         if self._data.savefile is None:
             if data_file is None:
@@ -135,7 +135,7 @@ class Moup(Features):
         if try_loaded and feature_hash is not None and feature_hash in Features.LOADED_FEATURES:
             feat = Features.LOADED_FEATURES[feature_hash]
         else:
-            h5_file, *attributes = load_h5( file, labels=Class.mou_attrs )
+            h5_file, frame, *attributes = load_h5( file, labels=["df", *Class.mou_attrs] )
             if try_loaded and h5_file.attrs["data_hash"] in Data.LOADED_DATA:
                 data = Data.LOADED_DATA[h5_file.attrs["data_hash"]]
             elif data_file is None:
@@ -144,7 +144,7 @@ class Moup(Features):
             attr_arrays = { attr:arr for attr, arr in zip(Class.mou_attrs,attributes) }
             attr_arrays["d_fit"] = [ { k:a for k,a in attr_arrays["d_fit"].items()} for i in range(len(attr_arrays[Moup.mou_attrs[0]])) ]
             mou_ests = recompose_mou_ests(attr_arrays)
-            feat = Class(data_file, mou_ests, label)
+            feat = Class(frame, data_file, mou_ests, label)
             feat.data_hash = bytes.fromhex(h5_file.attrs["data_hash"])
             Features.LOADED_FEATURES[feat.hash.digest()] = feat
         return feat
