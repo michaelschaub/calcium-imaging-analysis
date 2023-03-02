@@ -13,7 +13,7 @@ def sessions_input_gerion(wildcards):
     date = '-'.join(session_id[1:])
     input = {
         "tasks": f"resources/experiment/{subject_id}/{date}/task_data/",
-        "Vc": f"resources/experiment/{subject_id}/{date}/SVD_data/Vc_100s_highpass.mat", #TODO only works for new vc files, currently done this way to make sure only news vcs are used
+        "Vc": f"resources/experiment/{subject_id}/{date}/SVD_data/Vc.mat", #TODO only works for new vc files, currently done this way to make sure only news vcs are used
         "trans_params": f"resources/experiment/{subject_id}/{date}/SVD_data/opts2.mat"}
     return input
 

@@ -53,7 +53,7 @@ try:
     parcellation = params.pop('branch')
     data = parcellation_func[parcellation]( params )
     data.frame['parcellation'] = parcellation
-    logger.debug(f'{data.frame=}')
+    #logger.debug(f'{data.frame=}')
     ### Save
     data.save(snakemake.output[0])
 

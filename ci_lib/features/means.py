@@ -16,7 +16,7 @@ class Means(Features):
 
     def __init(self, frame, data, feature, file=None, time_resolved=False, full=False):
         super().__init(frame=frame, data=data, feature=feature, file=file, full=full)
-        self._time_resolved = True #only needed cause it's not properly saved
+        self._time_resolved = time_resolved #only needed cause it's not properly saved
 
 
     def create(data, max_comps=None, logger=LOGGER, window=None, start=None, stop=None,full=False,z_scored=True): #TODO z_score default ot False

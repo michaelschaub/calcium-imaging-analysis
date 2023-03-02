@@ -22,9 +22,9 @@ try:
     # Dictionary for converting parameters from workflow to parameters, that can be passed to feature creators
     param_dict = {
             #Activity 
-            "spot-activity" : (lambda p : {"start":int(snakemake.config["phase"][p["phase"]]["start"]) if "phase" in p else None, "stop":int(snakemake.config["phase"][p["phase"]]["stop"])if "phase" in p else None,"window": 1}),
+            "spot-activity" : (lambda p : {"start":int(snakemake.config["phase"][p["phase"]]["start"]) if "phase" in p else None, "stop":int(snakemake.config["phase"][p["phase"]]["stop"])if "phase" in p else None,"window": 1 if "window" not in p else p["window"]}),
             "mean-activity" : (lambda p : {"start":int(snakemake.config["phase"][p["phase"]]["start"]), "stop":int(snakemake.config["phase"][p["phase"]]["stop"])}),
-            "full-activity" : (lambda p : {"start":int(snakemake.config["phase"][p["phase"]]["start"]) if "phase" in p else None, "stop":int(snakemake.config["phase"][p["phase"]]["stop"])if "phase" in p else None,"window": 1,"full":True}),
+            "full-activity" : (lambda p : {"start":int(snakemake.config["phase"][p["phase"]]["start"]) if "phase" in p else None, "stop":int(snakemake.config["phase"][p["phase"]]["stop"])if "phase" in p else None,"window": 1 if "window" not in p else p["window"],"full":True}),
 
             #Functional Connectivity
             "cofluctuation": (lambda p : {}), 
@@ -52,10 +52,6 @@ try:
     params = snakemake.params["params"]
     max_comps = params["max_components"] if "max_components" in params else None
     window = params["window"] if "window" in params else None #TODO move param_dict , this will break for all feature that don't have window parameter!!
-    params.pop("branch",None)
-    params.pop("max_components",None)
-    params.pop("window",None)
-
 
     data = DecompData.load(snakemake.input[0])
     feat = feat_from_string(feature).create(data, max_comps=max_comps, **param_dict[feature](params)) #TODO **param_dict doesn't pass anything for empty lambda expression, shouldn't it just pass everyhting + replacement options

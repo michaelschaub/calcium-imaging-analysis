@@ -8,6 +8,7 @@ from sklearn import preprocessing
 from sklearn.model_selection import StratifiedShuffleSplit
 import numpy as np
 import pickle
+import pandas as pd
 
 #Multithreading
 from threading import Thread
@@ -107,6 +108,10 @@ try:
     else:
         #t Iterations for every timepoint t
         t_range = range(feat_list[0].timepoints)
+
+        logger.info(f"{feat_list[0].feature.shape=}")
+        logger.info(f"{feat_list[0].timepoints=}")
+
     logger.info(f"{t_range}")
     #Decoding results
     n_timepoints = len(list(t_range))
@@ -185,6 +190,14 @@ try:
     logger.info(f"Finished {n_timepoints} timepoints with {reps} repetitions")
     logger.info(f"Training & Testing each timepoints on average: {np.mean(t1_time)} s")
     logger.info(f"Testing on others timepoints on average: {np.mean(t2_time)} s")
+
+
+    # Construct wide dataframe
+    #add , "SVD_space": snakemake.wildcards[""] later when data_dict is reverted
+    accuracy_dict = [{"t": t, "run":r, "accuracy":run_perf, "decoder": snakemake.wildcards["decoder"], "parcellation":snakemake.wildcards["parcellation"], " feature": snakemake.wildcards["feature"]} for t,timepoint_perfs in enumerate(perf_list) for r, run_perf in  enumerate(timepoint_perfs) ]
+    accuracy_df =  pd.json_normalize(accuracy_dict)
+    accuracy_df.to_pickle(snakemake.output["df"])
+
 
     #Save results
     # TODO replace with better file format

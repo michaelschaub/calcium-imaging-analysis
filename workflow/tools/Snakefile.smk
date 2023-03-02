@@ -7,20 +7,63 @@ generalize_from = config["branch_opts"]["generalize_from"]
 datasets = config["branch_opts"]["datasets"]
 if not 'All' in datasets.keys():
     datasets['All'] = { 'group': list(datasets.keys()) }
+
+
+group_datasets = datasets
 datasets, dataset_aliases = create_datasets(datasets, config)
+
+
 #print(f"{datasets=}")
 #print(f"{dataset_aliases=}")
 
 #TODO repair
 if config["branch_opts"].get('include_individual_sessions', False):  # config["branch_opts"].get('combine_sessions', False): #TODO fail safe config loading with defaults
-    session_runs = list(datasets.keys())
+    session_runs = list(datasets.keys()) + [f"{subj}-{date}" for subj, date in datasets[dataset_aliases['All']]]
 else:
-    session_runs = [dataset_aliases['All']]
+    session_runs = list(datasets.keys()) 
 
+#TODO make config setting for this
+#session_runs.pop("All")  
+
+def get_key_by_val(mydict,val):
+    return list(mydict.keys())[list(mydict.values()).index(val)]
+
+def readable_dataset_id(hash,aliases=None):
+    if aliases is None:
+        aliases = dataset_aliases
+    try:
+        return '#'.join([get_key_by_val(aliases ,hash), hash])
+    except:
+        return hash
+
+
+readable_session_runs = [ readable_dataset_id(hash) for hash in datasets.keys()]
+readable_to_hash = [{readable_id: hash_id}  for readable_id,hash_id in zip(readable_session_runs,datasets.keys())]
+
+
+
+# TODO remove, only a hotfix
+session_runs = readable_session_runs
+
+datasets_shared_space = {}#{dataset_aliases[group_name] : [get_key_by_val(dataset_aliases,dataset) for dataset in group['group']] for group_name, group in group_datasets.items() if 'group' in group}
+
+
+dataset_aliases = {readable_id: readable_dataset_id(hash) for readable_id,hash in dataset_aliases.items()}
+print(f"{datasets=}")
+
+#
+
+
+#Maps hash of group to itself (shared space) or to the contained sessions (ind space)
+aggr_shared = {group_name: group_name for group_name in datasets.keys()} 
+aggr_ind = {group_name: ind_group_session for group_name, ind_group_session in datasets.items()}
+
+print(f"{aggr_shared=}")
+print(f"{aggr_ind=}")
 #TODO remove?
 combine_sessions = True
 
-print(f"{session_runs=}")
+#print(f"{session_runs=}")
 
 parcells_conf   = config["branch_opts"]["parcellations"]
 parcells_static = config["static_params"]["parcellations"]
@@ -32,12 +75,12 @@ parcellations   = create_parameters( parcells_conf, parcells_static )
 # selected_trials = create_parameters( selected_trials, {})
 '''Create a parameter dictionary for trial selection; the only parameters, appart from branch, is_dataset indicates, whether a single trial or a dataset is selected'''
 trial_selection = { dataset_id: { "branch": dataset_id, "sessions": sessions, "is_dataset":True} for dataset_id, sessions in datasets.items() }
-print(f"{trial_selection=}")
+#print(f"{trial_selection=}")
 
 selected_trials = { session: [session] for session in session_runs }
 if dataset_aliases["All"] in selected_trials.keys():
     selected_trials[dataset_aliases["All"]] = list(datasets.keys())
-print(f"{selected_trials=}")
+#print(f"{selected_trials=}")
 
 config["phase"] = config["phase_conditions"] #TODO check why phase_conditions is different from this
 
@@ -67,7 +110,7 @@ config["loading"] = {"datasets"        : datasets,
 
 config["output"] = {"processed_dates" :  session_runs}
 
-print('phases:', phase_conditions)
+#print('phases:', phase_conditions)
 
 config["processing"] = {"combine_sessions":combine_sessions,
                         "aggr_conditions" : aggr_conditions,
@@ -97,7 +140,13 @@ config["plotting"] =   {
                         "features": features,
                         "parcellations" :parcellations,
                         "default_conditions":default_conditions,
-                        "generalize_from":generalize_from}
+                        "generalize_from":generalize_from,
+                        "dataset_aliases":dataset_aliases,
+                        "aggr_shared":aggr_shared,
+                        "aggr_ind":aggr_ind,
+                        "readable_session_runs":readable_session_runs,
+                        "readable_to_hash" : readable_to_hash,
+                        "datasets_shared_space": datasets_shared_space }
 
 #config["generic"] = {"loglevel": config["loglevel"],
 #                    "export_type": export_type,

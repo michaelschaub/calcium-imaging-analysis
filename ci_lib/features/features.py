@@ -187,7 +187,7 @@ class Features:
     def save(self, file, data_file=None):
         '''
         '''
-        h5_file = save_h5( self, file, { "df": self._df, "feature": self._feature } )
+        h5_file = save_h5( self, file, { "df": self._df, "feature": self._feature,"time_resolved":np.asarray(self._time_resolved) } )
         h5_file.attrs["data_hash"] = self.data_hash.hex()
         if self.data.savefile is None:
             if data_file is None:
@@ -203,13 +203,13 @@ class Features:
         if try_loaded and feature_hash is not None and feature_hash in Features.LOADED_FEATURES:
             feat = Features.LOADED_FEATURES[feature_hash]
         else:
-            h5_file, frame, feature = load_h5( file, labels=["df", "feature"] )
+            h5_file, frame, feature, time_resolved = load_h5( file, labels=["df", "feature","time_resolved"] )
             data_hash = bytes.fromhex(h5_file.attrs["data_hash"])
             if try_loaded and data_hash in Data.LOADED_DATA:
                 data = Data.LOADED_DATA[data_hash]
             elif data_file is None:
                 data = h5_file.attrs["data_file"]
-            feat = Class(frame, data, feature, file)
+            feat = Class(frame, data, feature, file, time_resolved=time_resolved)
             feat.data_hash = bytes.fromhex(h5_file.attrs["data_hash"])
             Features.LOADED_FEATURES[feat.hash.digest()] = feat
         return feat

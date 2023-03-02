@@ -334,20 +334,21 @@ rule decoding:
 
 rule decoding:
     input:
-        [f"{{data_dir}}/Features/{cond}/{{feature}}/features.h5" for cond in config['aggr_conditions']],
+        [f"{{data_dir}}/{{parcellation}}/{{trials}}/Features/{cond}/{{feature}}/features.h5" for cond in config['aggr_conditions']],
     output:
-        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/decoder_model.pkl",
-        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/decoder_perf.pkl",
-        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/decoder_perf_across_timepoints.pkl",
-        conf_m = f"{{data_dir}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/confusion_matrix.pkl",
-        norm_conf_m = f"{{data_dir}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/norm_confusion_matrix.pkl",
-        labels = f"{{data_dir}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/class_labels.pkl",
-        config = f"{{data_dir}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/conf.yaml",
+        f"{{data_dir}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/decoder_model.pkl",
+        f"{{data_dir}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/decoder_perf.pkl",
+        f"{{data_dir}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/decoder_perf_across_timepoints.pkl",
+        conf_m = f"{{data_dir}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/confusion_matrix.pkl",
+        norm_conf_m = f"{{data_dir}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/norm_confusion_matrix.pkl",
+        labels = f"{{data_dir}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/class_labels.pkl",
+        df = f"{{data_dir}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/perf_df.pkl",
+        config = f"{{data_dir}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/conf.yaml",
     params:
         conds = list(config['aggr_conditions']),
         params = lambda wildcards: config["decoders"][wildcards["decoder"]]
     log:
-        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/decoding.log",
+        f"{{data_dir}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/decoding.log",
     conda:
         "../envs/environment.yaml"
     resources:

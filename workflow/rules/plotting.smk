@@ -1,7 +1,53 @@
-from snakemake_tools import create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match, hash_config
+from snakemake_tools import create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match, hash_config, readable_dataset_id
 
 
 ###   Plotting   ###
+
+rule ind_aggregate_results_as_df:
+    input:
+        lambda wildcards: [f"results/data/{sessions}/{{parcellation}}/{trials}/Decoding/decoder/{{conditions}}/{{feature}}/{{decoder}}/perf_df.pkl" 
+            for sessions in config["aggr_ind"][wildcards["dataset_hash"]] 
+            for trials in config["datasets_shared_space"][sessions]]
+    output:  
+        f"results/plots/{{dataset_hash}}/ind_space/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
+    log:
+        f"results/plots/{{dataset_hash}}/ind_space/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/df_aggregation.log"
+    params:
+        dataset_aliases = lambda wildcards: config["dataset_aliases"] [wildcards["dataset_hash"]]
+    conda:
+        "../envs/environment.yaml"
+    script:
+        "../scripts/plotting/aggreagte_results.py"
+
+use rule ind_aggregate_results_as_df as shared_aggregate_results_as_df with:
+    input:
+        "results/data/{dataset_hash}/{parcellation}/{trials}/Decoding/decoder/{conditions}/{feature}/{decoder}/perf_df.pkl"
+    output:
+        "results/plots/{dataset_hash}/shared_space/{conditions}/{feature}/{parcellation}/{decoder}/aggr_perf_df.pkl"  
+    params:
+        dataset_aliases = lambda wildcards: config["dataset_aliases"][wildcards["dataset_hash"]]
+
+#rule plot_from_df_dataset:
+#    input:
+#        "results/plots/{dataset_hash}/ind_space/{conditions}/{feature}/{parcellation}/{decoder}/aggr_perf_df.pkl"
+#        "results/plots/{dataset_hash}/shared_space/{conditions}/{feature}/{parcellation}/{decoder}/aggr_perf_df.pkl" 
+#    output:
+#        "results/plots/{dataset_hash}/{conditions}/{feature}/{parcellation}/{decoder}/perf_all.datasets.pdf"
+
+rule plot_from_df_all:
+    input:
+        [f"results/plots/{dataset_hash}/ind_space/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl" for dataset_hash in config["readable_session_runs"] ], 
+    output:
+        f"results/plots/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/perf_all.datasets.pdf",
+    log:
+        "results/plots/{conditions}/{feature}/{parcellation}/{decoder}/perf_all.datasets.log",
+    #params:
+    conda:
+        "../envs/environment.yaml"
+    script:
+        "../scripts/plotting/plot_performance_time_aggr.py"
+
+
 
 # noinspection SmkNotSameWildcardsSet
 rule plot_parcels:

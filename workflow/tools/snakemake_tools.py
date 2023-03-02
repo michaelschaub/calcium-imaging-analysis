@@ -3,6 +3,14 @@ from itertools import product as iterproduct
 import json
 import hashlib
 
+def get_key_by_val(mydict,val):
+    return list(mydict.keys())[list(mydict.values()).index(val)]
+
+def readable_dataset_id(hash,aliases=None):
+    if aliases is None:
+        aliases = dataset_aliases
+    return get_key_by_val(aliases ,hash) + hash[:4]
+
 def create_parameters( branch_conf, static_conf={} ):
     '''
     creates dictionary of unique names (used in paths) and corresponding parameters to be passed by snakemake
@@ -121,7 +129,7 @@ def create_datasets(sets, config):
     '''
     sets = { name: flattened_sessions(get_sessions(sets, content)) for name, content in sets.items() }
     aliases = { name: dataset_path_hash(sessions, config) for name, sessions in sets.items() }
-    sets = { dataset_path_hash(sessions, config): sessions for sessions in sets.values() }
+    sets = {'#'.join([name,dataset_path_hash(sessions, config)]): sessions for name, sessions in sets.items() }
     return sets, aliases
 
 
