@@ -1,3 +1,4 @@
+import pandas as pd
 from pathlib import Path
 import sys
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
@@ -59,6 +60,9 @@ try:
     data = DecompData.load(snakemake.input[0])
     feat = feat_from_string(feature).create(data, max_comps=max_comps, **param_dict[feature](params)) #TODO **param_dict doesn't pass anything for empty lambda expression, shouldn't it just pass everyhting + replacement options
     logger.debug(f"feature shape {feat.feature.shape}")
+
+    feat.frame['feature'] = feature
+    feat.frame['feature_params'] = pd.Series({i: params for i in feat.frame.index})
 
     feat.save(snakemake.output[0])
     feat.plot(snakemake.output["export_plot"])

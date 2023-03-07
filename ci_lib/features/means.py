@@ -14,8 +14,8 @@ def calc_means(temps):
 class Means(Features):
     _type = Feature_Type.NODE
 
-    def __init__(self, data, feature, file=None, time_resolved=False, full=False):
-        super().__init__(data=data, feature=feature, file=file, full=full)
+    def __init(self, frame, data, feature, file=None, time_resolved=False, full=False):
+        super().__init(frame=frame, data=data, feature=feature, file=file, full=full)
         self._time_resolved = True #only needed cause it's not properly saved
 
 
@@ -23,7 +23,7 @@ class Means(Features):
         if max_comps is not None:
             logger.warn("DEPRECATED: max_comps parameter in features can not garanty sensible choice of components, use n_components parameter for parcellations instead")
         if window is None:
-            feat = Means(data, feature=calc_means(data.temporals[:, slice(start,stop), :max_comps])[:,np.newaxis,:])  #TODO start:stop should be supported by window as well
+            feat = Means(data.frame, data, feature=calc_means(data.temporals[:, slice(start,stop), :max_comps])[:,np.newaxis,:])  #TODO start:stop should be supported by window as well
         else:
             trials , phase_length, comps  =   data.temporals[:, slice(start,stop), :max_comps].shape
             windows = [range(i,i+window) for i in range(0,phase_length-window+1)]
@@ -33,7 +33,7 @@ class Means(Features):
                 feat_val[:,w,:] = calc_means(data.temporals[:, slice(start,stop), :][:, window, :max_comps] if not z_scored else data.temporals_z_scored[:, slice(start,stop), :][:, window, :max_comps])
 
                 
-            feat = Means(data, feature=feat_val, time_resolved=True,full=full)
+            feat = Means(data.frame, data, feature=feat_val, time_resolved=True,full=full)
 
         return feat
 

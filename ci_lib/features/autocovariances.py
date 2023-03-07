@@ -30,8 +30,8 @@ def calc_acovs(temps, means, covs, n_tau_range):
 class AutoCovariances(Features):
     _type=Feature_Type.DIRECTED
 
-    def __init__(self, data, feature, file=None, include_diagonal=True):
-        super().__init__(data=data, feature=feature, file=file)
+    def __init(self, frame, data, feature, file=None, include_diagonal=True):
+        super().__init(frame=frame, data=data, feature=feature, file=file)
         self._include_diagonal = include_diagonal
 
     def create(data, means=None, covs=None, max_comps=None, timelag=1, include_diagonal=True, logger=LOGGER):
@@ -55,7 +55,7 @@ class AutoCovariances(Features):
             covs = np.copy(covs._feature)
 
         feature = calc_acovs(data.temporals[:, :, :max_comps], means, covs, timelags)
-        feat = AutoCovariances(data, feature, include_diagonal= include_diagonal)
+        feat = AutoCovariances(data.frame, data, feature, include_diagonal= include_diagonal)
         return feat
 
     def flatten(self, feat=None):

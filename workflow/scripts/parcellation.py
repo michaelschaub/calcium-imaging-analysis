@@ -23,35 +23,39 @@ try:
         svd = DecompData.load(snakemake.input[0])
         ### Process
         anatomical = anatomical_parcellation(svd, atlas_path=snakemake.input["atlas"], logger=logger, **params)
-        ### Save 
-        anatomical.save(snakemake.output[0])
+        return anatomical
 
     def locaNMF(params):
         from ci_lib.decomposition.locanmf import locaNMF #TODO use public version 
         os.environ['NUMEXPR_MAX_THREADS'] = str(snakemake.threads)
         svd = DecompData.load(snakemake.input[0])
         locanmf = locaNMF(svd, atlas_path=snakemake.input["atlas"], logger=logger, **params)
-        locanmf.save(snakemake.output[0])
+        return locanmf
 
     def ICA(params):
         from ci_lib.decomposition import fastICA
         svd = DecompData.load(snakemake.input[0], logger=logger)
         ica = fastICA(svd, **params) #snakemake.config
-        ica.save(snakemake.output[0])
+        return ica
 
     def SVD(params):
         from ci_lib.decomposition import postprocess_SVD
         svd = DecompData.load(snakemake.input[0], logger=logger)
         svd = postprocess_SVD(svd, **params) #snakemake.config
-        svd.save(snakemake.output[0])
+        return svd
 
 
-    parcellation = {'anatomical': anatom,
+    parcellation_func = {'anatomical': anatom,
                     'ICA':ICA,
                     'LocaNMF': locaNMF,
                     'SVD' : SVD}
     params = snakemake.params["params"]
-    parcellation[params.pop('branch')]( params )
+    parcellation = params.pop('branch')
+    data = parcellation_func[parcellation]( params )
+    data.frame['parcellation'] = parcellation
+    logger.debug(f'{data.frame=}')
+    ### Save
+    data.save(snakemake.output[0])
 
     snakemake_tools.stop_timer(start, logger=logger)
 except Exception:

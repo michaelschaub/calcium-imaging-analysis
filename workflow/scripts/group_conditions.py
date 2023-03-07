@@ -23,6 +23,7 @@ try:
     data = balance(data, seed=seed)
 
     data[0].concat(data[1:], overwrite=False) #TODO fails when no trials are present
+    data[0].frame['condition'] = snakemake.wildcards['cond']
     data[0].save(snakemake.output[0])
 
 
