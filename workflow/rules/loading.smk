@@ -110,7 +110,7 @@ rule unify:
         "results/data/{dataset_id}/SVD/{dataset_id}/data.h5",
         config = "results/data/{dataset_id}/SVD/{dataset_id}/conf.yaml",
     log:
-        "results/data/{dataset_id}/SVD/{dataset_id}/pipeline_entry.log"
+        "results/data/{dataset_id}/SVD/{dataset_id}/unify.log"
     params:
        alias=lambda wildcards: wildcards['dataset_id'] in config['dataset_aliases']
     conda:
