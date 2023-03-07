@@ -11,8 +11,8 @@ def parcellation_input(wildcards):
         return {"data":f"good/luck/finding/this/non/existing/path"}
 
     input = {
-        "data"	: f"{{data_dir}}/SVD/data.h5",
-        "config": f"{{data_dir}}/SVD/conf.yaml" }
+        "data"	: "{data_dir}/{dataset_id}/SVD/{dataset_id}/data.h5",
+        "config": "{data_dir}/{dataset_id}/SVD/{dataset_id}/conf.yaml" }
     branch = config["parcellations"][wildcards["parcellation"]]["branch"]
     input.update( config["parcellation_wildcard_matching"][branch] )
     return input
@@ -24,8 +24,8 @@ rule parcellate:
     input:
         unpack(parcellation_input)
     output:
-        f"{{data_dir}}/{{parcellation}}/data.h5",
-        config = f"{{data_dir}}/{{parcellation}}/conf.yaml",
+        "{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/data.h5",
+        config = "{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/conf.yaml",
     params:
         params = lambda wildcards: config["parcellations"][wildcards["parcellation"]]
     wildcard_constraints:
@@ -34,7 +34,7 @@ rule parcellate:
         parcellation = "(?!SVD$).+",
 	#data_dir = 'results/data/GN06.03-26#GN06.03-29'
     log:
-        f"{{data_dir}}/{{parcellation}}/parcellation.log"
+        "{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/parcellation.log"
     conda:
         "../envs/environment.yaml"
     resources:
@@ -50,19 +50,45 @@ use rule parcellate as locaNMF with:
     conda:
         "../envs/locaNMF_environment.yaml"
 
+def input_trial_selection(wildcards):
+    dataset_id = wildcards['dataset_id']
+    selection_id = wildcards["selection_id"]
+    if dataset_id == selection_id or '/' in selection_id:
+        raise ValueError("Trial selection can not produce these outputs.")
+    if selection_id in config['dataset_aliases']:
+        selection_id = config['dataset_aliases'].get(selection_id)
+        input = [ f"results/data/{{dataset_id}}/{{parcellation}}/{selection_id}/data.h5" ]
+    else:
+        input = [ "{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/data.h5" ]
+    return input
+
+def trial_selection_params(wildcards):
+    selection_id = wildcards["selection_id"]
+    if selection_id in config['dataset_aliases']:
+        selection_id = config['dataset_aliases'].get(selection_id)
+        alias = True
+    else:
+        alias = False
+    params = config["trial_selection"].get(selection_id, {'branch':selection_id, 'is_dataset':False})
+    params['alias'] = alias
+    return params
+
 rule trial_selection:
     '''
-    can select trials through predefined filters
+    can select trials from a dataset and (TODO) apply through predefined filters
     '''
     input:
-        data = f"{{data_dir}}/data.h5",
-        config = f"{{data_dir}}/conf.yaml",
+        #data = "{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/data.h5",
+        #config = "{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/conf.yaml",
+        input_trial_selection
     output:
-        f"{{data_dir}}/{{trials}}/data.h5",
-        #report = report(f"{{data_dir}}/{{trials}}/conf.yaml"),
-        config = f"{{data_dir}}/{{trials}}/conf.yaml",
+        "{data_dir}/{dataset_id}/{parcellation}/{selection_id}/data.h5",
+        #report = report("{data_dir}/{dataset_id}/{parcellation}/{selection_id}/conf.yaml"),
+        config = "{data_dir}/{dataset_id}/{parcellation}/{selection_id}/conf.yaml",
+    params:
+        trial_selection_params
     log:
-        f"{{data_dir}}/{{trials}}/trial_selection.log"
+        "{data_dir}/{dataset_id}/{parcellation}/{selection_id}/trial_selection.log"
     conda:
         "../envs/environment.yaml"
     resources:

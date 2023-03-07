@@ -42,7 +42,7 @@ class Data(ABC):
 
 
 class DecompData(Data):
-    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, allowed_overlap=0, cond_filter=None, trans_params=None, savefile=None, spatial_labels=None, mean=None, stdev=None, logger=None):
+    def __init__(self, df, temporal_comps, spatial_comps, trial_starts, allowed_overlap=0, cond_filter=None, trans_params=None, savefile=None, spatial_labels=None, mean=None, stdev=None, dataset_id_column="dataset_id", logger=None):
         self.logger = LOGGER if logger is None else logger
         #TODO remove first check
         assert len(df) != trial_starts.shape[0]-1, (
@@ -57,6 +57,7 @@ class DecompData(Data):
         self._allowed_overlap = np.asarray(allowed_overlap) #has to be 0 if trials are not containing continous frames, currently as 0 dim array cause save function doesn't handle ints yet
 
         self._spat_labels = spatial_labels
+        self.dataset_id_column = dataset_id_column
 
         #Needed to calculate z-score based on mean and stdev over whole dataset after splitting data into conditions
         self._mean = np.mean(self._temps,axis=0) if mean is None else mean
@@ -292,7 +293,7 @@ class DecompData(Data):
             # if keys[1] is bool us it as mask on aranged array to create array of frames to keep
             assert np.array(keys[1]).dtype == bool
             trial_frames = np.array(np.arange(len(keys[1]))[keys[1]])
-            self.logger.debug(f"frames {trial_frames}")
+            #self.logger.debug(f"frames {trial_frames}")
         except:
             try:
                 # else use it to slice from aranged array
@@ -306,11 +307,11 @@ class DecompData(Data):
                     raise
         # starts of selected frames in old temps
         starts = np.array(self._starts[keys[0]])
-        self.logger.debug(f"starts {starts}")
+        #self.logger.debug(f"starts {starts=}")
 
         # indices of temps in all selected frames (2d)
         selected_temps = np.array(trial_frames[np.newaxis, :] + starts[:, np.newaxis], dtype=int)
-        self.logger.debug(f"frames + starts {selected_temps}")
+        #self.logger.debug(f"(frames + starts)={selected_temps}")
 
         # starts of selected frames in new temps
         if 0 == selected_temps.shape[1]:
@@ -320,7 +321,7 @@ class DecompData(Data):
         else:
             new_starts = np.insert(np.cumsum(np.diff(selected_temps[:-1, (0, -1)]) + 1), 0, 0)
 
-        self.logger.debug(self._temps.shape)
+        #self.logger.debug(f"{self._temps.shape=}")
         temps = self._temps[selected_temps.flatten()]
 
         try:
@@ -364,20 +365,44 @@ class DecompData(Data):
         '''
         returns slice of self, containing all trials, where the trial data given by the keys of conditions match their corresponding values
         '''
+        def check_attr(df, attr, val):
+            if callable(val):
+                return val(getattr( df, attr ))
+            else:
+                return getattr( df, attr ) == val
+
         select = True
         for attr, val in conditions.items():
-            self.logger.debug(f"dataframe columns {self._df.columns}")
+            #self.logger.debug(f"dataframe columns {self._df.columns}")
             if isinstance(val,list):
                 any = False
                 for v in val:
-                     any = any | (getattr( self._df, attr ) == v)
+                     any = any | check_attr(self._df, attr, v)
                 select = select & any
             else:
-                select = select & (getattr( self._df, attr ) == val)
+                #self.logger.debug(f"{attr=} {val=} {self._df.loc[check_attr(self._df, attr, val)]}")
+                select = select & check_attr(self._df, attr, val)
         #if(np.any(select)):
         return self[select]
         #else:
             #return None
+
+    def dataset_from_sessions(self, sessions, dataset_id):
+        '''
+        Creates a DecompData object, only containing specified sessions and sets its datas_column to the specified dataset_id
+        sessions should be a list of dicts, each containing a `subject_id` string and a `datetime` `numpy.datetime64` value
+        '''
+        subject_ids = [s['subject_id'] for s in sessions]
+        dates = [s['datetime'] for s in sessions]
+        def date_compare(d, date):
+            return np.array(d, dtype=date.dtype) == date
+        session_data = [self.get_conditional({'subject_id': subject_id}) for subject_id in subject_ids]
+        session_data = [data.get_conditional({'date_time' : lambda d: date_compare(d,date) })
+                                                    for date, data in zip(dates, session_data)]
+        data = session_data[0]
+        data.concat(session_data, overwrite=True)
+        data._df[self.dataset_id_column] = dataset_id
+        return session_data[0]
 
     def _op_data(self, a):
         df = self._df

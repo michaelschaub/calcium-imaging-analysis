@@ -7,7 +7,7 @@ def create_parameters( branch_conf, static_conf={} ):
     '''
     creates dictionary of unique names (used in paths) and corresponding parameters to be passed by snakemake
     '''
-    default_params    = branch_conf["default"] if "default" in branch_conf else {}
+    default_params    = branch_conf.get("default", {})
     parameters    = {}
     for branch, br_params in branch_conf.items():
 
@@ -63,7 +63,7 @@ def create_parameters( branch_conf, static_conf={} ):
     return parameters
 
 def create_conditions(conditions, config):
-    defaults = conditions["default"] if "default" in conditions else {}
+    defaults = conditions.get("default", {})
 
     # create trial_conditions fitting for trial data by resolving column names and conditions from trial_conditions
     trial_condition     = config["trial_conditions"]
@@ -91,6 +91,39 @@ def create_conditions(conditions, config):
     aggr_conditions.extend(group_conditions.keys())
 
     return aggr_conditions, trial_conditions, phase_conditions, group_conditions, defaults
+
+
+def get_sessions(sets, content):
+    sessions = content.get('subjects', {})
+    for s in content.get('group',[]):
+        s_sessions = get_sessions(sets, sets[s])
+        sessions.update({ subj: (sess + sessions.get(subj,[])) for subj, sess in s_sessions.items() })
+    return sessions
+
+def flattened_sessions(sessions):
+    sessions = [ (subj,sess) for subj, dates in sessions.items() for sess in dates ]
+    sessions = sorted(set(sessions))
+    return sessions
+
+def dataset_path_hash(sessions, config):
+    h = hashlib.md5()
+    sessions = [f"{subj}.{date}" for subj, date in sessions]
+    for s in sessions:
+        h.update(bytes(s, "utf-8"))
+    digest_lng = config.get('hash_digest_length', 8)
+    return h.hexdigest()[:digest_lng]
+
+def create_datasets(sets, config):
+    '''
+    Performs the conversion from the format used in the config to
+    ´sets = { md5hashA : [(subj1,date1), ...], ...}´
+    and ´aliases = { nameA: md5hashA, ... }´
+    '''
+    sets = { name: flattened_sessions(get_sessions(sets, content)) for name, content in sets.items() }
+    aliases = { name: dataset_path_hash(sessions, config) for name, sessions in sets.items() }
+    sets = { dataset_path_hash(sessions, config): sessions for sessions in sets.values() }
+    return sets, aliases
+
 
 #TODO fix this mess / find a snakemake version, that fixes it
 # taking input as an argument creates all kinds of bugs in snakemake...
