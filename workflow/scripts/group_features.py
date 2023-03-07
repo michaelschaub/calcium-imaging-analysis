@@ -30,7 +30,8 @@ try:
         if feat.trials_n>0:
             feats.append(feat)
 
-    balance(feats)
+    seed = snakemake.config['seed'] if 'seed' in snakemake.config else None
+    feats = balance(feats, seed=seed)
     feat = feats[0]
     feat.concat(feats, overwrite=True) #TODO fails when no trials are present
 
