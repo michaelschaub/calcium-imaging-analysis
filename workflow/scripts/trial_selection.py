@@ -40,10 +40,9 @@ try:
     params = snakemake.params[0]
     logger.debug(f"{params=}")
     if params['alias']:
-        input_path = Path(snakemake.input[0])
-        output_path = Path(snakemake.output[0])
-        base_path = input_path.parent.parent.parent.parent
-        raise NotImplemented("Aliasing not yet implemented")
+        input_path = Path(snakemake.input[0]).parent
+        output_path = Path(snakemake.output[0]).parent
+        snakemake_tools.rel_symlink(input_path, output_path)
 
         snakemake_tools.stop_timer(timer_start, logger=logger)
         sys.exit(0)

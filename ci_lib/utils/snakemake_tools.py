@@ -70,6 +70,21 @@ def load(snakemake, path, dtype="float"):
     else:
         pass
 
+def rel_symlink(source, target):
+    '''
+    Creates a relative symlink in target linking to source, traversing the minmum depth of directories
+    '''
+    target = Path(target)
+    target_parts = Path(target).parts
+    source_parts = Path(source).parts
+    for i, (t, s) in enumerate(zip(target_parts,source_parts)):
+        if t != s:
+            depth = len(target_parts) - i - 1
+            source = Path(*(('..',)*depth+source_parts[i:]))
+            break
+    target.symlink_to(source, True)
+
+
 def match_conf(snakemake, sections):
     with open( snakemake.input["config"], 'r') as conf_file:
         config = yaml.safe_load(conf_file)

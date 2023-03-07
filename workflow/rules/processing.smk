@@ -52,14 +52,15 @@ use rule parcellate as locaNMF with:
 
 def input_trial_selection(wildcards):
     dataset_id = wildcards['dataset_id']
+    aliased_id = config['dataset_aliases'].get(dataset_id, dataset_id)
     selection_id = wildcards["selection_id"]
-    if dataset_id == selection_id or '/' in selection_id:
-        raise ValueError("Trial selection can not produce these outputs.")
+    if aliased_id == selection_id or '/' in selection_id:
+        raise ValueError(f"Trial selection can not produce these outputs. {aliased_id=}")
     if selection_id in config['dataset_aliases']:
         selection_id = config['dataset_aliases'].get(selection_id)
         input = [ f"results/data/{{dataset_id}}/{{parcellation}}/{selection_id}/data.h5" ]
     else:
-        input = [ "{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/data.h5" ]
+        input = [ f"{{data_dir}}/{dataset_id}/{{parcellation}}/{aliased_id}/data.h5" ]
     return input
 
 def trial_selection_params(wildcards):

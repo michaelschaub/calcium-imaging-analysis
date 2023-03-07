@@ -91,13 +91,11 @@ def input_unification(wildcards):
     dataset_id = wildcards['dataset_id']
     # if dataset_id is a defined alias, replace it with the canonical (hash) id, else leave it be
     if dataset_id in config['dataset_aliases']:
-        dataset_id = config['dataset_aliases'].get(dataset_id)
-        input = [ f"results/data/{dataset_id}/SVD/{dataset_id}/data.h5" ]
-    else:
-        digest_lng = config.get('hash_digest_length', 8)
-        matched_ids = [ id for id in config['datasets'].keys() if dataset_id[:digest_lng] == id[:digest_lng] ]
-        assert (len(matched_ids) == 1), f"Did not match exactly one dataset for {dataset_id=}, but instead {matched_ids=}"
-        input = [ f"results/data/{subj}-{date}/SVD/{subj}-{date}/data.h5" for subj, date in config['datasets'].get(matched_ids[0])]
+        raise ValueError("Rule unify can not produce these outputs.")
+    digest_lng = config.get('hash_digest_length', 8)
+    matched_ids = [ id for id in config['datasets'].keys() if dataset_id[:digest_lng] == id[:digest_lng] ]
+    assert (len(matched_ids) == 1), f"Did not match exactly one dataset for {dataset_id=}, but instead {matched_ids=}"
+    input = [ f"results/data/{subj}-{date}/SVD/{subj}-{date}/data.h5" for subj, date in config['datasets'].get(matched_ids[0])]
     return input
 
 rule unify:
@@ -119,3 +117,22 @@ rule unify:
         mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,1000)
     script:
         "../scripts/loading/unify_sessions.py"
+
+def input_unification_alias(wildcards):
+    dataset_id = wildcards['dataset_id']
+    aliased_id = wildcards['aliased_id']
+    if dataset_id not in config['dataset_aliases'] or aliased_id != config['dataset_aliases'][dataset_id]:
+        raise ValueError("Rule unify_alias can not produce these outputs.")
+    input = [ f"results/data/{aliased_id}/SVD/{aliased_id}/data.h5" ]
+    return input
+
+use rule unify as unify_alias with:
+    input:
+        unpack(input_unification_alias)
+    output:
+        "results/data/{dataset_id}/SVD/{aliased_id}/data.h5",
+        config = "results/data/{dataset_id}/SVD/{aliased_id}/conf.yaml",
+    log:
+        "results/data/{dataset_id}/SVD/{aliased_id}/pipeline_entry.log"
+    params:
+       alias=lambda wildcards: wildcards['dataset_id'] in config['dataset_aliases']

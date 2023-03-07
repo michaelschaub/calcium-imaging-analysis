@@ -17,7 +17,7 @@ rule ind_aggregate_results_as_df:
     conda:
         "../envs/environment.yaml"
     script:
-        "../scripts/plotting/aggreagte_results.py"
+        "../scripts/plotting/aggregate_results.py"
 
 use rule ind_aggregate_results_as_df as shared_aggregate_results_as_df with:
     input:
