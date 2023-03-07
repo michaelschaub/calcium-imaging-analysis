@@ -111,6 +111,8 @@ try:
 
     svd = DecompData( sessions, Vc, U, trial_starts, allowed_overlap=0) #TODO remove hardcode
     svd.frame['parcellation'] = 'SVD'
+    svd.frame['decomposition_space'] = snakemake.wildcards['session_id']
+    svd.frame[svd.dataset_id_column] = snakemake.wildcards['session_id']
     svd.save( snakemake.output[0] )
 
     snakemake_tools.stop_timer(timer_start, logger=logger)

@@ -82,6 +82,7 @@ try:
     Vc = np.concatenate( Vc )
 
     svd = DecompData( sessions, Vc, U, trial_starts, allowed_overlap=0) #TODO remove hardcode
+    svd.frame['decomposition_space'] = snakemake.wildcards['dataset_id']
     svd.save( snakemake.output[0] )
 
     snakemake_tools.stop_timer(timer_start, logger=logger)
