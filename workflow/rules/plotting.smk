@@ -5,15 +5,12 @@ from snakemake_tools import create_parameters, create_conditions, calculate_memo
 
 rule ind_aggregate_results_as_df:
     input:
-        lambda wildcards: [f"results/data/{sessions}/{{parcellation}}/{trials}/Decoding/decoder/{{conditions}}/{{feature}}/{{decoder}}/perf_df.pkl" 
-            for sessions in config["aggr_ind"][wildcards["dataset_hash"]] 
-            for trials in config["datasets_shared_space"][sessions]]
-    output:  
-        f"results/plots/{{dataset_hash}}/ind_space/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
+        lambda wildcards: [f"results/data/{{dataset_id}}/{{parcellation}}/{subset_id}/Decoding/decoder/{{conditions}}/{{feature}}/{{decoder}}/perf_df.pkl"
+            for subset_id in config["session_runs"][wildcards["dataset_id"]] ]
+    output:
+        f"results/plots/{{dataset_id}}/ind_decode/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
     log:
-        f"results/plots/{{dataset_hash}}/ind_space/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/df_aggregation.log"
-    params:
-        dataset_aliases = lambda wildcards: config["dataset_aliases"] [wildcards["dataset_hash"]]
+        f"results/plots/{{dataset_id}}/ind_decode/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/df_aggregation.log"
     conda:
         "../envs/environment.yaml"
     script:
@@ -21,27 +18,25 @@ rule ind_aggregate_results_as_df:
 
 use rule ind_aggregate_results_as_df as shared_aggregate_results_as_df with:
     input:
-        "results/data/{dataset_hash}/{parcellation}/{trials}/Decoding/decoder/{conditions}/{feature}/{decoder}/perf_df.pkl"
+        "results/data/{dataset_id}/{parcellation}/{dataset_id}/Decoding/decoder/{conditions}/{feature}/{decoder}/perf_df.pkl"
     output:
-        "results/plots/{dataset_hash}/shared_space/{conditions}/{feature}/{parcellation}/{decoder}/aggr_perf_df.pkl"  
-    params:
-        dataset_aliases = lambda wildcards: config["dataset_aliases"][wildcards["dataset_hash"]]
+        "results/plots/{dataset_id}/shared_decode/{conditions}/{feature}/{parcellation}/{decoder}/aggr_perf_df.pkl"
 
 #rule plot_from_df_dataset:
 #    input:
-#        "results/plots/{dataset_hash}/ind_space/{conditions}/{feature}/{parcellation}/{decoder}/aggr_perf_df.pkl"
-#        "results/plots/{dataset_hash}/shared_space/{conditions}/{feature}/{parcellation}/{decoder}/aggr_perf_df.pkl" 
+#        "results/plots/{dataset_hash}/ind_decode/{conditions}/{feature}/{parcellation}/{decoder}/aggr_perf_df.pkl"
+#        "results/plots/{dataset_hash}/shared_decode/{conditions}/{feature}/{parcellation}/{decoder}/aggr_perf_df.pkl" 
 #    output:
 #        "results/plots/{dataset_hash}/{conditions}/{feature}/{parcellation}/{decoder}/perf_all.datasets.pdf"
 
 rule plot_from_df_all:
     input:
-        [f"results/plots/{dataset_hash}/ind_space/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl" for dataset_hash in config["readable_session_runs"] ], 
+        [f"results/plots/{dataset_hash}/ind_decode/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl" for dataset_hash in config["session_runs"] ],
+        [f"results/plots/{dataset_hash}/shared_decode/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl" for dataset_hash in config["session_runs"] ],
     output:
         f"results/plots/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/perf_all.datasets.pdf",
     log:
         "results/plots/{conditions}/{feature}/{parcellation}/{decoder}/perf_all.datasets.log",
-    #params:
     conda:
         "../envs/environment.yaml"
     script:

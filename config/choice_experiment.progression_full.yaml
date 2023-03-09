@@ -1,6 +1,12 @@
 branch_opts:
-  combine_sessions: True #Combine sessions (upon loading) & find new spatials with PCA / Combine sessions (after feature calculation) based on original spatials (noisy if spatials are different)
-  include_individual_sessions: False #False #Run pipeline on individual sessions and combined sessions / just on combined session
+  # Allowed values are:
+  #   "All":     only work in the unified space of all datesets, default
+  #   "Dataset": only work in the spaces of individual datasets
+  #   "Both":    ... do both
+  unified_space: "Both"
+
+  # Run pipeline on individual sessions and combined sessions / just on combined session
+  include_individual_sessions: False
   generalize_from: "GN06.01-20#GN06.03-01#GN06.03-02#GN06.03-03#GN06.03-04#GN06.03-05#GN06.03-26#GN06.03-29"
 
     

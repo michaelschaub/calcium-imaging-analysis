@@ -113,13 +113,14 @@ def flattened_sessions(sessions):
     sessions = sorted(set(sessions))
     return sessions
 
-def dataset_path_hash(sessions, config):
+def dataset_path_hash(sessions, name, config):
     h = hashlib.md5()
     sessions = [f"{subj}.{date}" for subj, date in sessions]
     for s in sessions:
         h.update(bytes(s, "utf-8"))
     digest_lng = config.get('hash_digest_length', 8)
-    return h.hexdigest()[:digest_lng]
+    digest = h.hexdigest()[:digest_lng]
+    return '#'.join([name,digest])
 
 def create_datasets(sets, config):
     '''
@@ -127,10 +128,13 @@ def create_datasets(sets, config):
     ´sets = { md5hashA : [(subj1,date1), ...], ...}´
     and ´aliases = { nameA: md5hashA, ... }´
     '''
-    sets = { name: flattened_sessions(get_sessions(sets, content)) for name, content in sets.items() }
-    aliases = { name: dataset_path_hash(sessions, config) for name, sessions in sets.items() }
-    sets = {'#'.join([name,dataset_path_hash(sessions, config)]): sessions for name, sessions in sets.items() }
-    return sets, aliases
+    datasets = { name: flattened_sessions(get_sessions(sets, content)) for name, content in sets.items() }
+    aliases = { name: dataset_path_hash(sessions, name, config) for name, sessions in datasets.items() }
+    groups = { aliases[name]: [aliases[s] for s in content.get('group', [])] for name, content in sets.items() }
+
+    datasets = {dataset_path_hash(sessions, name, config): sessions for name, sessions in datasets.items() }
+    sessions = { id: ['-'.join(s) for s in sessions] for id, sessions in datasets.items()}
+    return datasets, sessions, groups, aliases
 
 
 #TODO fix this mess / find a snakemake version, that fixes it

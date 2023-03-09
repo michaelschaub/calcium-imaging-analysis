@@ -187,7 +187,7 @@ def concat_input(wildcards):
     return {"individual_sessions":[f"results/data/{'.'.join([subject_id,date])}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5" for subject_id,dates in sessions.items() for date in dates ]}
 
     
-#if not config["combine_sessions"]:
+# TODO fix this
 # Sessions were not combined upon loading, concat individual sessions 
 rule feature_concat:
     input:
@@ -210,7 +210,7 @@ rule feature_concat:
         params = lambda wildcards: config["features"][wildcards["feature"]]
     wildcard_constraints:
         #only allowed to resolve wildcards of combined sessions (indicated by the sessions being concat with #) if set false in config, else sessions should be loaded together instead of being concat afterwards
-        concated_sessions = r"GN[\w_.\-#]*" if not config["combine_sessions"] else r"(?!)" 
+        concated_sessions = r"GN[\w_.\-#]*" if not True else r"(?!)"
     log:
         f"results/data/{{concated_sessions}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/feature_calculation.log"
     conda:
