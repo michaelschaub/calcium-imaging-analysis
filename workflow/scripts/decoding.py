@@ -194,7 +194,16 @@ try:
 
     # Construct wide dataframe
     #add , "SVD_space": snakemake.wildcards[""] later when data_dict is reverted
-    accuracy_dict = [{"t": t, "run":r, "accuracy":run_perf, "decoder": snakemake.wildcards["decoder"], "parcellation":snakemake.wildcards["parcellation"], " feature": snakemake.wildcards["feature"]} for t,timepoint_perfs in enumerate(perf_list) for r, run_perf in  enumerate(timepoint_perfs) ]
+    accuracy_dict = {
+            "decomposition_space" : feat_list[0].frame["decomposition_space"].iloc[0],
+            "parcellation"        : feat_list[0].frame["parcellation"].iloc[0],
+            "dataset_id"          : feat_list[0].frame["dataset_id"].iloc[0],
+            "conditions"          : '.'.join(np.unique([ f.frame["condition"].iloc[0] for f in feat_list])),
+            "feature"             : feat_list[0].frame["feature"].iloc[0],
+            "feature_params"      : feat_list[0].frame["feature_params"].iloc[0],
+            }
+    accuracy_dict = [{"t": t, "run":r, "accuracy":run_perf, "decoder": snakemake.wildcards["decoder"], **accuracy_dict}
+                     for t,timepoint_perfs in enumerate(perf_list) for r, run_perf in  enumerate(timepoint_perfs) ]
     accuracy_df =  pd.json_normalize(accuracy_dict)
     accuracy_df.to_pickle(snakemake.output["df"])
 

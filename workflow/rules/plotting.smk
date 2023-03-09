@@ -14,13 +14,15 @@ rule ind_aggregate_results_as_df:
     conda:
         "../envs/environment.yaml"
     script:
-        "../scripts/plotting/aggreagte_results.py"
+        "../scripts/plotting/aggregate_results.py"
 
 use rule ind_aggregate_results_as_df as shared_aggregate_results_as_df with:
     input:
         "results/data/{dataset_id}/{parcellation}/{dataset_id}/Decoding/decoder/{conditions}/{feature}/{decoder}/perf_df.pkl"
     output:
         "results/plots/{dataset_id}/shared_decode/{conditions}/{feature}/{parcellation}/{decoder}/aggr_perf_df.pkl"
+    log:
+        f"results/plots/{{dataset_id}}/shared_decode/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/df_aggregation.log"
 
 #rule plot_from_df_dataset:
 #    input:
