@@ -11,7 +11,7 @@ import pandas as pd
 
 from pathlib import Path
 import sys
-sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
+sys.path.append(str((Path(__file__).parent.parent.parent.parent).absolute()))
 
 import ci_lib.plotting as plots
 from ci_lib.utils import snakemake_tools
@@ -22,7 +22,6 @@ try:
     timer_start = snakemake_tools.start_timer()
 
     #Loading
-    for 
     with open(snakemake.input["perf_df"], "rb") as f:
         df = pickle.load(f)
 
