@@ -138,12 +138,20 @@ rule decode:
         #Plot coefs
         expand([f"results/plots/{dataset_id}/{subset_id}/{{parcellation}}/{'.'.join(aggr_conditions)}/{{feature}}/{{decoder}}/model_coef_mean.pdf" for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],  parcellation = parcellations, feature =  features, decoder=decoders),
 '''
-        
+
+rule aggregated_decoding_plots:
+    input:
+        expand([f"results/plots/{dataset_id}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/perf_subset_space_comp.pdf"
+                for dataset_id in session_runs.keys()],
+                parcellation = parcellations, feature =  features, decoder=decoders, ),
+        expand([f"results/plots/{dataset_id}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/perf_all_space_comp.pdf"
+                for dataset_id in [dataset_aliases["All"]] if unified_space == "Both" ],
+                parcellation = parcellations, feature =  features, decoder=decoders, ),
 
 
 rule load:
     input:
-        expand("results/data/{session_run}/SVD/data.h5",session_run=session_runs)
+        expand("results/data/{session_run}/SVD/{session_run}/data.h5",session_run=session_runs)
 
 rule biomarkers:
     input:
@@ -186,7 +194,7 @@ rule decoding_performances:
     conda:
         "envs/environment.yaml"
     resources:
-        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,1000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,4000,1000)
     script:
         "scripts/run_aggregation.py"
 
@@ -202,6 +210,12 @@ module processing:
     config: config | config['processing']
 
 use rule * from processing
+
+module aggregation:
+    snakefile: "rules/aggregation.smk"
+    config: config | config['aggregation']
+
+use rule * from aggregation
 
 module plotting:
     snakefile: "rules/plotting.smk"

@@ -99,6 +99,10 @@ config["processing"] = {"aggr_conditions" : aggr_conditions,
                         "session_runs":session_runs}
 
 
+config["aggregation"] = {"dataset_groups" : dataset_groups,
+                        "dataset_sessions" : dataset_sessions,
+                        "session_runs":session_runs}
+
 #For annotating plots
 #TODO repair!
 config["plotting"] =   {
@@ -114,6 +118,7 @@ config["plotting"] =   {
                         "generalize_from":generalize_from,
                         "dataset_aliases":dataset_aliases,
                         "session_runs":session_runs,
+                        "datasets":datasets,
                         }
 
 #config["generic"] = {"loglevel": config["loglevel"],

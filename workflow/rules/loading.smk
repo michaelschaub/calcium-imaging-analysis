@@ -52,8 +52,8 @@ rule load_GN:
     output:
         "results/data/{session_id}/SVD/{session_id}/data.h5",
         align_plot = report("results/data/{session_id}/{session_id}}/SVD/alignment.pdf", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "GN", "Subjects":"{session_id}"}),
-        config = "results/data/{session_id}/{session_id}}/SVD/conf.yaml",
-        stim_side = report("results/data/{session_id}/{session_id}}/SVD/stim_side.pdf", caption="../report/alignment.rst", category="0 Loading", labels={"Dataset": "GN", "Subjects":"{session_id}"})
+        config = "results/data/{session_id}/SVD/{session_id}/conf.yaml",
+        stim_side = report("results/data/{session_id}/SVD/{session_id}/stim_side.pdf", caption="../report/alignment.rst", category="0 Loading", labels={"Dataset": "GN", "Subjects":"{session_id}"})
     wildcard_constraints:
         session_id = r"GN[\w_.\-]*"
     log:
@@ -61,7 +61,7 @@ rule load_GN:
     conda:
         "../envs/environment.yaml"
     resources:
-        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,1000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,4000,1000)
     script:
         "../scripts/loading/load_GN.py"
 
@@ -83,7 +83,7 @@ rule load_mSM:
     conda:
         "../envs/environment.yaml"
     resources:
-        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,1000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,4000,1000)
     script:
         "../scripts/loading/load_mSM.py"
 
@@ -116,6 +116,6 @@ rule unify:
     conda:
         "../envs/environment.yaml"
     resources:
-        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,1000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,8000,2000)
     script:
         "../scripts/loading/unify_sessions.py"

@@ -22,15 +22,32 @@ try:
     timer_start = snakemake_tools.start_timer()
 
     #Loading
-    with open(snakemake.input["perf_df"], "rb") as f:
-        df = pickle.load(f)
+    df = []
+    for infile in snakemake.input:
+        with open(infile, "rb") as f:
+            df.append(pickle.load(f))
+    df = pd.concat(df)
+
+    logger.debug(f"{df}")
+
+    strokes = snakemake.params.get("strokes", None)
+    colors = snakemake.params.get("colors", None)
+    subplots = snakemake.params.get("subplots", None)
+    if strokes is not None:
+        logger.info(f"stroke columns {strokes}")
+        stroke_keys = np.unique([ df[col] for col in strokes ])
+        logger.info(f"stroke keys = {stroke_keys}")
+    if colors is not None:
+        logger.info(f"color columns {colors}")
+        color_keys = np.unique([ df[col] for col in colors ])
+        logger.info(f"color keys = {color_keys}")
+    sys.exit(0)
 
             
     decoders = [ dec.split('_')[0] for dec in snakemake.params['decoders']]
     conditions = snakemake.params['conds']
     #parcellation = None
 
-    
 
     #Plotting
     

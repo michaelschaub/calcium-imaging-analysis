@@ -3,42 +3,53 @@ from snakemake_tools import create_parameters, create_conditions, calculate_memo
 
 ###   Plotting   ###
 
-rule ind_aggregate_results_as_df:
+#rule plot_from_df_dataset:
+#    input:
+#        "results/plots/{dataset_id}/ind_decode/{conditions}/{feature}/{parcellation}/{decoder}/aggr_perf_df.pkl"
+#        "results/plots/{dataset_id}/shared_decode/{conditions}/{feature}/{parcellation}/{decoder}/aggr_perf_df.pkl"
+#    output:
+#        "results/plots/{dataset_id}/{conditions}/{feature}/{parcellation}/{decoder}/perf_all.datasets.pdf"
+
+rule plot_from_df_subset_space_comp:
     input:
-        lambda wildcards: [f"results/data/{{dataset_id}}/{{parcellation}}/{subset_id}/Decoding/decoder/{{conditions}}/{{feature}}/{{decoder}}/perf_df.pkl"
-            for subset_id in config["session_runs"][wildcards["dataset_id"]] ]
+        f"results/plots/{{dataset_id}}/sessions_in_sessions/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
+        f"results/plots/{{dataset_id}}/sessions_in_subsets/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
+        f"results/plots/{{dataset_id}}/subsets_in_subsets/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
+        f"results/plots/{{dataset_id}}/subsets_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
+        f"results/plots/{{dataset_id}}/dataset_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
     output:
-        f"results/plots/{{dataset_id}}/ind_decode/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
+        touch(f"results/plots/{{dataset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/perf_subset_space_comp.pdf"),
+    params:
+        strokes = [ 'aggregated_from' ],
+        colors  = [ 'dataset_id' ],
     log:
-        f"results/plots/{{dataset_id}}/ind_decode/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/df_aggregation.log"
+        "results/plots/{dataset_id}/{conditions}/{feature}/{parcellation}/{decoder}/perf_subset_space_comp.log",
     conda:
         "../envs/environment.yaml"
     script:
-        "../scripts/plotting/aggregate_results.py"
+        "../scripts/plotting/plot_performance_time_aggr.py"
 
-use rule ind_aggregate_results_as_df as shared_aggregate_results_as_df with:
+
+rule plot_from_df_all_space_comp:
     input:
-        "results/data/{dataset_id}/{parcellation}/{dataset_id}/Decoding/decoder/{conditions}/{feature}/{decoder}/perf_df.pkl"
+        [ f"results/plots/{dataset_id}/sessions_in_sessions/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
+            for dataset_id in config["session_runs"].keys() if dataset_id != config['dataset_aliases']['All']],
+        [ f"results/plots/{dataset_id}/sessions_in_subsets/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
+            for dataset_id in config["session_runs"].keys() if dataset_id != config['dataset_aliases']['All']],
+        [ f"results/plots/{dataset_id}/subsets_in_subsets/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
+            for dataset_id in config["session_runs"].keys() if dataset_id != config['dataset_aliases']['All']],
+        [ f"results/plots/{dataset_id}/subsets_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
+            for dataset_id in config["session_runs"].keys() if dataset_id != config['dataset_aliases']['All']],
+        [ f"results/plots/{dataset_id}/dataset_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
+            for dataset_id in config["session_runs"].keys() if dataset_id != config['dataset_aliases']['All']],
+        f"results/plots/{config['dataset_aliases']['All']}/subsets_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
     output:
-        "results/plots/{dataset_id}/shared_decode/{conditions}/{feature}/{parcellation}/{decoder}/aggr_perf_df.pkl"
+        touch(f"results/plots/{config['dataset_aliases']['All']}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/perf_all_space_comp.pdf"),
+    params:
+        strokes = [ 'aggregated_from' ],
+        colors  = [ 'dataset_id' ],
     log:
-        f"results/plots/{{dataset_id}}/shared_decode/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/df_aggregation.log"
-
-#rule plot_from_df_dataset:
-#    input:
-#        "results/plots/{dataset_hash}/ind_decode/{conditions}/{feature}/{parcellation}/{decoder}/aggr_perf_df.pkl"
-#        "results/plots/{dataset_hash}/shared_decode/{conditions}/{feature}/{parcellation}/{decoder}/aggr_perf_df.pkl" 
-#    output:
-#        "results/plots/{dataset_hash}/{conditions}/{feature}/{parcellation}/{decoder}/perf_all.datasets.pdf"
-
-rule plot_from_df_all:
-    input:
-        [f"results/plots/{dataset_hash}/ind_decode/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl" for dataset_hash in config["session_runs"] ],
-        [f"results/plots/{dataset_hash}/shared_decode/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl" for dataset_hash in config["session_runs"] ],
-    output:
-        f"results/plots/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/perf_all.datasets.pdf",
-    log:
-        "results/plots/{conditions}/{feature}/{parcellation}/{decoder}/perf_all.datasets.log",
+        f"results/plots/{config['dataset_aliases']['All']}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/perf_all.datasets.log",
     conda:
         "../envs/environment.yaml"
     script:
@@ -131,7 +142,7 @@ rule decoding_with_existing_model:
     conda:
         "../envs/environment.yaml"
     resources:
-        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,1000,1000)
     script:
         "../scripts/test_models.py"
 
@@ -155,7 +166,7 @@ rule decoding_with_existing_model_different_subject:
     conda:
         "../envs/environment.yaml"
     resources:
-        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,1000,1000)
     script:
         "../scripts/test_models.py"
 ######
@@ -380,7 +391,7 @@ rule plot_glassbrain:
     conda:
         "../envs/environment.yaml"
     resources:
-        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,16000,16000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,16000,16000)
     script:
         "../scripts/plot_glassbrain.py"
 

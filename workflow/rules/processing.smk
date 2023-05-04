@@ -8,6 +8,7 @@ import re
 def parcellation_input(wildcards):
 
     if not bool(re.match(r"(?!SVD$).+",wildcards["parcellation"])):  #TODO why is snakemake regex broken? :( ,fro now evaulate the same freaking expression within input function and require non existing files to exclude this rule....
+        raise ValueError("This is not the correct rule for this!")
         return {"data":f"good/luck/finding/this/non/existing/path"}
 
     input = {
@@ -15,6 +16,8 @@ def parcellation_input(wildcards):
         "config": "{data_dir}/{dataset_id}/SVD/{dataset_id}/conf.yaml" }
     branch = config["parcellations"][wildcards["parcellation"]]["branch"]
     input.update( config["parcellation_wildcard_matching"][branch] )
+    if wildcards['parcellation'] == "SVD":
+        raise ValueError("This is not the correct rule for this!")
     return input
 
 rule parcellate:
@@ -38,7 +41,7 @@ rule parcellate:
     conda:
         "../envs/environment.yaml"
     resources:
-        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,2000,1000)
     script:
         "../scripts/parcellation.py"
 
@@ -92,7 +95,7 @@ rule trial_selection:
     conda:
         "../envs/environment.yaml"
     resources:
-        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,1000,1000)
     script:
         "../scripts/trial_selection.py"
 
@@ -122,7 +125,7 @@ rule condition:
     conda:
         "../envs/environment.yaml"
     resources:
-        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,2000,1000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,2000,1000)
     script:
         "../scripts/conditional.py"
 
@@ -143,7 +146,7 @@ rule condition_grouping:
     conda:
         "../envs/environment.yaml"
     resources:
-        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,2000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,4000,2000)
     script:
         "../scripts/group_conditions.py"
 
@@ -176,7 +179,7 @@ rule feature_calculation:
     conda:
         "../envs/environment.yaml"
     resources:
-        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,2000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,4000,2000)
     script:
         "../scripts/feature.py"
 
@@ -216,7 +219,7 @@ rule feature_concat:
     conda:
         "../envs/environment.yaml"
     resources:
-        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,2000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,4000,2000)
     script:
         "../scripts/feature_concat.py"
 #else:
@@ -250,7 +253,7 @@ rule thresholding:
     conda:
         "../envs/environment.yaml"
     resources:
-        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,2000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,4000,2000)
     script:
         "../scripts/thresholding.py"
 
@@ -285,7 +288,7 @@ rule feature_grouping:
     conda:
         "../envs/environment.yaml"
     resources:
-        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,2000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,4000,2000)
     script:
         "../scripts/group_features.py"
 
@@ -306,7 +309,7 @@ rule feature_elimination:
     conda:
         "../envs/environment.yaml"
     resources:
-        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,1000,1000)
     script:
         "../scripts/feature_elimination.py"
 
@@ -326,7 +329,7 @@ rule decoding:
     conda:
         "../envs/environment.yaml"
     resources:
-        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,1000,1000)
     script:
         "../scripts/decoding.py"
 
@@ -352,7 +355,7 @@ rule decoding:
     conda:
         "../envs/environment.yaml"
     resources:
-        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,1000,1000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,1000,1000)
     threads:
         min(len(list(config['aggr_conditions'])),workflow.cores) #For multinomial lr = job for each class
         #workflow.cores * 0.2

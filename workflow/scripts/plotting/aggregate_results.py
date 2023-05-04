@@ -19,9 +19,14 @@ try:
         logger.debug(f"Loaded frame from {df_path}.")
 
     #Concat
-    dfs = pd.concat(dfs)
+    if len(dfs) > 0:
+        dfs = pd.concat(dfs)
+    else:
+        dfs = pd.DataFrame()
     logger.debug(f"Concated frames.")
     #dfs["dataset"] = snakemake.params[dataset_name]
+    for column, param in snakemake.params.items():
+        dfs[column] = param
 
     #Save Dfs
     dfs.to_pickle(snakemake.output[0])

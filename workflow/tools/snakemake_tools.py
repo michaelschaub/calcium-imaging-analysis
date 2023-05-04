@@ -3,6 +3,8 @@ from itertools import product as iterproduct
 import json
 import hashlib
 
+import snakemake
+
 def get_key_by_val(mydict,val):
     return list(mydict.keys())[list(mydict.values()).index(val)]
 
@@ -139,16 +141,12 @@ def create_datasets(sets, config):
 
 #TODO fix this mess / find a snakemake version, that fixes it
 # taking input as an argument creates all kinds of bugs in snakemake...
-#def calculate_memory_resource(wildcards, input, attempt, minimum=1000, step=1000, multiple=2):
-def calculate_memory_resource(wildcards, attempt, minimum=1000, step=1000, multiple=2):
-		#input_mb = input.size_mb
-		#print(f"{wildcards}: {input_mb}\n\t{input}")
-		#if input_mb == '<TBD>':
-			#print("This should only appear in dry-run")
-			#input_mb = 0
-			#print(f"{wildcards}: {input_mb}\n\t{input}")
-		input_mb = 0
-		return max(multiple*input_mb, minimum) + step*(attempt-1)
+def calculate_memory_resource(wildcards, input, attempt, minimum=1000, step=1000, multiple=4):
+    #input_mb = input.size_mb
+    #if isinstance(input_mb, snakemake.common.TBDString):
+        #input_mb = 0
+    input_mb = 0
+    return max(multiple*input_mb, minimum) + step*(attempt-1)
 
 PARAMETER_EXPR = r"(_[a-zA-Z0-9'~.\[\], -]+)*"
 
