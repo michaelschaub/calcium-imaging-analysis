@@ -26,12 +26,14 @@ try:
     for infile in snakemake.input:
         with open(infile, "rb") as f:
             df.append(pickle.load(f))
-    df = pd.concat(df)
+    accuracy_df = pd.concat(df)
 
-    logger.debug(f"{df}")
+    logger.info(f"{accuracy_df}")
 
-    strokes = snakemake.params.get("strokes", None)
-    colors = snakemake.params.get("colors", None)
+    style = snakemake.params.get("style", None)
+    hue = snakemake.params.get("hue", None)
+
+    '''
     subplots = snakemake.params.get("subplots", None)
     if strokes is not None:
         logger.info(f"stroke columns {strokes}")
@@ -41,20 +43,26 @@ try:
         logger.info(f"color columns {colors}")
         color_keys = np.unique([ df[col] for col in colors ])
         logger.info(f"color keys = {color_keys}")
-    sys.exit(0)
+    '''
 
-            
-    decoders = [ dec.split('_')[0] for dec in snakemake.params['decoders']]
+    font_scale=1.1
+    sns.set(font_scale=font_scale)
+    sns.set(rc={'figure.figsize':(15,6)})
+    sns.set_style("whitegrid",{'axes.xaxis.grid' : False})
+
+    accuracy_over_time_plot = sns.lineplot(data=accuracy_df, x="t", y="accuracy",hue=hue,style=style,errorbar=('pi',90),palette='deep', err_kws={"alpha":0.25})
     conditions = snakemake.params['conds']
+   
+    '''
+            
+    #decoders = [ dec.split('_')[0] for dec in snakemake.params['decoders']]
+    #
     #parcellation = None
 
 
     #Plotting
     
-    font_scale=1.1
-    sns.set(font_scale=font_scale)
-    sns.set(rc={'figure.figsize':(15,6)})
-    sns.set_style("whitegrid",{'axes.xaxis.grid' : False})
+    
 
 
 
@@ -173,9 +181,12 @@ try:
 
         accuracy_over_time_plot  = sns.lineplot(data=accuracy_df, x="t", y="accuracy",hue="decoder",errorbar=('pi',90))
     
+    '''
     
-    start = accuracy_df.t.min()
-    stop = accuracy_df.t.max()
+    start = int(accuracy_df.t.min())
+    stop = int(accuracy_df.t.max())
+    timepoints_n = stop-start #assumes that we have continous timepoints between start and stop
+
     #sns.set(rc={'figure.figsize':(np.round((stop-start)/20,decimals=1),6)})
     #plt.rcParams["figure.figsize"] = (np.round((stop-start)/30,decimals=1),6)
 
@@ -223,12 +234,12 @@ try:
         logger.info(f"{xtick_labels}")
         plt.xlabel("Seconds")
         
-
+    plt.ylabel("Accuracy")
     plt.xticks(xticks, xtick_labels)
     accuracy_over_time_plot.set_xticklabels(xtick_labels)
     #accuracy_over_time_plot.xaxis.set_major_formatter(FormatStrFormatter('%.1f'))
     
-
+    '''
     middle_plot = False
     if middle_plot:
         sns.despine(ax=accuracy_over_time_plot,left=True,right=True)
@@ -237,7 +248,7 @@ try:
         accuracy_over_time_plot.tick_params(left=False)
     else:
         plt.ylabel("Accuracy")
-    
+    '''
     #remove vertical lines,
     accuracy_over_time_plot.grid(False) 
     accuracy_over_time_plot.yaxis.grid(True)

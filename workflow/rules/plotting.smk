@@ -14,18 +14,23 @@ rule plot_from_df_subset_space_comp:
     input:
         f"results/plots/{{dataset_id}}/sessions_in_sessions/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
         f"results/plots/{{dataset_id}}/sessions_in_subsets/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
+        f"results/plots/{{dataset_id}}/sessions_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
         f"results/plots/{{dataset_id}}/subsets_in_subsets/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
         f"results/plots/{{dataset_id}}/subsets_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
         f"results/plots/{{dataset_id}}/dataset_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
     output:
-        touch(f"results/plots/{{dataset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/perf_subset_space_comp.pdf"),
+        f"results/plots/{{dataset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/perf_subset_space_comp.pdf",
     params:
-        strokes = [ 'aggregated_from' ],
-        colors  = [ 'dataset_id' ],
+        #style = 'dataset_id',
+        hue  = 'aggregated_from',
+        #size
+        conds=list(config['aggr_conditions']), #maybe get from config within script?
     log:
         "results/plots/{dataset_id}/{conditions}/{feature}/{parcellation}/{decoder}/perf_subset_space_comp.log",
     conda:
         "../envs/environment.yaml"
+    priority:
+        50
     script:
         "../scripts/plotting/plot_performance_time_aggr.py"
 
@@ -38,16 +43,20 @@ rule plot_from_df_all_space_comp:
             for dataset_id in config["session_runs"].keys() if dataset_id != config['dataset_aliases']['All']],
         [ f"results/plots/{dataset_id}/subsets_in_subsets/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
             for dataset_id in config["session_runs"].keys() if dataset_id != config['dataset_aliases']['All']],
+        [ f"results/plots/{dataset_id}/sessions_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
+            for dataset_id in config["session_runs"].keys() if dataset_id != config['dataset_aliases']['All']],
         [ f"results/plots/{dataset_id}/subsets_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
             for dataset_id in config["session_runs"].keys() if dataset_id != config['dataset_aliases']['All']],
         [ f"results/plots/{dataset_id}/dataset_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
             for dataset_id in config["session_runs"].keys() if dataset_id != config['dataset_aliases']['All']],
         f"results/plots/{config['dataset_aliases']['All']}/subsets_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
     output:
-        touch(f"results/plots/{config['dataset_aliases']['All']}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/perf_all_space_comp.pdf"),
+        f"results/plots/{config['dataset_aliases']['All']}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/perf_all_space_comp.pdf",
     params:
-        strokes = [ 'aggregated_from' ],
-        colors  = [ 'dataset_id' ],
+        #style = 'dataset_id',
+        hue  = 'aggregated_from',
+        #size
+        conds=list(config['aggr_conditions']), #maybe get from config within script?
     log:
         f"results/plots/{config['dataset_aliases']['All']}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/perf_all.datasets.log",
     conda:

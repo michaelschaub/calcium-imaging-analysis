@@ -85,7 +85,7 @@ rule trial_selection:
         #config = "{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/conf.yaml",
         input_trial_selection
     output:
-        "{data_dir}/{dataset_id}/{parcellation}/{selection_id}/data.h5",
+        temp("{data_dir}/{dataset_id}/{parcellation}/{selection_id}/data.h5"),
         #report = report("{data_dir}/{dataset_id}/{parcellation}/{selection_id}/conf.yaml"),
         config = "{data_dir}/{dataset_id}/{parcellation}/{selection_id}/conf.yaml",
     params:
@@ -114,7 +114,7 @@ rule condition:
         data = f"{{data_dir}}/data.h5",
         config = f"{{data_dir}}/conf.yaml",
     output:
-        f"{{data_dir}}/Features/{{cond}}/data.h5",
+        temp(f"{{data_dir}}/Features/{{cond}}/data.h5"),
         config = f"{{data_dir}}/Features/{{cond}}/conf.yaml",
     params:
         condition_params
@@ -136,7 +136,7 @@ rule condition_grouping:
 		for sub_cond in config['group_conditions'][wildcards['cond']]
 	]
     output:
-        f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/data.h5",
+        temp(f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/data.h5"),
         config = f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/conf.yaml",
     wildcard_constraints:
         cond = branch_match(list(config['group_conditions'].keys()), params=False)
@@ -155,7 +155,7 @@ rule feature_calculation:
         data = f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/data.h5",
         config = f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/conf.yaml",
     output:
-        f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5",
+        temp(f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5"),
         export_raw = report(
             f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.{config['export_type']}",
             caption="../report/alignment.rst",
@@ -190,7 +190,8 @@ def concat_input(wildcards):
     return {"individual_sessions":[f"results/data/{'.'.join([subject_id,date])}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5" for subject_id,dates in sessions.items() for date in dates ]}
 
     
-# TODO fix this
+# can this actually occur with new structure? 
+# TODO remove?
 # Sessions were not combined upon loading, concat individual sessions 
 rule feature_concat:
     input:
@@ -264,7 +265,7 @@ rule feature_grouping:
 		for sub_cond in config['group_conditions'][wildcards['cond']]
 	]
     output:
-        f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5",
+        temp(f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5"),
         export_raw = report(
             f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.{config['export_type']}",
             caption="../report/alignment.rst",

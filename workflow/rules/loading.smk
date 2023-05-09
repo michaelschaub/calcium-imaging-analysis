@@ -13,7 +13,7 @@ def sessions_input_gerion(wildcards):
     date = '-'.join(session_id[1:])
     input = {
         "tasks": f"resources/experiment/{subject_id}/{date}/task_data/",
-        "Vc": f"resources/experiment/{subject_id}/{date}/SVD_data/Vc.mat", #TODO only works for new vc files, currently done this way to make sure only news vcs are used
+        "Vc": f"resources/experiment/{subject_id}/{date}/SVD_data/Vc_100s_highpass.mat", #TODO only works for new vc files, currently done this way to make sure only news vcs are used
         "trans_params": f"resources/experiment/{subject_id}/{date}/SVD_data/opts2.mat"}
     return input
 
@@ -50,8 +50,8 @@ rule load_GN:
     input:
         unpack(sessions_input_gerion)
     output:
-        "results/data/{session_id}/SVD/{session_id}/data.h5",
-        align_plot = report("results/data/{session_id}/{session_id}}/SVD/alignment.pdf", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "GN", "Subjects":"{session_id}"}),
+        temp("results/data/{session_id}/SVD/{session_id}/data.h5"),
+        align_plot = report("results/data/{session_id}/{session_id}/SVD/alignment.pdf", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "GN", "Subjects":"{session_id}"}),
         config = "results/data/{session_id}/SVD/{session_id}/conf.yaml",
         stim_side = report("results/data/{session_id}/SVD/{session_id}/stim_side.pdf", caption="../report/alignment.rst", category="0 Loading", labels={"Dataset": "GN", "Subjects":"{session_id}"})
     wildcard_constraints:
@@ -73,8 +73,8 @@ rule load_mSM:
     input:
         unpack(sessions_input_simon)
     output:
-        "results/data/{session_id}/{session_id}}/SVD/data.h5",
-        align_plot = report("results/data/{session_id}/{session_id}}/SVD/alignment.pdf", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "mSM", "Subjects":"{session_id}"}),
+        temp("results/data/{session_id}/{session_id}/SVD/data.h5"),
+        align_plot = report("results/data/{session_id}/{session_id}/SVD/alignment.pdf", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "mSM", "Subjects":"{session_id}"}),
         config = "results/data/{session_id}/SVD/{session_id}/conf.yaml",
     wildcard_constraints:
         session_id = r"mSM[\w_.\-]*"
