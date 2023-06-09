@@ -36,6 +36,20 @@ try:
 
     sessions['subject_id'] = sessions['mouse_id']
 
+    #annotate meta data with switch/non switch from previous stimulus and mouse choice to balance trials (with out requiring their order)
+    #1: changed, 0: no change, -1: unknown (due to being the first task)
+    response_side_diff = sessions['response_left'].diff().fillna(1).astype('int')
+    response_side_diff[response_side_diff>0] = 1
+    sessions['change_response_side'] = response_side_diff
+
+    stim_side_diff = sessions['target_side_left'].diff().fillna(1).astype('int')
+    stim_side_diff[stim_side_diff>0] = 1
+    sessions['change_stim_side'] = stim_side_diff
+    
+    
+
+
+
     logger.info(f"{sessions}")
 
     ###

@@ -28,7 +28,9 @@ try:
             perf.append(pickle.load(f))
 
             
-    decoders = [ dec.split('_')[0] for dec in snakemake.params['decoders']]
+    #decoders = [ dec.split('_')[0] for dec in snakemake.params['decoders']] #TODO format better
+    decoders = [ dec for dec in snakemake.params['decoders']] #Hotfix cause all params were dropped 
+
     conditions = snakemake.params['conds']
     #parcellation = None
 
@@ -141,10 +143,11 @@ try:
     else:
         perf = np.asarray(perf,dtype=float)
         _, timepoints_n, runs_n = perf.shape
-
+        logger.info(f"perf_shape {perf.shape}")
         #Create list of dicts
         accuracy_dict = np.asarray([[[{"decoder": decoder, "t": t, "run":r, "accuracy":run_perf} for r, run_perf in  enumerate(timepoint_perf)] for t,timepoint_perf in enumerate(perf[i,:,:])] for i,decoder in enumerate(decoders)]).flatten()
         accuracy_df =  pd.json_normalize(accuracy_dict)
+        logger.info(accuracy_df)
 
         accuracy_over_time_plot  = sns.lineplot(data=accuracy_df, x="t", y="accuracy",hue="decoder",errorbar=('pi',90))
     

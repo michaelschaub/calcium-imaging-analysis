@@ -91,10 +91,12 @@ try:
     across_time = True
     accumulate = False
 
-    #Load feature for all conditions
-    feat_list = load_feat(snakemake.wildcards["feature"],snakemake.input)
-    #print(snakemake.input)
+    if 'C' in snakemake.params["params"]:
+        C = snakemake.params["params"]["C"]
+    else:
+        C = None
 
+    feat_list = load_feat(snakemake.wildcards["feature"],snakemake.input)
 
     if balancing:
         #Balances the number of trials for each condition
@@ -167,7 +169,8 @@ try:
             t1_train_testing = snakemake_tools.start_timer()
 
             #Decode
-            perf_t, confusion_t, norm_confusion_t, model_t = decode(feats_t, labels_t,decoder,reps,label_order= label_list,cores=cores,logger=logger)
+            logger.info(f"C {C}")
+            perf_t, confusion_t, norm_confusion_t, model_t = decode(feats_t, labels_t,decoder,reps,label_order= label_list,cores=cores,logger=logger, C=C)
             perf_list[t,:] = perf_t
             conf_matrix[t,:,:,:] = confusion_t
             norm_conf_matrix[t,:,:,:] = norm_confusion_t

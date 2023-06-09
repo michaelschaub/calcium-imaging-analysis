@@ -29,8 +29,12 @@ try:
         logger.debug(feat.feature)
         if feat.trials_n>0:
             feats.append(feat)
+        else:
+            logger.info(f"{i} has no trials")
 
     seed = snakemake.config['seed'] if 'seed' in snakemake.config else None
+    logger.info(f"feature {feats}")
+    logger.info(f"feats length {[f.trials_n for f in feats]}")
     feats = balance(feats, seed=seed)
     feat = feats[0]
     feat.concat(feats, overwrite=True) #TODO fails when no trials are present
