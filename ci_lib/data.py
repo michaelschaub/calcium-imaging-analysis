@@ -6,6 +6,7 @@ import pathlib
 import logging
 import numpy as np
 import pandas as pd
+# pylint: disable-next=import-error
 import h5py
 
 from ci_lib.loading import reproducable_hash, load_h5, save_h5
@@ -79,6 +80,7 @@ class DecompData:
         Create a copy of this `DecompData` object with some compoments replaced,
         depending on which parameter is given.
         '''
+        # pylint: disable=protected-access
         data = self.copy()
         if temporal_comps is not None:
             data._temps = temporal_comps
@@ -98,13 +100,16 @@ class DecompData:
             data = [data]
         if not overwrite:
             data = [self, *data]
-        self._df = pd.concat([d._df for d in data], axis=0)
+        self._df = pd.concat([d.frame for d in data], axis=0)
         time_offs = [0, *[ d.t_max for d in data ][:-1]]
-        self._starts = np.concatenate([d._starts + t for d,t in zip(data,time_offs)], axis=0)
-        self._temps = np.concatenate([d._temps for d in data], axis=0)
+        self._starts = np.concatenate([d.trial_starts + t for d,t in zip(data,time_offs)], axis=0)
+        self._temps = np.concatenate([d.temporals_flat for d in data], axis=0)
 
     def save(self, file ):
-        LOGGER.info(f"{self._allowed_overlap} has type {type(self._allowed_overlap)}")
+        '''
+        Save this DecompData object to file `file` as an h5
+        '''
+        LOGGER.info("%s has type %s", self._allowed_overlap, type(self._allowed_overlap))
         _ = save_h5( self, file, {"df"    : self._df,
                                         "temps" : self._temps,
                                         "spats" : self._spats,
@@ -117,6 +122,9 @@ class DecompData:
 
     @classmethod
     def load(cls, file, data_hash=None, try_loaded=False, logger=LOGGER):
+        '''
+        Load a saved DecompData object from an h5 file `file`
+        '''
         # use already loaded data object if possible, may save a lot of memory
         if try_loaded and data_hash is not None and data_hash in LOADED_DATA:
             data = LOADED_DATA[data_hash]
@@ -125,6 +133,7 @@ class DecompData:
                               labels=["df", "temps", "spats", "starts","overlap","labels",
                                       "mean","stdev"],
                               logger=logger)
+            # pylint: disable-next=unbalanced-tuple-unpacking
             _, data_frame, temps, spats, starts, allowed_overlap, spat_labels, mean, stdev = loaded
             data = cls(data_frame, temps, spats, starts, allowed_overlap=allowed_overlap,
                        spatial_labels=spat_labels, savefile=file, mean=mean, stdev=stdev,
@@ -134,30 +143,37 @@ class DecompData:
 
     @property
     def spatial_labels(self):
+        '''The labels given to individual spatial components, None if none are given'''
         return self._spat_labels
 
     @property
     def hash(self):
+        '''A hash calculated from the important components of this DecompData'''
         return reproducable_hash(tuple( hsh.digest() for hsh in (
                             self.df_hash, self.temps_hash, self.spats_hash, self.starts_hash)))
 
     @property
     def df_hash(self):
+        '''A hash calculated from the dataframe of this DecompData'''
         return reproducable_hash(self._df)
 
     @property
     def temps_hash(self):
+        '''A hash calculated from the temporal components of this DecompData'''
         return reproducable_hash(self._temps)
 
     @property
     def spats_hash(self):
+        '''A hash calculated from the spatial components of this DecompData'''
         return reproducable_hash(self._spats)
 
     @property
     def starts_hash(self):
+        '''A hash calculated from the trial start times of this DecompData'''
         return reproducable_hash(self._starts)
 
     def check_hashes(self, hashes, warn=True ):
+        '''Compares all hashes of this object with those given by `hashes`'''
         if reproducable_hash(tuple( hsh for hsh in hashes)).digest() == self.hash.digest():
             return True
         if warn:
@@ -187,27 +203,32 @@ class DecompData:
 
     @property
     def n_components(self):
+        '''The number of components the data is decomposed into'''
         return self._spats.shape[0]
 
     @property
     def n_xaxis(self):
+        '''The width of the spatials in the x axis'''
         return self._spats.shape[1]
 
     @property
     def n_yaxis(self):
+        '''The width of the spatials in the y axis'''
         return self._spats.shape[2]
 
     @property
     def t_max(self):
+        '''The total length of temporal dimension'''
         return self._temps.shape[0]
 
     @property
     def trials_n(self):
-        ''' Returns number of trials'''
+        ''' The number of trials'''
         return self._df.shape[0]
 
     @property
     def frame(self):
+        '''The pandas DataFrame containing the trial data'''
         return self._df
 
     #TODO both temporals only work for decompdata objects where phases have been applied to cut
@@ -248,7 +269,15 @@ class DecompData:
 
     @property
     def spatials(self):
+        '''Get spatial components of DecompData object'''
         return self._spats
+
+    @property
+    def trial_starts(self):
+        '''
+        Get the trial start times of DecompData object
+        '''
+        return self._starts
 
     class PixelSlice:
         '''
@@ -307,12 +336,16 @@ class DecompData:
         except NotImplementedError:
             data_frame = self._df.loc[keys[0]]
         spats = self._spats
-        # TODO implement this more robustly!
+
+        # TODO implement the resolution of key 1 more robustly!
         try:
             # if keys[1] is bool us it as mask on aranged array to create array of frames to keep
             assert np.array(keys[1]).dtype == bool
             trial_frames = np.array(np.arange(len(keys[1]))[keys[1]])
             #self.logger.debug(f"frames {trial_frames}")
+
+        # especially this needs a better solution!
+        # pylint: disable-next=bare-except
         except:
             try:
                 # else use it to slice from aranged array
@@ -397,14 +430,14 @@ class DecompData:
             return getattr( data_frame, attr ) == val
 
         select = True
-        for attr, val in conditions.items():
-            if isinstance(val,list):
+        for attr, cond_val in conditions.items():
+            if isinstance(cond_val,list):
                 any_matching = False
-                for v in val:
-                    any_matching = any_matching | check_attr(self._df, attr, v)
+                for val in cond_val:
+                    any_matching = any_matching | check_attr(self._df, attr, val)
                 select = select & any_matching
             else:
-                select = select & check_attr(self._df, attr, val)
+                select = select & check_attr(self._df, attr, cond_val)
         #if(np.any_matching(select)):
         return self[select]
         #else:
@@ -419,18 +452,25 @@ class DecompData:
         '''
         subject_ids = [s['subject_id'] for s in sessions]
         dates = [s['datetime'] for s in sessions]
-        def date_compare(d, date):
-            return np.array(d, dtype=date.dtype) == date
+        def date_compare(date, date_comp):
+            return np.array(date, dtype=date.dtype) == date_comp
         session_data = [self.get_conditional({'subject_id': subject_id})
                                                     for subject_id in subject_ids]
-        session_data = [data.get_conditional({'date_time' : lambda d, d_comp=date: date_compare(d,d_comp) })
+        session_data = [data.get_conditional({'date_time' : (
+                                lambda d, d_comp=date: date_compare(d,d_comp)) })
                                                     for date, data in zip(dates, session_data)]
         data = session_data[0]
         data.concat(session_data, overwrite=True)
-        data._df[self.dataset_id_column] = dataset_id
+        data.frame[self.dataset_id_column] = dataset_id
         return session_data[0]
 
+#TODO remove this class, it is really not necessary
 class ConditionalData:
+    '''
+    This class represents a container of conditioned DecompData objects,
+    keyed by the same keys as the conditions used to construct it
+    '''
+
     def __init__( self, data, conditions ):
         if isinstance( conditions, dict ):
             self._data = { key : data.get_conditional(cond) for key, cond in conditions.items() }
@@ -438,6 +478,7 @@ class ConditionalData:
             self._data = [ data.get_conditional(cond) for cond in conditions ]
 
     def keys(self):
+        '''Returns the keys this ConditionalData is indexed by'''
         if isinstance( self._data, dict ):
             return self._data.keys()
         return range(len(self._data))
