@@ -61,6 +61,7 @@ class Moup(Features):
         self._savefile = file
         self._time_resolved = time_resolved
 
+    @staticmethod
     def create(data, max_comps=None, timelag=None, label=None, start=None,stop=None,logger=LOGGER):
         if max_comps is not None:
             logger.warn("DEPRECATED: max_comps parameter in features can not garanty sensible choice of components, use n_components parameter for parcellations instead")

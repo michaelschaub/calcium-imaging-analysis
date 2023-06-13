@@ -3,7 +3,7 @@ import numpy as np
 import logging
 LOGGER = logging.getLogger(__name__)
 
-from ci_lib import Data, DecompData
+from ci_lib.data import DecompData, LOADED_DATA
 from ci_lib.loading import reproducable_hash, load_h5, save_h5
 
 import pathlib
@@ -19,6 +19,8 @@ class Feature_Type(Enum):
         return self.value == other.value
 
 class Features:
+    _type : Feature_Type
+
     def __init__(self, frame, data, feature, file=None, time_resolved=False, full = False):
         self.data = data
         self._df = frame
@@ -33,18 +35,17 @@ class Features:
 
     def flatten(self):
         '''flatten contained feature to one trial and one feature dimension'''
-        pass
 
 
-    def concat(self, Features, overwrite=False):
+    def concat(self, features, overwrite=False):
         ''' concats feature values from List of Features to this feature'''
-        if not isinstance(Features, list):
-            Features = [Features]
+        if not isinstance(features, list):
+            features = [features]
         print(self._feature.shape)
         if overwrite:
-            self._feature = np.concatenate([f._feature for f in Features],axis=0)
+            self._feature = np.concatenate([f.feature for f in features],axis=0)
         else:
-            self._feature = np.concatenate([self._feature,[f._feature for f in Features]],axis=0)
+            self._feature = np.concatenate([self._feature,[f.feature for f in features]],axis=0)
 
         print(self._feature.shape)
 
@@ -54,7 +55,7 @@ class Features:
             data = self.data
         feats = self.feature
         feat = np.empty((data.temporals_flat.shape[0], *feats.shape[1:]), dtype=float)
-        starts = list(data._starts)
+        starts = list(data.trial_starts)
         starts.append(-1)
         for i in range(len(starts) - 1):
             feat[starts[i]:starts[i + 1]] = feats[i]
@@ -107,13 +108,6 @@ class Features:
         return self
 
     @property
-    def mean(self):
-        '''
-        Create FeatureMean object taking trial means over selfs features
-        '''
-        return FeatureMean.create(self)
-
-    @property
     def hash(self):
         '''
         reproducable hashsum of features to compare with others
@@ -125,11 +119,11 @@ class Features:
     def data(self):
         '''
         data object from with this feature is computated,
-        is retrieved from Data.LOADED_DATA by hash or loaded from file, when not set directly
+        is retrieved from LOADED_DATA by hash or loaded from file, when not set directly
         '''
         if not hasattr(self, '_data'):
-            if hasattr(self, '_data_hash') and self._data_hash in Data.LOADED_DATA:
-                self._data = Data.LOADED_DATA[self._data_hash]
+            if hasattr(self, '_data_hash') and self._data_hash in LOADED_DATA:
+                self._data = LOADED_DATA[self._data_hash]
             elif hasattr(self, '_data_file'):
                 self._data = DecompData.load(self._data_file)
             else:
@@ -144,7 +138,7 @@ class Features:
         '''
         if hasattr(self, '_data'):
             raise AttributeError("Feature already has data object set.")
-        if isinstance( data, Data ):
+        if isinstance( data, DecompData ):
             self._data = data
             self._data_hash = data.hash.digest()
             self._data_file = data.savefile
@@ -199,17 +193,18 @@ class Features:
         self._savefile = file
 
     @classmethod
-    def load(Class, file, data_file=None, feature_hash=None, try_loaded=False):
+    def load(cls, file, data_file=None, feature_hash=None, try_loaded=False):
         if try_loaded and feature_hash is not None and feature_hash in Features.LOADED_FEATURES:
             feat = Features.LOADED_FEATURES[feature_hash]
         else:
+            # pylint: disable-next=unbalanced-tuple-unpacking
             h5_file, frame, feature, time_resolved = load_h5( file, labels=["df", "feature","time_resolved"] )
             data_hash = bytes.fromhex(h5_file.attrs["data_hash"])
-            if try_loaded and data_hash in Data.LOADED_DATA:
-                data = Data.LOADED_DATA[data_hash]
+            if try_loaded and data_hash in LOADED_DATA:
+                data = LOADED_DATA[data_hash]
             elif data_file is None:
                 data = h5_file.attrs["data_file"]
-            feat = Class(frame, data, feature, file, time_resolved=time_resolved)
+            feat = cls(frame, data, feature, file, time_resolved=time_resolved)
             feat.data_hash = bytes.fromhex(h5_file.attrs["data_hash"])
             Features.LOADED_FEATURES[feat.hash.digest()] = feat
         return feat
@@ -222,12 +217,14 @@ class Features:
 
     def plot(self, path):
         #Create empty fi    le if inheritingfeature class doesn't define a visualization
+        # pylint: disable-next=unspecified-encoding
         open(path, 'a').close()
 
 
 class Raws(Features):
     _type = Feature_Type.TIMESERIES
 
+    @staticmethod
     def create(data, max_comps=None, logger=LOGGER):
         if max_comps is not None:
             logger.warn("DEPRECATED: max_comps parameter in features can not garanty sensible choice of components, use n_components parameter for parcellations instead")
@@ -242,18 +239,23 @@ class Raws(Features):
     @property
     def pixel(self):
         return DecompData.PixelSlice(np.reshape(self._feature, (-1, *self._feature[2:])),
-                                     self.data._spats[:self._feature.shape[2]])
+                                     self.data.spatials[:self._feature.shape[2]])
 
     @property
     def ncomponents(self):
         return self._feature.shape[-1]
 
 
+#TODO Is this even needed?
 class FeatureMean(Features):
-    def create(base, logger=LOGGER):
+    def __init__(self, frame, data, feature, base, file=None, full=False):
+        super().__init__(frame=frame, data=data, feature=feature, file=file, full=full)
+        self._base_feature = base
+
+    @staticmethod
+    def create(base):
         feature = np.mean(base.feature, axis=0)[None,:].reshape((1, *base.feature.shape[1:]))
-        feat = FeatureMean(base.frame, base.data, feature )
-        feat._base_feature = base
+        feat = FeatureMean(base.frame, base.data, feature, base )
         return feat
 
     def flatten(self, feat=None):
@@ -261,29 +263,16 @@ class FeatureMean(Features):
             feat = self._feature
         return self._base_feature.flatten(self._feature)
 
-    @property
-    def pixel(self):
-        if isinstance(self._base_feature, Raws):
-            return DecompData.PixelSlice(np.reshape(self._feature, (self._feature.shape[1:])),
-                                         self._data._spats[:self._feature.shape[2]])
-        elif isinstance(self._base_feature, Means):
-            return DecompData.PixelSlice(self._feature,
-                                         self._data._spats[:self._feature.shape[1]])
-        else:
-            raise AttributeError
-
     def save(self, file, data_file=None):
         '''
         not yet implemented
         '''
-        pass
 
     @classmethod
-    def load(Class, file, data_file=None, feature_hash=None, try_loaded=False):
+    def load(cls, file, data_file=None, feature_hash=None, try_loaded=False):
         '''
         not yet implemented
         '''
-        pass
 
     @property
     def ncomponents(self):

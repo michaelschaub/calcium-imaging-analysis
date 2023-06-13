@@ -23,10 +23,11 @@ def flat_covs(covs, diagonal):
 class Covariances(Features):
     _type = Feature_Type.UNDIRECTED
 
-    def __init(self, frame, data, feature, file=None, include_diagonal=True):
-        super().__init(frame=frame, data=data, feature=feature, file=file)
+    def __init__(self, frame, data, feature, file=None, include_diagonal=True):
+        super().__init__(frame=frame, data=data, feature=feature, file=file)
         self._include_diagonal = include_diagonal
 
+    @staticmethod
     def create(data, means=None, max_comps=None, include_diagonal=True, logger=LOGGER):
         if max_comps is not None:
             logger.warn("DEPRECATED: max_comps parameter in features can not garanty sensible choice of components, use n_components parameter for parcellations instead")

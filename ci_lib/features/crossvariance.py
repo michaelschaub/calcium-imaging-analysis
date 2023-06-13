@@ -36,6 +36,7 @@ class AutoCovariances(Features):
         super().__init(frame=frame, data=data, feature=feature, file=file)
         self._include_diagonal = include_diagonal
 
+    @staticmethod
     def create(data, means=None, covs=None, max_comps=None, timelag=None, label = None, include_diagonal=True, logger=LOGGER):
 
         if timelag is None or timelag >= data.temporals.shape[1]:

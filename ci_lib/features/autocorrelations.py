@@ -17,6 +17,7 @@ def calc_acorrs(covs, acovs):
 class AutoCorrelations(Features):
     _type = Feature_Type.UNDIRECTED
 
+    @staticmethod
     def create(data, means=None, covs=None, acovs=None, max_comps=None, timelag=1, logger=LOGGER):
         if max_comps is not None:
             logger.warn("DEPRECATED: max_comps parameter in features can not garanty sensible choice of components, use n_components parameter for parcellations instead")
