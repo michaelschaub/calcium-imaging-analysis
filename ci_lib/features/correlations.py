@@ -5,7 +5,7 @@ This module contains the component correlations feature.
 import logging
 import numpy as np
 
-from .features import Features, Feature_Type
+from .features import Features, FeatureType
 from .means import Means, calc_means
 from .covariances import Covariances, calc_covs, flat_covs
 
@@ -23,7 +23,7 @@ class Correlations(Features):
     A feature containing the component correlations within single trials
     '''
 
-    _type = Feature_Type.UNDIRECTED
+    _type = FeatureType.UNDIRECTED
 
     @staticmethod
     def create(data, means=None, covs=None, max_comps=None, logger=LOGGER):

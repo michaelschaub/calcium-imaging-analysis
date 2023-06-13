@@ -13,7 +13,7 @@ from ci_lib.loading import reproducable_hash, load_h5, save_h5
 LOGGER = logging.getLogger(__name__)
 
 
-class Feature_Type(Enum):
+class FeatureType(Enum):
     '''
     An enum describing the structure and possible representation of a Feature object
     '''
@@ -30,7 +30,7 @@ class Features:
     Used as a base class for specific features, like temporal mean, covariance, etc.
     '''
 
-    _type : Feature_Type
+    _type : FeatureType
 
     def __init__(self, frame, data, feature, file=None, time_resolved=False, full = False):
         self.data = data
@@ -238,7 +238,7 @@ class Features:
     @property
     def type(self):
         '''
-        The Feature_Type of this feature
+        The FeatureType of this feature
         '''
         return self._type
 
@@ -255,7 +255,7 @@ class Raws(Features):
     '''
     A feature containing the whole raw timeseries as a np.array
     '''
-    _type = Feature_Type.TIMESERIES
+    _type = FeatureType.TIMESERIES
 
     @staticmethod
     def create(data, max_comps=None, logger=LOGGER):

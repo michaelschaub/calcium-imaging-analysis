@@ -7,7 +7,7 @@ import numpy as np
 
 from ci_lib.plotting import plot_connectivity_matrix
 
-from .features import Features, Feature_Type
+from .features import Features, FeatureType
 from .means import Means, calc_means
 from .covariances import Covariances, calc_covs, flat_covs
 
@@ -40,7 +40,7 @@ class AutoCovariances(Features):
     A feature containing the time-lagged auto-covariances within single trials
     '''
 
-    _type=Feature_Type.DIRECTED
+    _type=FeatureType.DIRECTED
 
     def __init__(self, frame, data, feature, file=None, include_diagonal=True):
         super().__init__(frame=frame, data=data, feature=feature, file=file)

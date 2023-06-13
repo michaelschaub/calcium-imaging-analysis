@@ -2,7 +2,7 @@ import logging
 import numpy as np
 import scipy.stats
 
-from .features import Features, Feature_Type
+from .features import Features, FeatureType
 from .means import Means, calc_means
 
 LOGGER = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ def flat_time_resolved_c(connectivity, diagonal,timepoints=slice(None)):
 
 
 class Cofluctuation(Features):
-    _type = Feature_Type.UNDIRECTED
+    _type = FeatureType.UNDIRECTED
 
     def __init__(self, frame, data, feature, file=None, include_diagonal=True, range=None, full=False):
         super().__init__(frame=frame, data=data, feature=feature, file=file,full=full)

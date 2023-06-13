@@ -1,1 +1,1 @@
-from .data import DecompData, Data
+from .data import DecompData

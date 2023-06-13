@@ -6,7 +6,7 @@ import logging
 import numpy as np
 
 from ci_lib import DecompData
-from .features import Features, Feature_Type
+from .features import Features, FeatureType
 
 LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class Means(Features):
     or rolling window with the trials
     '''
 
-    _type = Feature_Type.NODE
+    _type = FeatureType.NODE
 
     def __init__(self, frame, data, feature, file=None, time_resolved=False, full=False):
         super().__init__(frame=frame, data=data, feature=feature, file=file, full=full)

@@ -4,7 +4,7 @@ This module contains the feature classes calculated from DecompData objects.
 
 import importlib
 
-from .features import Feature_Type, Features, Raws
+from .features import FeatureType, Features, Raws
 from .means import Means
 from .covariances import Covariances
 from .correlations import Correlations

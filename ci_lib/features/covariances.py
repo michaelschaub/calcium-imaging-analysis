@@ -5,7 +5,7 @@ This module contains the component covariances feature.
 import logging
 import numpy as np
 
-from .features import Features, Feature_Type
+from .features import Features, FeatureType
 from .means import Means, calc_means
 
 LOGGER = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ class Covariances(Features):
     A feature containing the component covariances within single trials
     '''
 
-    _type = Feature_Type.UNDIRECTED
+    _type = FeatureType.UNDIRECTED
 
     def __init__(self, frame, data, feature, file=None, include_diagonal=True):
         super().__init__(frame=frame, data=data, feature=feature, file=file)

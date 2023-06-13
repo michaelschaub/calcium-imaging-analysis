@@ -5,7 +5,7 @@ This module contains the (time-lagged) auto-correlations feature.
 import logging
 import numpy as np
 
-from .features import Features, Feature_Type
+from .features import Features, FeatureType
 from .covariances import Covariances, flat_covs
 from .autocovariances import AutoCovariances
 
@@ -23,7 +23,7 @@ class AutoCorrelations(Features):
     A feature containing the time-lagged auto-correlations within single trials
     '''
 
-    _type = Feature_Type.UNDIRECTED
+    _type = FeatureType.UNDIRECTED
 
     @staticmethod
     def create(data, means=None, covs=None, acovs=None, max_comps=None, timelag=1, logger=LOGGER):

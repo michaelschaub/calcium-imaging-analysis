@@ -148,7 +148,10 @@ class DecompData:
 
     @property
     def hash(self):
-        '''A hash calculated from the important components of this DecompData'''
+        '''
+        A hash calculated from the important components of this DecompData
+        WARNING: MAY NOT WORK, STILL IN DEVELOPMENT
+        '''
         return reproducable_hash(tuple( hsh.digest() for hsh in (
                             self.df_hash, self.temps_hash, self.spats_hash, self.starts_hash)))
 

@@ -5,7 +5,7 @@ import math
 import matplotlib.pyplot as plt
 import matplotlib.colors as color
 
-from ci_lib.features import Feature_Type
+from ci_lib.features import FeatureType
 
 
 def construct_rfe_graph(selected_feats, n_nodes, feat_type, edge_weight=None, edge_alpha=None):
@@ -25,7 +25,7 @@ def construct_rfe_graph(selected_feats, n_nodes, feat_type, edge_weight=None, ed
 
 
         # matrices to retrieve input/output channels from connections in support network
-    mask = np.tri(n_nodes,n_nodes,0, dtype=bool) if feat_type == Feature_Type.UNDIRECTED else np.ones((n_nodes,n_nodes), dtype=bool)
+    mask = np.tri(n_nodes,n_nodes,0, dtype=bool) if feat_type == FeatureType.UNDIRECTED else np.ones((n_nodes,n_nodes), dtype=bool)
     row_ind = np.repeat(np.arange(n_nodes).reshape([n_nodes,-1]),n_nodes,axis=1)
     col_ind = np.repeat(np.arange(n_nodes).reshape([-1,n_nodes]),n_nodes,axis=0)
     row_ind = row_ind[mask]
@@ -34,7 +34,7 @@ def construct_rfe_graph(selected_feats, n_nodes, feat_type, edge_weight=None, ed
     default_color= 'gray'
     selected_color= 'yellow'
 
-    if feat_type == Feature_Type.NODE: # nodal
+    if feat_type == FeatureType.NODE: # nodal
         g = nx.Graph()
         for i in range(n_nodes):
             g.add_node(i)
@@ -45,8 +45,8 @@ def construct_rfe_graph(selected_feats, n_nodes, feat_type, edge_weight=None, ed
         node_attrs = {node: {"node_size" : 25} for node in g.nodes}
         nx.set_node_attributes(g, node_attrs)
 
-    if feat_type == Feature_Type.DIRECTED or feat_type == Feature_Type.UNDIRECTED:
-        g = nx.Graph() if feat_type == Feature_Type.UNDIRECTED else nx.MultiDiGraph()
+    if feat_type == FeatureType.DIRECTED or feat_type == FeatureType.UNDIRECTED:
+        g = nx.Graph() if feat_type == FeatureType.UNDIRECTED else nx.MultiDiGraph()
         for i in range(n_nodes):
             g.add_node(i)
             g.nodes[i]['selected'] = False
@@ -74,7 +74,7 @@ def construct_rfe_graph(selected_feats, n_nodes, feat_type, edge_weight=None, ed
         remove = [node for node,degree in dict(g.degree()).items() if degree == 0]
         g.remove_nodes_from(remove)
 
-        if feat_type == Feature_Type.DIRECTED:
+        if feat_type == FeatureType.DIRECTED:
             strong_comps = nx.weakly_connected_components(g)
         else:
             strong_comps = nx.connected_components(g)
@@ -92,7 +92,7 @@ def construct_rfe_graph(selected_feats, n_nodes, feat_type, edge_weight=None, ed
 
                 src, trg = edge
 
-                if feat_type == Feature_Type.DIRECTED:
+                if feat_type == FeatureType.DIRECTED:
                     g[src][trg][0]["edge_color"] = color.rgb2hex(plt.cm.tab20(i/len(generator_list)))
                 else:
                     g[src][trg]["edge_color"] = color.rgb2hex(plt.cm.tab20(i/len(generator_list)))

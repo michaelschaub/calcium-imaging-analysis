@@ -13,7 +13,7 @@ from enum import Enum
 import logging
 LOGGER = logging.getLogger(__name__)
 
-from .features import Features, Feature_Type
+from .features import Features, FeatureType
 
 def fit_moup(temps, tau, logger=LOGGER):
     mou_ests = np.empty((len(temps)),dtype=np.object_)
@@ -51,7 +51,7 @@ def recompose_mou_ests( attr_arrays, mou_ests=None ):
 '''
 
 class Moup(Features):
-    _type = Feature_Type.DIRECTED
+    _type = FeatureType.DIRECTED
 
     def __init(self, frame, data, feature, mou_ests, label=None, file=None,time_resolved=False):
         self.data = data
