@@ -1,3 +1,7 @@
+'''
+This module contains the temporal means feature.
+'''
+
 import logging
 import numpy as np
 
@@ -8,10 +12,16 @@ LOGGER = logging.getLogger(__name__)
 
 
 def calc_means(temps):
+    '''Calculate the temporal means from temporal components'''
     return np.mean(temps, axis=1) # average over frames
 
 
 class Means(Features):
+    '''
+    A feature containing the mean of the temporal components over whole trials
+    or rolling window with the trials
+    '''
+
     _type = Feature_Type.NODE
 
     def __init__(self, frame, data, feature, file=None, time_resolved=False, full=False):
@@ -22,6 +32,8 @@ class Means(Features):
     @staticmethod
     def create(data, max_comps=None, logger=LOGGER, window=None, start=None, stop=None,
                full=False,z_scored=True): #TODO z_score default ot False
+        '''Create this feature from a DecompData object'''
+
         if max_comps is not None:
             logger.warn("DEPRECATED: max_comps parameter in features can not guaranty \
 sensible choice of components, use n_components parameter for parcellations instead")
@@ -45,6 +57,9 @@ sensible choice of components, use n_components parameter for parcellations inst
         return feat
 
     def flatten(self, timepoints=slice(None), feat=None):
+        '''
+        Flattens the feature into one trial dimension and one dimension for everything else
+        '''
         if feat is None:
             feat = self._feature
 
@@ -55,8 +70,14 @@ sensible choice of components, use n_components parameter for parcellations inst
 
     @property
     def pixel(self):
+        '''
+        Creates PixelSlice object, from which slices of recomposed pixel data can be accessed
+        the first key is applied to the trials, the second and third to the horizontal
+        and vertical dimension of the spatials
+        '''
         return DecompData.PixelSlice(self._feature, self.data.spatials[:self._feature.shape[1]])
 
     @property
     def ncomponents(self):
+        '''The number of components the data is decomposed into'''
         return self._feature.shape[-1]

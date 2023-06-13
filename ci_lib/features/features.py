@@ -1,3 +1,7 @@
+'''
+This module contains the some base classes for handling features calculated from DecompData objects.
+'''
+
 import logging
 import pathlib
 from enum import Enum
@@ -10,6 +14,9 @@ LOGGER = logging.getLogger(__name__)
 
 
 class Feature_Type(Enum):
+    '''
+    An enum describing the structure and possible representation of a Feature object
+    '''
     NODE = 0
     UNDIRECTED = 1
     DIRECTED = 2
@@ -18,6 +25,11 @@ class Feature_Type(Enum):
         return self.value == other.value
 
 class Features:
+    '''
+    A class containing a feature calculated from a DecompData object
+    Used as a base class for specific features, like temporal mean, covariance, etc.
+    '''
+
     _type : Feature_Type
 
     def __init__(self, frame, data, feature, file=None, time_resolved=False, full = False):
@@ -40,13 +52,13 @@ class Features:
         ''' concats feature values from List of Features to this feature'''
         if not isinstance(features, list):
             features = [features]
-        print(self._feature.shape)
+        LOGGER.info(self._feature.shape)
         if overwrite:
             self._feature = np.concatenate([f.feature for f in features],axis=0)
         else:
             self._feature = np.concatenate([self._feature,[f.feature for f in features]],axis=0)
 
-        print(self._feature.shape)
+        LOGGER.info(self._feature.shape)
 
     def expand(self, data=None):
         '''expand feature into same shape as temporals in Data (for computation)'''
@@ -62,6 +74,7 @@ class Features:
 
     @property
     def frame(self):
+        '''The pandas DataFrame containing the trial data'''
         return self._df
 
     @frame.setter
@@ -70,6 +83,7 @@ class Features:
 
     @property
     def feature(self):
+        '''The contained feature data, should be a numpy array'''
         return self._feature
 
     @feature.setter
@@ -78,13 +92,13 @@ class Features:
 
     @property
     def trials_n(self):
-        ''' Returns number of trials, the first dimension of the feature array'''
+        ''' The number of trials, the first dimension of the feature array'''
         return self._feature.shape[0]
 
     @property
     def timepoints(self):
         '''
-        Returns number of frames, the second dimension of the feature array,
+        The number of frames, the second dimension of the feature array,
         if it is time resolved and not full (decode timepoints together), otherwise None
         '''
         if self._time_resolved and not self._full:
@@ -93,6 +107,8 @@ class Features:
 
     @property
     def is_time_resolved(self):
+        #TODO fill this out
+        '''Not sure why we have this'''
         return self._time_resolved
 
     def subsample(self,size,seed=None):
@@ -153,6 +169,7 @@ class Features:
 
     @property
     def data_hash(self):
+        '''The hash of the underlying DecompData object'''
         if not hasattr(self, '_data'):
             return self._data_hash
         return self._data.hash.digest()
@@ -166,6 +183,7 @@ class Features:
 
     @property
     def data_file(self):
+        '''The file where the underlying DecompData object is saved, if any'''
         if not hasattr(self, '_data'):
             return self._data_file
         return self._data.savefile
@@ -180,6 +198,7 @@ class Features:
 
     def save(self, file, data_file=None):
         '''
+        Save this Feature object to file `file` as an h5
         '''
         h5_file = save_h5( self, file, { "df": self._df, "feature": self._feature,
                                         "time_resolved":np.asarray(self._time_resolved) } )
@@ -195,6 +214,9 @@ class Features:
 
     @classmethod
     def load(cls, file, data_file=None, feature_hash=None, try_loaded=False):
+        '''
+        Loads a saved Feature object from file `file`
+        '''
         if try_loaded and feature_hash is not None and feature_hash in Features.LOADED_FEATURES:
             feat = Features.LOADED_FEATURES[feature_hash]
         else:
@@ -215,19 +237,29 @@ class Features:
 
     @property
     def type(self):
+        '''
+        The Feature_Type of this feature
+        '''
         return self._type
 
     def plot(self, path):
+        '''
+        Plots the feature into `path`, only creates the file if not implemented
+        '''
         #Create empty file if inheriting feature class doesn't define a visualization
         # pylint: disable-next=consider-using-with, disable-next=unspecified-encoding
         open(path, 'a').close()
 
 
 class Raws(Features):
+    '''
+    A feature containing the whole raw timeseries as a np.array
+    '''
     _type = Feature_Type.TIMESERIES
 
     @staticmethod
     def create(data, max_comps=None, logger=LOGGER):
+        '''Create this feature from a DecompData object'''
         if max_comps is not None:
             logger.warn("DEPRECATED: max_comps parameter in features can not guaranty \
 sensible choice of components, use n_components parameter for parcellations instead")
@@ -235,33 +267,49 @@ sensible choice of components, use n_components parameter for parcellations inst
         return feat
 
     def flatten(self, feat=None):
+        '''
+        Flattens the feature into one trial dimension and one dimension for everything else
+        '''
         if feat is None:
             feat = self._feature
         return np.reshape(feat, (feat.shape[0], -1))
 
     @property
     def pixel(self):
+        '''
+        Creates PixelSlice object, from which slices of recomposed pixel data can be accessed
+        the first key is applied to the timepoints, the second and third to the horizontal
+        and vertical dimension of the spatials
+        '''
         return DecompData.PixelSlice(np.reshape(self._feature, (-1, *self._feature[2:])),
                                      self.data.spatials[:self._feature.shape[2]])
 
     @property
     def ncomponents(self):
+        '''The number of components the data is decomposed into'''
         return self._feature.shape[-1]
 
 
 #TODO Is this even needed?
 class FeatureMean(Features):
+    '''
+    A derived feature class containing the trial average of another feature
+    '''
     def __init__(self, frame, data, feature, base, file=None, full=False):
         super().__init__(frame=frame, data=data, feature=feature, file=file, full=full)
         self._base_feature = base
 
     @staticmethod
     def create(base):
+        '''Create this feature mean from a base feature'''
         feature = np.mean(base.feature, axis=0)[None,:].reshape((1, *base.feature.shape[1:]))
         feat = FeatureMean(base.frame, base.data, feature, base )
         return feat
 
     def flatten(self, feat=None):
+        '''
+        Flattens the feature into one trial dimension and one dimension for everything else
+        '''
         if feat is None:
             feat = self._feature
         return self._base_feature.flatten(self._feature)
@@ -279,4 +327,5 @@ class FeatureMean(Features):
 
     @property
     def ncomponents(self):
+        '''The number of components the data is decomposed into'''
         return self._feature.shape[-1]

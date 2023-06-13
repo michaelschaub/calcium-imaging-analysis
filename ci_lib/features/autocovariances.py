@@ -1,3 +1,7 @@
+'''
+This module contains the (time-lagged) auto-covariances feature.
+'''
+
 import logging
 import numpy as np
 
@@ -11,6 +15,10 @@ LOGGER = logging.getLogger(__name__)
 
 
 def calc_acovs(temps, means, covs, n_tau_range):
+    '''
+    Calculate the auto-covariances from temporal components, means
+    and covariances (avoid duplicate calculation)
+    '''
     n_taus = np.array(n_tau_range)
     temps = temps - means[:, None, :]
     trials, n_frames, comps = temps.shape
@@ -28,6 +36,10 @@ def calc_acovs(temps, means, covs, n_tau_range):
 
 
 class AutoCovariances(Features):
+    '''
+    A feature containing the time-lagged auto-covariances within single trials
+    '''
+
     _type=Feature_Type.DIRECTED
 
     def __init__(self, frame, data, feature, file=None, include_diagonal=True):
@@ -37,6 +49,8 @@ class AutoCovariances(Features):
     @staticmethod
     def create(data, means=None, covs=None, max_comps=None, timelag=1, include_diagonal=True,
                logger=LOGGER):
+        '''Create this feature from a DecompData object'''
+
         if max_comps is not None:
             logger.warning("DEPRECATED: max_comps parameter in features can not guaranty \
 sensible choice of components, use n_components parameter for parcellations instead")
@@ -63,6 +77,9 @@ removing too large timelags!")
         return feat
 
     def flatten(self, feat=None):
+        '''
+        Flattens the feature into one trial dimension and one dimension for everything else
+        '''
         if feat is None:
             feat = self._feature
         return np.concatenate(
@@ -72,6 +89,7 @@ removing too large timelags!")
 
     @property
     def ncomponents(self):
+        '''The number of components the data is decomposed into'''
         return self._feature.shape[-1]
 
     def plot(self,path):
@@ -79,4 +97,3 @@ removing too large timelags!")
         plot_connectivity_matrix(
                 [np.mean(self._feature,axis=0)[0],np.std(self._feature,axis=0)[0]],
                 title="mean|std",path=path)
-

@@ -1,3 +1,7 @@
+'''
+This module contains the component correlations feature.
+'''
+
 import logging
 import numpy as np
 
@@ -9,15 +13,22 @@ LOGGER = logging.getLogger(__name__)
 
 
 def calc_corrs(covs):
+    '''Calculate the component correlations from covariances'''
     var = np.diagonal(covs, axis1=1, axis2=2)
     sig = np.sqrt(var)
     return (covs / sig[:,:,None]) / sig[:,None,:]
 
 class Correlations(Features):
+    '''
+    A feature containing the component correlations within single trials
+    '''
+
     _type = Feature_Type.UNDIRECTED
 
     @staticmethod
     def create(data, means=None, covs=None, max_comps=None, logger=LOGGER):
+        '''Create this feature from a DecompData object'''
+
         if max_comps is not None:
             logger.warn("DEPRECATED: max_comps parameter in features can not guaranty \
 sensible choice of components, use n_components parameter for parcellations instead")
@@ -34,10 +45,14 @@ sensible choice of components, use n_components parameter for parcellations inst
         return feat
 
     def flatten(self, feat=None):
+        '''
+        Flattens the feature into one trial dimension and one dimension for everything else
+        '''
         if feat is None:
             feat = self._feature
         return flat_covs(feat, diagonal=False)
 
     @property
     def ncomponents(self):
+        '''The number of components the data is decomposed into'''
         return self._feature.shape[-1]

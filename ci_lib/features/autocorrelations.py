@@ -1,3 +1,7 @@
+'''
+This module contains the (time-lagged) auto-correlations feature.
+'''
+
 import logging
 import numpy as np
 
@@ -9,15 +13,22 @@ LOGGER = logging.getLogger(__name__)
 
 
 def calc_acorrs(covs, acovs):
+    '''Calculate the auto-correlations from covariances and auto-covariances'''
     var = np.diagonal(covs, axis1=1, axis2=2)
     sig = np.sqrt(var)
     return (acovs / sig[:,None,:,None]) / sig[:,None,None,:]
 
 class AutoCorrelations(Features):
+    '''
+    A feature containing the time-lagged auto-correlations within single trials
+    '''
+
     _type = Feature_Type.UNDIRECTED
 
     @staticmethod
     def create(data, means=None, covs=None, acovs=None, max_comps=None, timelag=1, logger=LOGGER):
+        '''Create this feature from a DecompData object'''
+
         if max_comps is not None:
             logger.warn("DEPRECATED: max_comps parameter in features can not guaranty \
 sensible choice of components, use n_components parameter for parcellations instead")
@@ -36,6 +47,9 @@ sensible choice of components, use n_components parameter for parcellations inst
         return feat
 
     def flatten(self, feat=None):
+        '''
+        Flattens the feature into one trial dimension and one dimension for everything else
+        '''
         if feat is None:
             feat = self._feature
         return np.concatenate(
@@ -44,4 +58,5 @@ sensible choice of components, use n_components parameter for parcellations inst
 
     @property
     def ncomponents(self):
+        '''The number of components the data is decomposed into'''
         return self._feature.shape[-1]
