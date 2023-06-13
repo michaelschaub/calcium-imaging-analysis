@@ -34,7 +34,7 @@ class Covariances(Features):
         if means is None:
             means = calc_means(data.temporals[:, :, :max_comps])
         elif isinstance(means, Means):
-            means = means._feature
+            means = means.feature
         feature = calc_covs(data.temporals[:, :, :max_comps], means)
         feat = Covariances(data.frame, data, feature, include_diagonal=include_diagonal)
         return feat

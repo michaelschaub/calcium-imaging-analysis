@@ -24,10 +24,10 @@ class Correlations(Features):
             if means is None:
                 means = calc_means(data.temporals[:, :, :max_comps])
             elif isinstance(means, Means):
-                means = means._feature
+                means = means.feature
             covs = calc_covs(data.temporals[:, :, :max_comps], means)
         elif isinstance(covs, Covariances):
-            covs = np.copy(covs._feature)
+            covs = np.copy(covs.feature)
         feature = calc_corrs(covs)
         feat = Correlations(data.frame, data, feature)
         return feat

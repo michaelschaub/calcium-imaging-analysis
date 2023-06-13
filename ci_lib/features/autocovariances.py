@@ -37,11 +37,11 @@ class AutoCovariances(Features):
     @staticmethod
     def create(data, means=None, covs=None, max_comps=None, timelag=1, include_diagonal=True, logger=LOGGER):
         if max_comps is not None:
-            logger.warn("DEPRECATED: max_comps parameter in features can not garanty sensible choice of components, use n_components parameter for parcellations instead")
+            logger.warning("DEPRECATED: max_comps parameter in features can not garanty sensible choice of components, use n_components parameter for parcellations instead")
 
         timelags = np.asarray(timelag, dtype=int).reshape(-1)
         if np.max(timelags) >= data.temporals.shape[1]:
-            logger.warn("AutoCovariances with timelag exceeding length of data found, removing too large timelags!")
+            logger.warning("AutoCovariances with timelag exceeding length of data found, removing too large timelags!")
             timelags = timelags[timelags >= data.temporals.shape[1]]
         if len(timelags) == 0:
             raise ValueError
@@ -49,11 +49,11 @@ class AutoCovariances(Features):
         if means is None:
             means = calc_means(data.temporals[:, :, :max_comps])
         elif isinstance(means, Means):
-            means = means._feature
+            means = means.feature
         if covs is None:
             covs = calc_covs(data.temporals[:, :, :max_comps], means)
         elif isinstance(covs, Covariances):
-            covs = np.copy(covs._feature)
+            covs = np.copy(covs.feature)
 
         feature = calc_acovs(data.temporals[:, :, :max_comps], means, covs, timelags)
         feat = AutoCovariances(data.frame, data, feature, include_diagonal= include_diagonal)
