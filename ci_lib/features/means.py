@@ -1,10 +1,10 @@
+import logging
 import numpy as np
 
-import logging
-LOGGER = logging.getLogger(__name__)
-
-from .features import Features, Feature_Type
 from ci_lib import DecompData
+from .features import Features, Feature_Type
+
+LOGGER = logging.getLogger(__name__)
 
 
 def calc_means(temps):
@@ -20,20 +20,26 @@ class Means(Features):
 
 
     @staticmethod
-    def create(data, max_comps=None, logger=LOGGER, window=None, start=None, stop=None,full=False,z_scored=True): #TODO z_score default ot False
+    def create(data, max_comps=None, logger=LOGGER, window=None, start=None, stop=None,
+               full=False,z_scored=True): #TODO z_score default ot False
         if max_comps is not None:
-            logger.warn("DEPRECATED: max_comps parameter in features can not garanty sensible choice of components, use n_components parameter for parcellations instead")
+            logger.warn("DEPRECATED: max_comps parameter in features can not guaranty \
+sensible choice of components, use n_components parameter for parcellations instead")
         if window is None:
-            feat = Means(data.frame, data, feature=calc_means(data.temporals[:, slice(start,stop), :max_comps])[:,np.newaxis,:])  #TODO start:stop should be supported by window as well
+            #TODO start:stop should be supported by window as well
+            feat = Means(data.frame, data, feature=calc_means(
+                            data.temporals[:, slice(start,stop), :max_comps])[:,np.newaxis,:])
         else:
-            trials , phase_length, comps  =   data.temporals[:, slice(start,stop), :max_comps].shape
+            trials, phase_length, comps = data.temporals[:, slice(start,stop), :max_comps].shape
             windows = [range(i,i+window) for i in range(0,phase_length-window+1)]
 
             feat_val = np.zeros((trials,len(windows),comps if max_comps is None else max_comps))
-            for w,window in enumerate(windows):
-                feat_val[:,w,:] = calc_means(data.temporals[:, slice(start,stop), :][:, window, :max_comps] if not z_scored else data.temporals_z_scored[:, slice(start,stop), :][:, window, :max_comps])
-
-                
+            for w_indx,window in enumerate(windows):
+                if not z_scored:
+                    temps = data.temporals[:, slice(start,stop), :][:, window, :max_comps]
+                else:
+                    temps = data.temporals_z_scored[:, slice(start,stop), :][:, window, :max_comps]
+                feat_val[:,w_indx,:] = calc_means(temps)
             feat = Means(data.frame, data, feature=feat_val, time_resolved=True,full=full)
 
         return feat

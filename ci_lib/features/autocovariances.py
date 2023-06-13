@@ -1,13 +1,13 @@
+import logging
 import numpy as np
 
-import logging
-LOGGER = logging.getLogger(__name__)
+from ci_lib.plotting import plot_connectivity_matrix
 
 from .features import Features, Feature_Type
 from .means import Means, calc_means
 from .covariances import Covariances, calc_covs, flat_covs
 
-from ci_lib.plotting import plot_connectivity_matrix
+LOGGER = logging.getLogger(__name__)
 
 
 def calc_acovs(temps, means, covs, n_tau_range):
@@ -35,13 +35,16 @@ class AutoCovariances(Features):
         self._include_diagonal = include_diagonal
 
     @staticmethod
-    def create(data, means=None, covs=None, max_comps=None, timelag=1, include_diagonal=True, logger=LOGGER):
+    def create(data, means=None, covs=None, max_comps=None, timelag=1, include_diagonal=True,
+               logger=LOGGER):
         if max_comps is not None:
-            logger.warning("DEPRECATED: max_comps parameter in features can not garanty sensible choice of components, use n_components parameter for parcellations instead")
+            logger.warning("DEPRECATED: max_comps parameter in features can not guaranty \
+sensible choice of components, use n_components parameter for parcellations instead")
 
         timelags = np.asarray(timelag, dtype=int).reshape(-1)
         if np.max(timelags) >= data.temporals.shape[1]:
-            logger.warning("AutoCovariances with timelag exceeding length of data found, removing too large timelags!")
+            logger.warning("AutoCovariances with timelag exceeding length of data found, \
+removing too large timelags!")
             timelags = timelags[timelags >= data.temporals.shape[1]]
         if len(timelags) == 0:
             raise ValueError
@@ -62,12 +65,18 @@ class AutoCovariances(Features):
     def flatten(self, feat=None):
         if feat is None:
             feat = self._feature
-        return np.concatenate((flat_covs(feat[:, 0],diagonal=self._include_diagonal), feat[:, 1:].reshape((feat.shape[0], -1))), axis=1)
+        return np.concatenate(
+                (flat_covs(feat[:, 0],
+                           diagonal=self._include_diagonal),
+                 feat[:, 1:].reshape((feat.shape[0], -1))), axis=1)
 
     @property
     def ncomponents(self):
         return self._feature.shape[-1]
 
     def plot(self,path):
-        plot_connectivity_matrix([np.mean(self._feature,axis=0)[0],np.std(self._feature,axis=0)[0]],title="mean|std",path=path) #TODO why is it trial x 1 (?) x w x h
+        #TODO why is it trial x 1 (?) x w x h
+        plot_connectivity_matrix(
+                [np.mean(self._feature,axis=0)[0],np.std(self._feature,axis=0)[0]],
+                title="mean|std",path=path)
 

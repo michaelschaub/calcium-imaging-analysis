@@ -1,11 +1,11 @@
+import logging
 import numpy as np
 import scipy.stats
 
-import logging
-LOGGER = logging.getLogger(__name__)
-
 from .features import Features, Feature_Type
 from .means import Means, calc_means
+
+LOGGER = logging.getLogger(__name__)
 
 
 def calc_covs(temps, means):

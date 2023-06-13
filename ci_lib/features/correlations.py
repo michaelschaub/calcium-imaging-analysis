@@ -1,11 +1,11 @@
-import numpy as np
-
 import logging
-LOGGER = logging.getLogger(__name__)
+import numpy as np
 
 from .features import Features, Feature_Type
 from .means import Means, calc_means
 from .covariances import Covariances, calc_covs, flat_covs
+
+LOGGER = logging.getLogger(__name__)
 
 
 def calc_corrs(covs):
@@ -19,7 +19,8 @@ class Correlations(Features):
     @staticmethod
     def create(data, means=None, covs=None, max_comps=None, logger=LOGGER):
         if max_comps is not None:
-            logger.warn("DEPRECATED: max_comps parameter in features can not garanty sensible choice of components, use n_components parameter for parcellations instead")
+            logger.warn("DEPRECATED: max_comps parameter in features can not guaranty \
+sensible choice of components, use n_components parameter for parcellations instead")
         if covs is None:
             if means is None:
                 means = calc_means(data.temporals[:, :, :max_comps])
