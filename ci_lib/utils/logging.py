@@ -19,22 +19,22 @@ def start_log(snakemake):
                 format="{asctime} {name}: {levelname}: {message}", datefmt="%b %d %H:%M:%S",
                 level=LOGLEVELS[snakemake.config["loglevel"]])
     logger = logging.getLogger(f"{snakemake.rule}")
-    logger.info(f"Start of rule")
-    logger.info(f"Loglevel: {logger.getEffectiveLevel()}")
+    logger.info("Start of rule")
+    logger.info("Loglevel: %s", logger.getEffectiveLevel())
     return logger
 
-class StreamToLogger(object):
+class StreamToLogger:
     """
     Fake file-like stream object that redirects writes to a logger instance.
     """
     def __init__(self, logger, level):
-       self.logger = logger
-       self.level = level
-       self.linebuf = ''
+        self.logger = logger
+        self.level = level
+        self.linebuf = ''
 
     def write(self, buf):
-       for line in buf.rstrip().splitlines():
-          self.logger.log(self.level, line.rstrip())
+        for line in buf.rstrip().splitlines():
+            self.logger.log(self.level, line.rstrip())
 
     def flush(self):
         pass
