@@ -1,3 +1,7 @@
+'''
+Contains various utility functions to be used in snakemake workflow scripts
+'''
+
 import datetime
 import logging
 import resource
@@ -9,6 +13,10 @@ import yaml
 import numpy
 
 def load_wildcards(snakemake):
+    '''
+    Loads wildcards from a saved config yaml file
+    Currently not used
+    '''
     wildcards = []
     for path in snakemake.input["config"]:
         with open(path, "r", encoding='utf-8') as file:
@@ -16,6 +24,9 @@ def load_wildcards(snakemake):
 
 
 def save_conf(snakemake, sections, params=None, additional_config=None):
+    '''
+    Saves the given sections of the snakemake config and snakemake params into a yaml
+    '''
     if params is None:
         params = []
     config = { 'static_params' : {}, 'branch_opts' : {} }
@@ -35,6 +46,9 @@ def save_conf(snakemake, sections, params=None, additional_config=None):
         yaml.dump(config, conf_file)
 
 def save(snakemake, path, data):
+    '''
+    Saves `data` into `path` in a format specified by the extension of `path`
+    '''
     if isinstance(data, numpy.ndarray):
         ext = snakemake.config['export_type']
         if ext == 'csv':
@@ -50,6 +64,9 @@ def save(snakemake, path, data):
             pickle.dump(data, file)
 
 def load(snakemake, path, dtype="float"):
+    '''
+    Loads data from a file saved into `path` in a format specified by the extension of `path`
+    '''
     _ , file_extension = os.path.splitext(path)
     ext = file_extension
     if ext=='.csv':
@@ -63,6 +80,10 @@ def load(snakemake, path, dtype="float"):
     raise ValueError("Unrecognised file extension")
 
 def match_conf(snakemake, sections):
+    '''
+    Matches the given sections of the snakemake config
+    to a saved yaml file specified as snakemake input
+    '''
     with open( snakemake.input["config"], 'r', encoding='utf-8') as conf_file:
         config = yaml.safe_load(conf_file)
     for sec in sections:
@@ -77,6 +98,10 @@ def match_conf(snakemake, sections):
     return True
 
 def check_conf(snakemake, sections, logger=None):
+    '''
+    Checks if the given sections of the snakemake config match
+    the config file specified as snakemake input
+    '''
     if not match_conf(snakemake, sections=sections):
         if snakemake.config["different_config_inputs"] == 0:
             raise ValueError("Config used to generate input does not match current config!")
@@ -84,17 +109,24 @@ def check_conf(snakemake, sections, logger=None):
             logger.warning("Config used to generate input does not match current config!")
 
 def start_timer():
+    '''Returns the current datetime, to be used with `stop_timer`'''
     return datetime.datetime.now()
 
 def stop_timer(start, logger=None, silent=False):
+    '''
+    Takes a start datetime and returns the elapsed time,
+    if not `silent` also logs this time delta
+    '''
     delta = datetime.datetime.now() - start
     if not silent:
         (logging.getLogger(__name__) if logger is None else logger).info("Finished after %s", delta)
     return delta.total_seconds()
 
 def limit_memory(snakemake, soft=True):
+    '''
+    Sets the python resource memory rlimit to the snakemake mem_mib resource limit
+    '''
     soft, hard = resource.getrlimit(resource.RLIMIT_AS)
-
 
     if soft:
         soft = snakemake.resources['mem_mib']*1024*1024
