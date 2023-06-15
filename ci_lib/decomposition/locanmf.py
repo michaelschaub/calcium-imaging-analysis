@@ -1,3 +1,8 @@
+'''
+This module contains the locaNMF function for calculating a locaNMF decomposed DecompData
+from a SVD DecompData object
+'''
+
 import logging
 import sys
 import scipy.io as sio
@@ -40,19 +45,25 @@ def locaNMF(data, atlas_path, logger=LOGGER,
     :param atlas_path: Path to Dict containing the Brain Atlas (TODO Specify Format)
     :type atlas_path: String or pathlib.Path or None
 
-    :param minrank: how many components per brain region. Set maxrank to around 10 for regular dataset.
-    :param maxrank: how many components per brain region. Set maxrank to around 10 for regular dataset.
+    :param minrank: how many components per brain region.
+    :param maxrank: how many components per brain region.
+                    Set maxrank to around 10 for regular dataset.
     :param min_pixels: minimum number of pixels in Allen map for it to be considered a brain region
-    :param loc_thresh: Localization threshold, i.e. percentage of area restricted to be inside the 'Allen boundary
+    :param loc_thresh: Localization threshold, i.e. percentage of area restricted
+                       to be inside the 'Allen boundary
     :param r2_thresh: Fraction of variance in the data to capture with LocaNMF
-    :param nonnegative_temporal: Do you want nonnegative temporal components? The data itself should also be nonnegative in this case.
+    :param nonnegative_temporal: Do you want nonnegative temporal components?
+                                 The data itself should also be nonnegative in this case.
 
     :param logger: The LOGGER object that all console outputs are piped into
     :type logger: LOGGER
 
-    :return: DecompData object with Data-driven Spatials constrained to the Brain Regions in the Atlas.
+    :return: DecompData object with Data-driven Spatials constrained
+             to the Brain Regions in the Atlas.
     :rtype: DecompData
     """
+    # pylint: disable=invalid-name
+
     stdout = sys.stdout
     stderr = sys.stderr
     sys.stdout = StreamToLogger(logger,logging.INFO)
@@ -67,12 +78,12 @@ def locaNMF(data, atlas_path, logger=LOGGER,
 
     temporals = data.temporals_flat
     spatials = np.moveaxis(np.nan_to_num(data.spatials), 0, -1 )
-    
+
     #TODO remove after testing
     #Testing if adding random noise fixes error on empty areas (with no variation)
-    print(f"Before {np.var(spatials,axis=0)}")
-    spatials = spatials + np.random.rand(*spatials.shape) * 16 * np.finfo(np.float32).eps 
-    print(f"After {np.var(spatials,axis=0)}")
+    logger.info("Before %s", np.var(spatials,axis=0))
+    spatials = spatials + np.random.rand(*spatials.shape) * 16 * np.finfo(np.float32).eps
+    logger.info("After %s", np.var(spatials,axis=0))
 
     width = min(data.n_xaxis, brainmask.shape[0])
     height = min(data.n_yaxis, brainmask.shape[1])
@@ -84,8 +95,8 @@ def locaNMF(data, atlas_path, logger=LOGGER,
     brainmask &= nan_mask
 
     atlas = np.zeros((width,height), dtype=float)
-    for i,a in enumerate(atlas_msk):
-        atlas[a] = i
+    for i,atl in enumerate(atlas_msk):
+        atlas[atl] = i
 
     # region_mats[0] = [unique regions x pixels] the mask of each region
     # region_mats[1] = [unique regions x pixels] the distance penalty of each region
@@ -96,6 +107,8 @@ def locaNMF(data, atlas_path, logger=LOGGER,
                                             region_mats[0].shape[1:],
                                             device=DEVICE)
 
+    # pylint does not find torch.from_numpy, so this is the workaround
+    # pylint: disable=no-member
     region_metadata.set(torch.from_numpy(region_mats[0].astype(np.uint8)),
                         torch.from_numpy(region_mats[1]),
                         torch.from_numpy(region_mats[2].astype(np.int64)))
@@ -119,6 +132,7 @@ def locaNMF(data, atlas_path, logger=LOGGER,
 
     low_rank_video.set(torch.from_numpy(video_mats[0].T),
                         torch.from_numpy(video_mats[1]))
+    # pylint: enable=no-member
 
     locanmf_comps = LocaNMF.rank_linesearch(low_rank_video,
                                             region_metadata,
@@ -162,7 +176,7 @@ def locaNMF(data, atlas_path, logger=LOGGER,
     max_len = max(len(l) for l in labels)
     n_region = [ (regions == i).sum() for i in range(len(labels))]
     max_len += 1 + len(str(max(n_region)))
-    new_labels = np.empty_like(regions, dtype="<U{}".format(max_len))
+    new_labels = np.empty_like(regions, dtype=f"<U{max_len}")
     logger.debug("1_region %s", (regions == 1))
     logger.debug("n_region %s", n_region)
     i_region = np.zeros_like(labels, dtype=int)
@@ -170,7 +184,7 @@ def locaNMF(data, atlas_path, logger=LOGGER,
         if n_region[r] == 1:
             new_labels[i] = labels[r]
         else:
-            new_labels[i] = "{}#{}".format(labels[r],i_region[r])
+            new_labels[i] = f"{labels[r]}#{i_region[r]}"
             logger.debug(f"{labels[r]}#{i_region[r]}")
             i_region[r] += 1
     logger.debug("dtype new_labels %s", new_labels.dtype)
