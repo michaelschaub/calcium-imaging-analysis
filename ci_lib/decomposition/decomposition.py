@@ -1,12 +1,12 @@
+import logging
 from pathlib import Path
 import scipy.io
 import numpy as np
 from sklearn.decomposition import FastICA
 
-import logging
 LOGGER = logging.getLogger(__name__)
 
-def anatomical_parcellation(data, atlas_path=None, ROI=[], logger=LOGGER, ):
+def anatomical_parcellation(data, atlas_path=None, ROI=None, logger=LOGGER, ):
     '''
     Decomposes a DecompData object into a anatomical parcellation based on a Brain Atlas
 
@@ -34,7 +34,7 @@ def anatomical_parcellation(data, atlas_path=None, ROI=[], logger=LOGGER, ):
 
 
     #To load only ROI from of anatomical atlas
-    if ROI != [] and ROI !='':
+    if ROI is not None and ROI != [] and ROI !='':
         if isinstance(ROI,str):
             ROI = ROI.split(',')
         else:
@@ -55,7 +55,7 @@ def anatomical_parcellation(data, atlas_path=None, ROI=[], logger=LOGGER, ):
         if ind!=[]:
             spatials, labels = spatials[ind,:,:],labels[ind]
         else:
-            logger.warn("No ROI matched Atlas from "+",".join[ROI])
+            logger.warning("No ROI matched Atlas from %s", ",".join(ROI))
 
 
     #Filter according to labels
@@ -63,7 +63,6 @@ def anatomical_parcellation(data, atlas_path=None, ROI=[], logger=LOGGER, ):
     #    pass
 
     # Maps and Spats have slightly different dims
-    frames, _ = data.temporals_flat.shape
     n_svd , h, _ = data.spatials.shape
     n_segments , _ , w = spatials.shape
 
@@ -82,8 +81,12 @@ def anatomical_parcellation(data, atlas_path=None, ROI=[], logger=LOGGER, ):
     new_temporals = np.tensordot(data.temporals_flat, svd_segment_mean, 1)
     new_spatials = spatials
 
-    logger.info(f"NaNs in spatials: {np.isnan(new_spatials).any()}, NaNs in temporals: {np.isnan(new_temporals).any()}")
-    logger.info(f"0 Vars in spatials: {np.count_nonzero(np.var(new_spatials,axis=0))}, 0 Vars in temporals: {np.count_nonzero(np.var(new_temporals,axis=0)==0)}")
+    logger.info("NaNs in spatials: %s, NaNs in temporals: %s",
+                np.isnan(new_spatials).any(),
+                np.isnan(new_temporals).any())
+    logger.info("0 Vars in spatials: %s, 0 Vars in temporals: %s",
+                np.count_nonzero(np.var(new_spatials,axis=0)),
+                np.count_nonzero(np.var(new_temporals,axis=0)==0))
 
     return data.recreate(new_temporals,new_spatials, spatial_labels=labels)
 
