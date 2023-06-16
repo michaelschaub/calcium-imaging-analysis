@@ -162,7 +162,7 @@ class Features:
             self._data = data
             self._data_hash = data.hash.digest()
             self._data_file = data.savefile
-        elif isinstance(data) == bytes:
+        elif isinstance(data, bytes):
             self.data_hash = data
         else:
             try:
