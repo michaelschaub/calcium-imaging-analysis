@@ -6,6 +6,7 @@ import logging
 import pathlib
 from enum import Enum
 import numpy as np
+import pandas as pd
 
 from ci_lib.data import DecompData, LOADED_DATA
 from ci_lib.loading import reproducable_hash, load_h5, save_h5
@@ -34,7 +35,7 @@ class Features:
 
     def __init__(self, frame, data, feature, file=None, time_resolved=False, full = False):
         self.data = data
-        self._df = frame
+        self._df = frame.reset_index(drop=True)
         self._feature = feature
         self._savefile = file
 
@@ -55,8 +56,10 @@ class Features:
         LOGGER.info(self._feature.shape)
         if overwrite:
             self._feature = np.concatenate([f.feature for f in features],axis=0)
+            self._df = pd.concat([f._df for f in features]).reset_index(drop=True)
         else:
             self._feature = np.concatenate([self._feature,[f.feature for f in features]],axis=0)
+            self._df = pd.concat([self._df,[f._df for f in features]]).reset_index(drop=True)
 
         LOGGER.info(self._feature.shape)
 
@@ -79,7 +82,7 @@ class Features:
 
     @frame.setter
     def frame(self,frame):
-        self._df = frame
+        self._df = frame.reset_index(drop=True)
 
     @property
     def feature(self):

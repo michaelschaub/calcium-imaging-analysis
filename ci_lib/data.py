@@ -35,7 +35,7 @@ class DecompData:
         assert len(data_frame) == trial_starts.shape[0], (
             f"DataFrame data_frame and trial_starts do not have matching length \
                     ({len(data_frame)} != {len(trial_starts)})")
-        self._df = data_frame
+        self._df = data_frame.reset_index(drop=True)
         self._temps = temporal_comps
         if trans_params is None:
             self._spats = spatial_comps
@@ -100,7 +100,7 @@ class DecompData:
             data = [data]
         if not overwrite:
             data = [self, *data]
-        self._df = pd.concat([d.frame for d in data], axis=0)
+        self._df = pd.concat([d._df for d in data], axis=0).reset_index(drop=True)
         time_offs = [0, *[ d.t_max for d in data ][:-1]]
         self._starts = np.concatenate([d.trial_starts + t for d,t in zip(data,time_offs)], axis=0)
         self._temps = np.concatenate([d.temporals_flat for d in data], axis=0)

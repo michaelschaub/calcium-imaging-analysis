@@ -1,6 +1,6 @@
 import numpy as np
 
-from ci_lib import Data, DecompData
+from ci_lib import DecompData
 from ci_lib.loading import reproducable_hash, load_h5, save_h5
 from ci_lib.networks import MOU #from pymou import MOU
 from ci_lib.plotting import plot_connectivity_matrix
