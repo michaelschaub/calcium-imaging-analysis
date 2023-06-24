@@ -162,7 +162,10 @@ def decode(data, labels, decoder, reps, label_order=None,cores=1,logger=None,C=N
                     "RF":RF,
                     "RFshuffle":RF}
 
-        model = decoders[decoder](cores,C,logger)
+        if C is None:
+            model = decoders[decoder](cores,logger=logger)
+        else:
+            model = decoders[decoder](cores,C=C,logger=logger)
 
     ### Train & Eval
     try:
