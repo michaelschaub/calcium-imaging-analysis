@@ -37,6 +37,8 @@ try:
 
     start = snakemake_tools.start_timer()
 
+    seed = snakemake.config.get("seed", None)
+
     #Load models
     with open(snakemake.input["models"], "rb") as f:
         models = pickle.load(f)
@@ -82,7 +84,7 @@ try:
 
     if balancing:
         #Balances the number of trials for each condition
-        feat_list = balance(feat_list)
+        feat_list = balance(feat_list, seed=seed)
     logger.info(feat_list)
     if feat_list[0].timepoints is None or "full" in snakemake.wildcards["feature"]: #TODO full matching just a workaround, save new full property of feature class 
         #1 Iteration for full feature (Timepoint = None)
@@ -113,7 +115,7 @@ try:
         
         if shuffling:
             #Shuffle all labels as sanity check
-            labels_t = shuffle(labels_t)
+            labels_t = shuffle(labels_t, seed=seed)
 
         ###
         #Decode
@@ -121,7 +123,10 @@ try:
             logger.info(m)
             logger.info(model)
             logger.info(model.coef_.shape)
-            perf_t, confusion_t, norm_confusion_t, _ = decode(feats_t, labels_t,[model]*reps,reps,label_order= label_list,logger=logger) #TODO model[1] is hardcoded for mlr pipeline, other decoders are just model
+            #TODO model[1] is hardcoded for mlr pipeline, other decoders are just model
+            perf_t, confusion_t, norm_confusion_t, _ = decode(feats_t, labels_t,[model]*reps,reps,
+                                                              label_order= label_list,
+                                                              logger=logger, seed=seed)
             logger.info(perf_t.shape)
             logger.info(f"{t}{t_range}")
             perf_list[t,m,:] = perf_t

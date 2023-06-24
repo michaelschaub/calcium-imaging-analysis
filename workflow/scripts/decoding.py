@@ -54,17 +54,19 @@ def decoding_iteration(t,feat_list,label_list,decoder,reps,perf_list,model_list,
     
     if shuffling:
         #Shuffle all labels as sanity check
-        labels_t = shuffle(labels_t)
+        labels_t = shuffle(labels_t,seed=seed)
 
     #Decode
-    perf_t, confusion_t, model_t = decode(feats_t, labels_t,decoder,reps,label_order= label_list)
+    perf_t, confusion_t, model_t = decode(feats_t, labels_t,decoder,reps,
+                                          label_order=label_list, seed=seed)
     perf_list[t,:] = perf_t
     model_list[t]= model_t
 
     #Test on other timepoints
-    for t2 in t_range:
+    for j,t2 in enumerate(t_range, 1):
         feats_t2, labels_t2 = flatten(feat_list,label_list,t2)
-        perf_matrix[t,t2,:], confusion_t_not_used, _ = decode(feats_t2, labels_t2,model_t,reps,label_order= label_list)
+        perf_matrix[t,t2,:], confusion_t_not_used, _ = decode(feats_t2, labels_t2,model_t,reps,
+                                                              label_order=label_list, seed=seed*j)
 
     logger.info(f"Timepoint {t} finished")
     start_thread()
@@ -82,6 +84,9 @@ try:
                                             params=['conds','params'])
     start = snakemake_tools.start_timer()
 
+    seed = snakemake.config.get("seed", 42)
+    logger.info(f"Seed is {seed}")
+
     #Load params from Snakemake
     label_list = snakemake.params['conds']
     reps = snakemake.params["params"]['reps']
@@ -91,20 +96,20 @@ try:
     across_time = True
     accumulate = False
 
-    if 'C' in snakemake.params["params"]:
-        C = snakemake.params["params"]["C"]
-    else:
-        C = None
+    C = snakemake.params["params"].get("C", None)
+    max_trials = snakemake.params["params"].get("max_trials", None)
 
     feat_list = load_feat(snakemake.wildcards["feature"],snakemake.input)
 
     if balancing:
         #Balances the number of trials for each condition
-        feat_list = balance(feat_list)
+        logger.debug(f"{max_trials=}")
+        feat_list = balance(feat_list, max_number_trials=max_trials, seed=seed)
     
     #print(feat_list[0])
     #print(feat_list[0].feature)
-    if feat_list[0].timepoints is None or "full" in snakemake.wildcards["feature"]: #TODO full matching just a workaround, save new full property of feature class 
+    #TODO full matching just a workaround, save new full property of feature class
+    if feat_list[0].timepoints is None or "full" in snakemake.wildcards["feature"]:
         #1 Iteration for full feature (Timepoint = None)
         t_range = [None]
     else:
@@ -113,6 +118,7 @@ try:
 
         logger.info(f"{feat_list[0].feature.shape=}")
         logger.info(f"{feat_list[0].timepoints=}")
+        logger.debug(f"feat_list shapes: {[f.feature.shape for f in feat_list]}")
 
     logger.info(f"{t_range}")
     #Decoding results
@@ -155,6 +161,7 @@ try:
     else:
         #Decode all timepoints (without multithreading)
         for t in t_range:
+            logger.debug(f"Timepoint {t}:")
 
             if accumulate:
                 t = range(t)
@@ -164,13 +171,17 @@ try:
             
             if shuffling:
                 #Shuffle all labels as sanity check
-                labels_t = shuffle(labels_t)
+                logger.info(f"Shuffeling labels")
+                labels_t = shuffle(labels_t, seed=seed)
 
             t1_train_testing = snakemake_tools.start_timer()
 
             #Decode
             logger.info(f"C {C}")
-            perf_t, confusion_t, norm_confusion_t, model_t = decode(feats_t, labels_t,decoder,reps,label_order= label_list,cores=cores,logger=logger, C=C)
+            perf_t, confusion_t, norm_confusion_t, model_t = decode(feats_t, labels_t,decoder,reps,
+                                                                    label_order=label_list,
+                                                                    cores=cores,logger=logger,
+                                                                    C=C, seed=seed)
             perf_list[t,:] = perf_t
             conf_matrix[t,:,:,:] = confusion_t
             norm_conf_matrix[t,:,:,:] = norm_confusion_t
@@ -184,9 +195,12 @@ try:
             #Test on other timepoints
             if across_time:
                 t2_testing = snakemake_tools.start_timer()
-                for t2 in t_range:
+                for i,t2 in enumerate(t_range, 1):
                     feats_t2, labels_t2 = flatten(feat_list,label_list,t2)
-                    perf_matrix[t,t2,:], _ , _ , _ = decode(feats_t2, labels_t2,model_t,reps,label_order= label_list,cores=cores,logger=logger) #TODo could be optimizied (run only once for each t2 on all t1)
+                    #TODO could be optimizied (run only once for each t2 on all t1)
+                    perf_matrix[t,t2,:], _ , _ , _ = decode(feats_t2, labels_t2,model_t,reps,
+                                                            label_order=label_list,cores=cores,
+                                                            logger=logger, seed=seed*i)
 
                 t2_time[t] = snakemake_tools.stop_timer(t2_testing,silent=True)
 
