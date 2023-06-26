@@ -15,113 +15,149 @@ from snakemake_tools import getKeys, hash_config
         #Fig 2: Timeseries Activity, Spatial Activity Maps, Frames
 
         #Fig 3: Framewise Decoding, Comparison FEatures: Framewise, Phasewide, Mean (Temporal + Across Parcel), Conf Matrizes, Class Coefs, Across Time
-        #expand(f"results/paper/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/perf_all.feats.parcels.pdf", session_run = session_runs, trials= selected_trials),
+        #expand([f"results/paper/{dataset_id}/{subset_id}/{'.'.join(aggr_conditions)}/perf_all.feats.parcels.pdf" for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids]),
 
         #Decoding performance over time across: parcellations, features
-        #expand(f"results/paper/{{session_run}}/{{trials}}/{{feature}}/{'.'.join(aggr_conditions)}/performance_over_time_parcels.pdf", session_run = session_runs,  feature =  features, trials= selected_trials), # (3a)
-        #expand(f"results/paper/{{session_run}}/{{trials}}/{{parcellation}}/{'.'.join(aggr_conditions)}/performance_over_time_features.pdf", session_run = session_runs,  parcellation = parcellations, trials= selected_trials), # (3b)
+        #expand([f"results/paper/{dataset_id}/{subset_id}/{{feature}}/{'.'.join(aggr_conditions)}/performance_over_time_parcels.pdf" for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],  feature =  features), # (3a)
+        #expand([f"results/paper/{dataset_id}/{subset_id}/{{parcellation}}/{'.'.join(aggr_conditions)}/performance_over_time_features.pdf" for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],  parcellation = parcellations), # (3b)
 
 #rule subdivided_svd:
 
 #rule brain_alignment:
 
-rule test:
-	input:
-		expand(f"results/data/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(aggr_conditions)}/performances.pdf", session_run = session_runs,  parcellation = parcellations, trials= selected_trials),
-		expand(f"results/plots/{{session_run}}/{{trials}}/Decoding/{'.'.join(aggr_conditions)}/{{feature}}/performances.pdf", session_run = session_runs,  feature =  features, trials= selected_trials),
-		expand(f"results/data/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(aggr_conditions)}/{{feature}}/plots/performance_over_time.pdf", session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials),
-		expand(f"results/data/{{session_run}}/{{parcellation}}/visualization/combined_parcels.pdf", session_run = session_runs,  parcellation = parcellations),
-		expand(f"results/data/{{session_run}}/{{parcellation}}/data.h5", session_run = session_runs,  parcellation = parcellations) 
-
 rule parcellation: 
-	input: 
-		#Result of parcellations
-		expand(f"results/data/{{session_run}}/{{parcellation}}/data.h5", session_run = session_runs,  parcellation = parcellations), #TODO add all session_run = session_runs+["All"]
-		#Plot of parcellations
-		expand(f"results/data/{{session_run}}/{{parcellation}}/visualization/combined_parcels.pdf", session_run = session_runs,  parcellation = parcellations)
+    input:
+        #Result of parcellations
+        expand(f"results/data/{{session_run}}/{{parcellation}}/{{session_run}}/data.h5", session_run = session_runs,  parcellation = parcellations), #TODO add all session_run = session_runs+["All"]
+        #Plot of parcellations
+        expand(f"results/data/{{session_run}}/{{parcellation}}/visualization/combined_parcels.pdf", session_run = session_runs,  parcellation = parcellations)
 
+rule conditions:
+    input:
+        expand([f"results/plots/{dataset_id}/{subset_id}/{'.'.join(trial_conditions)}/b-maps/{{parcellation}}/all_cond_difference_b-maps.pdf"
+                        for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
+                parcellation = parcellations)
 
 rule feature:
-	input:
-		expand(f"results/data/{{session_run}}/{{parcellation}}/{{trials}}/Features/{{trial_conditions}}/{{feature}}/{{trial_conditions}}.{{feature}}.{config['export_type']}", session_run = session_runs,  parcellation = parcellations, trials= selected_trials, trial_conditions = trial_conditions, feature =  features)
-	output:
-		dict = f"results/exports/feats_hash{hash_config(config)}.{config['export_type']}"
-	params:
-		iter = [session_runs, getKeys(parcellations), getKeys(selected_trials), getKeys(trial_conditions), getKeys(features)],
-		reorder = "feature" #TODO can you access rule name from script context?
+    input:
+        expand([f"results/data/{dataset_id}/{{parcellation}}/{subset_id}/Features/{{trial_conditions}}/{{feature}}/{{trial_conditions}}.{{feature}}.{config['export_type']}"
+                        for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
+                parcellation = parcellations, trial_conditions = trial_conditions, feature =  features)
+    output:
+        dict = f"results/exports/feats_hash{hash_config(config)}.{config['export_type']}"
+    params:
+        iter = [session_runs, getKeys(parcellations), getKeys(trial_conditions), getKeys(features)],
+        reorder = "feature" #TODO can you access rule name from script context?
 
-	conda:
-		"envs/environment.yaml"
-	script:
-		"scripts/aggregate_dict.py"
+    conda:
+        "envs/environment.yaml"
+    script:
+        "scripts/aggregate_dict.py"
+
 
 rule decode:
-	input:
-		#Decoding performance across: features, parcellation and both
-		expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/{{parcellation}}_perf.pdf", session_run = session_runs,  parcellation = parcellations, trials= selected_trials),
-		expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/{{feature}}_perf.pdf", session_run = session_runs,  feature =  features, trials= selected_trials),
-        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/all_perf.pdf", session_run = session_runs, trials= selected_trials),
+    input:
+        #Decoding performance across: features, parcellation and both
+        expand([f"results/plots/{dataset_id}/{subset_id}/{'.'.join(aggr_conditions)}/{{parcellation}}_perf.pdf"
+                        for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
+                    parcellation = parcellations, ),
+        expand([f"results/plots/{dataset_id}/{subset_id}/{'.'.join(aggr_conditions)}/{{feature}}_perf.pdf"
+                        for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
+                    feature =  features, ),
+        expand([f"results/plots/{dataset_id}/{subset_id}/{'.'.join(aggr_conditions)}/all_perf.pdf"
+                        for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids], ),
 
-		#Plot Train/Test across time: on the same timepoints, on different timepoints	
-        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/performance_over_time.pdf", session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials),
-        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/performance_matrix.pdf", session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
+        #Plot Train/Test across time: on the same timepoints, on different timepoint
+        expand([f"results/plots/{dataset_id}/{subset_id}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/performance_over_time.pdf"
+                        for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
+                    parcellation = parcellations, feature =  features, ),
+        expand([f"results/plots/{dataset_id}/{subset_id}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/performance_matrix.pdf"
+                        for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
+                    parcellation = parcellations, feature =  features, decoder=decoders,),
         
         #Decoding performance over time across: parcellations, features
-        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/{{feature}}_performance_over_time.pdf", session_run = session_runs,  feature =  features, trials= selected_trials),
-        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/{{parcellation}}_performance_over_time.pdf", session_run = session_runs,  parcellation = parcellations, trials= selected_trials),
+        expand([f"results/plots/{dataset_id}/{subset_id}/{'.'.join(aggr_conditions)}/{{feature}}_performance_over_time.pdf"
+                        for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
+                    feature =  features, ),
+        expand([f"results/plots/{dataset_id}/{subset_id}/{'.'.join(aggr_conditions)}/{{parcellation}}_performance_over_time.pdf"
+                        for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
+                    parcellation = parcellations, ),
         
         #Confusion Matrix
-        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/confusion_matrix.pdf",session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
+        expand([f"results/plots/{dataset_id}/{subset_id}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/confusion_matrix.pdf"
+                        for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
+                    parcellation = parcellations, feature =  features, decoder=decoders, ),
         
         #Plot coefs
-        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/model_coef_mean.pdf",session_run = session_runs,  parcellation = parcellations, trials= selected_trials, feature =  features, decoder=decoders),
+        expand([f"results/plots/{dataset_id}/{subset_id}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/model_coef_mean.pdf"
+                        for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
+                    parcellation = parcellations, feature =  features, decoder=decoders, ),
 
         #Plot clustered coefs
-        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.pdf", session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
+        #expand([f"results/plots/{dataset_id}/{subset_id}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.pdf"
+        #                for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
+        #            parcellation = parcellations, feature =  features, decoder=decoders, ),
 
         #Create models from clusters and test over time
-        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.pdf", session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
+        #expand([f"results/plots/{dataset_id}/{subset_id}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.pdf"
+        #                for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
+        #            parcellation = parcellations, feature =  features, decoder=decoders, ),
+
+
+        ## Plot from df across aggregated datasets
+        #expand(f"results/plots/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/perf_all.datasets.pdf", parcellation = parcellations, feature =  features, decoder=decoders),
 
 rule decode_generalized:
     input:
-        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/from_{generalize_from}/ClusturedModels_perf.pdf",
-                session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
-        expand(f"results/data/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/decoder/{'.'.join(aggr_conditions)}/{{feature}}/{{decoder}}/from_{generalize_from}/cluster_perf.pkl",
-                session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
+        expand([f"results/plots/{dataset_id}/{subset_id}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/from_{generalize_from}/ClusturedModels_perf.pdf"
+                        for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
+                    parcellation = parcellations, feature =  features, decoder=decoders),
+        expand([f"results/data/{dataset_id}/{{parcellation}}/{subset_id}/Decoding/decoder/{'.'.join(aggr_conditions)}/{{feature}}/{{decoder}}/from_{generalize_from}/cluster_perf.pkl"
+                        for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
+                    parcellation = parcellations, feature =  features, decoder=decoders),
 
 '''
 rule decode:
-	input:
-		#Decoding performance across: features, parcellation and both
-		expand(f"results/plots/{{session_run}}/{{trials}}/{{parcellation}}/{'.'.join(aggr_conditions)}/perf_all.feats.pdf", session_run = session_runs,  parcellation = parcellations, trials= selected_trials),
-		expand(f"results/plots/{{session_run}}/{{trials}}/{{feature}}/{'.'.join(aggr_conditions)}/perf_all.parcels.pdf", session_run = session_runs,  feature =  features, trials= selected_trials),
-        expand(f"results/plots/{{session_run}}/{{trials}}/{'.'.join(aggr_conditions)}/perf_all.feats.parcels.pdf", session_run = session_runs, trials= selected_trials),
+    input:
+        #Decoding performance across: features, parcellation and both
+        expand([f"results/plots/{dataset_id}/{subset_id}/{{parcellation}}/{'.'.join(aggr_conditions)}/perf_all.feats.pdf" for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],  parcellation = parcellations),
+        expand([f"results/plots/{dataset_id}/{subset_id}/{{feature}}/{'.'.join(aggr_conditions)}/perf_all.parcels.pdf" for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],  feature =  features),
+        expand([f"results/plots/{dataset_id}/{subset_id}/{'.'.join(aggr_conditions)}/perf_all.feats.parcels.pdf" for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids]),
 
-		#Plot Train/Test across time: on the same timepoints, on different timepoints	
-        expand(f"results/plots/{{session_run}}/{{trials}}/{{parcellation}}/{'.'.join(aggr_conditions)}/{{feature}}/performance_over_time.pdf", session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials),
-        expand(f"results/plots/{{session_run}}/{{trials}}/{{parcellation}}/{'.'.join(aggr_conditions)}/{{feature}}/{{decoder}}/performance_matrix.pdf", session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
+        #Plot Train/Test across time: on the same timepoints, on different timepoints
+        expand([f"results/plots/{dataset_id}/{subset_id}/{{parcellation}}/{'.'.join(aggr_conditions)}/{{feature}}/performance_over_time.pdf" for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids] ,parcellation = parcellations, feature =  features),
+        expand([f"results/plots/{dataset_id}/{subset_id}/{{parcellation}}/{'.'.join(aggr_conditions)}/{{feature}}/{{decoder}}/performance_matrix.pdf" for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids] ,parcellation = parcellations, feature =  features, decoder=decoders),
         
         #Decoding performance over time across: parcellations, features
-        expand(f"results/plots/{{session_run}}/{{trials}}/{{feature}}/{'.'.join(aggr_conditions)}/performance_over_time_parcels.pdf", session_run = session_runs,  feature =  features, trials= selected_trials),
-        expand(f"results/plots/{{session_run}}/{{trials}}/{{parcellation}}/{'.'.join(aggr_conditions)}/performance_over_time_features.pdf", session_run = session_runs,  parcellation = parcellations, trials= selected_trials),
+        expand([f"results/plots/{dataset_id}/{subset_id}/{{feature}}/{'.'.join(aggr_conditions)}/performance_over_time_parcels.pdf" for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],  feature =  features),
+        expand([f"results/plots/{dataset_id}/{subset_id}/{{parcellation}}/{'.'.join(aggr_conditions)}/performance_over_time_features.pdf" for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],  parcellation = parcellations),
         
         #Confusion Matrix
-        expand(f"results/plots/{{session_run}}/{{trials}}/{{parcellation}}/{'.'.join(aggr_conditions)}/{{feature}}/{{decoder}}/confusion_matrix.pdf",session_run = session_runs ,parcellation = parcellations, feature =  features, trials= selected_trials, decoder=decoders),
+        expand([f"results/plots/{dataset_id}/{subset_id}/{{parcellation}}/{'.'.join(aggr_conditions)}/{{feature}}/{{decoder}}/confusion_matrix.pdf" for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids] ,parcellation = parcellations, feature =  features, decoder=decoders),
         
         #Plot coefs
-        expand(f"results/plots/{{session_run}}/{{trials}}/{{parcellation}}/{'.'.join(aggr_conditions)}/{{feature}}/{{decoder}}/model_coef_mean.pdf",session_run = session_runs,  parcellation = parcellations, trials= selected_trials, feature =  features, decoder=decoders),
+        expand([f"results/plots/{dataset_id}/{subset_id}/{{parcellation}}/{'.'.join(aggr_conditions)}/{{feature}}/{{decoder}}/model_coef_mean.pdf" for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],  parcellation = parcellations, feature =  features, decoder=decoders),
 '''
-        
 
-        #expand(f"results/plots/{{session_run}}/{{trials}}/Decoding/{'.'.join(aggr_conditions)}/{{feature}}/performance_over_time_parcels.pdf",
+rule aggregated_decoding_plots:
+    input:
+        expand([f"results/plots/{dataset_id}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/perf_subset_space_comp.pdf"
+                for dataset_id in session_runs.keys()],
+                parcellation = parcellations, feature =  features, decoder=decoders, ),
+        expand([f"results/plots/{dataset_id}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/perf_all_space_comp.pdf"
+                for dataset_id in [dataset_aliases["All"]] if unified_space == "Both" ],
+                parcellation = parcellations, feature =  features, decoder=decoders, ),
+
 
 rule load:
-	input:
-		expand("results/data/{session_run}/SVD/data.h5",session_run=session_runs)
+    input:
+        expand("results/data/{session_run}/SVD/{session_run}/data.h5",session_run=session_runs)
 
 rule biomarkers:
-	input:
-		expand(f"results/data/{{session_run}}/{{parcellation}}/{{trials}}/Decoding/rfe/{'.'.join(aggr_conditions)}/{{rfe_n}}/{{feature}}/circle_plot.pdf", session_run = session_runs, parcellation = parcellations, trials = selected_trials, feature = features, rfe_n = rfe_ns)
+    input:
+        expand([f"results/data/{dataset_id}/{{parcellation}}/{subset_id}/Decoding/rfe/{'.'.join(aggr_conditions)}/{{rfe_n}}/{{feature}}/circle_plot.pdf"
+                        for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
+                    parcellation = parcellations, feature = features, rfe_n = rfe_ns)
 
 
 
@@ -158,7 +194,7 @@ rule decoding_performances:
     conda:
         "envs/environment.yaml"
     resources:
-        mem_mb=lambda wildcards, attempt: mem_res(wildcards,attempt,4000,1000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,4000,1000)
     script:
         "scripts/run_aggregation.py"
 
@@ -174,6 +210,12 @@ module processing:
     config: config | config['processing']
 
 use rule * from processing
+
+module aggregation:
+    snakefile: "rules/aggregation.smk"
+    config: config | config['aggregation']
+
+use rule * from aggregation
 
 module plotting:
     snakefile: "rules/plotting.smk"

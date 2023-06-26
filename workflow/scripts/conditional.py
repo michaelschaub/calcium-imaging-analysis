@@ -31,7 +31,7 @@ try:
         else:
             start = phase["start"] if "start" in phase else None
             stop = phase["stop"] if "stop" in phase else None
-     
+
         # Save output
         conditional = data.conditions[cond, :, start:stop]
         conditional.frame['condition'] = cond

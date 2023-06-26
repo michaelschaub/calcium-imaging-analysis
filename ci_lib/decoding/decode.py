@@ -32,17 +32,19 @@ from ci_lib.features import from_string as feat_from_string
 
 ### Select decoder
 # TODO as classes
-def MLR(cores=1):
+def MLR(cores=1,C=0.05,logger=None):
+    logger.info(f"C {C}")
     return skppl.make_pipeline(skppc.StandardScaler(),
-                                skllm.LogisticRegression(C=0.1, penalty='l2', multi_class='multinomial',
+                                skllm.LogisticRegression(C=C, penalty='l1', multi_class='multinomial',
                                                         #solver='saga', max_iter=1000, n_jobs=cores))
-                                                            solver='lbfgs', max_iter=1000, n_jobs=cores))
+                                                        solver='saga', max_iter=1000, n_jobs=cores))
 
 def NN(cores):
     return sklnn.KNeighborsClassifier(n_neighbors=1, algorithm='brute', metric='correlation')
 
-def LDA(cores):
-    return skda.LinearDiscriminantAnalysis(n_components=None, solver='eigen', shrinkage='auto')
+def LDA(cores,C=None,logger=None):
+    return skppl.make_pipeline(skppc.StandardScaler(),
+                                skda.LinearDiscriminantAnalysis(n_components=None, solver='eigen', shrinkage='auto'))
 
 def RF(cores):
     return skens.RandomForestClassifier(n_estimators=10, bootstrap=False)
@@ -135,7 +137,7 @@ def decode_from_feature(feat_wildcard,feat_path_list,labels,decoder,reps=5,outpu
 '''
 
 @ignore_warnings(category=ConvergenceWarning)
-def decode(data, labels, decoder, reps, label_order=None,cores=1,logger=None):
+def decode(data, labels, decoder, reps, label_order=None,cores=1,logger=None,C=None):
     ### Split
     cv = StratifiedShuffleSplit(reps, test_size=0.2, random_state=420)
 
@@ -159,7 +161,7 @@ def decode(data, labels, decoder, reps, label_order=None,cores=1,logger=None):
                     "RF":RF,
                     "RFshuffle":RF}
 
-        model = decoders[decoder](cores)
+        model = decoders[decoder](cores,C,logger)
 
 
     ### Train & Eval
@@ -179,8 +181,8 @@ def decode(data, labels, decoder, reps, label_order=None,cores=1,logger=None):
             
             trained_decoders[i] = models[i]
     except Exception as Err:
-        print("Error during training and testing")
-        print(Err)
+        logger.error("Error during training and testing")
+        logger.error(Err)
 
     return perf,  confusion, norm_confusion, trained_decoders
 

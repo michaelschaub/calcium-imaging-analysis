@@ -8,6 +8,7 @@ from sklearn import preprocessing
 from sklearn.model_selection import StratifiedShuffleSplit
 import numpy as np
 import pickle
+import pandas as pd
 
 #Multithreading
 from threading import Thread
@@ -90,27 +91,12 @@ try:
     across_time = True
     accumulate = False
 
-    #Load feature for all conditions
+    if 'C' in snakemake.params["params"]:
+        C = snakemake.params["params"]["C"]
+    else:
+        C = None
+
     feat_list = load_feat(snakemake.wildcards["feature"],snakemake.input)
-    #print(snakemake.input)
-
-    
-    #TODO remove, just a fix check
-    '''
-    left, right = [],[]
-    for i,feat in enumerate(feat_list):
-        if "leftResponse" in label_list[i]:
-            left.append(feat)
-            
-        if "rightResponse" in label_list[i]: 
-
-            right.append(feat)
-     
-    [left[0].concat(balance(left),overwrite=True),right[0].concat(balance(right),overwrite=True)]
-    label_list = ["leftResponse","rightResponse"]
-   
-    feat_list = [left[0],right[0]]
-    '''
 
     if balancing:
         #Balances the number of trials for each condition
@@ -124,6 +110,10 @@ try:
     else:
         #t Iterations for every timepoint t
         t_range = range(feat_list[0].timepoints)
+
+        logger.info(f"{feat_list[0].feature.shape=}")
+        logger.info(f"{feat_list[0].timepoints=}")
+
     logger.info(f"{t_range}")
     #Decoding results
     n_timepoints = len(list(t_range))
@@ -178,16 +168,16 @@ try:
 
             t1_train_testing = snakemake_tools.start_timer()
 
-            ###
             #Decode
-            perf_t, confusion_t, norm_confusion_t, model_t = decode(feats_t, labels_t,decoder,reps,label_order= label_list,cores=cores,logger=logger)
+            logger.info(f"C {C}")
+            perf_t, confusion_t, norm_confusion_t, model_t = decode(feats_t, labels_t,decoder,reps,label_order= label_list,cores=cores,logger=logger, C=C)
             perf_list[t,:] = perf_t
             conf_matrix[t,:,:,:] = confusion_t
             norm_conf_matrix[t,:,:,:] = norm_confusion_t
             model_list[t]= model_t
 
             #Track stats
-            iterations[t,:] = [model[-1].n_iter_[-1] for model in model_t]
+            #iterations[t,:] = [model[-1].n_iter_[-1] for model in model_t]
             t1_time[t] = snakemake_tools.stop_timer(t1_train_testing,silent=True)
             logger.info(f"Timepoint {t} decoded {len(feats_t)} trials with average accuracy {np.mean(perf_t)}")
 
@@ -203,6 +193,24 @@ try:
     logger.info(f"Finished {n_timepoints} timepoints with {reps} repetitions")
     logger.info(f"Training & Testing each timepoints on average: {np.mean(t1_time)} s")
     logger.info(f"Testing on others timepoints on average: {np.mean(t2_time)} s")
+
+
+    # Construct wide dataframe
+    #add , "SVD_space": snakemake.wildcards[""] later when data_dict is reverted
+    accuracy_dict = {
+            "decomposition_space" : feat_list[0].frame["decomposition_space"].iloc[0],
+            "parcellation"        : feat_list[0].frame["parcellation"].iloc[0],
+            "dataset_id"          : feat_list[0].frame["dataset_id"].iloc[0],
+            "decoding_space"      : feat_list[0].frame["dataset_id"].iloc[0],
+            "conditions"          : '.'.join(np.unique([ f.frame["condition"].iloc[0] for f in feat_list])),
+            "feature"             : feat_list[0].frame["feature"].iloc[0],
+            "feature_params"      : feat_list[0].frame["feature_params"].iloc[0],
+            }
+    accuracy_dict = [{"t": t, "run":r, "accuracy":run_perf, "decoder": snakemake.wildcards["decoder"], **accuracy_dict}
+                     for t,timepoint_perfs in enumerate(perf_list) for r, run_perf in  enumerate(timepoint_perfs) ]
+    accuracy_df =  pd.json_normalize(accuracy_dict)
+    accuracy_df.to_pickle(snakemake.output["df"])
+
 
     #Save results
     # TODO replace with better file format

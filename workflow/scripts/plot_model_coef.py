@@ -8,7 +8,7 @@ import sys
 
 sys.path.append(str((Path(__file__).parent.parent.parent).absolute()))
 
-from ci_lib.plotting import draw_neural_activity
+from ci_lib.plotting import draw_neural_activity, cmap_blueblackred
 from ci_lib.utils import snakemake_tools
 from ci_lib.utils.logging import start_log
 from ci_lib import DecompData
@@ -62,7 +62,7 @@ try:
         means=np.mean(spatials,axis=0)
         dispersion =np.std(spatials,axis=0)
         
-    labels=classes[0] if n_classes>1 else [""]
+    labels=classes[0] if n_classes>1 else classes[0][1] #n-classes or binary case, where last class corresponds to 1
     
     draw_neural_activity(frames=means,path=snakemake.output['coef_plot'],plt_title=f"Mean Coef for {snakemake.wildcards['feature']} across Splits",subfig_titles= labels,overlay=True,outlined=True, logger=logger,font_scale=snakemake.config["font_scale"])
     draw_neural_activity(frames=dispersion,path=snakemake.output['var_plot'],plt_title=f"Std Coef for {snakemake.wildcards['feature']} across Splits",subfig_titles= labels,overlay=True,outlined=True, logger=logger,font_scale=snakemake.config["font_scale"])

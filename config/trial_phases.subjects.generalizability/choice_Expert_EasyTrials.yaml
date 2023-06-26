@@ -1,0 +1,331 @@
+branch_opts:
+  combine_sessions: True #Combine sessions (upon loading) & find new spatials with PCA / Combine sessions (after feature calculation) based on original spatials (noisy if spatials are different)
+  include_individual_sessions: False #False #Run pipeline on individual sessions and combined sessions / just on combined session
+  generalize_from: "GN06.01-20#GN06.03-01#GN06.03-02#GN06.03-03#GN06.03-04#GN06.03-05#GN06.03-26#GN06.03-29"
+
+    
+    #GN06_untrained combined im shared_space von untrained
+    #Gn06_untrained ind      im shared_space  
+    #Gn06_untrained ind      im ind_space    
+
+    
+
+
+
+
+  subjects:
+    #random:
+    #  - random
+
+    # Defines subjects and dates to use from Gerions Experiment
+    GN06:
+    #  - 2000-03-25_09-19-18
+      - 2000-03-26_10-53-05
+      - 2000-03-29_11-51-27
+      - 2000-04-01_13-44-22
+
+    GN08:
+    #  - 2000-03-25_11-56-39
+    #  - 2000-03-25_15-06-40
+      - 2000-03-26_13-37-18
+      - 2000-03-29_13-37-29
+      - 2000-03-29_16-33-41
+
+    GN09:
+    #  - 2000-03-25_14-29-57
+    #  - 2000-03-26_10-13-36
+    #  - 2000-03-29_11-13-15
+    #  - 2000-03-29_15-07-57
+    #  - 2000-03-25_10-34-45
+    #  - 2000-04-12_10-32-11
+    #  - 2000-04-13_10-38-53
+    #  - 2000-04-14_16-01-37
+    #  - 2000-04-15_11-12-30
+    #  - 2000-04-15_15-21-57
+    #  - 2000-04-16_15-11-45
+      - 2000-04-19_10-37-14
+      - 2000-04-20_13-07-10
+      - 2000-04-21_13-20-21
+    
+    GN10:
+    #  - 2000-03-26_09-13-00
+    #  - 2000-03-29_10-17-01
+    #  - 2000-03-29_15-41-22
+    #  - 2000-04-12_09-43-29
+    #  - 2000-04-13_09-47-57
+    #  - 2000-04-14_14-50-49
+    #  - 2000-04-15_10-09-25
+    #  - 2000-04-16_12-30-41
+    #  - 2000-04-19_09-43-03
+      - 2000-04-20_10-13-51
+      - 2000-04-21_11-00-51
+      - 2000-04-22_10-16-39
+    
+
+  # Defines conditions for Gerions Experimental Setup
+  conditions:
+  
+    default:
+      phase: all
+      n_targets: all
+      n_distractors: none
+      auto_reward: no
+      both_spouts: yes
+      
+
+    LR-LS:
+      responses: left
+      sides: left
+
+    LR-RS:
+      responses: left
+      sides: right
+      
+
+    RR-LS:
+      responses: right
+      sides: left
+
+    RR-RS:
+      responses: right
+      sides: right
+
+    LeftChoice:
+      group:
+        - LR-LS
+        - LR-RS
+
+    RightChoice:
+      group:
+        - RR-RS
+        - RR-LS
+  
+
+    #Correct:
+    #  group:
+    #    - LR-LS
+    #    - RR-RS
+    #Incorrect:
+    #  group:
+    #    - LR-RS
+    #    - RR-LS
+  
+  parcellations:
+    SVD:
+    #  n_components: 
+    #    - 299
+    LocaNMF:
+    anatomical:
+    
+  selected_trials:
+    All:
+
+
+  features:
+
+    spot-activity: #Full Timeseries for each trial
+      #phase: 
+        #- all
+        #- pretrial
+      #  - stimulu s
+        #- response
+        
+        #- stim1
+        #- inter_stim
+        #- stim2
+        #- delay
+        #- response
+
+    #full-activity: #Full Timeseries for each trial
+      #phase: 
+        #- all
+        #- pretrial
+        #- stimulus
+        #- response
+
+    mean-activity: #Mean Activity over trial
+      phase: 
+        #- all
+        #- pretrial
+        - stimulus
+        #- stim1
+        #- inter_stim
+        #- stim2
+        - delay
+        - response
+        #- posttrial
+
+    #dFC:
+    #  phase:
+      #  - pretrial
+    #    - stimulus
+      #  - response
+
+    #full-dFC:
+    #  phase:
+    #    - stimulus
+    #  - response
+    
+    #FC:
+    #  phase:
+    #    - all
+    #    - pretrial
+    #    - stimulus
+    #    - "?" 
+        #- delay
+    #    - response
+        #- posttrial
+
+    #spot-activity-dFC:
+    #  phase:
+      #  - pretrial
+    #    - stimulus
+      #  - response
+
+    #full-activity-dFC:
+    #  phase:
+    #    - stimulus
+      #- response
+    
+    #mean-activity-FC:
+    #  phase:
+    #    - stimulus
+    #    - all
+    #    - pretrial
+
+
+    ##moup:
+    ##  phase:
+    ##    - stimulus
+
+    #raw:
+    #  max_components : [64]
+
+    #mean:
+    #  window: [1]
+
+      #optional:
+      #  window: [1] #TODO currently needs to be in an array (should support int aswell)
+
+    #covariance:
+      #max_components : [64]
+    #moup:
+    #  timelags: [1] #,2,3]
+      #optional:
+      #  thresh:
+      #    - 0.5
+    #  max_components : [64]
+
+    #autocorrelation:
+    #  timelags: [[1]] #,[1]]
+    #  phase:
+    #    - stimulus
+
+
+
+  decoders:
+    default:
+      reps: [5]
+    MLR:
+    #MLRshuffle:
+
+static_params:
+  parcellations:
+    anatomical:
+    ICA:
+    LocaNMF:
+      minrank: 2
+      maxrank: 8
+      min_pixels: 400
+      loc_thresh: 300
+      r2_thresh: 0.99
+      nonnegative_temporal: False
+
+
+  selected_trials:
+    All:
+
+  features:
+    mean:
+
+  decoders:
+    MLR:
+    1NN:
+    LDA:
+    RF:
+
+paths:
+  parcellations:
+    ICA: {}
+    anatomical:
+      atlas: resources/meta/anatomical.mat
+    LocaNMF:
+      atlas: resources/meta/anatomical.mat
+
+different_config_inputs: 1
+
+limit_memory: 1
+
+loglevel: INFO
+
+export_type: 'npy'
+
+
+
+# Defines trial phases for Gerions Experimental Setup
+trial_conditions:
+  sides:
+    column: target_side_left
+    conds:
+      left:   1
+      right:  0
+  modalities:
+    column: modality
+    conds:
+      visual:   0
+      tactile:  1
+      vistact:  2
+  responses:
+    column: response_left
+    conds:
+      left: 1
+      right: 0
+      no: -1
+  n_targets:
+    column: n_targets
+    conds:
+      all: 6
+  n_distractors:
+    column: n_distractors
+    conds:
+      none: 0
+  auto_reward:
+    column: auto_reward
+    conds:
+      no: 0
+      yes: 1
+  both_spouts:
+    column: both_spouts
+    conds:
+      no: 0
+      yes: 1
+
+phase_conditions:
+  pretrial:
+    start: 0
+    stop:  30
+  stimulus:
+    start:  30
+    stop:   75
+  delay:
+    start: 75
+    stop: 82
+  response:
+    start: 82
+    stop: 113
+  posttrial:
+    start: 113
+    stop: 134
+  all:
+    start: 0
+    stop: 134

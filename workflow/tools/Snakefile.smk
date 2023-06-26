@@ -7,19 +7,34 @@ generalize_from = config["branch_opts"]["generalize_from"]
 datasets = config["branch_opts"]["datasets"]
 if not 'All' in datasets.keys():
     datasets['All'] = { 'group': list(datasets.keys()) }
-datasets, dataset_aliases = create_datasets(datasets, config)
-#print(f"{datasets=}")
-#print(f"{dataset_aliases=}")
 
-#TODO repair
-if config["branch_opts"].get('include_individual_sessions', False):  # config["branch_opts"].get('combine_sessions', False): #TODO fail safe config loading with defaults
-    session_runs = list(datasets.keys())
+
+group_datasets = datasets
+datasets, dataset_sessions, dataset_groups, dataset_aliases = create_datasets(datasets, config)
+
+
+print(f"{datasets=}")
+print(f"{dataset_sessions=}")
+print(f"{dataset_groups=}")
+print(f"{dataset_aliases=}")
+
+unified_space = config['branch_opts'].get('unified_space', 'All')
+individual_sessions = config["branch_opts"].get('include_individual_sessions', False)
+
+if unified_space in ["Both", "Datasets"]:
+    unification_groups = dataset_groups
+    if unified_space != "Both":
+        unification_groups.pop(dataset_aliases["All"])
 else:
-    session_runs = [dataset_aliases['All']]
+    all_id = dataset_aliases["All"]
+    unification_groups = { all_id: dataset_groups[all_id] }
 
-#TODO remove?
-combine_sessions = True
-
+session_runs = {}
+for set_id, sub_ids in unification_groups.items():
+    sub_datasets = [set_id, *sub_ids]
+    if individual_sessions:
+        sub_datasets.extend(dataset_sessions[set_id])
+    session_runs[set_id] = sub_datasets
 print(f"{session_runs=}")
 
 parcells_conf   = config["branch_opts"]["parcellations"]
@@ -32,12 +47,12 @@ parcellations   = create_parameters( parcells_conf, parcells_static )
 # selected_trials = create_parameters( selected_trials, {})
 '''Create a parameter dictionary for trial selection; the only parameters, appart from branch, is_dataset indicates, whether a single trial or a dataset is selected'''
 trial_selection = { dataset_id: { "branch": dataset_id, "sessions": sessions, "is_dataset":True} for dataset_id, sessions in datasets.items() }
-print(f"{trial_selection=}")
+#print(f"{trial_selection=}")
 
 selected_trials = { session: [session] for session in session_runs }
 if dataset_aliases["All"] in selected_trials.keys():
     selected_trials[dataset_aliases["All"]] = list(datasets.keys())
-print(f"{selected_trials=}")
+#print(f"{selected_trials=}")
 
 config["phase"] = config["phase_conditions"] #TODO check why phase_conditions is different from this
 
@@ -67,10 +82,9 @@ config["loading"] = {"datasets"        : datasets,
 
 config["output"] = {"processed_dates" :  session_runs}
 
-print('phases:', phase_conditions)
+#print('phases:', phase_conditions)
 
-config["processing"] = {"combine_sessions":combine_sessions,
-                        "aggr_conditions" : aggr_conditions,
+config["processing"] = {"aggr_conditions" : aggr_conditions,
                         "trial_conditions" : trial_conditions,
                         "phase_conditions": phase_conditions,
                         "group_conditions" : group_conditions,
@@ -85,6 +99,10 @@ config["processing"] = {"combine_sessions":combine_sessions,
                         "session_runs":session_runs}
 
 
+config["aggregation"] = {"dataset_groups" : dataset_groups,
+                        "dataset_sessions" : dataset_sessions,
+                        "session_runs":session_runs}
+
 #For annotating plots
 #TODO repair!
 config["plotting"] =   {
@@ -97,7 +115,11 @@ config["plotting"] =   {
                         "features": features,
                         "parcellations" :parcellations,
                         "default_conditions":default_conditions,
-                        "generalize_from":generalize_from}
+                        "generalize_from":generalize_from,
+                        "dataset_aliases":dataset_aliases,
+                        "session_runs":session_runs,
+                        "datasets":datasets,
+                        }
 
 #config["generic"] = {"loglevel": config["loglevel"],
 #                    "export_type": export_type,

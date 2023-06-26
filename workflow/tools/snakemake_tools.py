@@ -3,6 +3,16 @@ from itertools import product as iterproduct
 import json
 import hashlib
 
+import snakemake
+
+def get_key_by_val(mydict,val):
+    return list(mydict.keys())[list(mydict.values()).index(val)]
+
+def readable_dataset_id(hash,aliases=None):
+    if aliases is None:
+        aliases = dataset_aliases
+    return get_key_by_val(aliases ,hash) + hash[:4]
+
 def create_parameters( branch_conf, static_conf={} ):
     '''
     creates dictionary of unique names (used in paths) and corresponding parameters to be passed by snakemake
@@ -105,13 +115,14 @@ def flattened_sessions(sessions):
     sessions = sorted(set(sessions))
     return sessions
 
-def dataset_path_hash(sessions, config):
+def dataset_path_hash(sessions, name, config):
     h = hashlib.md5()
     sessions = [f"{subj}.{date}" for subj, date in sessions]
     for s in sessions:
         h.update(bytes(s, "utf-8"))
     digest_lng = config.get('hash_digest_length', 8)
-    return h.hexdigest()[:digest_lng]
+    digest = h.hexdigest()[:digest_lng]
+    return '#'.join([name,digest])
 
 def create_datasets(sets, config):
     '''
@@ -119,24 +130,23 @@ def create_datasets(sets, config):
     ´sets = { md5hashA : [(subj1,date1), ...], ...}´
     and ´aliases = { nameA: md5hashA, ... }´
     '''
-    sets = { name: flattened_sessions(get_sessions(sets, content)) for name, content in sets.items() }
-    aliases = { name: dataset_path_hash(sessions, config) for name, sessions in sets.items() }
-    sets = { dataset_path_hash(sessions, config): sessions for sessions in sets.values() }
-    return sets, aliases
+    datasets = { name: flattened_sessions(get_sessions(sets, content)) for name, content in sets.items() }
+    aliases = { name: dataset_path_hash(sessions, name, config) for name, sessions in datasets.items() }
+    groups = { aliases[name]: [aliases[s] for s in content.get('group', [])] for name, content in sets.items() }
+
+    datasets = {dataset_path_hash(sessions, name, config): sessions for name, sessions in datasets.items() }
+    sessions = { id: ['-'.join(s) for s in sessions] for id, sessions in datasets.items()}
+    return datasets, sessions, groups, aliases
 
 
 #TODO fix this mess / find a snakemake version, that fixes it
 # taking input as an argument creates all kinds of bugs in snakemake...
-#def calculate_memory_resource(wildcards, input, attempt, minimum=1000, step=1000, multiple=2):
-def calculate_memory_resource(wildcards, attempt, minimum=1000, step=1000, multiple=2):
-		#input_mb = input.size_mb
-		#print(f"{wildcards}: {input_mb}\n\t{input}")
-		#if input_mb == '<TBD>':
-			#print("This should only appear in dry-run")
-			#input_mb = 0
-			#print(f"{wildcards}: {input_mb}\n\t{input}")
-		input_mb = 0
-		return max(multiple*input_mb, minimum) + step*(attempt-1)
+def calculate_memory_resource(wildcards, input, attempt, minimum=1000, step=1000, multiple=4):
+    #input_mb = input.size_mb
+    #if isinstance(input_mb, snakemake.common.TBDString):
+        #input_mb = 0
+    input_mb = 0
+    return max(multiple*input_mb, minimum) + step*(attempt-1)
 
 PARAMETER_EXPR = r"(_[a-zA-Z0-9'~.\[\], -]+)*"
 
