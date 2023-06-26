@@ -24,6 +24,7 @@ dependencies:
       - sphinx-autoapi
       - torch
       - numpydoc
+      - wlra@git+https://www.github.com/aksarkar/wlra.git#egg=wlra
       - pyMou@git+https://github.com/mb-BCA/pyMOU.git@master
       - networkx
       - Shapely

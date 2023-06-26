@@ -19,8 +19,9 @@ dependencies:
   - opencv
 
   - pip:
+      - sympy
       - pyMou@git+https://github.com/mb-BCA/pyMOU.git@master
-
+      - wlra@git+https://www.github.com/aksarkar/wlra.git#egg=wlra
       - networkx
       - Shapely
       - seaborn==0.12.1

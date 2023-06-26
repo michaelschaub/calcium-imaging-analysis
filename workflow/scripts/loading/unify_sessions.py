@@ -15,6 +15,7 @@ from ci_lib.utils.logging import start_log
 from ci_lib.loading import load_task_data_as_pandas_df, alignment #import extract_session_data_and_save
 from ci_lib.plotting import draw_neural_activity
 from ci_lib import DecompData
+from ci_lib.unify import weighted_lra, lra
 
 import pandas as pd
 import seaborn as sns
@@ -56,10 +57,14 @@ try:
     sessions = pd.concat(sessions)
     trial_starts = np.concatenate( trial_starts )
 
+    svd = lra(Vc,U,sessions, trial_starts, seed=snakemake.config['seed'])
+    '''
     frames, n_components = Vc[-1].shape
     _, width, height = U[-1].shape
     logger.debug(f"{frames=}, {n_components=}, {width=}, {height=}")
     logger.debug(f"{len(U)=}")
+
+    ##SVD
     svd = TruncatedSVD(n_components=n_components, random_state=snakemake.config['seed'])
     flat_U = np.nan_to_num(np.concatenate([u.reshape(n_components,width * height) for u in U]))
     logger.debug(f"{flat_U.shape=}")
@@ -82,6 +87,7 @@ try:
     Vc = np.concatenate( Vc )
 
     svd = DecompData( sessions, Vc, U, trial_starts, allowed_overlap=0) #TODO remove hardcode
+    '''
     svd.frame['decomposition_space'] = snakemake.wildcards['dataset_id']
     svd.save( snakemake.output[0] )
 

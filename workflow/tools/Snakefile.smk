@@ -4,7 +4,7 @@ from snakemake_tools import create_datasets, create_parameters, create_condition
 
 generalize_from = config["branch_opts"]["generalize_from"]
 
-datasets = config["branch_opts"]["datasets"]
+datasets = config["branch_opts"].get("datasets", {})
 if not 'All' in datasets.keys():
     datasets['All'] = { 'group': list(datasets.keys()) }
 
