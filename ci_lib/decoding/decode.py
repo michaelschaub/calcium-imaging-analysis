@@ -60,17 +60,18 @@ def load_feat(feat_wildcard,feat_path_list):
 
     return feat_list
 
-def balance(data_list, seed=None):
+def balance(data_list, max_number_trials=None, seed=None):
     ''' Balance number of trials between conditions'''
-    min_number_trials = np.min([data.trials_n for data in data_list])
-
-    return [data.subsample(min_number_trials, seed=seed*i if seed is not None else None)
+    number_trials = np.min([data.trials_n for data in data_list])
+    if max_number_trials is not None:
+        number_trials = min(number_trials, max_number_trials)
+    return [data.subsample(number_trials, seed=seed*i if seed is not None else None)
                                                 for i,data in enumerate(data_list,start=1)]
 
 def shuffle(labels):
     ### Shuffle     #TODO shuffle better integrated
-    def shuffle_along_axis(a, axis):
-        idx = np.random.rand(*a.shape).argsort(axis=axis)
+    def shuffle_along_axis(a, axis, seed=None):
+        idx = np.random.default_rng(seed).random(size=a.shape).argsort(axis=axis)
         return np.take_along_axis(a,idx,axis=axis)
 
     return shuffle_along_axis(labels,axis=0)
@@ -137,9 +138,9 @@ def decode_from_feature(feat_wildcard,feat_path_list,labels,decoder,reps=5,outpu
 '''
 
 @ignore_warnings(category=ConvergenceWarning)
-def decode(data, labels, decoder, reps, label_order=None,cores=1,logger=None,C=None):
+def decode(data, labels, decoder, reps, label_order=None,cores=1,logger=None,C=None, seed=420):
     ### Split
-    cv = StratifiedShuffleSplit(reps, test_size=0.2, random_state=420)
+    cv = StratifiedShuffleSplit(reps, test_size=0.2, random_state=seed)
 
     ### Scale
     scaler = preprocessing.StandardScaler().fit(data)
@@ -161,22 +162,30 @@ def decode(data, labels, decoder, reps, label_order=None,cores=1,logger=None,C=N
                     "RF":RF,
                     "RFshuffle":RF}
 
-        model = decoders[decoder](cores,C,logger)
-
+        if C is None:
+            model = decoders[decoder](cores,logger=logger)
+        else:
+            model = decoders[decoder](cores,C=C,logger=logger)
 
     ### Train & Eval
     try:
         for i, (train_index, test_index) in enumerate(cv_split):
             if isinstance(decoder,str):
+                logger.debug(f"it {i:4}/{reps-1}")
                 #If decoder is reference to a decoder, it wasn't trained yet
+                logger.debug(f"Creating model...")
                 models[i] = clone(model)
+                logger.debug(f"Fitting model...")
                 models[i].fit(data[train_index,:],labels[train_index])
             else:
                 #Otherwise its assumed to be an array of already trained decoders
                 models[i] = decoder[i]  
-            
 
+            if isinstance(decoder,str):
+                logger.debug(f"Scoring model...")
             perf[i] = models[i].score(data[test_index,:],labels[test_index])
+            if isinstance(decoder,str):
+                logger.debug(f"Calculating confusion matrix...")
             norm_confusion[i,:,:], confusion[i,:,:] = confusion_matrix(data[test_index,:],labels[test_index],models[i],label_order)
             
             trained_decoders[i] = models[i]
@@ -189,11 +198,11 @@ def decode(data, labels, decoder, reps, label_order=None,cores=1,logger=None,C=N
 
     
 '''
-def decode(data,labels,decoder,reps=5,outputs=None,balance=False,time_resolved=False):
+def decode(data,labels,decoder,reps=5,outputs=None,balance=False,time_resolved=False,seed=420):
 
     ### Shuffle     #TODO shuffle better integrated
-    def shuffle_along_axis(a, axis):
-        idx = np.random.rand(*a.shape).argsort(axis=axis)
+    def shuffle_along_axis(a, axis, seed=None):
+        idx = np.random.default_rng(seed).random(size=a.shape).argsort(axis=axis)
         return np.take_along_axis(a,idx,axis=axis)
     if "shuffle" in decoder:
         print(labels)
@@ -202,7 +211,7 @@ def decode(data,labels,decoder,reps=5,outputs=None,balance=False,time_resolved=F
 
 
     ### Split
-    cv = StratifiedShuffleSplit(reps, test_size=0.2, random_state=420)
+    cv = StratifiedShuffleSplit(reps, test_size=0.2, random_state=seed)
 
     ### Scale
     scaler = preprocessing.StandardScaler().fit( data )
