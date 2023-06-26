@@ -3,10 +3,12 @@ import numpy as np
 import logging
 LOGGER = logging.getLogger(__name__)
 
-from .features import Features, Feature_Type
+from .features import Features, FeatureType
 from .means import Means, calc_means
 from .covariances import Covariances, calc_covs, flat_covs
-from .autocovariances import AutoCovariances, calc_acovs, DEFAULT_TIMELAG
+from .autocovariances import AutoCovariances
+from .autocorrelations import AutoCorrelations
+from .crossvariance import CrossCovariances
 
 
 def calc_acorrs(covs, acovs):
@@ -15,8 +17,9 @@ def calc_acorrs(covs, acovs):
     return (acovs / sig[:,None,:,None]) / sig[:,None,None,:]
 
 class CrossCorrelations(Features):
-    _type = Feature_Type.DIRECTED
+    _type = FeatureType.DIRECTED
 
+    @staticmethod
     def create(data, means=None, covs=None, acovs=None, max_comps=None, timelag=0, label = None, logger=LOGGER):
         if covs is None:
             covs = Covariances.create(data, means, max_comps, True, logger)._feature

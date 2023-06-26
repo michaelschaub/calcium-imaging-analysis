@@ -1,11 +1,11 @@
+import logging
 import numpy as np
 import scipy.stats
 
-import logging
-LOGGER = logging.getLogger(__name__)
-
-from .features import Features, Feature_Type
+from .features import Features, FeatureType
 from .means import Means, calc_means
+
+LOGGER = logging.getLogger(__name__)
 
 
 def calc_covs(temps, means):
@@ -27,14 +27,15 @@ def flat_time_resolved_c(connectivity, diagonal,timepoints=slice(None)):
 
 
 class Cofluctuation(Features):
-    _type = Feature_Type.UNDIRECTED
+    _type = FeatureType.UNDIRECTED
 
-    def __init(self, frame, data, feature, file=None, include_diagonal=True, range=None, full=False):
-        super().__init(frame=frame, data=data, feature=feature, file=file,full=full)
+    def __init__(self, frame, data, feature, file=None, include_diagonal=True, range=None, full=False):
+        super().__init__(frame=frame, data=data, feature=feature, file=file,full=full)
         self._time_resolved = True
         self._include_diagonal = include_diagonal
         self._range = range if range else (0,feature.shape[1])
 
+    @staticmethod
     def create(data, max_comps=None, include_dia=False, logger=LOGGER,window=None,mean=False,start=None,stop=None,full=False):
         zscores_over_time = data.temporals_z_scored[:,  slice(start,stop), :max_comps]
 

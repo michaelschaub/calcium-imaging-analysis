@@ -3,7 +3,7 @@ import numpy as np
 import logging
 LOGGER = logging.getLogger(__name__)
 
-from .features import Features, Feature_Type
+from .features import Features, FeatureType
 from .means import Means, calc_means
 from .covariances import Covariances, calc_covs, flat_covs
 
@@ -30,12 +30,13 @@ def calc_acovs(temps, means, covs, taus, label):
 
 
 class AutoCovariances(Features):
-    _type=Feature_Type.DIRECTED
+    _type=FeatureType.DIRECTED
 
     def __init(self, frame, data, feature, file=None, include_diagonal=True):
         super().__init(frame=frame, data=data, feature=feature, file=file)
         self._include_diagonal = include_diagonal
 
+    @staticmethod
     def create(data, means=None, covs=None, max_comps=None, timelag=None, label = None, include_diagonal=True, logger=LOGGER):
 
         if timelag is None or timelag >= data.temporals.shape[1]:

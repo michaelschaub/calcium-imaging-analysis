@@ -1,12 +1,19 @@
+'''
+This module contains functions for calculating variously decomposed DecompData
+from SVD decomposed DecompData objects
+'''
+
+# pylint: disable=invalid-name
+
+import logging
 from pathlib import Path
 import scipy.io
 import numpy as np
 from sklearn.decomposition import FastICA
 
-import logging
 LOGGER = logging.getLogger(__name__)
 
-def anatomical_parcellation(data, atlas_path=None, ROI=[], logger=LOGGER, ):
+def anatomical_parcellation(data, atlas_path=None, ROI=None, logger=LOGGER, ):
     '''
     Decomposes a DecompData object into a anatomical parcellation based on a Brain Atlas
 
@@ -22,19 +29,22 @@ def anatomical_parcellation(data, atlas_path=None, ROI=[], logger=LOGGER, ):
     :param logger: The LOGGER object that all console outputs are piped into
     :type logger: LOGGER
 
-    :return: Anatomically parcellated DecompData object with Spatials corresponding to the given Atlas.
+    :return: Anatomically parcellated DecompData object with Spatials corresponding
+             to the given Atlas.
     :rtype: DecompData
     '''
 
     ### Loading meta data for parcellation, masks and labels for each area
     if atlas_path is None: # Fallback
         atlas_path = Path(__file__).parent.parent.parent/"resources"/"meta"/"anatomical.mat"
-    spatials = np.asarray(scipy.io.loadmat(atlas_path ,simplify_cells=True)['areaMasks'], dtype='bool')
-    labels = np.asarray(scipy.io.loadmat(atlas_path ,simplify_cells=True) ['areaLabels_wSide'],dtype=str)
+    spatials = np.asarray(
+            scipy.io.loadmat(atlas_path ,simplify_cells=True)['areaMasks'], dtype='bool')
+    labels = np.asarray(
+            scipy.io.loadmat(atlas_path ,simplify_cells=True) ['areaLabels_wSide'], dtype=str)
 
 
     #To load only ROI from of anatomical atlas
-    if ROI != [] and ROI !='':
+    if ROI is not None and ROI != [] and ROI !='':
         if isinstance(ROI,str):
             ROI = ROI.split(',')
         else:
@@ -48,14 +58,12 @@ def anatomical_parcellation(data, atlas_path=None, ROI=[], logger=LOGGER, ):
             #    ROI[i]= ROI[i]+"ᴿ"
             #    np.insert(ROI,i,ROI[i]+"ᴸ")
 
-        #print([region for region in ROI if region in labels])
         ind = [i for region in ROI for i, label in enumerate(labels) if region in label]
 
-        #iter=[(spatials[i],region) for i,region in enumerate(labels) if region in ROI]
         if ind!=[]:
             spatials, labels = spatials[ind,:,:],labels[ind]
         else:
-            logger.warn("No ROI matched Atlas from "+",".join[ROI])
+            logger.warning("No ROI matched Atlas from %s", ",".join(ROI))
 
 
     #Filter according to labels
@@ -63,27 +71,38 @@ def anatomical_parcellation(data, atlas_path=None, ROI=[], logger=LOGGER, ):
     #    pass
 
     # Maps and Spats have slightly different dims
-    frames, _ = data.temporals_flat.shape
-    n_svd , h, _ = data.spatials.shape
-    n_segments , _ , w = spatials.shape
+    n_svd , height, _ = data.spatials.shape
+    n_segments , _ , width = spatials.shape
 
-    svd_segments_bitmasks = np.broadcast_to(spatials,(n_svd,*spatials.shape)) #repeats spatials for every frame (not in memory, just simulates it by setting a stride )
+    #repeats spatials for every frame (not in memory, just simulates it by setting a stride )
+    svd_segments_bitmasks = np.broadcast_to(spatials,(n_svd,*spatials.shape))
 
     svd_segment_mean = np.zeros((n_svd,n_segments))
 
     svd_spatials = data.spatials
 
     #Add random noise to avoid Var=0 for empty areas
-    svd_spatials = np.nan_to_num(svd_spatials) + np.random.rand(*svd_spatials.shape) * 16 * np.finfo(np.float32).eps
+    svd_spatials = ( np.nan_to_num(svd_spatials)
+                    + np.random.rand(*svd_spatials.shape) * 16 * np.finfo(np.float32).eps)
 
-    svd_segment_mean = np.moveaxis([np.nanmean(svd_spatials[:,:h,:w][svd_segments_bitmasks[:,i,:h,:w]].reshape(n_svd,-1),axis=-1) for i in range(n_segments)],-1,0)
+    svd_segment_mean = np.moveaxis(
+            [ np.nanmean(
+                (
+                    svd_spatials[:,:height,:width][svd_segments_bitmasks[:,i,:height,:width]]
+                ).reshape(n_svd,-1),
+                axis=-1)
+             for i in range(n_segments)], -1, 0)
     np.nan_to_num(svd_segment_mean,copy=False)
 
     new_temporals = np.tensordot(data.temporals_flat, svd_segment_mean, 1)
     new_spatials = spatials
 
-    logger.info(f"NaNs in spatials: {np.isnan(new_spatials).any()}, NaNs in temporals: {np.isnan(new_temporals).any()}")
-    logger.info(f"0 Vars in spatials: {np.count_nonzero(np.var(new_spatials,axis=0))}, 0 Vars in temporals: {np.count_nonzero(np.var(new_temporals,axis=0)==0)}")
+    logger.info("NaNs in spatials: %s, NaNs in temporals: %s",
+                np.isnan(new_spatials).any(),
+                np.isnan(new_temporals).any())
+    logger.info("0 Vars in spatials: %s, 0 Vars in temporals: %s",
+                np.count_nonzero(np.var(new_spatials,axis=0)),
+                np.count_nonzero(np.var(new_temporals,axis=0)==0))
 
     return data.recreate(new_temporals,new_spatials, spatial_labels=labels)
 
@@ -97,7 +116,8 @@ def fastICA(data, n_components):
     :param n_components: Number of independent components (w.r.t. time).
     :type n_components: int
 
-    :return: DecompData object with Spatials corresponding to the independent components (w.r.t. time) obtianed by ICA.
+    :return: DecompData object with Spatials corresponding to the independent
+             components (w.r.t. time) obtained by ICA.
     :rtype: DecompData
     """
     #Eventually add mask?

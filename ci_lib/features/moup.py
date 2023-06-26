@@ -1,6 +1,6 @@
 import numpy as np
 
-from ci_lib import Data, DecompData
+from ci_lib import DecompData
 from ci_lib.loading import reproducable_hash, load_h5, save_h5
 from ci_lib.networks import MOU #from pymou import MOU
 from ci_lib.plotting import plot_connectivity_matrix
@@ -13,7 +13,7 @@ from enum import Enum
 import logging
 LOGGER = logging.getLogger(__name__)
 
-from .features import Features, Feature_Type
+from .features import Features, FeatureType
 
 def fit_moup(temps, tau, logger=LOGGER):
     mou_ests = np.empty((len(temps)),dtype=np.object_)
@@ -51,7 +51,7 @@ def recompose_mou_ests( attr_arrays, mou_ests=None ):
 '''
 
 class Moup(Features):
-    _type = Feature_Type.DIRECTED
+    _type = FeatureType.DIRECTED
 
     def __init(self, frame, data, feature, mou_ests, label=None, file=None,time_resolved=False):
         self.data = data
@@ -61,6 +61,7 @@ class Moup(Features):
         self._savefile = file
         self._time_resolved = time_resolved
 
+    @staticmethod
     def create(data, max_comps=None, timelag=None, label=None, start=None,stop=None,logger=LOGGER):
         if max_comps is not None:
             logger.warn("DEPRECATED: max_comps parameter in features can not garanty sensible choice of components, use n_components parameter for parcellations instead")

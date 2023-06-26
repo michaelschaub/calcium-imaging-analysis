@@ -1,43 +1,65 @@
-import numpy as np
+'''
+This module contains the temporal means feature.
+'''
 
 import logging
-LOGGER = logging.getLogger(__name__)
+import numpy as np
 
-from .features import Features, Feature_Type
-from ci_lib import Data, DecompData
+from ci_lib import DecompData
+from .features import Features, FeatureType
+
+LOGGER = logging.getLogger(__name__)
 
 
 def calc_means(temps):
+    '''Calculate the temporal means from temporal components'''
     return np.mean(temps, axis=1) # average over frames
 
 
 class Means(Features):
-    _type = Feature_Type.NODE
+    '''
+    A feature containing the mean of the temporal components over whole trials
+    or rolling window with the trials
+    '''
 
-    def __init(self, frame, data, feature, file=None, time_resolved=False, full=False):
-        super().__init(frame=frame, data=data, feature=feature, file=file, full=full)
+    _type = FeatureType.NODE
+
+    def __init__(self, frame, data, feature, file=None, time_resolved=False, full=False):
+        super().__init__(frame=frame, data=data, feature=feature, file=file, full=full)
         self._time_resolved = time_resolved #only needed cause it's not properly saved
 
 
-    def create(data, max_comps=None, logger=LOGGER, window=None, start=None, stop=None,full=False,z_scored=True): #TODO z_score default ot False
+    @staticmethod
+    def create(data, max_comps=None, logger=LOGGER, window=None, start=None, stop=None,
+               full=False,z_scored=True): #TODO z_score default ot False
+        '''Create this feature from a DecompData object'''
+
         if max_comps is not None:
-            logger.warn("DEPRECATED: max_comps parameter in features can not garanty sensible choice of components, use n_components parameter for parcellations instead")
+            logger.warn("DEPRECATED: max_comps parameter in features can not guaranty \
+sensible choice of components, use n_components parameter for parcellations instead")
         if window is None:
-            feat = Means(data.frame, data, feature=calc_means(data.temporals[:, slice(start,stop), :max_comps])[:,np.newaxis,:])  #TODO start:stop should be supported by window as well
+            #TODO start:stop should be supported by window as well
+            feat = Means(data.frame, data, feature=calc_means(
+                            data.temporals[:, slice(start,stop), :max_comps])[:,np.newaxis,:])
         else:
-            trials , phase_length, comps  =   data.temporals[:, slice(start,stop), :max_comps].shape
+            trials, phase_length, comps = data.temporals[:, slice(start,stop), :max_comps].shape
             windows = [range(i,i+window) for i in range(0,phase_length-window+1)]
 
             feat_val = np.zeros((trials,len(windows),comps if max_comps is None else max_comps))
-            for w,window in enumerate(windows):
-                feat_val[:,w,:] = calc_means(data.temporals[:, slice(start,stop), :][:, window, :max_comps] if not z_scored else data.temporals_z_scored[:, slice(start,stop), :][:, window, :max_comps])
-
-                
+            for w_indx,window in enumerate(windows):
+                if not z_scored:
+                    temps = data.temporals[:, slice(start,stop), :][:, window, :max_comps]
+                else:
+                    temps = data.temporals_z_scored[:, slice(start,stop), :][:, window, :max_comps]
+                feat_val[:,w_indx,:] = calc_means(temps)
             feat = Means(data.frame, data, feature=feat_val, time_resolved=True,full=full)
 
         return feat
 
     def flatten(self, timepoints=slice(None), feat=None):
+        '''
+        Flattens the feature into one trial dimension and one dimension for everything else
+        '''
         if feat is None:
             feat = self._feature
 
@@ -45,24 +67,17 @@ class Means(Features):
         mask = np.ones((feat.shape[1:]), dtype=bool)
         return feat[:,mask]
 
-    def mean(self):
-        return Means(self._data, feature=calc_means(self._feature[:, :, :]))
-
 
     @property
     def pixel(self):
-        return DecompData.PixelSlice(self._feature, self.data._spats[:self._feature.shape[1]])
-
-    def _op_data(self, a):
-        df = self.data._df
-        if isinstance(a, Data):
-            temps = self.expand(a)
-        else:
-            temps = self.expand()
-        spats = self.data.spatials
-        starts = self.data._starts
-        return df, temps, spats, starts
+        '''
+        Creates PixelSlice object, from which slices of recomposed pixel data can be accessed
+        the first key is applied to the trials, the second and third to the horizontal
+        and vertical dimension of the spatials
+        '''
+        return DecompData.PixelSlice(self._feature, self.data.spatials[:self._feature.shape[1]])
 
     @property
     def ncomponents(self):
+        '''The number of components the data is decomposed into'''
         return self._feature.shape[-1]

@@ -2,9 +2,9 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 
-#from ci_lib.features import Feature_Type #can't import due to circular dependencies
+#from ci_lib.features import FeatureType #can't import due to circular dependencies
 from enum import Enum
-class Feature_Type(Enum): #
+class FeatureType(Enum): #
     NODE = 0
     UNDIRECTED = 1
     DIRECTED = 2
@@ -23,7 +23,7 @@ def construct_rfe_graph(selected_feats, n_nodes, feat_type, labels=None):
     
 
     # matrices to retrieve input/output channels from connections in support network
-    mask = np.tri(n_nodes,n_nodes,0, dtype=bool) if feat_type == Feature_Type.UNDIRECTED else np.ones((n_nodes,n_nodes), dtype=bool)
+    mask = np.tri(n_nodes,n_nodes,0, dtype=bool) if feat_type == FeatureType.UNDIRECTED else np.ones((n_nodes,n_nodes), dtype=bool)
     row_ind = np.repeat(np.arange(n_nodes).reshape([n_nodes,-1]),n_nodes,axis=1)
     col_ind = np.repeat(np.arange(n_nodes).reshape([-1,n_nodes]),n_nodes,axis=0)
     row_ind = row_ind[mask]
@@ -32,7 +32,7 @@ def construct_rfe_graph(selected_feats, n_nodes, feat_type, labels=None):
     default_color= 'gray'
     selected_color= 'yellow'
 
-    if feat_type == Feature_Type.NODE: # nodal
+    if feat_type == FeatureType.NODE: # nodal
         g = nx.Graph()
         for i in range(n_nodes):
             g.add_node(i)
@@ -40,8 +40,8 @@ def construct_rfe_graph(selected_feats, n_nodes, feat_type, labels=None):
             g.nodes[i]['color'] = selected_color if (i in selected_feats) else default_color
         #g.nodes[selected_feats]['color'] = selected_color if (i in selected_feats) else default_color
 
-    if feat_type == Feature_Type.DIRECTED or feat_type == Feature_Type.UNDIRECTED:
-        g = nx.Graph() if feat_type == Feature_Type.UNDIRECTED else nx.MultiDiGraph()
+    if feat_type == FeatureType.DIRECTED or feat_type == FeatureType.UNDIRECTED:
+        g = nx.Graph() if feat_type == FeatureType.UNDIRECTED else nx.MultiDiGraph()
         for i in range(n_nodes):
             g.add_node(i)
             g.nodes[i]['selected'] = False
@@ -116,7 +116,7 @@ def graph_circle_plot(list_best_feat, n_nodes, title, feature_type, save_path=Fa
         node_labels = dict(enumerate(node_labels))
 
     # matrices to retrieve input/output channels from connections in support network
-    mask = np.tri(N,N,0, dtype=bool) if feature_type.__eq__(Feature_Type.UNDIRECTED) else np.ones((N,N), dtype=bool)
+    mask = np.tri(N,N,0, dtype=bool) if feature_type.__eq__(FeatureType.UNDIRECTED) else np.ones((N,N), dtype=bool)
 
     row_ind = np.repeat(np.arange(N).reshape([N,-1]),N,axis=1)
     col_ind = np.repeat(np.arange(N).reshape([-1,N]),N,axis=0)
@@ -129,7 +129,7 @@ def graph_circle_plot(list_best_feat, n_nodes, title, feature_type, save_path=Fa
     plt.axis('off')
     plt.title=title
 
-    if feature_type.__eq__(Feature_Type.NODE): # nodal
+    if feature_type.__eq__(FeatureType.NODE): # nodal
         #list_best_feat = np.argsort(class_perfs.mean(0))[:n_edges] # select n best features
         node_color_aff = []
         g = nx.Graph()
@@ -142,9 +142,9 @@ def graph_circle_plot(list_best_feat, n_nodes, title, feature_type, save_path=Fa
         nx.draw_networkx_nodes(g,pos=pos_circ,node_color=node_color_aff)
         nx.draw_networkx_labels(g,pos=pos_circ,labels=node_labels)
 
-    if feature_type.__eq__(Feature_Type.DIRECTED) or feature_type.__eq__(Feature_Type.UNDIRECTED):
+    if feature_type.__eq__(FeatureType.DIRECTED) or feature_type.__eq__(FeatureType.UNDIRECTED):
         #list_best_feat = np.argsort(class_perfs.mean(0))[:n_edges] # select n best features
-        g = nx.Graph() if feature_type.__eq__(Feature_Type.UNDIRECTED) else nx.MultiDiGraph()
+        g = nx.Graph() if feature_type.__eq__(FeatureType.UNDIRECTED) else nx.MultiDiGraph()
         for i in range(N):
             g.add_node(i)
         node_color_aff = ['#E8F0F2']*N
