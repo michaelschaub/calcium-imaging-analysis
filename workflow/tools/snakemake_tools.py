@@ -6,12 +6,10 @@ import hashlib
 import snakemake
 
 def get_key_by_val(mydict,val):
-    return list(mydict.keys())[list(mydict.values()).index(val)]
-
-def readable_dataset_id(hash,aliases=None):
-    if aliases is None:
-        aliases = dataset_aliases
-    return get_key_by_val(aliases ,hash) + hash[:4]
+    try:
+        return list(mydict.keys())[list(mydict.values()).index(val)]
+    except ValueError:
+        raise ValueError("Value not found in dict") from None
 
 def create_parameters( branch_conf, static_conf={} ):
     '''
@@ -137,6 +135,18 @@ def create_datasets(sets, config):
     datasets = {dataset_path_hash(sessions, name, config): sessions for name, sessions in datasets.items() }
     sessions = { id: ['-'.join(s) for s in sessions] for id, sessions in datasets.items()}
     return datasets, sessions, groups, aliases
+
+def unalias_dataset(aliases, dataset):
+    try:
+        return aliases[dataset]
+    except KeyError:
+        return dataset
+
+def alias_dataset(aliases, dataset):
+    try:
+        return get_key_by_val(aliases, dataset)
+    except ValueError:
+        return dataset
 
 
 #TODO fix this mess / find a snakemake version, that fixes it

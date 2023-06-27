@@ -6,8 +6,6 @@ ruleorder:  load_GN > load_mSM > trial_selection > locaNMF > feature_concat > pa
 
 from snakemake_tools import getKeys, hash_config
 
-
-
 ###   Output accumulation rules   ###
 
 #rule paper:
@@ -160,6 +158,14 @@ rule biomarkers:
                     parcellation = parcellations, feature = features, rfe_n = rfe_ns)
 
 
+rule exports:
+    input:
+        expand([f"results/exports/{config['name']}/{alias(dataset_id)}/{alias(subset_id)}/{{parcellation}}/temporals.{config['export_type']}"
+                        for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
+                    parcellation = parcellations, ),
+        #expand([f"results/exports/{config['name']}/{alias(dataset_id)}/{alias(subset_id)}/{{parcellation}}/{{condition}}/temporals.{config['export_type']}"
+        #                for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
+        #            parcellation = parcellations, condition=aggr_conditions),
 
 
 
@@ -222,3 +228,9 @@ module plotting:
     config: config | config['plotting']
 
 use rule * from plotting
+
+module export:
+    snakefile: "rules/export.smk"
+    config: config | config['export']
+
+use rule * from export

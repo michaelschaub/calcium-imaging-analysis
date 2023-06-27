@@ -1,6 +1,9 @@
 configfile: "config/config.yaml"
 
-from snakemake_tools import create_datasets, create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match, hash_config
+from snakemake_tools import create_datasets, create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match, hash_config, alias_dataset, unalias_dataset
+
+if config.get('name', None) is None:
+    config['name'] = "Default"
 
 generalize_from = config["branch_opts"]["generalize_from"]
 
@@ -12,6 +15,9 @@ if not 'All' in datasets.keys():
 group_datasets = datasets
 datasets, dataset_sessions, dataset_groups, dataset_aliases = create_datasets(datasets, config)
 
+
+alias   = lambda dataset:   alias_dataset(dataset_aliases, dataset)
+unalias = lambda dataset: unalias_dataset(dataset_aliases, dataset)
 
 #print(f"{datasets=}")
 #print(f"{dataset_sessions=}")
@@ -128,6 +134,11 @@ config["plotting"] =   {
                         "dataset_aliases":dataset_aliases,
                         "session_runs":session_runs,
                         "datasets":datasets,
+                        }
+
+config["export"] =     {"dataset_groups" : dataset_groups,
+                        "dataset_aliases" : dataset_aliases,
+                        "session_runs" : session_runs,
                         }
 
 #config["generic"] = {"loglevel": config["loglevel"],

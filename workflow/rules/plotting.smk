@@ -1,4 +1,4 @@
-from snakemake_tools import create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match, hash_config, readable_dataset_id
+from snakemake_tools import create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match, hash_config
 
 
 ###   Plotting   ###
