@@ -234,18 +234,20 @@ class DecompData:
         '''The pandas DataFrame containing the trial data'''
         return self._df
 
-    #TODO both temporals only work for decompdata objects where phases have been applied to cut
-    # all trials into same length, otherwise reshaping doesnt work
     @property
     def temporals_z_scored(self):
         '''
         Get z-score of temporal components of DecompData object, reshaped into trials.
+        The new length of the individual trials is that of shortest trial.
         Z-score is calculated using the mean and standart deviation of the full dataset,
         even after splitting the DecompData-object into conditions.
         '''
         try:
-            return np.reshape(self._temps - self._mean * (1/self._stdev),
-                              (len(self), -1, self.n_components))
+            ends = np.roll(self._starts, -1)
+            ends[-1] = self.t_max
+            min_trial_len = np.min(ends - self._starts)
+            temp_indx = np.array(np.arange(min_trial_len)[np.newaxis, :] + self._starts[:, np.newaxis], dtype=int)
+            return self._temps[temp_indx] - self._mean * (1/self._stdev)
         except ValueError as err:
             if "cannot reshape array of size 0 into shape" in err.args[0]:
                 return np.zeros((0, 0, self.n_components))
@@ -254,10 +256,15 @@ class DecompData:
     @property
     def temporals(self):
         '''
-        Get temporal components of DecompData object, reshaped into trials
+        Get temporal components of DecompData object, reshaped into trials.
+        The new length of the individual trials is that of shortest trial.
         '''
         try:
-            return np.reshape(self._temps, (len(self), -1, self.n_components))
+            ends = np.roll(self._starts, -1)
+            ends[-1] = self.t_max
+            min_trial_len = np.min(ends - self._starts)
+            temp_indx = np.array(np.arange(min_trial_len)[np.newaxis, :] + self._starts[:, np.newaxis], dtype=int)
+            return self._temps[temp_indx]
         except ValueError as err:
             if "cannot reshape array of size 0 into shape" in err.args[0]:
                 return np.zeros((0, 0, self.n_components))
