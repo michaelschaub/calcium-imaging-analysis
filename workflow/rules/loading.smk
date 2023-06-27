@@ -51,7 +51,7 @@ rule load_GN:
         unpack(sessions_input_gerion)
     output:
         temp("results/data/{session_id}/SVD/{session_id}/data.h5"),
-        align_plot = report("results/data/{session_id}/{session_id}/SVD/alignment.pdf", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "GN", "Subjects":"{session_id}"}),
+        align_plot = report("results/data/{session_id}/SVD/{session_id}/alignment.pdf", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "GN", "Subjects":"{session_id}"}),
         config = "results/data/{session_id}/SVD/{session_id}/conf.yaml",
         stim_side = report("results/data/{session_id}/SVD/{session_id}/stim_side.pdf", caption="../report/alignment.rst", category="0 Loading", labels={"Dataset": "GN", "Subjects":"{session_id}"})
     wildcard_constraints:
@@ -74,7 +74,7 @@ rule load_mSM:
         unpack(sessions_input_simon)
     output:
         temp("results/data/{session_id}/{session_id}/SVD/data.h5"),
-        align_plot = report("results/data/{session_id}/{session_id}/SVD/alignment.pdf", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "mSM", "Subjects":"{session_id}"}),
+        align_plot = report("results/data/{session_id}/SVD/{session_id}/alignment.pdf", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "mSM", "Subjects":"{session_id}"}),
         config = "results/data/{session_id}/SVD/{session_id}/conf.yaml",
     wildcard_constraints:
         session_id = r"mSM[\w_.\-]*"
