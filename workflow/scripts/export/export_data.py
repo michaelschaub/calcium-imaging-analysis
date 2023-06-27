@@ -1,6 +1,6 @@
 from pathlib import Path
 import sys
-sys.path.append(str(Path(__file__).parent.parent.parent.absolute()))
+sys.path.append(str(Path(__file__).parent.parent.parent.parent.absolute()))
 
 from ci_lib.utils.snakemake_tools import start_timer, stop_timer, save
 from ci_lib.utils.logging import start_log

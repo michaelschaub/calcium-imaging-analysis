@@ -17,7 +17,7 @@ rule export_data:
     conda:
         "../envs/environment.yaml"
     script:
-        "../scripts/export_data.py"
+        "../scripts/export/export_data.py"
 
 use rule export_data as export_data_deeper with:
     input:
