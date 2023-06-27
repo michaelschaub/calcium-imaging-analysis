@@ -45,12 +45,12 @@ def save_conf(snakemake, sections, params=None, additional_config=None):
     with open( snakemake.output["config"], 'w', encoding='utf-8') as conf_file:
         yaml.dump(config, conf_file)
 
-def save(snakemake, path, data):
+def save(path, data):
     '''
     Saves `data` into `path` in a format specified by the extension of `path`
     '''
     if isinstance(data, numpy.ndarray):
-        ext = snakemake.config['export_type']
+        ext = path.split('.')[-1]
         if ext == 'csv':
             numpy.savetxt(path, data, delimiter=',')
         elif ext == 'npy':
@@ -63,7 +63,7 @@ def save(snakemake, path, data):
         with open(path, 'wb', encoding='utf-8') as file:
             pickle.dump(data, file)
 
-def load(snakemake, path, dtype="float"):
+def load(path, dtype="float"):
     '''
     Loads data from a file saved into `path` in a format specified by the extension of `path`
     '''

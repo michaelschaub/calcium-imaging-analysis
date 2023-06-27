@@ -45,7 +45,7 @@ try:
 
     feat.save(snakemake.output[0])
     feat.plot(snakemake.output["export_plot"])
-    snakemake_tools.save(snakemake, snakemake.output["export_raw"], feat.feature)
+    snakemake_tools.save(snakemake.output["export_raw"], feat.feature)
 
     snakemake_tools.stop_timer(start, logger=logger)
 except Exception:

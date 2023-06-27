@@ -32,7 +32,7 @@ try:
     plot_connectivity_matrix([np.mean(feat.feature,axis=0)[0],np.mean(thresh_feat,axis=0)[0]],title=snakemake.wildcards["feature"],path=snakemake.output["export_plot"]) #TODO why is it trial x 1 (?) x w x h
 
     feat.feature = thresh_feat
-    snakemake_tools.save(snakemake, snakemake.output["export_raw"], feat.feature)
+    snakemake_tools.save(snakemake.output["export_raw"], feat.feature)
 
     feat.save(snakemake.output["data"])
 

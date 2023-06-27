@@ -55,15 +55,17 @@ try:
 
     data = DecompData.load(snakemake.input[0])
     feat = feat_from_string(feature).create(data, max_comps=max_comps, **param_dict[feature](params)) #TODO **param_dict doesn't pass anything for empty lambda expression, shouldn't it just pass everyhting + replacement options
+    logger.debug(f"feature condition {feat.frame['condition']}")
     logger.debug(f"feature shape {feat.feature.shape}")
+    logger.debug(f"feature ids {feat.frame['trial_id']}")
 
     feat.frame['feature'] = feature
     feat.frame['feature_params'] = pd.Series({i: params for i in feat.frame.index})
 
     feat.save(snakemake.output[0])
     feat.plot(snakemake.output["export_plot"])
-    snakemake_tools.save(snakemake, snakemake.output["export_raw"], feat.feature)
-    #snakemake_tools.save(snakemake, snakemake.output["export_plot"], feat.feature)
+    snakemake_tools.save(snakemake.output["export_raw"], feat.feature)
+    #snakemake_tools.save(snakemake.output["export_plot"], feat.feature)
 
     snakemake_tools.stop_timer(start, logger=logger)
 except Exception:

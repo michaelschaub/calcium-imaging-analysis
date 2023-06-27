@@ -77,7 +77,7 @@ try:
  
     #print(output_dict)
 
-    snakemake_tools.save(snakemake,snakemake.output["dict"],output_dict)
+    snakemake_tools.save(snakemake.output["dict"],output_dict)
 
     #remove lambda exp. so nested_dict can be pickled
     #pkl_save_dict = json.loads(json.dumps(nest))
