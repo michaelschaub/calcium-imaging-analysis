@@ -26,7 +26,8 @@ try:
     logger.debug(f"Concated frames.")
     #dfs["dataset"] = snakemake.params[dataset_name]
     for column, param in snakemake.params.items():
-        dfs[column] = param
+        if param is not None:
+            dfs[column] = param
 
     #Save Dfs
     dfs.to_pickle(snakemake.output[0])
