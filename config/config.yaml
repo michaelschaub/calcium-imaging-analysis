@@ -172,6 +172,19 @@ paths:
     LocaNMF:
       atlas: resources/meta/anatomical.mat
 
+temporary_outputs:
+  # mark all intermediate outputs as temporary
+  default: True
+  #
+  # mark outputs of specific rules as (not) temporary
+  # load: False
+  unify: False
+  parcellate: False
+  # trial_selection: False
+  # condition: False
+  # feature: False
+  # decoding: NOT YET IMPLEMENTED!
+
 different_config_inputs: 1
 
 limit_memory: 1
@@ -182,7 +195,7 @@ seed: 1423
 
 #hash_digest_length: 8
 
-export_type: 'npy'
+export_type: 'npz'
 
 ####Plot styling #TODO encapsulate 
 font_scale: 1.5

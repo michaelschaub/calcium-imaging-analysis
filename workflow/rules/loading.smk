@@ -1,5 +1,8 @@
-from snakemake_tools import create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match, hash_config
+from snakemake_tools import create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match, hash_config, temp_if_config
 from wildcard_functions import subjects_from_wildcard
+
+def temp_c(file, rule=None):
+    return temp_if_config(file, config.get("temporary_outputs",{}), rule)
 
 ### Todo unify simon and gerions inout functions (easy)
 
@@ -50,7 +53,7 @@ rule load_GN:
     input:
         unpack(sessions_input_gerion)
     output:
-        temp("results/data/{session_id}/SVD/{session_id}/data.h5"),
+        temp_c("results/data/{session_id}/SVD/{session_id}/data.h5", rule="load"),
         align_plot = report("results/data/{session_id}/SVD/{session_id}/alignment.pdf", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "GN", "Subjects":"{session_id}"}),
         config = "results/data/{session_id}/SVD/{session_id}/conf.yaml",
         stim_side = report("results/data/{session_id}/SVD/{session_id}/stim_side.pdf", caption="../report/alignment.rst", category="0 Loading", labels={"Dataset": "GN", "Subjects":"{session_id}"})
@@ -73,7 +76,7 @@ rule load_mSM:
     input:
         unpack(sessions_input_simon)
     output:
-        temp("results/data/{session_id}/{session_id}/SVD/data.h5"),
+        temp_c("results/data/{session_id}/SVD/{session_id}/data.h5", rule="load"),
         align_plot = report("results/data/{session_id}/SVD/{session_id}/alignment.pdf", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "mSM", "Subjects":"{session_id}"}),
         config = "results/data/{session_id}/SVD/{session_id}/conf.yaml",
     wildcard_constraints:
@@ -107,7 +110,7 @@ rule unify:
     input:
         unpack(input_unification)
     output:
-        "results/data/{dataset_id}/SVD/{dataset_id}/data.h5",
+        temp_c("results/data/{dataset_id}/SVD/{dataset_id}/data.h5", rule="unify"),
         config = "results/data/{dataset_id}/SVD/{dataset_id}/conf.yaml",
     log:
         "results/data/{dataset_id}/SVD/{dataset_id}/unify.log"

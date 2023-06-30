@@ -1,7 +1,10 @@
-from snakemake_tools import create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match, hash_config
+from snakemake_tools import create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match, hash_config, temp_if_config
 from wildcard_functions import subjects_from_wildcard
 
 import re
+
+def temp_c(file, rule=None):
+    return temp_if_config(file, config.get("temporary_outputs",{}), rule)
 
 ###   Data processing   ###
 
@@ -27,7 +30,7 @@ rule parcellate:
     input:
         unpack(parcellation_input)
     output:
-        "{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/data.h5",
+        temp_c("{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/data.h5", rule="parcellate"),
         config = "{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/conf.yaml",
     params:
         params = lambda wildcards: config["parcellations"][wildcards["parcellation"]]
@@ -85,7 +88,7 @@ rule trial_selection:
         #config = "{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/conf.yaml",
         input_trial_selection
     output:
-        temp("{data_dir}/{dataset_id}/{parcellation}/{selection_id}/data.h5"),
+        temp_c("{data_dir}/{dataset_id}/{parcellation}/{selection_id}/data.h5", rule="trial_selection"),
         #report = report("{data_dir}/{dataset_id}/{parcellation}/{selection_id}/conf.yaml"),
         config = "{data_dir}/{dataset_id}/{parcellation}/{selection_id}/conf.yaml",
     params:
@@ -114,7 +117,7 @@ rule condition:
         data = f"{{data_dir}}/data.h5",
         config = f"{{data_dir}}/conf.yaml",
     output:
-        temp(f"{{data_dir}}/Features/{{cond}}/data.h5"),
+        temp_c(f"{{data_dir}}/Features/{{cond}}/data.h5", rule="condition"),
         config = f"{{data_dir}}/Features/{{cond}}/conf.yaml",
     params:
         condition_params
@@ -132,17 +135,17 @@ rule condition:
 rule condition_grouping:
     input:
         lambda wildcards: [
-		f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{sub_cond}/data.h5"
+		f"results/data/{{dataset_id}}/{{parcellation}}/{{trials}}/Features/{sub_cond}/data.h5"
 		for sub_cond in config['group_conditions'][wildcards['cond']]
 	]
     output:
-        temp(f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/data.h5"),
-        config = f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/conf.yaml",
+        temp_c(f"results/data/{{dataset_id}}/{{parcellation}}/{{trials}}/Features/{{cond}}/data.h5", rule="condition"),
+        config = f"results/data/{{dataset_id}}/{{parcellation}}/{{trials}}/Features/{{cond}}/conf.yaml",
     wildcard_constraints:
         cond = branch_match(list(config['group_conditions'].keys()), params=False)
     params:
     log:
-        f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/condition_grouping.log"
+        f"results/data/{{dataset_id}}/{{parcellation}}/{{trials}}/Features/{{cond}}/condition_grouping.log"
     conda:
         "../envs/environment.yaml"
     resources:
@@ -152,30 +155,30 @@ rule condition_grouping:
 
 rule feature_calculation:
     input:
-        data = f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/data.h5",
-        config = f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/conf.yaml",
+        data = f"results/data/{{dataset_id}}/{{parcellation}}/{{trials}}/Features/{{cond}}/data.h5",
+        config = f"results/data/{{dataset_id}}/{{parcellation}}/{{trials}}/Features/{{cond}}/conf.yaml",
     output:
-        temp(f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5"),
+        temp_c(f"results/data/{{dataset_id}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5", rule="feature"),
         export_raw = report(
-            f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.{config['export_type']}",
+            f"results/data/{{dataset_id}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.{config['export_type']}",
             caption="../report/alignment.rst",
             category="4 Feature Calculation",
             subcategory="{feature}",
-            labels={"Condition": "{cond}", "Subject/Date": "{mouse_dates}", "Type": "Data"}),
+            labels={"Condition": "{cond}", "Subject/Date": "{dataset_id}", "Type": "Data"}),
         export_plot = report(
-            f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.pdf",
+            f"results/data/{{dataset_id}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.pdf",
             caption="../report/alignment.rst",
             category="4 Feature Calculation",
             subcategory="{feature}",
-            labels={"Condition": "{cond}", "Subject/Date": "{mouse_dates}", "Type": "Plot"}),
+            labels={"Condition": "{cond}", "Subject/Date": "{dataset_id}", "Type": "Plot"}),
 
-        config = f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/conf.yaml",
+        config = f"results/data/{{dataset_id}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/conf.yaml",
     wildcard_constraints:
         feature = r'(?!thresh).+'
     params:
         params = lambda wildcards: config["features"][wildcards["feature"]]
     log:
-        f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/feature_calculation.log"
+        f"results/data/{{dataset_id}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/feature_calculation.log"
     conda:
         "../envs/environment.yaml"
     resources:
@@ -261,31 +264,31 @@ rule thresholding:
 rule feature_grouping:
     input:
         lambda wildcards: [
-		f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{sub_cond}/{{feature}}/features.h5"
+		f"results/data/{{dataset_id}}/{{parcellation}}/{{trials}}/Features/{sub_cond}/{{feature}}/features.h5"
 		for sub_cond in config['group_conditions'][wildcards['cond']]
 	]
     output:
-        temp(f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5"),
+        temp_c(f"results/data/{{dataset_id}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5", rule="feature"),
         export_raw = report(
-            f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.{config['export_type']}",
+            f"results/data/{{dataset_id}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.{config['export_type']}",
             caption="../report/alignment.rst",
             category="4 Feature Calculation",
             subcategory="{feature}",
-            labels={"Condition": "{cond}", "Subject/Date": "{mouse_dates}", "Type": "Data"}),
+            labels={"Condition": "{cond}", "Subject/Date": "{dataset_id}", "Type": "Data"}),
         export_plot = report(
-            f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.pdf",
+            f"results/data/{{dataset_id}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.pdf",
             caption="../report/alignment.rst",
             category="4 Feature Calculation",
             subcategory="{feature}",
-            labels={"Condition": "{cond}", "Subject/Date": "{mouse_dates}", "Type": "Plot"}),
+            labels={"Condition": "{cond}", "Subject/Date": "{dataset_id}", "Type": "Plot"}),
 
-        config = f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/conf.yaml",
+        config = f"results/data/{{dataset_id}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/conf.yaml",
     wildcard_constraints:
         cond = branch_match(list(config['group_conditions'].keys()), params=False)
     params:
         params = lambda wildcards: config["features"][wildcards["feature"]]
     log:
-        f"results/data/{{mouse_dates}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/feature_grouping.log"
+        f"results/data/{{dataset_id}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/feature_grouping.log"
     conda:
         "../envs/environment.yaml"
     resources:
