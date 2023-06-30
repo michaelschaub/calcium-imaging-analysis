@@ -276,7 +276,7 @@ rule plot_performances_features:
         subjects=config["plot_subject_labels"],
         trials=config['default_conditions'],
     log:
-        f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/plot_performances.log",
+        f"results/plots/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{parcellation}}_plot_performances.log",
     conda:
         "../envs/environment.yaml"
     script:
@@ -298,7 +298,7 @@ rule plot_performances_parcellations:
         subjects=config["plot_subject_labels"],
         trials=config['default_conditions'],
     log:
-        f"results/plots/{{dataset_id}}/{{subset_id}}/{{feature}}/{'.'.join(config['aggr_conditions'])}/plot_performances.log",
+        f"results/plots/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}_plot_performances.log",
     conda:
         "../envs/environment.yaml"
     script:
@@ -342,7 +342,7 @@ rule plot_performances_features_parcellations:
         #subjects=config["plot_subject_labels"],
         #trials=config['default_conditions'],
     log:
-        f"results/data/{{dataset_id}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/plot_performances.log",
+        f"results/plots/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/plot_performances.log",
     conda:
         "../envs/environment.yaml"
     script:
