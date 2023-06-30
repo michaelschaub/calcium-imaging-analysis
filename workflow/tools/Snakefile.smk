@@ -44,7 +44,7 @@ session_runs = {}
 for set_id, sub_ids in unification_groups.items():
     if include_subsets:
         sub_datasets = [set_id, *sub_ids]
-        if include_individual_sessions:
+        if include_individual_sessions and set_id in datasets:
             sub_datasets.extend(dataset_sessions[set_id])
     else:
         sub_datasets = [set_id]
