@@ -1,12 +1,10 @@
 configfile: "config/config.yaml"
 
-from snakemake_tools import create_datasets, create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match, hash_config, alias_dataset, unalias_dataset, temp_if_config
+#from snakemake_tools import create_datasets, create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match, hash_config, alias_dataset, unalias_dataset, temp_if_config
+from snakemake_tools import create_datasets, create_parameters, create_conditions, branch_match, getKeys, hash_config
 
 if config.get('name', None) is None:
     config['name'] = "Default"
-
-def temp_c(in_file, rule=None):
-    return temp_if_config(in_file, config.get("temporary_outputs",{}), rule)
 
 generalize_from = config["branch_opts"]["generalize_from"]
 
@@ -18,9 +16,8 @@ if not 'All' in datasets.keys():
 group_datasets = datasets
 datasets, dataset_sessions, dataset_groups, dataset_aliases = create_datasets(datasets, config)
 
-
-alias   = lambda dataset:   alias_dataset(dataset_aliases, dataset)
-unalias = lambda dataset: unalias_dataset(dataset_aliases, dataset)
+config["dataset_aliases"] = dataset_aliases
+include: "../rules/common.smk"
 
 #print(f"{datasets=}")
 #print(f"{dataset_sessions=}")
@@ -159,5 +156,3 @@ wildcard_constraints:
     cond          = branch_match(config["branch_opts"]["conditions"].keys()),
     feature       = branch_match(config["branch_opts"]["features"].keys()),
     decoder       = branch_match(config["branch_opts"]["decoders"].keys()),
-
-TRIALS_DIR = r"results/{session_runs}/{parcellation}/{trials}"
