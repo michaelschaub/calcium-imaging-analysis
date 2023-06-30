@@ -148,6 +148,14 @@ def alias_dataset(aliases, dataset):
     except ValueError:
         return dataset
 
+def temp_if_config(file, temp_config, rule=None):
+    # check if rule specific config exists
+    if rule in temp_config:
+        temp = temp_config[rule]
+    else:
+        # get default value for all intermediates
+        temp = temp_config.get("default", False)
+    return snakemake.io.temp(file) if temp else file
 
 #TODO fix this mess / find a snakemake version, that fixes it
 # taking input as an argument creates all kinds of bugs in snakemake...

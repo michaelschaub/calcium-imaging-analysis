@@ -1,9 +1,12 @@
 configfile: "config/config.yaml"
 
-from snakemake_tools import create_datasets, create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match, hash_config, alias_dataset, unalias_dataset
+from snakemake_tools import create_datasets, create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match, hash_config, alias_dataset, unalias_dataset, temp_if_config
 
 if config.get('name', None) is None:
     config['name'] = "Default"
+
+def temp_c(in_file, rule=None):
+    return temp_if_config(in_file, config.get("temporary_outputs",{}), rule)
 
 generalize_from = config["branch_opts"]["generalize_from"]
 
