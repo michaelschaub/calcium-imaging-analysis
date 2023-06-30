@@ -41,7 +41,7 @@ rule parcellate:
     conda:
         "../envs/environment.yaml"
     resources:
-        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,2000,1000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,4000,2000)
     script:
         "../scripts/parcellation.py"
 
@@ -95,7 +95,7 @@ rule trial_selection:
     conda:
         "../envs/environment.yaml"
     resources:
-        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,1000,1000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,2000,2000)
     script:
         "../scripts/trial_selection.py"
 
@@ -125,7 +125,7 @@ rule condition:
     conda:
         "../envs/environment.yaml"
     resources:
-        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,2000,1000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,2000,2000)
     script:
         "../scripts/conditional.py"
 
@@ -179,7 +179,7 @@ rule feature_calculation:
     conda:
         "../envs/environment.yaml"
     resources:
-        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,4000,2000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,4000,4000)
     script:
         "../scripts/feature.py"
 
@@ -310,7 +310,7 @@ rule feature_elimination:
     conda:
         "../envs/environment.yaml"
     resources:
-        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,1000,1000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,4000,4000)
     script:
         "../scripts/feature_elimination.py"
 
@@ -356,7 +356,7 @@ rule decoding:
     conda:
         "../envs/environment.yaml"
     resources:
-        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,1000,1000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,8000,4000)
     threads:
         min(len(list(config['aggr_conditions'])),workflow.cores) #For multinomial lr = job for each class
         #workflow.cores * 0.2

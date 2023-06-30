@@ -116,6 +116,6 @@ rule unify:
     conda:
         "../envs/environment.yaml"
     resources:
-        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,8000,2000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,12000,4000)
     script:
         "../scripts/loading/unify_sessions.py"
