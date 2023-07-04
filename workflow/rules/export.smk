@@ -11,8 +11,8 @@ rule export_data:
     log:
         f"{EXPORTS_DIR}/{{decomp_alias}}/{{dataset_alias}}/{{parcellation}}/export_data.{{ext}}.log"
     wildcard_constraints:
-        #decomp_alias = r"[a-zA-Z\d_.#-]+",
-        #dataset_alias = r"[a-zA-Z\d_.#-]+",
+        decomp_alias  = r"[a-zA-Z\d_.#-]+",
+        dataset_alias = r"[a-zA-Z\d_.#-]+",
         ext = r"(npy|npz|csv|pkl)"
     conda:
         "../envs/environment.yaml"

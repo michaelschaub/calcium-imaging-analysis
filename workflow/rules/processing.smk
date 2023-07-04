@@ -35,7 +35,6 @@ rule parcellate:
         # exclude SVD as parcellation
         #TODO check if this really works
         parcellation = "(?!SVD$).+",
-	#data_dir = 'results/data/GN06.03-26#GN06.03-29'
     log:
         "{data_dir}/{dataset_id}/{parcellation}/{dataset_id}/parcellation.log"
     conda:
@@ -313,28 +312,6 @@ rule feature_elimination:
         mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,4000,4000)
     script:
         "../scripts/feature_elimination.py"
-
-'''
-rule decoding:
-    input:
-        [f"{{data_dir}}/Features/{cond}/{{feature}}/features.h5" for cond in config['aggr_conditions']],
-    output:
-        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/decoder_model.pkl",
-        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/decoder_perf.pkl",
-        config = f"{{data_dir}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/conf.yaml",
-    params:
-        conds = list(config['aggr_conditions']),
-        params = lambda wildcards: config["decoders"][wildcards["decoder"]]
-    log:
-        f"{{data_dir}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/decoding.log",
-    conda:
-        "../envs/environment.yaml"
-    resources:
-        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,1000,1000)
-    script:
-        "../scripts/decoding.py"
-
-'''
 
 rule decoding:
     input:

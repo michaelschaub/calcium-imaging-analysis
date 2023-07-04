@@ -4,13 +4,6 @@ include: "common.smk"
 
 ###   Plotting   ###
 
-#rule plot_from_df_dataset:
-#    input:
-#        f"{PLOTS_DIR}/{{dataset_id}}/ind_decode/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
-#        f"{PLOTS_DIR}/{{dataset_id}}/shared_decode/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
-#    output:
-#        f"{PLOTS_DIR}/{{dataset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/perf_all.datasets.pdf"
-
 rule plot_from_df_subset_space_comp:
     input:
         f"{PLOTS_DIR}/{{dataset_id}}/sessions_in_sessions/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
@@ -243,8 +236,6 @@ rule plot_performance:
         config = [f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{decoder}/conf.yaml" for decoder in config["decoders"]],
     output:
         f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/performance.pdf",
-        
-        #f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/performance.pkl",
     params:
         conds=list(config['aggr_conditions']),
         decoders=config["decoders"],
@@ -354,10 +345,7 @@ rule plot_performance_over_time:
         perf   = [f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{decoder}/decoder_perf.pkl" for decoder in config["decoders"]],
         config = [f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{decoder}/conf.yaml" for decoder in config["decoders"]],
     output:
-        #f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/{{dataset_id}}_{{parcellation}}_{{feature}}_{'.'.join(config['aggr_conditions'])}_over_time.pdf",
-        #f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/{{dataset_id}}_{{parcellation}}_{{feature}}_{'.'.join(config['aggr_conditions'])}_over_time.pkl",
         f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/performance_over_time.pdf",
-        #f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{parcellation}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/performance_over_time.pkl",
     params:
         conds=list(config['aggr_conditions']),
         decoders=config["decoders"],
@@ -414,7 +402,6 @@ rule plot_performances_parcellations_over_time:
          for parcellation in config['parcellations']]
     output:
         f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}_performance_over_time.pdf",
-        #f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{feature}}/{'.'.join(config['aggr_conditions'])}/performance_over_time_parcels.pkl",
     params:
         conds=list(config['aggr_conditions']),
         decoders=config["decoders"],
@@ -433,7 +420,6 @@ rule plot_performances_features_over_time:
          for feature in config['features']]
     output:
         f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{parcellation}}_performance_over_time.pdf",
-        #f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{parcellation}}/{'.'.join(config['aggr_conditions'])}/performance_over_time_features.pkl",
     params:
         conds=list(config['aggr_conditions']),
         decoders=config["decoders"],
