@@ -189,42 +189,6 @@ def concat_input(wildcards):
     return {"individual_sessions":[f"{DATA_DIR}/{'.'.join([subject_id,date])}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5" for subject_id,dates in sessions.items() for date in dates ]}
 
     
-# can this actually occur with new structure? 
-# TODO remove?
-# Sessions were not combined upon loading, concat individual sessions 
-rule feature_concat:
-    input:
-        unpack(concat_input)
-    output:
-        f"{DATA_DIR}/{{concated_sessions}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/features.h5",
-        export_raw = report(
-            f"{DATA_DIR}/{{concated_sessions}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.{config['export_type']}",
-            caption="../report/alignment.rst",
-            category="4 Feature Calculation",
-            subcategory="{feature}",
-            labels={"Condition": "{cond}", "Subject/Date": "All", "Type": "Data"}),
-        export_plot = report(
-            f"{DATA_DIR}/{{concated_sessions}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/{{cond}}.{{feature}}.pdf",
-            caption="../report/alignment.rst",
-            category="4 Feature Calculation",
-            subcategory="{feature}",
-            labels={"Condition": "{cond}", "Subject/Date": "All", "Type": "Plot"}),  
-    params:
-        params = lambda wildcards: config["features"][wildcards["feature"]]
-    wildcard_constraints:
-        #only allowed to resolve wildcards of combined sessions (indicated by the sessions being concat with #) if set false in config, else sessions should be loaded together instead of being concat afterwards
-        concated_sessions = r"GN[\w_.\-#]*" if not True else r"(?!)"
-    log:
-        f"{DATA_DIR}/{{concated_sessions}}/{{parcellation}}/{{trials}}/Features/{{cond}}/{{feature}}/feature_calculation.log"
-    conda:
-        "../envs/environment.yaml"
-    resources:
-        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,4000,2000)
-    script:
-        "../scripts/feature_concat.py"
-#else:
-# Sessions were combined upon loading, no concatination
-
 
 #Need prio over features
 rule thresholding:

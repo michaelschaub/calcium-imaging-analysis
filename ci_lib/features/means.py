@@ -30,27 +30,25 @@ class Means(Features):
 
 
     @staticmethod
-    def create(data, max_comps=None, logger=LOGGER, window=None, start=None, stop=None,
+    def create(data, logger=LOGGER, window=None, start=None, stop=None,
                full=False,z_scored=True): #TODO z_score default ot False
         '''Create this feature from a DecompData object'''
 
-        if max_comps is not None:
-            logger.warn("DEPRECATED: max_comps parameter in features can not guaranty \
 sensible choice of components, use n_components parameter for parcellations instead")
         if window is None:
             #TODO start:stop should be supported by window as well
             feat = Means(data.frame, data, feature=calc_means(
-                            data.temporals[:, slice(start,stop), :max_comps])[:,np.newaxis,:])
+                            data.temporals[:, slice(start,stop), :])[:,np.newaxis,:])
         else:
-            trials, phase_length, comps = data.temporals[:, slice(start,stop), :max_comps].shape
+            trials, phase_length, comps = data.temporals[:, slice(start,stop), :].shape
             windows = [range(i,i+window) for i in range(0,phase_length-window+1)]
 
-            feat_val = np.zeros((trials,len(windows),comps if max_comps is None else max_comps))
+            feat_val = np.zeros((trials,len(windows),comps ))
             for w_indx,window in enumerate(windows):
                 if not z_scored:
-                    temps = data.temporals[:, slice(start,stop), :][:, window, :max_comps]
+                    temps = data.temporals[:, slice(start,stop), :][:, window, :]
                 else:
-                    temps = data.temporals_z_scored[:, slice(start,stop), :][:, window, :max_comps]
+                    temps = data.temporals_z_scored[:, slice(start,stop), :][:, window, :]
                 feat_val[:,w_indx,:] = calc_means(temps)
             feat = Means(data.frame, data, feature=feat_val, time_resolved=True,full=full)
 

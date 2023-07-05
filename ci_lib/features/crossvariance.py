@@ -37,21 +37,21 @@ class AutoCovariances(Features):
         self._include_diagonal = include_diagonal
 
     @staticmethod
-    def create(data, means=None, covs=None, max_comps=None, timelag=None, label = None, include_diagonal=True, logger=LOGGER):
+    def create(data, means=None, covs=None, timelag=None, label = None, include_diagonal=True, logger=LOGGER):
 
         if timelag is None or timelag >= data.temporals.shape[1]:
             timelag = 0
 
         if means is None:
-            means = calc_means(data.temporals[:, :, :max_comps])
+            means = calc_means(data.temporals)
         elif isinstance(means, Means):
             means = means._feature
         if covs is None:
-            covs = calc_covs(data.temporals[:, :, :max_comps], means)
+            covs = calc_covs(data.temporals, means)
         elif isinstance(covs, Covariances):
             covs = np.copy(covs._feature)
 
-        feature = calc_acovs(data.temporals[:, :, :max_comps], means, covs, timelag, label)
+        feature = calc_acovs(data.temporals, means, covs, timelag, label)
 
         feat = AutoCovariances(data.frame, data, feature, include_diagonal= include_diagonal)
         return feat

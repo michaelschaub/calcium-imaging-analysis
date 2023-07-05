@@ -47,12 +47,10 @@ class AutoCovariances(Features):
         self._include_diagonal = include_diagonal
 
     @staticmethod
-    def create(data, means=None, covs=None, max_comps=None, timelag=1, include_diagonal=True,
+    def create(data, means=None, covs=None, timelag=1, include_diagonal=True,
                logger=LOGGER):
         '''Create this feature from a DecompData object'''
 
-        if max_comps is not None:
-            logger.warning("DEPRECATED: max_comps parameter in features can not guaranty \
 sensible choice of components, use n_components parameter for parcellations instead")
 
         timelags = np.asarray(timelag, dtype=int).reshape(-1)
@@ -64,15 +62,15 @@ removing too large timelags!")
             raise ValueError
 
         if means is None:
-            means = calc_means(data.temporals[:, :, :max_comps])
+            means = calc_means(data.temporals)
         elif isinstance(means, Means):
             means = means.feature
         if covs is None:
-            covs = calc_covs(data.temporals[:, :, :max_comps], means)
+            covs = calc_covs(data.temporals, means)
         elif isinstance(covs, Covariances):
             covs = np.copy(covs.feature)
 
-        feature = calc_acovs(data.temporals[:, :, :max_comps], means, covs, timelags)
+        feature = calc_acovs(data.temporals, means, covs, timelags)
         feat = AutoCovariances(data.frame, data, feature, include_diagonal= include_diagonal)
         return feat
 

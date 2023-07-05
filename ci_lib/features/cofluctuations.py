@@ -36,8 +36,8 @@ class Cofluctuation(Features):
         self._range = range if range else (0,feature.shape[1])
 
     @staticmethod
-    def create(data, max_comps=None, include_dia=False, logger=LOGGER,window=None,mean=False,start=None,stop=None,full=False):
-        zscores_over_time = data.temporals_z_scored[:,  slice(start,stop), :max_comps]
+    def create(data, include_dia=False, logger=LOGGER,window=None,mean=False,start=None,stop=None,full=False):
+        zscores_over_time = data.temporals_z_scored[:,  slice(start,stop), :]
 
         trials, frames, comps = zscores_over_time.shape
         co_fluct = np.zeros((trials, frames, comps, comps))

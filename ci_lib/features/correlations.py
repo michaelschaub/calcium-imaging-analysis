@@ -26,18 +26,16 @@ class Correlations(Features):
     _type = FeatureType.UNDIRECTED
 
     @staticmethod
-    def create(data, means=None, covs=None, max_comps=None, logger=LOGGER):
+    def create(data, means=None, covs=None, logger=LOGGER):
         '''Create this feature from a DecompData object'''
 
-        if max_comps is not None:
-            logger.warn("DEPRECATED: max_comps parameter in features can not guaranty \
 sensible choice of components, use n_components parameter for parcellations instead")
         if covs is None:
             if means is None:
-                means = calc_means(data.temporals[:, :, :max_comps])
+                means = calc_means(data.temporals)
             elif isinstance(means, Means):
                 means = means.feature
-            covs = calc_covs(data.temporals[:, :, :max_comps], means)
+            covs = calc_covs(data.temporals, means)
         elif isinstance(covs, Covariances):
             covs = np.copy(covs.feature)
         feature = calc_corrs(covs)

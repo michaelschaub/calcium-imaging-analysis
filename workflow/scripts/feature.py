@@ -50,11 +50,10 @@ try:
 
     feature = snakemake.params["params"]['branch']
     params = snakemake.params["params"]
-    max_comps = params["max_components"] if "max_components" in params else None
     window = params["window"] if "window" in params else None #TODO move param_dict , this will break for all feature that don't have window parameter!!
 
     data = DecompData.load(snakemake.input[0])
-    feat = feat_from_string(feature).create(data, max_comps=max_comps, **param_dict[feature](params)) #TODO **param_dict doesn't pass anything for empty lambda expression, shouldn't it just pass everyhting + replacement options
+    feat = feat_from_string(feature).create(data, **param_dict[feature](params)) #TODO **param_dict doesn't pass anything for empty lambda expression, shouldn't it just pass everyhting + replacement options
     logger.debug(f"feature condition {feat.frame['condition']}")
     logger.debug(f"feature shape {feat.feature.shape}")
     logger.debug(f"feature ids {feat.frame['trial_id']}")

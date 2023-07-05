@@ -37,10 +37,9 @@ try:
     logger.info(f"feats length {[f.trials_n for f in feats]}")
     feats = balance(feats, seed=seed)
     feat = feats[0]
-    feat.concat(feats, overwrite=True) #TODO fails when no trials are present
+    feat.concat(feats, overwrite=True)
     feat.frame['condition'] = snakemake.wildcards['cond']
 
-    #feat = feature_dict[feature].create(data, max_comps=max_comps, **param_dict[feature](params))
     logger.debug(f"feature shape {feat.feature.shape}")
 
     feat.save(snakemake.output[0])

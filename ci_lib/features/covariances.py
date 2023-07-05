@@ -40,16 +40,14 @@ class Covariances(Features):
         self._include_diagonal = include_diagonal
 
     @staticmethod
-    def create(data, means=None, max_comps=None, include_diagonal=True, logger=LOGGER):
+    def create(data, means=None, include_diagonal=True, logger=LOGGER):
         '''Create this feature from a DecompData object'''
-        if max_comps is not None:
-            logger.warn("DEPRECATED: max_comps parameter in features can not guaranty \
 sensible choice of components, use n_components parameter for parcellations instead")
         if means is None:
-            means = calc_means(data.temporals[:, :, :max_comps])
+            means = calc_means(data.temporals)
         elif isinstance(means, Means):
             means = means.feature
-        feature = calc_covs(data.temporals[:, :, :max_comps], means)
+        feature = calc_covs(data.temporals, means)
         feat = Covariances(data.frame, data, feature, include_diagonal=include_diagonal)
         return feat
 
