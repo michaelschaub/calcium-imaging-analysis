@@ -35,9 +35,9 @@ try:
 
 
     #Save outputs
-    snakemake_tools.save(snakemake,snakemake.output["perf"],perf)
-    snakemake_tools.save(snakemake,snakemake.output["best_feats"],selected_feats)
-    snakemake_tools.save(snakemake,snakemake.output["model"],decoders)
+    snakemake_tools.save(snakemake.output["perf"],perf)
+    snakemake_tools.save(snakemake.output["best_feats"],selected_feats)
+    snakemake_tools.save(snakemake.output["model"],decoders)
 
     snakemake_tools.stop_timer(timer_start, logger=logger)
 except Exception:

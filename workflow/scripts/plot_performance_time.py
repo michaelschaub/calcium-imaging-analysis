@@ -82,9 +82,9 @@ try:
         for j,decoder_perf in enumerate(perf):
             for i,feat in enumerate(features):
 
+                total_timesteps = int(snakemake.config["phase"]["all"]["stop"]) - int(snakemake.config["phase"]["all"]["start"]) - 1
                 if "phase" in snakemake.config["features"][feat].keys():
                     runs_n = len(perf[j][i][0])
-                    total_timesteps = int(snakemake.config["phase"]["all"]["stop"]) - int(snakemake.config["phase"]["all"]["start"])  
                     start = int(snakemake.config["phase"][snakemake.config["features"][feat]["phase"]]["start"])
                     stop = int(snakemake.config["phase"][snakemake.config["features"][feat]["phase"]]["stop"]) 
                     tmp = np.zeros((total_timesteps,runs_n))
@@ -92,7 +92,7 @@ try:
                     #print(stop)
                     #print(total_timesteps)
                     
-                    tmp[start:stop,:]= decoder_perf[i] if len(decoder_perf)>1 else decoder_perf[i][0] #[:] #np.asarray(np.repeat([decoder_perf[i][0]],stop-start,axis=0))
+                    tmp[start:stop,:]= decoder_perf[i] if len(decoder_perf[i])>1 else decoder_perf[i][0] #[:] #np.asarray(np.repeat([decoder_perf[i][0]],stop-start,axis=0))
 
                     #print(tmp)
                     perf[j][i] = tmp

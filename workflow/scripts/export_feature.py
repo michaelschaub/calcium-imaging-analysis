@@ -18,7 +18,7 @@ try:
 
 
     feat = feat_from_string(snakemake.params["branch"]).load(path)
-    snakemake_tools.save(snakemake, snakemake.output[0], feat.feature, export_type=snakemake.wildcards['ext'])
+    snakemake_tools.save(snakemake.output[0], feat.feature, export_type=snakemake.wildcards['ext'])
 
     snakemake_tools.stop_timer(start, logger=logger)
 except Exception:

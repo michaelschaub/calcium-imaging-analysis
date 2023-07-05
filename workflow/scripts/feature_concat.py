@@ -38,8 +38,8 @@ try:
     feats[0].save(snakemake.output[0])
 
     feats[0].plot(snakemake.output["export_plot"])
-    snakemake_tools.save(snakemake, snakemake.output["export_raw"], feats[0].feature)
-    #snakemake_tools.save(snakemake, snakemake.output["export_plot"], feat.feature)
+    snakemake_tools.save(snakemake.output["export_raw"], feats[0].feature)
+    #snakemake_tools.save(snakemake.output["export_plot"], feat.feature)
 
     snakemake_tools.stop_timer(start, logger=logger)
 except Exception:

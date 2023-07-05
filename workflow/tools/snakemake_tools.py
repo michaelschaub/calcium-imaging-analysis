@@ -6,12 +6,10 @@ import hashlib
 import snakemake
 
 def get_key_by_val(mydict,val):
-    return list(mydict.keys())[list(mydict.values()).index(val)]
-
-def readable_dataset_id(hash,aliases=None):
-    if aliases is None:
-        aliases = dataset_aliases
-    return get_key_by_val(aliases ,hash) + hash[:4]
+    try:
+        return list(mydict.keys())[list(mydict.values()).index(val)]
+    except ValueError:
+        raise ValueError("Value not found in dict") from None
 
 def create_parameters( branch_conf, static_conf={} ):
     '''
@@ -138,6 +136,26 @@ def create_datasets(sets, config):
     sessions = { id: ['-'.join(s) for s in sessions] for id, sessions in datasets.items()}
     return datasets, sessions, groups, aliases
 
+def unalias_dataset(aliases, dataset):
+    try:
+        return aliases[dataset]
+    except KeyError:
+        return dataset
+
+def alias_dataset(aliases, dataset):
+    try:
+        return get_key_by_val(aliases, dataset)
+    except ValueError:
+        return dataset
+
+def temp_if_config(file, temp_config, rule=None):
+    # check if rule specific config exists
+    if rule in temp_config:
+        temp = temp_config[rule]
+    else:
+        # get default value for all intermediates
+        temp = temp_config.get("default", False)
+    return snakemake.io.temp(file) if temp else file
 
 #TODO fix this mess / find a snakemake version, that fixes it
 # taking input as an argument creates all kinds of bugs in snakemake...

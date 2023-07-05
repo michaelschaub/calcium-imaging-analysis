@@ -1,6 +1,10 @@
 configfile: "config/config.yaml"
 
-from snakemake_tools import create_datasets, create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match, hash_config
+#from snakemake_tools import create_datasets, create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match, hash_config, alias_dataset, unalias_dataset, temp_if_config
+from snakemake_tools import create_datasets, create_parameters, create_conditions, branch_match, getKeys, hash_config
+
+if config.get('name', None) is None:
+    config['name'] = "Default"
 
 generalize_from = config["branch_opts"]["generalize_from"]
 
@@ -12,14 +16,17 @@ if not 'All' in datasets.keys():
 group_datasets = datasets
 datasets, dataset_sessions, dataset_groups, dataset_aliases = create_datasets(datasets, config)
 
+config["dataset_aliases"] = dataset_aliases
+include: "../rules/common.smk"
 
-print(f"{datasets=}")
-print(f"{dataset_sessions=}")
-print(f"{dataset_groups=}")
-print(f"{dataset_aliases=}")
+#print(f"{datasets=}")
+#print(f"{dataset_sessions=}")
+#print(f"{dataset_groups=}")
+#print(f"{dataset_aliases=}")
 
-unified_space = config['branch_opts'].get('unified_space', 'All')
-individual_sessions = config["branch_opts"].get('include_individual_sessions', False)
+unified_space               = config['branch_opts'].get('unified_space', 'All')
+include_individual_sessions = config["branch_opts"].get('include_individual_sessions', False)
+include_subsets             = config["branch_opts"].get('include_subsets', True)
 
 if unified_space in ["Both", "Datasets"]:
     unification_groups = dataset_groups
@@ -29,11 +36,18 @@ else:
     all_id = dataset_aliases["All"]
     unification_groups = { all_id: dataset_groups[all_id] }
 
+if include_individual_sessions:
+    unification_groups.update({ session_id : [session_id]
+                               for session_id in dataset_sessions[dataset_aliases["All"]] })
+
 session_runs = {}
 for set_id, sub_ids in unification_groups.items():
-    sub_datasets = [set_id, *sub_ids]
-    if individual_sessions:
-        sub_datasets.extend(dataset_sessions[set_id])
+    if include_subsets:
+        sub_datasets = [set_id, *sub_ids]
+        if include_individual_sessions and set_id in datasets:
+            sub_datasets.extend(dataset_sessions[set_id])
+    else:
+        sub_datasets = [set_id]
     session_runs[set_id] = sub_datasets
 print(f"{session_runs=}")
 
@@ -111,6 +125,7 @@ config["plotting"] =   {
                         "parcels_n" : config['branch_opts']['plotting']['plot_parcels']['n'],
                         "decoders" : decoders,
                         #"subject_dates": subject_dates,
+                        "trial_conditions" : trial_conditions,
                         "aggr_conditions" : aggr_conditions,
                         "features": features,
                         "parcellations" :parcellations,
@@ -119,6 +134,11 @@ config["plotting"] =   {
                         "dataset_aliases":dataset_aliases,
                         "session_runs":session_runs,
                         "datasets":datasets,
+                        }
+
+config["export"] =     {"dataset_groups" : dataset_groups,
+                        "dataset_aliases" : dataset_aliases,
+                        "session_runs" : session_runs,
                         }
 
 #config["generic"] = {"loglevel": config["loglevel"],
@@ -136,5 +156,3 @@ wildcard_constraints:
     cond          = branch_match(config["branch_opts"]["conditions"].keys()),
     feature       = branch_match(config["branch_opts"]["features"].keys()),
     decoder       = branch_match(config["branch_opts"]["decoders"].keys()),
-
-TRIALS_DIR = r"results/{session_runs}/{parcellation}/{trials}"

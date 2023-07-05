@@ -1,32 +1,26 @@
-from snakemake_tools import create_parameters, create_conditions, calculate_memory_resource as mem_res, branch_match, hash_config, readable_dataset_id
+from snakemake_tools import calculate_memory_resource as mem_res
 
+include: "common.smk"
 
 ###   Plotting   ###
 
-#rule plot_from_df_dataset:
-#    input:
-#        "results/plots/{dataset_id}/ind_decode/{conditions}/{feature}/{parcellation}/{decoder}/aggr_perf_df.pkl"
-#        "results/plots/{dataset_id}/shared_decode/{conditions}/{feature}/{parcellation}/{decoder}/aggr_perf_df.pkl"
-#    output:
-#        "results/plots/{dataset_id}/{conditions}/{feature}/{parcellation}/{decoder}/perf_all.datasets.pdf"
-
 rule plot_from_df_subset_space_comp:
     input:
-        f"results/plots/{{dataset_id}}/sessions_in_sessions/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
-        f"results/plots/{{dataset_id}}/sessions_in_subsets/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
-        f"results/plots/{{dataset_id}}/sessions_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
-        f"results/plots/{{dataset_id}}/subsets_in_subsets/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
-        f"results/plots/{{dataset_id}}/subsets_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
-        f"results/plots/{{dataset_id}}/dataset_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
+        f"{PLOTS_DIR}/{{dataset_id}}/sessions_in_sessions/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
+        f"{PLOTS_DIR}/{{dataset_id}}/sessions_in_subsets/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
+        f"{PLOTS_DIR}/{{dataset_id}}/sessions_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
+        f"{PLOTS_DIR}/{{dataset_id}}/subsets_in_subsets/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
+        f"{PLOTS_DIR}/{{dataset_id}}/subsets_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
+        f"{PLOTS_DIR}/{{dataset_id}}/dataset_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
     output:
-        f"results/plots/{{dataset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/perf_subset_space_comp.pdf",
+        f"{PLOTS_DIR}/{{dataset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/perf_subset_space_comp.pdf",
     params:
         #style = 'dataset_id',
         hue  = 'aggregated_from',
         #size
         conds=list(config['aggr_conditions']), #maybe get from config within script?
     log:
-        "results/plots/{dataset_id}/{conditions}/{feature}/{parcellation}/{decoder}/perf_subset_space_comp.log",
+        f"{PLOTS_DIR}/{{dataset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/perf_subset_space_comp.log",
     conda:
         "../envs/environment.yaml"
     priority:
@@ -37,28 +31,28 @@ rule plot_from_df_subset_space_comp:
 
 rule plot_from_df_all_space_comp:
     input:
-        [ f"results/plots/{dataset_id}/sessions_in_sessions/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
+        [ f"{PLOTS_DIR}/{dataset_id}/sessions_in_sessions/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
             for dataset_id in config["session_runs"].keys() if dataset_id != config['dataset_aliases']['All']],
-        [ f"results/plots/{dataset_id}/sessions_in_subsets/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
+        [ f"{PLOTS_DIR}/{dataset_id}/sessions_in_subsets/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
             for dataset_id in config["session_runs"].keys() if dataset_id != config['dataset_aliases']['All']],
-        [ f"results/plots/{dataset_id}/subsets_in_subsets/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
+        [ f"{PLOTS_DIR}/{dataset_id}/subsets_in_subsets/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
             for dataset_id in config["session_runs"].keys() if dataset_id != config['dataset_aliases']['All']],
-        [ f"results/plots/{dataset_id}/sessions_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
+        [ f"{PLOTS_DIR}/{dataset_id}/sessions_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
             for dataset_id in config["session_runs"].keys() if dataset_id != config['dataset_aliases']['All']],
-        [ f"results/plots/{dataset_id}/subsets_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
+        [ f"{PLOTS_DIR}/{dataset_id}/subsets_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
             for dataset_id in config["session_runs"].keys() if dataset_id != config['dataset_aliases']['All']],
-        [ f"results/plots/{dataset_id}/dataset_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
+        [ f"{PLOTS_DIR}/{dataset_id}/dataset_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl"
             for dataset_id in config["session_runs"].keys() if dataset_id != config['dataset_aliases']['All']],
-        f"results/plots/{config['dataset_aliases']['All']}/subsets_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
+        f"{PLOTS_DIR}/{config['dataset_aliases']['All']}/subsets_in_dataset/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/aggr_perf_df.pkl",
     output:
-        f"results/plots/{config['dataset_aliases']['All']}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/perf_all_space_comp.pdf",
+        f"{PLOTS_DIR}/{config['dataset_aliases']['All']}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/perf_all_space_comp.pdf",
     params:
         #style = 'dataset_id',
         hue  = 'aggregated_from',
         #size
         conds=list(config['aggr_conditions']), #maybe get from config within script?
     log:
-        f"results/plots/{config['dataset_aliases']['All']}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/perf_all.datasets.log",
+        f"{PLOTS_DIR}/{config['dataset_aliases']['All']}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/perf_all.datasets.log",
     conda:
         "../envs/environment.yaml"
     script:
@@ -100,13 +94,13 @@ rule plot_parcels:
 
 rule plot_model_coef:
     input:
-        model  = f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{{conditions}}/{{feature}}/{{decoder}}/decoder_model.pkl",
-        parcel = f"results/data/{{dataset_id}}/{{parcellation}}/{{dataset_id}}/data.h5"
+        model  = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{{conditions}}/{{feature}}/{{decoder}}/decoder_model.pkl",
+        parcel = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{dataset_id}}/data.h5"
     output:
-        coef_plot = f"results/plots/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/model_coef_mean.pdf",
-        var_plot = f"results/plots/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/model_coef_std.pdf"
+        coef_plot = f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/model_coef_mean.pdf",
+        var_plot = f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/model_coef_std.pdf"
     log:
-        f"results/plots/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/decoder_model.log",
+        f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/decoder_model.log",
     conda:
         "../envs/environment.yaml"
     script:
@@ -115,21 +109,21 @@ rule plot_model_coef:
 ### move to processing
 rule cluster_coef:
     input:
-        model  = f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{{conditions}}/{{feature}}/{{decoder}}/decoder_model.pkl",
-        parcel = f"results/data/{{dataset_id}}/{{parcellation}}/{{dataset_id}}/data.h5"
+        model  = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{{conditions}}/{{feature}}/{{decoder}}/decoder_model.pkl",
+        parcel = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{dataset_id}}/data.h5"
     output:
-        no_cluster = f"results/plots/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime.pdf",
-        cluster    = f"results/plots/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.pdf",
-        PCA_3D = f"results/plots/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_PCA_3D.html",
-        Cluster_3D = f"results/plots/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_Clustered_3D.html",
+        no_cluster = f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime.pdf",
+        cluster    = f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.pdf",
+        PCA_3D = f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_PCA_3D.html",
+        Cluster_3D = f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_Clustered_3D.html",
 
-        cluster_small    = f"results/plots/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.png",
-        models     = f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{{conditions}}/{{feature}}/{{decoder}}/ClusterModels.pkl",
-        coef_plots  = directory(f"results/plots/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/Clusters/")
+        cluster_small    = f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.png",
+        models     = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{{conditions}}/{{feature}}/{{decoder}}/ClusterModels.pkl",
+        coef_plots  = directory(f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/Clusters/")
     params:
         phases = config["phase_conditions"]
     log:
-         f"results/plots/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.log",
+         f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.log",
     conda:
         "../envs/environment_clustering.yaml"
     script:
@@ -138,16 +132,16 @@ rule cluster_coef:
 
 rule decoding_with_existing_model:
     input:
-        feat = [f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Features/{cond}/{{feature}}/features.h5" for cond in config['aggr_conditions']],
-        models = f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/ClusterModels.pkl",
+        feat = [f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Features/{cond}/{{feature}}/features.h5" for cond in config['aggr_conditions']],
+        models = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/ClusterModels.pkl",
     output:
-        perf =f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/cluster_perf.pkl"
+        perf =f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/cluster_perf.pkl"
     params:
         conds = list(config['aggr_conditions']),
         decoders=[f"{{decoder}}"],
         params = lambda wildcards: config["decoders"][wildcards["decoder"]], #TODO actually we just need number of reps, or we could also just test once on whole dataset
     log:
-        f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/cluster_perf.log",
+        f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/cluster_perf.log",
     conda:
         "../envs/environment.yaml"
     resources:
@@ -159,19 +153,19 @@ rule decoding_with_existing_model:
 
 rule decoding_with_existing_model_different_subject:
     input:
-        feat = [f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Features/{cond}/{{feature}}/features.h5" for cond in config['aggr_conditions']],
-        models = f"results/data/{config['generalize_from']}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/ClusterModels.pkl",
-        org_decomp = f"results/data/{config['generalize_from']}/{{parcellation}}/data.h5",
-        new_decomp = f"results/data/{{dataset_id}}/{{parcellation}}/{{dataset_id}}/data.h5",
+        feat = [f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Features/{cond}/{{feature}}/features.h5" for cond in config['aggr_conditions']],
+        models = f"{DATA_DIR}/{config['generalize_from']}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/ClusterModels.pkl",
+        org_decomp = f"{DATA_DIR}/{config['generalize_from']}/{{parcellation}}/data.h5",
+        new_decomp = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{dataset_id}}/data.h5",
     output:
-        perf =f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/from_{config['generalize_from']}/cluster_perf.pkl"
+        perf =f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/from_{config['generalize_from']}/cluster_perf.pkl"
     params:
         conds = list(config['aggr_conditions']),
 
         decoders=[f"{{decoder}}"],
         params = lambda wildcards: config["decoders"][wildcards["decoder"]], #TODO actually we just need number of reps, or we could also just test once on whole dataset
     log:
-        f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/from_{config['generalize_from']}/cluster_perf.log",
+        f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/from_{config['generalize_from']}/cluster_perf.log",
     conda:
         "../envs/environment.yaml"
     resources:
@@ -182,25 +176,25 @@ rule decoding_with_existing_model_different_subject:
 
 rule plot_performances_clusters_time:
     input:
-        perf   =[f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/cluster_perf.pkl"],
+        perf   =[f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/cluster_perf.pkl"],
 
     output:
-        f"results/plots/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.pdf"
+        f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.pdf"
         
         
 
-        #report(f"results/plots/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{parcellation}}_perf.pdf",
+        #report(f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{parcellation}}_perf.pdf",
         #    caption="../report/decode_features.rst",
         #    category="6 Decoding",
         #    subcategory="Compare Features",
         #    labels={"Parcellation":"{parcellation}","Subject/Date": "{dataset_id}"}),
-        #f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/performances_anno.pdf"
+        #f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/performances_anno.pdf"
     params:
         clusters="",
         decoders=[f"{{decoder}}"],
         conds=list(config['aggr_conditions']),
     log:
-        f"results/plots/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.log"
+        f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.log"
         
     conda:
         "../envs/environment.yaml"
@@ -210,23 +204,23 @@ rule plot_performances_clusters_time:
 
 rule plot_performances_clusters_time_different_subject:
     input:
-        perf   =[f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/from_{config['generalize_from']}/cluster_perf.pkl"],
+        perf   =[f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/from_{config['generalize_from']}/cluster_perf.pkl"],
     output:
-        f"results/plots/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/from_{config['generalize_from']}/ClusturedModels_perf.pdf"
+        f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/from_{config['generalize_from']}/ClusturedModels_perf.pdf"
         
 
-        #report(f"results/plots/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{parcellation}}_perf.pdf",
+        #report(f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{parcellation}}_perf.pdf",
         #    caption="../report/decode_features.rst",
         #    category="6 Decoding",
         #    subcategory="Compare Features",
         #    labels={"Parcellation":"{parcellation}","Subject/Date": "{dataset_id}"}),
-        #f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/performances_anno.pdf"
+        #f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/performances_anno.pdf"
     params:
         clusters="",
         decoders=[f"{{decoder}}"],
         conds=list(config['aggr_conditions']),
     log:
-        f"results/plots/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.log"
+        f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.log"
         
     conda:
         "../envs/environment.yaml"
@@ -238,17 +232,15 @@ rule plot_performances_clusters_time_different_subject:
 
 rule plot_performance:
     input:
-        perf   = [f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{decoder}/decoder_perf.pkl" for decoder in config["decoders"]],
-        config = [f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{decoder}/conf.yaml" for decoder in config["decoders"]],
+        perf   = [f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{decoder}/decoder_perf.pkl" for decoder in config["decoders"]],
+        config = [f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{decoder}/conf.yaml" for decoder in config["decoders"]],
     output:
-        f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/performance.pdf",
-        
-        #f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/performance.pkl",
+        f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/performance.pdf",
     params:
         conds=list(config['aggr_conditions']),
         decoders=config["decoders"],
     log:
-        f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/plot_performance.log",
+        f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/plot_performance.log",
     conda:
         "../envs/environment.yaml"
     script:
@@ -256,19 +248,19 @@ rule plot_performance:
 
 rule plot_performances_features:
     input:
-        perf   = [f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{feature}/{decoder}/decoder_perf.pkl"
+        perf   = [f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{feature}/{decoder}/decoder_perf.pkl"
                   for feature in config['features']
                   for decoder in config["decoders"]],
-        config = [f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{feature}/{decoder}/conf.yaml"
+        config = [f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{feature}/{decoder}/conf.yaml"
                   for feature in config['features']
                   for decoder in config["decoders"]],
     output:
-        report(f"results/plots/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{parcellation}}_perf.pdf",
+        report(f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{parcellation}}_perf.pdf",
             caption="../report/decode_features.rst",
             category="6 Decoding",
             subcategory="Compare Features",
             labels={"Parcellation":"{parcellation}","Subject/Date": "{dataset_id}"}),
-        f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/performances_anno.pdf"
+        f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/performances_anno.pdf"
     params:
         conds=list(config['aggr_conditions']),
         decoders=config["decoders"],
@@ -276,7 +268,7 @@ rule plot_performances_features:
         subjects=config["plot_subject_labels"],
         trials=config['default_conditions'],
     log:
-        f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/plot_performances.log",
+        f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{parcellation}}_plot_performances.log",
     conda:
         "../envs/environment.yaml"
     script:
@@ -284,13 +276,13 @@ rule plot_performances_features:
 
 rule plot_performances_parcellations:
     input:
-        [f"results/data/{{dataset_id}}/{parcellation}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{decoder}/decoder_perf.pkl"
+        [f"{DATA_DIR}/{{dataset_id}}/{parcellation}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{decoder}/decoder_perf.pkl"
          for parcellation in config['parcellations']
          for decoder in config["decoders"]],
     output:
-        report(f"results/plots/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}_perf.pdf", caption="../report/decode_features.rst", category="6 Decoding", subcategory="Compare Parcellation", labels={"Feature":"{feature}"}),
+        report(f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}_perf.pdf", caption="../report/decode_features.rst", category="6 Decoding", subcategory="Compare Parcellation", labels={"Feature":"{feature}"}),
 
-        f"results/plots/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/performances_anno.pdf",
+        f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/performances_anno.pdf",
     params:
         conds=list(config['aggr_conditions']),
         decoders=config["decoders"],
@@ -298,7 +290,7 @@ rule plot_performances_parcellations:
         subjects=config["plot_subject_labels"],
         trials=config['default_conditions'],
     log:
-        f"results/plots/{{dataset_id}}/{{subset_id}}/{{feature}}/{'.'.join(config['aggr_conditions'])}/plot_performances.log",
+        f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}_plot_performances.log",
     conda:
         "../envs/environment.yaml"
     script:
@@ -307,14 +299,14 @@ rule plot_performances_parcellations:
 
 rule plot_condition_diff:
     input:
-        [f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Features/{cond}/data.h5" for cond in config['trial_conditions']],
+        [f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Features/{cond}/data.h5" for cond in config['trial_conditions']],
     output:
-        directory(f"results/plots/{{dataset_id}}/{{subset_id}}/{'.'.join(config['trial_conditions'])}/b-maps/{{parcellation}}/Phases/"), #Do not replace with aggr_condtiions
-        static = f"results/plots/{{dataset_id}}/{{subset_id}}/{'.'.join(config['trial_conditions'])}/b-maps/{{parcellation}}/all_cond_difference_b-maps.pdf"
+        directory(f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['trial_conditions'])}/b-maps/{{parcellation}}/Phases/"), #Do not replace with aggr_condtiions
+        static = f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['trial_conditions'])}/b-maps/{{parcellation}}/all_cond_difference_b-maps.pdf"
     params:
         conds = config['trial_conditions']
     log:
-        f"results/plots/{{dataset_id}}/{{subset_id}}/{'.'.join(config['trial_conditions'])}/b-maps/{{parcellation}}/cond_difference_b-maps.log"
+        f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['trial_conditions'])}/b-maps/{{parcellation}}/cond_difference_b-maps.log"
     conda:
         "../envs/environment.yaml"
     script:
@@ -322,12 +314,12 @@ rule plot_condition_diff:
 
 rule plot_performances_features_parcellations:
     input:
-        [f"results/data/{{dataset_id}}/{parcellation}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{feature}/{decoder}/decoder_perf.pkl"
+        [f"{DATA_DIR}/{{dataset_id}}/{parcellation}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{feature}/{decoder}/decoder_perf.pkl"
             for feature in config['features']
             for parcellation in config['parcellations']
             for decoder in config["decoders"]]
     output:
-        report(f"results/plots/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/all_perf.pdf",
+        report(f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/all_perf.pdf",
             caption="../report/decode_features.rst",
             category="6 Decoding",
             subcategory="Compare Features & Parcellation",
@@ -342,7 +334,7 @@ rule plot_performances_features_parcellations:
         #subjects=config["plot_subject_labels"],
         #trials=config['default_conditions'],
     log:
-        f"results/data/{{dataset_id}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/plot_performances.log",
+        f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/plot_performances.log",
     conda:
         "../envs/environment.yaml"
     script:
@@ -350,18 +342,15 @@ rule plot_performances_features_parcellations:
 
 rule plot_performance_over_time:
     input:
-        perf   = [f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{decoder}/decoder_perf.pkl" for decoder in config["decoders"]],
-        config = [f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{decoder}/conf.yaml" for decoder in config["decoders"]],
+        perf   = [f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{decoder}/decoder_perf.pkl" for decoder in config["decoders"]],
+        config = [f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{decoder}/conf.yaml" for decoder in config["decoders"]],
     output:
-        #f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/{{dataset_id}}_{{parcellation}}_{{feature}}_{'.'.join(config['aggr_conditions'])}_over_time.pdf",
-        #f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/{{dataset_id}}_{{parcellation}}_{{feature}}_{'.'.join(config['aggr_conditions'])}_over_time.pkl",
-        f"results/plots/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/performance_over_time.pdf",
-        #f"results/plots/{{dataset_id}}/{{subset_id}}/{{parcellation}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/performance_over_time.pkl",
+        f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/performance_over_time.pdf",
     params:
         conds=list(config['aggr_conditions']),
         decoders=config["decoders"],
     log:
-        f"results/plots/{{dataset_id}}/{{subset_id}}/{{parcellation}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/plot_performance_over_time.log",
+        f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{parcellation}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/plot_performance_over_time.log",
     conda:
         "../envs/environment.yaml"
     script:
@@ -369,18 +358,18 @@ rule plot_performance_over_time:
 
 rule plot_performance_matrix:
     input:
-        perf   = f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/decoder_perf_across_timepoints.pkl",
-        config = f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/conf.yaml",
+        perf   = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/decoder_perf_across_timepoints.pkl",
+        config = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/conf.yaml",
     output:
-        f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/{{decoder}}_performance_matrix.pdf",
-        f"results/plots/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/performance_matrix.pdf",
-        cluster = f"results/plots/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/performance_clustered.pdf",
-        model = f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/{{decoder}}/performance_matrix_model.pkl",
+        f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/{{decoder}}_performance_matrix.pdf",
+        f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/performance_matrix.pdf",
+        cluster = f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/performance_clustered.pdf",
+        model = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/{{decoder}}/performance_matrix_model.pkl",
     params:
         conds=list(config['aggr_conditions']),
         decoders=config["decoders"],
     log:
-        f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/{{decoder}}_plot_matrix_performance.log",
+        f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/{{decoder}}_plot_matrix_performance.log",
     conda:
         "../envs/environment.yaml"
     script:
@@ -388,15 +377,15 @@ rule plot_performance_matrix:
 
 rule plot_glassbrain:
     input:
-        parcellation      = f"results/data/{{dataset_id}}/{{parcellation}}/{{dataset_id}}/data.h5",
-        original_features = [f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Features/{cond}/{{feature}}/features.h5" for cond in config['aggr_conditions']],
-        features          = f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/rfe/{'.'.join(config['aggr_conditions'])}/{{rfe_n}}/{{feature}}/best_feats.{config['export_type']}",
+        parcellation      = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{dataset_id}}/data.h5",
+        original_features = [f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Features/{cond}/{{feature}}/features.h5" for cond in config['aggr_conditions']],
+        features          = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/rfe/{'.'.join(config['aggr_conditions'])}/{{rfe_n}}/{{feature}}/best_feats.{config['export_type']}",
 
     output:
-        plot              = f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/rfe/{'.'.join(config['aggr_conditions'])}/{{rfe_n}}/{{feature}}/circle_plot.pdf",
-        interactive_plot  = f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/rfe/{'.'.join(config['aggr_conditions'])}/{{rfe_n}}/{{feature}}/glassbrain.html",
+        plot              = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/rfe/{'.'.join(config['aggr_conditions'])}/{{rfe_n}}/{{feature}}/circle_plot.pdf",
+        interactive_plot  = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/rfe/{'.'.join(config['aggr_conditions'])}/{{rfe_n}}/{{feature}}/glassbrain.html",
     log:
-        f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/rfe/{'.'.join(config['aggr_conditions'])}/{{rfe_n}}/{{feature}}/plot_glassbrain.log",
+        f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/rfe/{'.'.join(config['aggr_conditions'])}/{{rfe_n}}/{{feature}}/plot_glassbrain.log",
     conda:
         "../envs/environment.yaml"
     resources:
@@ -408,18 +397,17 @@ rule plot_glassbrain:
 
 rule plot_performances_parcellations_over_time:
     input:
-        perf = [f"results/data/{{dataset_id}}/{parcellation}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{decoder}/decoder_perf.pkl"
+        perf = [f"{DATA_DIR}/{{dataset_id}}/{parcellation}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{decoder}/decoder_perf.pkl"
          for decoder in config["decoders"]
          for parcellation in config['parcellations']]
     output:
-        f"results/plots/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}_performance_over_time.pdf",
-        #f"results/plots/{{dataset_id}}/{{subset_id}}/{{feature}}/{'.'.join(config['aggr_conditions'])}/performance_over_time_parcels.pkl",
+        f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}_performance_over_time.pdf",
     params:
         conds=list(config['aggr_conditions']),
         decoders=config["decoders"],
         parcellations=list(config['parcellations']), #plot_feature_labels,
     log:
-        f"results/plots/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{feature}}_performances_over_time.log",
+        f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{feature}}_performances_over_time.log",
     conda:
         "../envs/environment.yaml"
     script:
@@ -427,18 +415,17 @@ rule plot_performances_parcellations_over_time:
 
 rule plot_performances_features_over_time:
     input:
-        perf = [f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{feature}/{decoder}/decoder_perf.pkl"
+        perf = [f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{feature}/{decoder}/decoder_perf.pkl"
          for decoder in config["decoders"]
          for feature in config['features']]
     output:
-        f"results/plots/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{parcellation}}_performance_over_time.pdf",
-        #f"results/plots/{{dataset_id}}/{{subset_id}}/{{parcellation}}/{'.'.join(config['aggr_conditions'])}/performance_over_time_features.pkl",
+        f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{parcellation}}_performance_over_time.pdf",
     params:
         conds=list(config['aggr_conditions']),
         decoders=config["decoders"],
         features=list(config['features']), #plot_feature_labels,
     log:
-        f"results/plots/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{parcellation}}/{{parcellation}}_performances_over_time.log",
+        f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{parcellation}}/{{parcellation}}_performances_over_time.log",
     conda:
         "../envs/environment.yaml"
     script:
@@ -446,16 +433,16 @@ rule plot_performances_features_over_time:
 
 rule plot_conf_matrix:
     input:
-        conf_matrix = f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/confusion_matrix.pkl",
-        norm_conf_matrix = f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/norm_confusion_matrix.pkl",
-        class_labels = f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/class_labels.pkl",
+        conf_matrix = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/confusion_matrix.pkl",
+        norm_conf_matrix = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/norm_confusion_matrix.pkl",
+        class_labels = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/class_labels.pkl",
     output:
-        f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/{{decoder}}_confusion_matrix.pdf",
-        f"results/plots/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/confusion_matrix.pdf",
+        f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/{{decoder}}_confusion_matrix.pdf",
+        f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/confusion_matrix.pdf",
     params:
         phases = config["phase_conditions"]
     log:
-        f"results/data/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/{{decoder}}_confusion_matrix.log",
+        f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/plots/{{decoder}}_confusion_matrix.log",
     conda:
         "../envs/environment.yaml"
     script:
