@@ -97,7 +97,9 @@ def input_unification(wildcards):
         input = [ f"{DATA_DIR}/{dataset_id}/SVD/{dataset_id}/data.h5" ]
     else:
         digest_lng = config.get('hash_digest_length', 8)
-        matched_ids = [ id for id in config['datasets'].keys() if dataset_id[:digest_lng] == id[:digest_lng] ]
+        name_lng = len(dataset_id.removesuffix(dataset_id.split('#')[-1]))
+        match_lng = name_lng + digest_lng
+        matched_ids = [ id for id in config['datasets'].keys() if dataset_id[:match_lng] == id[:match_lng] ]
         assert (len(matched_ids) == 1), f"Did not match exactly one dataset for {dataset_id=}, but instead {matched_ids=}"
         input = [ f"{DATA_DIR}/{subj}-{date}/SVD/{subj}-{date}/data.h5" for subj, date in config['datasets'].get(matched_ids[0])]
     return input
