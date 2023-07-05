@@ -29,7 +29,6 @@ branch_opts:
           - GN10_dec
           - GN10_jan
           - GN10_feb
-          
           - GN10_mar
               
           
@@ -70,7 +69,7 @@ branch_opts:
             - 2021-01-06_13-48-54
             - 2021-01-07_15-45-21
             #- 2021-01-08_15-38-01
-            - 2021-01-08_15-49-08
+            #- 2021-01-08_15-49-08
             - 2021-01-11_14-28-07
             - 2021-01-12_13-25-52
             - 2021-01-13_14-22-57
@@ -279,7 +278,7 @@ branch_opts:
         subjects:
           GN10:
             #- 2021-02-01_13-56-56
-            - 2021-02-02_13-16-19
+            #- 2021-02-02_13-16-19
             - 2021-02-03_13-34-09
             - 2021-02-04_14-47-54
             - 2021-02-05_15-52-46
@@ -397,38 +396,47 @@ branch_opts:
   
     default:
       phase: all
-      #n_targets: all
-      n_distractors: largerzero
+      n_targets: all
+      n_distractors: none
       auto_reward: no
       both_spouts: yes
       
 
-    LR-LS:
-      responses: left
+    #Stimulus Decoder
+    L-V:
       sides: left
+      modalities: visual
 
-    LR-RS:
-      responses: left
-      sides: right
-      
-
-    RR-LS:
-      responses: right
+    L-T:
       sides: left
+      modalities: tactile
 
-    RR-RS:
-      responses: right
+    L-VT:
+      sides: left
+      modalities: vistact
+
+    R-V:
       sides: right
+      modalities: visual
+    
+    R-T:
+      sides: right
+      modalities: tactile
+    R-VT:
+      sides: right
+      modalities: vistact
 
-    LeftChoice:
+    Left:
       group:
-        - LR-LS
-        - LR-RS
+        - L-V
+        - L-T
+        - L-VT
 
-    RightChoice:
+    Right:
       group:
-        - RR-RS
-        - RR-LS
+        - R-V
+        - R-T
+        - R-VT
   
 
     #Correct:
@@ -555,7 +563,7 @@ branch_opts:
 
   decoders:
     default:
-      reps: [5]
+      reps: [10]
     LDA:
     MLR:
     #MLRshuffle:
