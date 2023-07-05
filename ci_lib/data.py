@@ -92,16 +92,21 @@ class DecompData:
         data._savefile = None
         return data #TODO maybe as inplace instead?
 
-    def concat(self, data, overwrite=False):
-        ''' concats trials from List of DecompData to this DecompData'''
+    @staticmethod
+    def concat(data):
+        '''
+        Concats trials from List of DecompData to this DecompData
+        Spatial components are kept from the first data object,
+        mean and stdev are to be considered invalid
+        '''
         if not isinstance(data, list):
             data = [data]
-        if not overwrite:
-            data = [self, *data]
-        self._df = pd.concat([d._df for d in data], axis=0)
+        concat_data = data[0].copy()
+        concat_data._df = pd.concat([d._df for d in data], axis=0)
         time_offs = [0, *[ d.t_max for d in data ][:-1]]
-        self._starts = np.concatenate([d._starts + t for d,t in zip(data,time_offs)], axis=0)
-        self._temps = np.concatenate([d._temps for d in data], axis=0)
+        concat_data._starts = np.concatenate([d._starts + t for d,t in zip(data,time_offs)], axis=0)
+        concat_data._temps = np.concatenate([d._temps for d in data], axis=0)
+        return concat_data
 
     def save(self, file ):
         LOGGER.info(f"{self._allowed_overlap} has type {type(self._allowed_overlap)}")
@@ -125,6 +130,7 @@ class DecompData:
                               labels=["df", "temps", "spats", "starts","overlap","labels",
                                       "mean","stdev"],
                               logger=logger)
+            # pylint: disable=unbalanced-tuple-unpacking
             _, data_frame, temps, spats, starts, allowed_overlap, spat_labels, mean, stdev = loaded
             data = cls(data_frame, temps, spats, starts, allowed_overlap=allowed_overlap,
                        spatial_labels=spat_labels, savefile=file, mean=mean, stdev=stdev,
@@ -425,8 +431,7 @@ class DecompData:
                                                     for subject_id in subject_ids]
         session_data = [data.get_conditional({'date_time' : lambda d, d_comp=date: date_compare(d,d_comp) })
                                                     for date, data in zip(dates, session_data)]
-        data = session_data[0]
-        data.concat(session_data, overwrite=True)
+        data = DecompData.concat(session_data)
         data._df[self.dataset_id_column] = dataset_id
         return session_data[0]
 

@@ -22,9 +22,9 @@ try:
     seed = snakemake.config['seed'] if 'seed' in snakemake.config else None
     data = balance(data, seed=seed)
 
-    data[0].concat(data[1:], overwrite=False) #TODO fails when no trials are present
-    data[0].frame['condition'] = snakemake.wildcards['cond']
-    data[0].save(snakemake.output[0])
+    data = DecompData.concat(data) #TODO fails when no trials are present
+    data.frame['condition'] = snakemake.wildcards['cond']
+    data.save(snakemake.output[0])
 
 
     snakemake_tools.stop_timer(timer_start, logger=logger)
