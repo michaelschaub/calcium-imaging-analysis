@@ -1,0 +1,317 @@
+name: "test"
+
+branch_opts:
+  # Allowed values are:
+  #   "All":     only work in the unified space of all datasets, default
+  #   "Datasets": only work in the spaces of individual datasets
+  #   "Both":    ... do both
+  unified_space: "Both"
+
+  # Run pipeline on individual sessions and combined sessions / just on combined session
+  include_individual_sessions: True
+  generalize_from: "GN06.01-20#GN06.03-01#GN06.03-02#GN06.03-03#GN06.03-04#GN06.03-05#GN06.03-26#GN06.03-29"
+
+    
+    #GN06_untrained combined im shared_space von untrained
+    #Gn06_untrained ind      im shared_space  
+    #Gn06_untrained ind      im ind_space    
+
+  #For now only session with hard trials
+  datasets:
+    All:
+      subjects: 
+        GN06: 
+            - 2021-03-25_09-19-18  
+            - 2021-03-26_10-53-05
+            - 2021-03-29_11-51-27 
+
+
+
+
+
+  conditions:
+  
+    default:
+      phase: all
+      #n_targets: all
+      #n_distractors: largerzero
+      auto_reward: no
+      both_spouts: yes
+    
+    L_changed:
+      sides: left
+      sides_changed: changed
+ 
+
+    L_unchanged:
+      sides: left
+      sides_changed: unchanged
+
+
+    R_changed:
+      sides: right
+      sides_changed: changed
+    
+    R_unchanged:
+      sides: right
+      sides_changed: unchanged
+
+
+    LeftStim:
+      group:
+        - L_changed
+        - L_unchanged
+
+    RightStim:
+      group:
+        - R_changed
+        - R_unchanged
+
+  
+
+    #Correct:
+    #  group:
+    #    - LR-LS
+    #    - RR-RS
+    #Incorrect:
+    #  group:
+    #    - LR-RS
+    #    - RR-LS
+  
+  parcellations:
+    SVD:
+      n_components: 
+        - 50
+    #LocaNMF:
+    anatomical:
+    
+  selected_trials:
+    All:
+
+
+  features:
+
+    spot-activity: #Full Timeseries for each trial
+      window: [2]
+      #phase: 
+        #- all
+        #- pretrial
+        #- stimulus
+        #- response
+        
+        #- stim1
+        #- inter_stim
+        #- stim2
+        #- delay
+        #- response
+
+    #full-activity: #Full Timeseries for each trial
+      #phase: 
+        #- all
+        #- pretrial
+        #- stimulus
+        #- response
+
+    #mean-activity: #Mean Activity over trial
+      #phase: 
+        #- all
+        #- pretrial
+        #- stimulus
+        #- stim1
+        #- inter_stim
+        #- stim2
+        #- delay
+        #- response
+        #- posttrial
+
+    #dFC:
+    #  phase:
+      #  - pretrial
+    #    - stimulus
+      #  - response
+
+    #full-dFC:
+    #  phase:
+    #    - stimulus
+    #  - response
+    
+    #FC:
+    #  phase:
+    #    - all
+    #    - pretrial
+    #    - stimulus
+        #- delay
+    #    - response
+        #- posttrial
+
+    #spot-activity-dFC:
+    #  phase:
+      #  - pretrial
+    #    - stimulus
+      #  - response
+
+    #full-activity-dFC:
+    #  phase:
+    #    - stimulus
+      #- response
+    
+    #mean-activity-FC:
+    #  phase:
+    #    - stimulus
+    #    - all
+    #    - pretrial
+
+
+    ##moup:
+    ##  phase:
+    ##    - stimulus
+
+    #raw:
+    #  max_components : [64]
+
+    #mean:
+    #  window: [1]
+
+      #optional:
+      #  window: [1] #TODO currently needs to be in an array (should support int aswell)
+
+    #covariance:
+      #max_components : [64]
+    #moup:
+    #  timelags: [1] #,2,3]
+      #optional:
+      #  thresh:
+      #    - 0.5
+    #  max_components : [64]
+
+    #autocorrelation:
+    #  timelags: [[1]] #,[1]]
+    #  phase:
+    #    - stimulus
+
+
+
+  decoders:
+    default:
+      reps: [20]
+    LDA:
+    MLR:
+    #MLRshuffle:
+
+static_params:
+  parcellations:
+    anatomical:
+    ICA:
+    LocaNMF:
+      minrank: 2
+      maxrank: 8
+      min_pixels: 400
+      loc_thresh: 300
+      r2_thresh: 0.99
+      nonnegative_temporal: False
+
+
+  selected_trials:
+    All:
+
+  features:
+    mean:
+
+  decoders:
+    MLR:
+    1NN:
+    LDA:
+    RF:
+
+paths:
+  parcellations:
+    ICA: {}
+    anatomical:
+      atlas: resources/meta/anatomical.mat
+    LocaNMF:
+      atlas: resources/meta/anatomical.mat
+
+different_config_inputs: 1
+
+limit_memory: 1
+
+loglevel: INFO
+
+export_type: 'npy'
+
+
+
+# Defines trial phases for Gerions Experimental Setup
+trial_conditions:
+  sides:
+    column: target_side_left
+    conds:
+      left:   1
+      right:  0
+  sides_changed:
+    column: change_stim_side
+    conds:
+      changed:   1
+      unchanged:  0
+      unknown: -1
+
+  modalities:
+    column: modality
+    conds:
+      visual:   0
+      tactile:  1
+      vistact:  2
+
+  responses:
+    column: response_left
+    conds:
+      left: 1
+      right: 0
+      no: -1
+  responses_changed:
+    column: change_response_side
+    conds:
+      changed:   1
+      unchanged:  0
+      unknown: -1
+
+
+  n_targets:
+    column: n_targets
+    conds:
+      all: 6
+  n_distractors:
+    column: n_distractors
+    conds:
+      none: 0
+      largerzero: [1,2]
+  auto_reward:
+    column: auto_reward
+    conds:
+      no: 0
+      yes: 1
+  both_spouts:
+    column: both_spouts
+    conds:
+      no: 0
+      yes: 1
+
+phase_conditions:
+  pretrial:
+    start: 0
+    stop:  30
+  stimulus:
+    start:  30
+    stop:   75
+  delay:
+    start: 75
+    stop: 82
+  response:
+    start: 82
+    stop: 113
+  posttrial:
+    start: 113
+    stop: 134
+  all:
+    start: 0
+    stop: 134

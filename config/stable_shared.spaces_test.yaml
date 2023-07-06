@@ -1,3 +1,5 @@
+name: "export_for_simon"
+
 branch_opts:
   # Allowed values are:
   #   "All":     only work in the unified space of all datasets, default
@@ -7,23 +9,33 @@ branch_opts:
 
   # Run pipeline on individual sessions and combined sessions / just on combined session
   include_individual_sessions: True
+  include_subsets: True
+
   generalize_from: "GN06.01-20#GN06.03-01#GN06.03-02#GN06.03-03#GN06.03-04#GN06.03-05#GN06.03-26#GN06.03-29"
 
+  
+  datasets: 
+
+    #####################################
+    #2 expert per Mice (GN06, GN10) and Mixed (GN06 + GN10)
+    #GN06_4expert:
+    #  group:
+    #    - GN06_2expert_a
+    #    - GN06_2expert_b
+
+    a_GN06_2expert:
+      subjects:
+        GN06:
+          - 2021-03-26_10-53-05
+          - 2021-03-29_11-51-27
+
+    b_GN06_2expert:
+      subjects:
+        GN06:
+          - 2021-03-25_09-19-18
+          - 2021-03-24_11-41-12
+
     
-    #GN06_untrained combined im shared_space von untrained
-    #Gn06_untrained ind      im shared_space  
-    #Gn06_untrained ind      im ind_space    
-
-  #For now only session with hard trials
-  datasets:
-    All:
-      subjects: 
-        GN06: 
-            - 2021-03-25_09-19-18  
-            - 2021-03-26_10-53-05
-            - 2021-03-29_11-51-27 
-
-
 
 
 
@@ -31,40 +43,47 @@ branch_opts:
   
     default:
       phase: all
-      #n_targets: all
-      #n_distractors: largerzero
+      n_targets: all
+      n_distractors: none
       auto_reward: no
       both_spouts: yes
-    
-    L_changed:
+      
+
+    #Stimulus Decoder
+    L-V:
       sides: left
-      sides_changed: changed
- 
+      modalities: visual
 
-    L_unchanged:
+    L-T:
       sides: left
-      sides_changed: unchanged
+      modalities: tactile
 
+    L-VT:
+      sides: left
+      modalities: vistact
 
-    R_changed:
+    R-V:
       sides: right
-      sides_changed: changed
+      modalities: visual
     
-    R_unchanged:
+    R-T:
       sides: right
-      sides_changed: unchanged
+      modalities: tactile
+    R-VT:
+      sides: right
+      modalities: vistact
 
-
-    LeftStim:
+    Left:
       group:
-        - L_changed
-        - L_unchanged
+        - L-V
+        - L-T
+        - L-VT
 
-    RightStim:
+    Right:
       group:
-        - R_changed
-        - R_unchanged
-
+        - R-V
+        - R-T
+        - R-VT
   
 
     #Correct:
@@ -78,8 +97,8 @@ branch_opts:
   
   parcellations:
     SVD:
-      n_components: 
-        - 50
+    #  n_components: 
+    #    - 299
     #LocaNMF:
     anatomical:
     
@@ -191,10 +210,17 @@ branch_opts:
 
   decoders:
     default:
-      reps: [20]
+      reps: [10]
     LDA:
     MLR:
     #MLRshuffle:
+  
+  rfe:
+    select_features_n:
+      - 1.0 #Dry run, reduces to 100% of features
+      - 2 #Reduces to % of features (floats < 1.0)
+      #- 100 #Reduces to n features (integers)
+    reps: 1 # Does independent repetitions, averages the feature rank and returns the highest ranked features
 
 static_params:
   parcellations:
@@ -231,7 +257,7 @@ paths:
 
 different_config_inputs: 1
 
-limit_memory: 1
+limit_memory: 0
 
 loglevel: INFO
 
@@ -246,34 +272,18 @@ trial_conditions:
     conds:
       left:   1
       right:  0
-  sides_changed:
-    column: change_stim_side
-    conds:
-      changed:   1
-      unchanged:  0
-      unknown: -1
-
   modalities:
     column: modality
     conds:
       visual:   0
       tactile:  1
       vistact:  2
-
   responses:
     column: response_left
     conds:
       left: 1
       right: 0
       no: -1
-  responses_changed:
-    column: change_response_side
-    conds:
-      changed:   1
-      unchanged:  0
-      unknown: -1
-
-
   n_targets:
     column: n_targets
     conds:
