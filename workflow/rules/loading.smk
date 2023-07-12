@@ -102,6 +102,9 @@ def input_unification(wildcards):
         matched_ids = [ id for id in config['datasets'].keys() if dataset_id[:match_lng] == id[:match_lng] ]
         assert (len(matched_ids) == 1), f"Did not match exactly one dataset for {dataset_id=}, but instead {matched_ids=}"
         input = [ f"{DATA_DIR}/{subj}-{date}/SVD/{subj}-{date}/data.h5" for subj, date in config['datasets'].get(matched_ids[0])]
+        if len(input) == 0:
+            print(f"No sessions seem to be part of dataset {dataset_id}")
+        assert (len(input) > 0), f"No sessions seem to be part of dataset {dataset_id}"
     return input
 
 rule unify:
