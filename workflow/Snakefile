@@ -141,8 +141,10 @@ rule biomarkers:
 
 rule exports:
     input:
-        expand([f"{EXPORTS_DIR}/{alias(dataset_id)}/{alias(subset_id)}/{{parcellation}}/temporals.{config['export_type']}"
+        expand([*[f"{EXPORTS_DIR}/{alias(dataset_id)}/{alias(subset_id)}/{{parcellation}}/temporals.{config['export_type']}"
                         for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
+                *[f"{EXPORTS_DIR}/{alias(dataset_id)}/{alias(dataset_id)}/{{parcellation}}/spatials.{config['export_type']}"
+                        for dataset_id in session_runs.keys()]],
                     parcellation = parcellations, ),
         #expand([f"{EXPORTS_DIR}/{alias(dataset_id)}/{alias(subset_id)}/{{parcellation}}/{{condition}}/temporals.{config['export_type']}"
         #                for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
