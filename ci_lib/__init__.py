@@ -1,1 +1,1 @@
-from .data import DecompData
+from .data import DecompData, TrialData, CombinedData
