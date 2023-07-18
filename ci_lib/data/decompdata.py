@@ -2,7 +2,7 @@
 
 import logging
 from typing import TypedDict, Optional, Union
-#from typing_extensions import Unpack
+from typing_extensions import Unpack
 import numpy as np
 
 Index = Union[int,slice,np.ndarray[bool]]
@@ -31,15 +31,15 @@ class DecompData:
     _mean  : Array
     _stdev : Array
 
-    _logger : logging.Logger
+    logger : logging.Logger
 
     def __init__(self, temporal_comps : Array, spatial_comps : Array,
-                 **kwargs : DecompDataParams):
+                 **kwargs : Unpack[DecompDataParams]):
                  #**kwargs : Unpack[DecompDataParams]):
         spatial_labels = kwargs.get("spatial_labels", None)
         mean           = kwargs.get("mean", None)
         stdev          = kwargs.get("stdev", None)
-        self._logger   = kwargs.get("logger", LOGGER)
+        self.logger   = kwargs.get("logger", LOGGER)
 
         n_t_comps = temporal_comps.shape[1]
         n_s_comps = spatial_comps.shape[0]
@@ -71,6 +71,16 @@ class DecompData:
         even after splitting the DecompData-object into conditions.
         '''
         return self._temps - self._mean * (1/self._stdev)
+
+    @property
+    def mean(self) -> Array:
+        '''Get mean of the temporal components'''
+        return self._mean
+
+    @property
+    def stdev(self) -> Array:
+        '''Get standard deviation of the temporal components'''
+        return self._stdev
 
     @property
     def spatials(self) -> Array:
@@ -120,8 +130,9 @@ class DecompData:
         if spatial_labels is None:
             spatial_labels = np.copy(self._spat_labels)
         return DecompData(temporal_comps, spatial_comps, spatial_labels=spatial_labels,
-                          mean=mean, stdev=stdev, logger=self._logger)
+                          mean=mean, stdev=stdev, logger=self.logger)
 
+    #TODO Making concat inplace does not make sense, should leave self and data unmodified instead
     def concat(self, data:DecompDataList, overwrite:bool=False) -> 'DecompData':
         '''
         Concats trials from list of `DecompData` to this `DecompData`
@@ -135,6 +146,9 @@ class DecompData:
             matching_spatials = (data[0].spatials==np.array(data[1:])).all(axis=0)
             assert matching_spatials, "Spatials do not seem to match"
         self._temps = np.concatenate([d.temporals for d in data], axis=0)
+        #TODO maybe add recalculation
+        self._mean  = np.nan
+        self._stdev = np.nan
         return self
 
     def __getitem__(self, key:Index) -> 'DecompData':
