@@ -51,7 +51,6 @@ class AutoCovariances(Features):
                logger=LOGGER):
         '''Create this feature from a DecompData object'''
 
-sensible choice of components, use n_components parameter for parcellations instead")
 
         timelags = np.asarray(timelag, dtype=int).reshape(-1)
         if np.max(timelags) >= data.temporals.shape[1]:

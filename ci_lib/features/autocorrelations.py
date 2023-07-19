@@ -29,7 +29,6 @@ class AutoCorrelations(Features):
     def create(data, means=None, covs=None, acovs=None, timelag=1, logger=LOGGER):
         '''Create this feature from a DecompData object'''
 
-sensible choice of components, use n_components parameter for parcellations instead")
         if covs is None:
             covs = Covariances.create(data, means, True, logger).feature
         elif isinstance(covs, Covariances):

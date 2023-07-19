@@ -34,7 +34,6 @@ class Means(Features):
                full=False,z_scored=True): #TODO z_score default ot False
         '''Create this feature from a DecompData object'''
 
-sensible choice of components, use n_components parameter for parcellations instead")
         if window is None:
             #TODO start:stop should be supported by window as well
             feat = Means(data.frame, data, feature=calc_means(

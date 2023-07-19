@@ -263,7 +263,6 @@ class Raws(Features):
     @staticmethod
     def create(data, logger=LOGGER):
         '''Create this feature from a DecompData object'''
-sensible choice of components, use n_components parameter for parcellations instead")
         feat = Raws(data.frame, data, data.temporals)
         return feat
 

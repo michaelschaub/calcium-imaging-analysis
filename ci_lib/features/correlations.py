@@ -29,7 +29,6 @@ class Correlations(Features):
     def create(data, means=None, covs=None, logger=LOGGER):
         '''Create this feature from a DecompData object'''
 
-sensible choice of components, use n_components parameter for parcellations instead")
         if covs is None:
             if means is None:
                 means = calc_means(data.temporals)

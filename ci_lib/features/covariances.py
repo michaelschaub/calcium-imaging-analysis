@@ -42,7 +42,6 @@ class Covariances(Features):
     @staticmethod
     def create(data, means=None, include_diagonal=True, logger=LOGGER):
         '''Create this feature from a DecompData object'''
-sensible choice of components, use n_components parameter for parcellations instead")
         if means is None:
             means = calc_means(data.temporals)
         elif isinstance(means, Means):
