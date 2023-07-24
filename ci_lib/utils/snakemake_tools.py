@@ -8,6 +8,7 @@ import resource
 import os
 import pickle
 import json
+import scipy
 
 import yaml
 import numpy
@@ -57,6 +58,8 @@ def save(path, data):
             numpy.save(path, data)
         elif ext == 'npz':
             numpy.savez_compressed(path, data)
+        elif ext == 'mat':
+            scipy.io.savemat(path, {'data':data})
         else:
             pass
     else:

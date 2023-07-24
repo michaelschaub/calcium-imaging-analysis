@@ -13,7 +13,7 @@ rule export_data:
     wildcard_constraints:
         decomp_alias  = r"[a-zA-Z\d_.#-]+",
         dataset_alias = r"[a-zA-Z\d_.#-]+",
-        ext = r"(npy|npz|csv|pkl)"
+        ext = r"(npy|npz|csv|pkl|mat)"
     conda:
         "../envs/environment.yaml"
     script:

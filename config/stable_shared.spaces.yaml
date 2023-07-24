@@ -1,11 +1,11 @@
-name: "export_for_simon"
+name: "export_for_simon_mat"
 
 branch_opts:
   # Allowed values are:
   #   "All":     only work in the unified space of all datasets, default
   #   "Datasets": only work in the spaces of individual datasets
   #   "Both":    ... do both
-  unified_space: "Both"
+  unified_space: "Datasets"
 
   # Run pipeline on individual sessions and combined sessions / just on combined session
   include_individual_sessions: True
@@ -105,16 +105,18 @@ branch_opts:
             #- 2020-12-28_14-28-58 #IndexError: index -1 is out of bounds for axis 0 with size 0 in feature_calculation
 
     a_GN10.06_2Novice:
-      GN06:
-        - 2020-12-28_17-40-49
-      GN10:
-        - 2020-12-21_13-52-03
+      subjects:
+        GN06:
+          - 2020-12-28_17-40-49
+        GN10:
+          - 2020-12-21_13-52-03
 
     b_GN10.06_2Novice:
-      GN06:
-        - 2020-12-22_11-16-30
-      GN10:
-        - 2020-12-23_13-23-03
+      subjects:
+        GN06:
+          - 2020-12-22_11-16-30
+        GN10:
+          - 2020-12-23_13-23-03
 
 
     #4 Novice per Mice (GN06, GN10) and Mixed (GN06 + GN10)
@@ -438,7 +440,7 @@ limit_memory: 0
 
 loglevel: INFO
 
-export_type: 'npy'
+export_type: 'mat'
 
 
 

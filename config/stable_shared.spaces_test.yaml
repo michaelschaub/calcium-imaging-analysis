@@ -18,18 +18,18 @@ branch_opts:
 
     #####################################
     #2 expert per Mice (GN06, GN10) and Mixed (GN06 + GN10)
-    #GN06_4expert:
-    #  group:
-    #    - GN06_2expert_a
-    #    - GN06_2expert_b
+    GN06_4expert:
+      group:
+        - GN06_2expert_a
+        - GN06_2expert_b
 
-    a_GN06_2expert:
+    GN06_2expert_a:
       subjects:
         GN06:
           - 2021-03-26_10-53-05
           - 2021-03-29_11-51-27
 
-    b_GN06_2expert:
+    GN06_2expert_b:
       subjects:
         GN06:
           - 2021-03-25_09-19-18
