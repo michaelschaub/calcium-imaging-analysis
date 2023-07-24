@@ -18,7 +18,6 @@ from collections import defaultdict
 
 def set_nested_dict_recursive(dict,keys,val=None):
     #adds the val to the dict nested under the list of keys
-    print(keys)
     if len(keys) == 1:
         dict[keys[0]] = val
         return dict
@@ -35,21 +34,22 @@ def reorder_feats(generic_dict):
     #Here we transform them to Parcellation x Feature x Condition x  (All Sessions + Individual Sessions)
     feats = {}
 
-    for session,sdict in generic_dict.items():
-        for parcellation,pdict in sdict.items():
-            feats[parcellation]=feats.get(parcellation, {})
-            for trials,tdict in pdict.items():
-                for condition,cdict in tdict.items():
+    for dataset,ddict in generic_dict.items():
+        for subset,sdict in ddict.items():
+            for parcellation,pdict in sdict.items():
+                feats[parcellation]=feats.get(parcellation, {})
+                for condition,cdict in pdict.items():
 
                     for feature, data in cdict.items():
                         feats[parcellation][feature] = feats[parcellation].get(feature, {})
                         feats[parcellation][feature][condition] = feats[parcellation][feature].get(condition, {})
+                        feats[parcellation][feature][condition][dataset] = feats[parcellation][feature].get(dataset, {})
 
-                        feats[parcellation][feature][condition][session]= data 
+                        feats[parcellation][feature][condition][dataset][subset] = data
     return feats
 
 logger = start_log(snakemake)
-if snakemake.config['limit_memory']:
+if snakemake.config['limit_memory'] and 'mem_mib' in snakemake.resources:
     snakemake_tools.limit_memory(snakemake)
 try:
     timer_start = snakemake_tools.start_timer()
@@ -59,9 +59,12 @@ try:
     nest = defaultdict(nested_dict)
 
     # loops over all arrays in iter in occuring order [X,Y] -> (x1,y1),(x1,y2), ...
-    for i, keys in enumerate(itertools.product(*snakemake.params['iter'])):
-        val = snakemake_tools.load(snakemake,snakemake.input[i]) 
-        nest = set_nested_dict_recursive(nest, list(keys), val)
+    logger.debug("session_runs: %s", snakemake.params['iter'][0])
+    for dataset_id, subset_ids in snakemake.params['iter'][0].items():
+        for subset_id in subset_ids:
+            for i, keys in enumerate(itertools.product(*snakemake.params['iter'][1:])):
+                val = snakemake_tools.load(snakemake.input[i])
+                nest = set_nested_dict_recursive(nest, [dataset_id, subset_id, *keys], val)
 
     #Removes lambda by converting to normal dict class
     generic_dict = dict(nest)

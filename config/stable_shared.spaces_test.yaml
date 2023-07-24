@@ -1,0 +1,325 @@
+name: "export_for_simon"
+
+branch_opts:
+  # Allowed values are:
+  #   "All":     only work in the unified space of all datasets, default
+  #   "Datasets": only work in the spaces of individual datasets
+  #   "Both":    ... do both
+  unified_space: "Both"
+
+  # Run pipeline on individual sessions and combined sessions / just on combined session
+  include_individual_sessions: True
+  include_subsets: True
+
+  generalize_from: "GN06.01-20#GN06.03-01#GN06.03-02#GN06.03-03#GN06.03-04#GN06.03-05#GN06.03-26#GN06.03-29"
+
+  
+  datasets: 
+
+    #####################################
+    #2 expert per Mice (GN06, GN10) and Mixed (GN06 + GN10)
+    GN06_4expert:
+      group:
+        - GN06_2expert_a
+        - GN06_2expert_b
+
+    GN06_2expert_a:
+      subjects:
+        GN06:
+          - 2021-03-26_10-53-05
+          - 2021-03-29_11-51-27
+
+    GN06_2expert_b:
+      subjects:
+        GN06:
+          - 2021-03-25_09-19-18
+          - 2021-03-24_11-41-12
+
+    
+
+
+
+  conditions:
+  
+    default:
+      phase: all
+      n_targets: all
+      n_distractors: none
+      auto_reward: no
+      both_spouts: yes
+      
+
+    #Stimulus Decoder
+    L-V:
+      sides: left
+      modalities: visual
+
+    L-T:
+      sides: left
+      modalities: tactile
+
+    L-VT:
+      sides: left
+      modalities: vistact
+
+    R-V:
+      sides: right
+      modalities: visual
+    
+    R-T:
+      sides: right
+      modalities: tactile
+    R-VT:
+      sides: right
+      modalities: vistact
+
+    Left:
+      group:
+        - L-V
+        - L-T
+        - L-VT
+
+    Right:
+      group:
+        - R-V
+        - R-T
+        - R-VT
+  
+
+    #Correct:
+    #  group:
+    #    - LR-LS
+    #    - RR-RS
+    #Incorrect:
+    #  group:
+    #    - LR-RS
+    #    - RR-LS
+  
+  parcellations:
+    SVD:
+    #  n_components: 
+    #    - 299
+    #LocaNMF:
+    anatomical:
+    
+  selected_trials:
+    All:
+
+
+  features:
+
+    spot-activity: #Full Timeseries for each trial
+      window: [2]
+      #phase: 
+        #- all
+        #- pretrial
+        #- stimulus
+        #- response
+        
+        #- stim1
+        #- inter_stim
+        #- stim2
+        #- delay
+        #- response
+
+    #full-activity: #Full Timeseries for each trial
+      #phase: 
+        #- all
+        #- pretrial
+        #- stimulus
+        #- response
+
+    #mean-activity: #Mean Activity over trial
+      #phase: 
+        #- all
+        #- pretrial
+        #- stimulus
+        #- stim1
+        #- inter_stim
+        #- stim2
+        #- delay
+        #- response
+        #- posttrial
+
+    #dFC:
+    #  phase:
+      #  - pretrial
+    #    - stimulus
+      #  - response
+
+    #full-dFC:
+    #  phase:
+    #    - stimulus
+    #  - response
+    
+    #FC:
+    #  phase:
+    #    - all
+    #    - pretrial
+    #    - stimulus
+        #- delay
+    #    - response
+        #- posttrial
+
+    #spot-activity-dFC:
+    #  phase:
+      #  - pretrial
+    #    - stimulus
+      #  - response
+
+    #full-activity-dFC:
+    #  phase:
+    #    - stimulus
+      #- response
+    
+    #mean-activity-FC:
+    #  phase:
+    #    - stimulus
+    #    - all
+    #    - pretrial
+
+
+    ##moup:
+    ##  phase:
+    ##    - stimulus
+
+    #raw:
+    #  max_components : [64]
+
+    #mean:
+    #  window: [1]
+
+      #optional:
+      #  window: [1] #TODO currently needs to be in an array (should support int aswell)
+
+    #covariance:
+      #max_components : [64]
+    #moup:
+    #  timelags: [1] #,2,3]
+      #optional:
+      #  thresh:
+      #    - 0.5
+    #  max_components : [64]
+
+    #autocorrelation:
+    #  timelags: [[1]] #,[1]]
+    #  phase:
+    #    - stimulus
+
+
+
+  decoders:
+    default:
+      reps: [10]
+    LDA:
+    MLR:
+    #MLRshuffle:
+  
+  rfe:
+    select_features_n:
+      - 1.0 #Dry run, reduces to 100% of features
+      - 2 #Reduces to % of features (floats < 1.0)
+      #- 100 #Reduces to n features (integers)
+    reps: 1 # Does independent repetitions, averages the feature rank and returns the highest ranked features
+
+static_params:
+  parcellations:
+    anatomical:
+    ICA:
+    LocaNMF:
+      minrank: 2
+      maxrank: 8
+      min_pixels: 400
+      loc_thresh: 300
+      r2_thresh: 0.99
+      nonnegative_temporal: False
+
+
+  selected_trials:
+    All:
+
+  features:
+    mean:
+
+  decoders:
+    MLR:
+    1NN:
+    LDA:
+    RF:
+
+paths:
+  parcellations:
+    ICA: {}
+    anatomical:
+      atlas: resources/meta/anatomical.mat
+    LocaNMF:
+      atlas: resources/meta/anatomical.mat
+
+different_config_inputs: 1
+
+limit_memory: 0
+
+loglevel: INFO
+
+export_type: 'npy'
+
+
+
+# Defines trial phases for Gerions Experimental Setup
+trial_conditions:
+  sides:
+    column: target_side_left
+    conds:
+      left:   1
+      right:  0
+  modalities:
+    column: modality
+    conds:
+      visual:   0
+      tactile:  1
+      vistact:  2
+  responses:
+    column: response_left
+    conds:
+      left: 1
+      right: 0
+      no: -1
+  n_targets:
+    column: n_targets
+    conds:
+      all: 6
+  n_distractors:
+    column: n_distractors
+    conds:
+      none: 0
+      largerzero: [1,2]
+  auto_reward:
+    column: auto_reward
+    conds:
+      no: 0
+      yes: 1
+  both_spouts:
+    column: both_spouts
+    conds:
+      no: 0
+      yes: 1
+
+phase_conditions:
+  pretrial:
+    start: 0
+    stop:  30
+  stimulus:
+    start:  30
+    stop:   75
+  delay:
+    start: 75
+    stop: 82
+  response:
+    start: 82
+    stop: 113
+  posttrial:
+    start: 113
+    stop: 134
+  all:
+    start: 0
+    stop: 134

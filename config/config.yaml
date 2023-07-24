@@ -116,10 +116,10 @@ branch_opts:
 
 
 
-  decoders:
-    default:
-      reps: [20]
-    MLR:
+  #decoders:
+    #default:
+    #  reps: [20]
+    #MLR:
     #MLRshuffle:
 
     #1NN:

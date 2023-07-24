@@ -2,7 +2,7 @@ include: "tools/Snakefile.smk"
 
 report: "report/workflow.rst"
 
-ruleorder:  load_GN > load_mSM > trial_selection > locaNMF > feature_concat > parcellate >  thresholding > feature_grouping > feature_calculation
+ruleorder:  load_GN > load_mSM > trial_selection > locaNMF > parcellate >  thresholding > feature_grouping > feature_calculation
 
 ###   Output accumulation rules   ###
 
@@ -50,6 +50,8 @@ rule feature:
     params:
         iter = [session_runs, getKeys(parcellations), getKeys(trial_conditions), getKeys(features)],
         reorder = "feature" #TODO can you access rule name from script context?
+    log:
+        f"{EXPORTS_DIR}/feats_hash{hash_config(config)}.log"
 
     conda:
         "envs/environment.yaml"
@@ -141,8 +143,10 @@ rule biomarkers:
 
 rule exports:
     input:
-        expand([f"{EXPORTS_DIR}/{alias(dataset_id)}/{alias(subset_id)}/{{parcellation}}/temporals.{config['export_type']}"
+        expand([*[f"{EXPORTS_DIR}/{alias(dataset_id)}/{alias(subset_id)}/{{parcellation}}/temporals.{config['export_type']}"
                         for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
+                *[f"{EXPORTS_DIR}/{alias(dataset_id)}/{alias(dataset_id)}/{{parcellation}}/spatials.{config['export_type']}"
+                        for dataset_id in session_runs.keys()]],
                     parcellation = parcellations, ),
         #expand([f"{EXPORTS_DIR}/{alias(dataset_id)}/{alias(subset_id)}/{{parcellation}}/{{condition}}/temporals.{config['export_type']}"
         #                for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],

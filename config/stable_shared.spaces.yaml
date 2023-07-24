@@ -1,0 +1,504 @@
+name: "export_for_simon_mat"
+
+branch_opts:
+  # Allowed values are:
+  #   "All":     only work in the unified space of all datasets, default
+  #   "Datasets": only work in the spaces of individual datasets
+  #   "Both":    ... do both
+  unified_space: "Datasets"
+
+  # Run pipeline on individual sessions and combined sessions / just on combined session
+  include_individual_sessions: True
+  generalize_from: "GN06.01-20#GN06.03-01#GN06.03-02#GN06.03-03#GN06.03-04#GN06.03-05#GN06.03-26#GN06.03-29"
+
+  
+  datasets: 
+
+    #####################################
+    #2 expert per Mice (GN06, GN10) and Mixed (GN06 + GN10)
+    a_GN06_2expert:
+      subjects:
+        GN06:
+          - 2021-03-26_10-53-05
+          - 2021-03-29_11-51-27
+
+    b_GN06_2expert:
+      subjects:
+        GN06:
+          - 2021-03-25_09-19-18 #0 trials?!
+          - 2021-03-24_11-41-12
+
+    a_GN10_2expert:
+      subjects:
+        GN10:
+          - 2021-03-12_10-47-53
+          - 2021-03-17_09-40-32
+          #- 2021-03-15_10-34-55 #0 trials?
+
+    b_GN10_2expert:
+      subjects:
+        GN10:
+          - 2021-03-05_10-36-28
+          - 2021-03-09_09-25-36
+
+    a_GN10.06_2expert:
+      subjects:
+        GN06:
+          - 2021-03-26_10-53-05
+        GN10:
+          - 2021-03-12_10-47-53
+
+    b_GN10.06_2expert:
+      subjects:
+        GN06:
+          - 2021-03-25_09-19-18
+        GN10:
+          - 2021-03-05_10-36-28
+
+    #4 expert per Mice (GN06, GN10) and Mixed (GN06 + GN10)
+    GN06_4expert:
+      group:
+        - a_GN06_2expert
+        - b_GN06_2expert
+
+    GN10_4expert:
+      group:
+        - a_GN10_2expert
+        - b_GN10_2expert
+
+    GN10.06_4expert:
+      group:
+        - a_GN10.06_2expert
+        - b_GN10.06_2expert
+
+    #8 expert Mixed
+    GN10.06_8expert:
+      group:
+        - GN10_4expert
+        - GN06_4expert
+
+    ##################################
+    #2 Novice per Mice (GN06, GN10) and Mixed (GN06 + GN10)
+    a_GN06_2Novice:
+      subjects:
+        GN06:
+          - 2020-12-28_17-40-49
+          - 2020-12-23_10-22-53
+
+    b_GN06_2Novice:
+      subjects:
+        GN06:
+          - 2020-12-22_11-16-30
+          - 2020-12-21_11-53-00
+
+    a_GN10_2Novice:
+      subjects:
+        GN10:
+            - 2020-12-21_13-52-03
+            - 2020-12-22_13-58-01
+
+    b_GN10_2Novice:
+      subjects:
+        GN10:
+            - 2020-12-23_13-23-03
+            - 2021-01-04_11-55-55
+            #- 2020-12-28_14-28-58 #IndexError: index -1 is out of bounds for axis 0 with size 0 in feature_calculation
+
+    a_GN10.06_2Novice:
+      subjects:
+        GN06:
+          - 2020-12-28_17-40-49
+        GN10:
+          - 2020-12-21_13-52-03
+
+    b_GN10.06_2Novice:
+      subjects:
+        GN06:
+          - 2020-12-22_11-16-30
+        GN10:
+          - 2020-12-23_13-23-03
+
+
+    #4 Novice per Mice (GN06, GN10) and Mixed (GN06 + GN10)
+    GN06_4Novice:
+      group:
+        - a_GN06_2Novice
+        - b_GN06_2Novice
+
+    GN10_4Novice:
+      group:
+        - a_GN10_2Novice
+        - b_GN10_2Novice
+
+    GN10.06_4Novice:
+      group:
+        - a_GN10.06_2Novice
+        - b_GN10.06_2Novice
+
+    #8 Novice Mixed
+    GN10.06_8Novice:
+      group:
+        - GN10_4Novice
+        - GN06_4Novice
+
+    #################################################
+    #2 Mixed per Mice (GN06, GN10) and Mixed (GN06 + GN10)
+    a_GN06_2Mixed:
+      subjects:
+        GN06:
+          - 2020-12-29_15-26-41 #Novice
+          - 2021-03-23_11-44-20 #Expert
+          
+    b_GN06_2Mixed:
+      subjects:
+        GN06:
+          #-2020-12-30_13-23-06 #Novice #IndexError: index 63497 is out of bounds for axis 0 with size 63497 in condtionals
+          - 2021-01-04_14-16-20 #Novice
+          - 2021-03-22_11-02-36 #Expert #0 trials
+
+    a_GN10_2Mixed:
+      subjects:
+        GN10:
+          - 2021-01-07_12-21-04
+          - 2021-03-16_09-38-17
+
+    b_GN10_2Mixed:
+      subjects:
+        GN10:
+            - 2021-01-05_15-39-34
+            #- 2020-12-29_11-43-36 #Novice #IndexError: index -1 is out of bounds for axis 0 with size 0 at feature_calculation
+            - 2021-03-24_15-22-52
+
+    a_GN10.06_2Mixed:
+      subjects:
+        GN06:
+          - 2021-03-22_11-02-36 #Expert
+        GN10:
+          - 2021-01-08_11-16-50
+          #- 2020-12-30_11-16-21 #Novice IndexError: index -1 is out of bounds for axis 0 with size 0 at feature_calculation
+
+    b_GN10.06_2Mixed:
+      subjects:
+        GN06:
+          - 2020-12-29_15-26-41 #Novice
+        GN10:
+          - 2021-03-16_09-38-17 #Expert
+
+    #4 Mixed per Mice (GN06, GN10) and Mixed (GN06 + GN10)
+    GN06_4Mixed:
+      group:
+        - a_GN06_2Mixed
+        - b_GN06_2Mixed
+    
+    GN10_4Mixed:
+      group:
+        - a_GN06_2Mixed
+        - b_GN06_2Mixed
+
+    GN10.06_4Mixed:
+      group:
+        - a_GN10.06_2Mixed
+        - b_GN10.06_2Mixed
+
+    #8 Mixed per GN06.GN10
+    GN10.06_8Mixed:
+      group:
+        - GN06_4Mixed
+        - GN10_4Mixed
+
+    ######################
+    All_GN10.06_24Mixed:
+      group:
+        - GN10.06_8Mixed
+        - GN10.06_8Novice
+        - GN10.06_8expert
+    
+
+
+  conditions:
+  
+    default:
+      phase: all
+      n_targets: all
+      n_distractors: none
+      auto_reward: no
+      both_spouts: yes
+      
+
+    #Stimulus Decoder
+    L-Stim:
+      sides: left
+
+    R_Stim:
+      sides: right
+
+    # L-T:
+    #   sides: left
+    #   modalities: tactile
+
+    # L-VT:
+    #   sides: left
+    #   modalities: vistact
+
+    # R-V:
+    #   sides: right
+    #   modalities: visual
+    
+    # R-T:
+    #   sides: right
+    #   modalities: tactile
+    # R-VT:
+    #   sides: right
+    #   modalities: vistact
+
+    # Left:
+    #   group:
+    #     - L-V
+    #     - L-T
+    #     - L-VT
+
+    # Right:
+    #   group:
+    #     - R-V
+    #     - R-T
+    #     - R-VT
+  
+
+    #Correct:
+    #  group:
+    #    - LR-LS
+    #    - RR-RS
+    #Incorrect:
+    #  group:
+    #    - LR-RS
+    #    - RR-LS
+  
+  parcellations:
+    SVD:
+    #  n_components: 
+    #    - 299
+    #LocaNMF:
+    #anatomical:
+    
+  selected_trials:
+    All:
+
+
+  features:
+
+    spot-activity: #Full Timeseries for each trial
+      window: [2]
+      #phase: 
+        #- all
+        #- pretrial
+        #- stimulus
+        #- response
+        
+        #- stim1
+        #- inter_stim
+        #- stim2
+        #- delay
+        #- response
+
+    #full-activity: #Full Timeseries for each trial
+      #phase: 
+        #- all
+        #- pretrial
+        #- stimulus
+        #- response
+
+    #mean-activity: #Mean Activity over trial
+      #phase: 
+        #- all
+        #- pretrial
+        #- stimulus
+        #- stim1
+        #- inter_stim
+        #- stim2
+        #- delay
+        #- response
+        #- posttrial
+
+    #dFC:
+    #  phase:
+      #  - pretrial
+    #    - stimulus
+      #  - response
+
+    #full-dFC:
+    #  phase:
+    #    - stimulus
+    #  - response
+    
+    #FC:
+    #  phase:
+    #    - all
+    #    - pretrial
+    #    - stimulus
+        #- delay
+    #    - response
+        #- posttrial
+
+    #spot-activity-dFC:
+    #  phase:
+      #  - pretrial
+    #    - stimulus
+      #  - response
+
+    #full-activity-dFC:
+    #  phase:
+    #    - stimulus
+      #- response
+    
+    #mean-activity-FC:
+    #  phase:
+    #    - stimulus
+    #    - all
+    #    - pretrial
+
+
+    ##moup:
+    ##  phase:
+    ##    - stimulus
+
+    #raw:
+    #  max_components : [64]
+
+    #mean:
+    #  window: [1]
+
+      #optional:
+      #  window: [1] #TODO currently needs to be in an array (should support int aswell)
+
+    #covariance:
+      #max_components : [64]
+    #moup:
+    #  timelags: [1] #,2,3]
+      #optional:
+      #  thresh:
+      #    - 0.5
+    #  max_components : [64]
+
+    #autocorrelation:
+    #  timelags: [[1]] #,[1]]
+    #  phase:
+    #    - stimulus
+
+
+
+  decoders:
+    default:
+      reps: [3]
+    #LDA:
+    MLR:
+      C: [1.]
+    #MLRshuffle:
+  
+  rfe:
+    select_features_n:
+      - 1.0 #Dry run, reduces to 100% of features
+      - 2 #Reduces to % of features (floats < 1.0)
+      #- 100 #Reduces to n features (integers)
+    reps: 1 # Does independent repetitions, averages the feature rank and returns the highest ranked features
+
+static_params:
+  parcellations:
+    anatomical:
+    ICA:
+    LocaNMF:
+      minrank: 2
+      maxrank: 8
+      min_pixels: 400
+      loc_thresh: 300
+      r2_thresh: 0.99
+      nonnegative_temporal: False
+
+
+  selected_trials:
+    All:
+
+  features:
+    mean:
+
+  decoders:
+    MLR:
+    1NN:
+    LDA:
+    RF:
+
+paths:
+  parcellations:
+    ICA: {}
+    anatomical:
+      atlas: resources/meta/anatomical.mat
+    LocaNMF:
+      atlas: resources/meta/anatomical.mat
+
+different_config_inputs: 1
+
+limit_memory: 0
+
+loglevel: INFO
+
+export_type: 'mat'
+
+
+
+# Defines trial phases for Gerions Experimental Setup
+trial_conditions:
+  sides:
+    column: target_side_left
+    conds:
+      left:   1
+      right:  0
+  modalities:
+    column: modality
+    conds:
+      visual:   0
+      tactile:  1
+      vistact:  2
+  responses:
+    column: response_left
+    conds:
+      left: 1
+      right: 0
+      no: -1
+  n_targets:
+    column: n_targets
+    conds:
+      all: 6
+  n_distractors:
+    column: n_distractors
+    conds:
+      none: 0
+      largerzero: [1,2]
+  auto_reward:
+    column: auto_reward
+    conds:
+      no: 0
+      yes: 1
+  both_spouts:
+    column: both_spouts
+    conds:
+      no: 0
+      yes: 1
+
+phase_conditions:
+  pretrial:
+    start: 0
+    stop:  30
+  stimulus:
+    start:  30
+    stop:   75
+  delay:
+    start: 75
+    stop: 82
+  response:
+    start: 82
+    stop: 113
+  posttrial:
+    start: 113
+    stop: 134
+  all:
+    start: 0
+    stop: 134
