@@ -1,15 +1,25 @@
 name: "Choice_Partial"
 
 branch_opts:
-  # Allowed values are:
-  #   "All":      only work in the unified space of all datesets, default
-  #   "Datasets": only work in the spaces of individual datasets
-  #   "Both":     ... do both
-  unified_space: "All"
+  unification:
+    # The unified space in which analysis is performed, allowed values are:
+    #   "All":      only work in the unified space of all datesets, default
+    #   "Datasets": only work in the spaces of individual datasets
+    #   "Both":     ... do both
+    unified_space: "All"
 
-  # Run pipeline on individual sessions and combined sessions / just on combined session
-  include_individual_sessions: True
-  include_subsets: True
+    # Run pipeline on individual sessions and combined sessions / just on combined session, default False
+    include_individual_sessions: True
+    # Run pipeline on subsets of the unified spaces, default True
+    include_subsets: True
+
+    # Method of unification, allowed values are
+    #   "naiv":        naiv approach, calculate svd of spatials, take new spatials and apply inverse transformation to temporals
+    #   "sv_weighted": rescale spatials by singular values computed from temporals and proceed with the same steps as in naiv, default
+    #   "block_svd"    recalculate blockwise svd over all temporals, more resource intensive, but more accurate
+    # Warning: changes this will trigger recomputaion of unify rule, overwriting previous output, if not exported
+    unification_method: "sv_weighted"
+
 
   generalize_from: "GN06.01-20#GN06.03-01#GN06.03-02#GN06.03-03#GN06.03-04#GN06.03-05#GN06.03-26#GN06.03-29"
 
@@ -581,12 +591,6 @@ paths:
 different_config_inputs: 1
 
 limit_memory: 1
-
-loglevel: DEBUG
-
-export_type: 'npy'
-
-
 
 # Defines trial phases for Gerions Experimental Setup
 trial_conditions:

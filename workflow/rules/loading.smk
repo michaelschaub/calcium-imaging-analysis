@@ -119,10 +119,12 @@ rule unify:
     log:
         f"{DATA_DIR}/{{dataset_id}}/SVD/{{dataset_id}}/unify.log"
     params:
-       alias=lambda wildcards: wildcards['dataset_id'] in config['dataset_aliases']
+       alias=lambda wildcards: wildcards['dataset_id'] in config['dataset_aliases'],
+       method=config["unification_method"]
     conda:
         "../envs/environment.yaml"
+    threads: 8
     resources:
-        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,12000,4000)
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,16000,8000)
     script:
         "../scripts/loading/unify_sessions.py"

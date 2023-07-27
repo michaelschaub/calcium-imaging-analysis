@@ -24,9 +24,11 @@ include: "../rules/common.smk"
 #print(f"{dataset_groups=}")
 #print(f"{dataset_aliases=}")
 
-unified_space               = config['branch_opts'].get('unified_space', 'All')
-include_individual_sessions = config["branch_opts"].get('include_individual_sessions', False)
-include_subsets             = config["branch_opts"].get('include_subsets', True)
+unification_conf = config['branch_opts'].get('unification', {})
+unified_space               = unification_conf.get('unified_space', 'All')
+include_individual_sessions = unification_conf.get('include_indiviual_sessions', False)
+include_subsets             = unification_conf.get('include_subsets', True)
+unification_method          = unification_conf.get('unification_method', 'sv_weighted')
 
 if unified_space in ["Both", "Datasets"]:
     unification_groups = dataset_groups
@@ -92,6 +94,7 @@ run_id = hash_config(config)
 
 config["loading"] = {"datasets"        : datasets,
                     "dataset_aliases" : dataset_aliases,
+                    "unification_method" : unification_method,
                     } #"subject_dates"  :subject_dates}
 
 config["output"] = {"processed_dates" :  session_runs}

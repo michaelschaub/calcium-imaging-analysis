@@ -29,6 +29,8 @@ try:
         snakemake_tools.stop_timer(timer_start, logger=logger)
         sys.exit(0)
 
+    method = snakemake.params['method']
+
     ### Load individual DecompData objects
 
     input_files = list(snakemake.input)
@@ -48,44 +50,56 @@ try:
         trial_starts.append(data._starts + start)
         start += Vc[-1].shape[0]
 
+        if method == "sv_weighted":
+            # rescale U by singular values, the inverse with Vc
+            # Does not need to be reversed later, since Vc are transformed with U in the end anyway
+            singular_values = np.linalg.norm(Vc[-1], axis=0)
+            U[-1] *= singular_values[:, None, None]
+            Vc[-1] /= singular_values[None, :]
+
     sessions = pd.concat(sessions)
     trial_starts = np.concatenate( trial_starts )
 
-    ### Begin SVD
+    if method in ("sv_weighted", "naiv"):
+        ### Begin SVD
 
-    frames, n_components = Vc[-1].shape
-    _, width, height = U[-1].shape
-    logger.debug(f"{frames=}, {n_components=}, {width=}, {height=}")
-    logger.debug(f"{len(U)=}")
-    svd = TruncatedSVD(n_components=n_components, random_state=snakemake.config['seed'])
-    # flatten U's width and height, concatenate along components and replace nans with zero
-    flat_U = np.nan_to_num(np.concatenate([u.reshape(n_components,width * height) for u in U]))
-    logger.debug(f"{flat_U.shape=}")
-    
-    # actual SVD calulation
-    svd.fit(flat_U)
-    
-    # new U, still flattened
-    logger.debug(f"{svd.components_.shape=}")
-    mean_U = svd.components_ 
+        frames, n_components = Vc[-1].shape
+        _, width, height = U[-1].shape
+        logger.debug(f"{frames=}, {n_components=}, {width=}, {height=}")
+        logger.debug(f"{len(U)=}")
+        svd = TruncatedSVD(n_components=n_components, random_state=snakemake.config['seed'])
+        # flatten U's width and height, concatenate along components and replace nans with zero
+        flat_U = np.nan_to_num(np.concatenate([u.reshape(n_components,width * height) for u in U]))
+        logger.debug(f"{flat_U.shape=}")
 
-    # the pseudo inverse is required to calculate new temporals
-    mean_U_inv = np.nan_to_num(np.linalg.pinv(np.nan_to_num(mean_U, nan=0.0)), nan=0.0)
+        # actual SVD calulation
+        svd.fit(flat_U)
 
-    error = np.zeros((len(U)))
+        # new U, still flattened
+        logger.debug(f"{svd.components_.shape=}")
+        mean_U = svd.components_
 
-    for i,V in enumerate(Vc):
-        U[i] = U[i].reshape(n_components,width * height)
-        # calculate tranformation matrix U * mean_U^(-1) and use it to transform Vc,
-        # more efficient then calculating (Vc * U) * mean_U^(-1)
-        V_transform = np.matmul(np.nan_to_num(U[i], nan=0.0), mean_U_inv)
-        # transfor temporals
-        Vc[i] = np.matmul(Vc[i], V_transform)
+        # the pseudo inverse is required to calculate new temporals
+        mean_U_inv = np.nan_to_num(np.linalg.pinv(np.nan_to_num(mean_U, nan=0.0)), nan=0.0)
 
-    # reshape into new spatials
-    U = mean_U.reshape(n_components,width,height) # U[0]
-    # concatenate temporals trials into one temporals
-    Vc = np.concatenate( Vc )
+        error = np.zeros((len(U)))
+
+        for i,V in enumerate(Vc):
+            U[i] = U[i].reshape(n_components,width * height)
+            # calculate tranformation matrix U * mean_U^(-1) and use it to transform Vc,
+            # more efficient then calculating (Vc * U) * mean_U^(-1)
+            V_transform = np.matmul(np.nan_to_num(U[i], nan=0.0), mean_U_inv)
+            # transform temporals
+            Vc[i] = np.matmul(Vc[i], V_transform)
+
+        # reshape into new spatials
+        U = mean_U.reshape(n_components,width,height) # U[0]
+        # concatenate temporals trials into one temporals
+        Vc = np.concatenate( Vc )
+    elif method == "block_svd":
+        raise NotImplementedError("Unification method 'block_svd' is not yet implemented")
+    else:
+        raise ValueError(f"Unknown unification method '{method}'")
 
     ### Save into new DecompData
 
