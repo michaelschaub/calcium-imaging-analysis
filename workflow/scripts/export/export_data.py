@@ -19,8 +19,10 @@ try:
     logger.debug("data.t_max=%s", data.t_max)
     #assert (data.temporals == data[:,:data.temporals.shape[1]].temporals).all()
 
-    save(snakemake.output['temporals'], data.temporals)
-    save(snakemake.output['spatials'], data.spatials)
+    if 'temporals' in snakemake.output.keys():
+        save(snakemake.output['temporals'], data.temporals)
+    if 'spatials' in snakemake.output.keys():
+        save(snakemake.output['spatials'], data.spatials)
 
     stop_timer(timer_start, logger=logger)
 except Exception:
