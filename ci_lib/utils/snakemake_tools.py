@@ -63,7 +63,7 @@ def save(path, data):
         else:
             pass
     else:
-        with open(path, 'wb', encoding='utf-8') as file:
+        with open(path, 'wb') as file:
             pickle.dump(data, file)
 
 def load(path, dtype="float"):
@@ -77,7 +77,7 @@ def load(path, dtype="float"):
     if ext in ('.npy', '.npz'):
         return numpy.load(path)
     if ext=='.pkl':
-        with open(path, 'rb', encoding='utf-8') as file:
+        with open(path, 'rb') as file:
             data = pickle.load(file)
         return data
     raise ValueError("Unrecognised file extension")
