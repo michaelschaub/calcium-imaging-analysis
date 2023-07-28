@@ -312,6 +312,18 @@ class DecompData:
                 spats = self._spats
             return np.tensordot(temps, spats, (-1, 0))
 
+        def __setitem__(self, keys, value):
+            if np.any(value != 0):
+                raise ValueError("value is not zero, PixelSlice.__setitem__ can only be used for masking")
+            if not isinstance(keys, tuple):
+                keys = (keys,)
+            if np.all([k == slice(None) for k in keys[1:]]):
+                self._temps[keys[0], :] = value
+            elif keys[0] == slice(None):
+                self._spats[(*keys[1:],)] = value
+            else:
+                raise ValueError("PixelSlice.__setitem__ can only mask temporal or spatial dimensions at once")
+
         @property
         def shape(self):
             return (self._temps.shape[0], *self._spats.shape[1:])
@@ -336,6 +348,22 @@ class DecompData:
                 pixels = [pixel.__getitem__((temps, *keys[1:]))
                           for pixel, temps in zip(self._pixels, temp_indx)]
                 return np.concatenate(pixels, axis=0)
+
+            def __setitem__(self, keys, value):
+                if not isinstance(keys, tuple):
+                    keys = (keys,)
+                if np.all([k == slice(None) for k in keys[1:]]):
+                    selected_t = np.arange(self._stops[-1])[keys[0]]
+                    temp_indx = [ts[np.isin(ts, selected_t)] for ts in self._temps]
+                    starts = (0,*self._stops[:-1])
+                    temp_indx = [ts - start for ts,start in zip(temp_indx,starts)]
+                    for pixel, temps in zip(self._pixels, temp_indx):
+                        pixel.__setitem__(temps, value)
+                elif keys[0] == slice(None):
+                    for pixel in self._pixel:
+                        pixel.__setitem__(keys, value)
+                else:
+                    raise ValueError("PixelConcat.__setitem__ can only mask temporal or spatial dimensions at once")
 
             @property
             def shape(self):
