@@ -4,7 +4,7 @@ channels:
   - defaults
   - local
 dependencies:
-  - python=3.7
+  - python>=3.8
   - pip
   - numpy
   - pandas
@@ -35,4 +35,5 @@ dependencies:
       - cython
       - versioned-hdf5
       - h5py
+      - wfield
 
