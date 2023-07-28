@@ -77,8 +77,10 @@ def load(path, dtype="float"):
     ext = file_extension
     if ext=='.csv':
         return numpy.loadtxt(path, delimiter=',',dtype=dtype)
-    if ext in ('.npy', '.npz'):
+    if ext == '.npy':
         return numpy.load(path)
+    if ext == '.npz':
+        return list(numpy.load(path).values())[0]
     if ext=='.pkl':
         with open(path, 'rb') as file:
             data = pickle.load(file)

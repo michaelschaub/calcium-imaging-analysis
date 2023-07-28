@@ -32,6 +32,7 @@ dependencies:
       - cython
       - versioned-hdf5
       - h5py
+      - wfield
 
 variables:
   SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL: True #While we use old pyMOU

@@ -28,6 +28,7 @@ def blockwise_svd(pixel_data, n_components, mask=None, logger=None, **kwargs):
                 if not isinstance(keys, tuple):
                     keys = (keys,)
                 return self._pixel.__getitem__((keys[0], *keys[2:]))
+            #TODO add __setitem__ to set mask
             @property
             def shape(self):
                 shape = self._pixel.shape
