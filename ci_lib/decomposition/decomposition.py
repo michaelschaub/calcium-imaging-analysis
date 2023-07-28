@@ -131,19 +131,3 @@ def fastICA(data, n_components):
     new_spatials = np.tensordot(inverse, data.spatials, axes=1)
 
     return data.recreate(new_temporals, new_spatials)
-
-def postprocess_SVD(data, n_components):
-    """
-    Modifies an SVD DecompData object, for example to crop to the number of components
-
-    :param data: DecompData object with SVD parcellation
-    :type data: DecompData
-
-    :param n_components: Number of components (w.r.t. time).
-    :type n_components: int
-
-    :return: DecompData object containing the processes SVD
-    :rtype: DecompData
-    """
-
-    return data.recreate(data.temporals_flat[:,:n_components], data.spatials[:n_components,:,:])
