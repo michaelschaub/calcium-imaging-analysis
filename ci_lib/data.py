@@ -302,8 +302,8 @@ class DecompData:
             if not isinstance(keys, tuple):
                 keys = (keys,)
             temps = self._temps[keys[0], :]
-            if len(keys) > 1:
-                if np.array(keys[1]).ndim == 2:
+            if len(keys) != 1:
+                if len(keys) == 2:
                     spats = self._spats[:, keys[1]]
                 else:
                     keys2 = keys[2] if len(keys) > 2 else slice(None, None, None)
@@ -311,6 +311,36 @@ class DecompData:
             else:
                 spats = self._spats
             return np.tensordot(temps, spats, (-1, 0))
+
+        @property
+        def shape(self):
+            return (self._temps.shape[0], *self._spats.shape[1:])
+
+        @staticmethod
+        def concat(pixels):
+            return DecompData.PixelSlice.PixelConcat(pixels)
+
+        class PixelConcat:
+            def __init__(self, pixels):
+                self._pixels = pixels
+                self._stops  = np.cumsum([p._temps.shape[0] for p in pixels])
+                self._temps  = np.split(np.arange(self._stops[-1]), self._stops[:-1])
+
+            def __getitem__(self, keys):
+                if not isinstance(keys, tuple):
+                    keys = (keys,)
+                selected_t = np.arange(self._stops[-1])[keys[0]]
+                temp_indx = [ts[np.isin(ts, selected_t)] for ts in self._temps]
+                starts = (0,*self._stops[:-1])
+                temp_indx = [ts - start for ts,start in zip(temp_indx,starts)]
+                pixels = [pixel.__getitem__((temps, *keys[1:]))
+                          for pixel, temps in zip(self._pixels, temp_indx)]
+                return np.concatenate(pixels, axis=0)
+
+            @property
+            def shape(self):
+                return (self._stops[-1], *self._pixels[0].shape[1:])
+
 
     def subsample(self,size,seed=None):
         '''
