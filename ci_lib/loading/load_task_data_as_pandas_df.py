@@ -120,11 +120,11 @@ def load_individual_session_data(date_folder, mouse_id, logger=None):
             # only accept temp_data if the file could be read correctly
             data = copy.deepcopy(temp_data)
         except ValueError as e:
-            logger.debug('A trial is probaby incomplete and being skipped:',exc_info=e)
+            logger.warning('A trial is probaby incomplete and being skipped:',exc_info=e)
             # this occurs when the session was interrupted during a trial. Usually the last trial in a session.
             pass
         except Exception as e:
-            logger.debug('Something went wrong and trial extraction is stopped at this point!', exc_info=e)
+            logger.warning('Something went wrong and trial extraction is stopped at this point!', exc_info=e)
             break
         #
     #
