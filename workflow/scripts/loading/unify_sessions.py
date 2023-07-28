@@ -8,6 +8,7 @@ sys.path.append(str((Path(__file__).parent.parent.parent.parent).absolute()))
 from ci_lib.utils import snakemake_tools
 from ci_lib.utils.logging import start_log
 from ci_lib import DecompData
+from ci_lib.decomposition import blockwise_svd
 
 import pandas as pd
 
@@ -36,31 +37,32 @@ try:
     input_files = list(snakemake.input)
     logger.debug(f"{input_files=}")
 
-    sessions = []
-    trial_starts = []
-    Vc = []
-    U = []
-    start = 0
-    for f in input_files:
-        data = DecompData.load(f)
-
-        sessions.append(data._df)
-        U.append(data.spatials)
-        Vc.append(data.temporals_flat)
-        trial_starts.append(data._starts + start)
-        start += Vc[-1].shape[0]
-
-        if method == "sv_weighted":
-            # rescale U by singular values, the inverse with Vc
-            # Does not need to be reversed later, since Vc are transformed with U in the end anyway
-            singular_values = np.linalg.norm(Vc[-1], axis=0)
-            U[-1] *= singular_values[:, None, None]
-            Vc[-1] /= singular_values[None, :]
-
-    sessions = pd.concat(sessions)
-    trial_starts = np.concatenate( trial_starts )
-
+    logger.info(f"Starting unification with method {method}")
     if method in ("sv_weighted", "naiv"):
+        sessions = []
+        trial_starts = []
+        Vc = []
+        U = []
+        start = 0
+        for f in input_files:
+            data = DecompData.load(f)
+
+            sessions.append(data._df)
+            U.append(data.spatials)
+            Vc.append(data.temporals_flat)
+            trial_starts.append(data._starts + start)
+            start += Vc[-1].shape[0]
+
+            if method == "sv_weighted":
+                # rescale U by singular values, the inverse with Vc
+                # Does not need to be reversed later, since Vc are transformed with U in the end anyway
+                singular_values = np.linalg.norm(Vc[-1], axis=0)
+                U[-1] *= singular_values[:, None, None]
+                Vc[-1] /= singular_values[None, :]
+
+        sessions = pd.concat(sessions)
+        trial_starts = np.concatenate( trial_starts )
+
         ### Begin SVD
 
         frames, n_components = Vc[-1].shape
@@ -97,7 +99,32 @@ try:
         # concatenate temporals trials into one temporals
         Vc = np.concatenate( Vc )
     elif method == "block_svd":
-        raise NotImplementedError("Unification method 'block_svd' is not yet implemented")
+        all_data = [ DecompData.load(f) for f in input_files ]
+
+        mask_path = snakemake.config['paths'].get('SVD',{}).get('allenMask', None)
+        if mask_path is None:
+            mask = None
+        else:
+            # convert from mask, so that True indicates brain, not not brain
+            mask = np.logical_not(scipy.io.loadmat(mask_path)['allenMask'])
+        for data in all_data:
+            # remove nans in all components
+            np.nan_to_num(data.temporals_flat, copy=False)
+            np.nan_to_num(data.spatials, copy=False)
+        # create pixel object spanning all sessions
+        pixel = DecompData.PixelSlice.concat([data.pixel for data in all_data])
+        # actual blockwise svd
+        # TODO remove hardcoded blocksize
+        Vc, U, S = blockwise_svd(pixel, all_data[-1].n_components, blocksize=60, logger=logger, mask=mask)
+
+        # create new trial_starts and sessions dataframe
+        trial_starts = []
+        start = 0
+        for data in all_data:
+            trial_starts.append(data._starts + start)
+            start += data.t_max
+        trial_starts = np.concatenate( trial_starts )
+        sessions = pd.concat([data.frame for data in all_data])
     else:
         raise ValueError(f"Unknown unification method '{method}'")
 
@@ -105,6 +132,7 @@ try:
 
     svd = DecompData( sessions, Vc, U, trial_starts, allowed_overlap=0) #TODO remove hardcode
     svd.frame['decomposition_space'] = snakemake.wildcards['dataset_id']
+    svd.frame['unification_method']  = method
     svd.save( snakemake.output[0] )
 
     snakemake_tools.stop_timer(timer_start, logger=logger)
