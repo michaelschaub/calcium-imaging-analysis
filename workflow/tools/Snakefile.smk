@@ -24,9 +24,14 @@ include: "../rules/common.smk"
 #print(f"{dataset_groups=}")
 #print(f"{dataset_aliases=}")
 
-unified_space               = config['branch_opts'].get('unified_space', 'All')
-include_individual_sessions = config["branch_opts"].get('include_individual_sessions', False)
-include_subsets             = config["branch_opts"].get('include_subsets', True)
+loaded_decomposition = config['branch_opts'].get('loading', {}).get('loaded_decomposition', 'SVD')
+
+unification_conf = config['branch_opts'].get('unification', {})
+print(f"{unification_conf=}")
+unified_space               = unification_conf.get('unified_space', 'All')
+include_individual_sessions = unification_conf.get('include_individual_sessions', False)
+include_subsets             = unification_conf.get('include_subsets', True)
+unification_method          = unification_conf.get('unification_method', 'sv_weighted')
 
 if unified_space in ["Both", "Datasets"]:
     unification_groups = dataset_groups
@@ -49,6 +54,10 @@ for set_id, sub_ids in unification_groups.items():
     else:
         sub_datasets = [set_id]
     session_runs[set_id] = sub_datasets
+
+if include_individual_sessions:
+    for session in dataset_sessions[dataset_aliases['All']]:
+        session_runs[session] = [session]
 print(f"{session_runs=}")
 
 parcells_conf   = config["branch_opts"]["parcellations"]
@@ -92,6 +101,10 @@ run_id = hash_config(config)
 
 config["loading"] = {"datasets"        : datasets,
                     "dataset_aliases" : dataset_aliases,
+                    "dataset_sessions" : dataset_sessions,
+                    "loaded_decomposition" : loaded_decomposition,
+                    "parcellations": parcellations,
+                    "unification_method" : unification_method,
                     } #"subject_dates"  :subject_dates}
 
 config["output"] = {"processed_dates" :  session_runs}

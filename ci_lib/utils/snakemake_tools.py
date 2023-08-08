@@ -33,10 +33,10 @@ def save_conf(snakemake, sections, params=None, additional_config=None):
     config = { 'static_params' : {}, 'branch_opts' : {} }
     for sec in sections:
         config['branch_opts'][sec] = json.loads(json.dumps(
-                                                snakemake.config['branch_opts'][sec]))
+                                                snakemake.config['branch_opts'].get(sec, {})))
         if sec not in ['conditions']:
             config['static_params'][sec] = json.loads(json.dumps(
-                                                snakemake.config['static_params'][sec]))
+                                                snakemake.config['static_params'].get(sec, {})))
     for par in params:
         config[par] = snakemake.params[par]
     config["wildcards"] = json.loads(json.dumps(dict(snakemake.wildcards)))
@@ -63,7 +63,7 @@ def save(path, data):
         else:
             pass
     else:
-        with open(path, 'wb', encoding='utf-8') as file:
+        with open(path, 'wb') as file:
             pickle.dump(data, file)
 
 def load(path, dtype="float"):
@@ -74,10 +74,12 @@ def load(path, dtype="float"):
     ext = file_extension
     if ext=='.csv':
         return numpy.loadtxt(path, delimiter=',',dtype=dtype)
-    if ext in ('.npy', '.npz'):
+    if ext == '.npy':
         return numpy.load(path)
+    if ext == '.npz':
+        return list(numpy.load(path).values())[0]
     if ext=='.pkl':
-        with open(path, 'rb', encoding='utf-8') as file:
+        with open(path, 'rb') as file:
             data = pickle.load(file)
         return data
     raise ValueError("Unrecognised file extension")

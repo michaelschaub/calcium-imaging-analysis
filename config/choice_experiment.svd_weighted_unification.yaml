@@ -1,6 +1,9 @@
-name: "Choice_Partial"
+name: "Clean_SVD_weighted_unification"
 
 branch_opts:
+  loading:
+    loaded_decomposition: "SVD_dirty"
+
   unification:
     # The unified space in which analysis is performed, allowed values are:
     #   "All":      only work in the unified space of all datesets, default
@@ -11,7 +14,7 @@ branch_opts:
     # Run pipeline on individual sessions and combined sessions / just on combined session, default False
     include_individual_sessions: True
     # Run pipeline on subsets of the unified spaces, default True
-    include_subsets: True
+    include_subsets: False
 
     # Method of unification, allowed values are
     #   "naiv":        naiv approach, calculate svd of spatials, take new spatials and apply inverse transformation to temporals
@@ -439,7 +442,7 @@ branch_opts:
     #  n_components: 
     #    - 299
     #LocaNMF:
-    anatomical:
+    #anatomical:
     
   selected_trials:
     All:

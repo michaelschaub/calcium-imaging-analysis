@@ -1,0 +1,17 @@
+
+static_params:
+  parcellations:
+    anatomical:
+    ICA:
+    LocaNMF:
+      minrank: 1
+      maxrank: 7
+      min_pixels: 400
+      loc_thresh: 90
+      r2_thresh: 0.95
+      nonnegative_temporal: False
+
+temporary_outputs:
+  default: False
+
+loglevel: DEBUG
