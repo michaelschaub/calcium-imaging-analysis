@@ -1,11 +1,15 @@
+import logging
 import numpy as np
 import wfield
 
-def blockwise_svd(pixel_data, n_components, mask=None, logger=None, **kwargs):
+LOGGER = logging.getLogger(__name__)
+
+def blockwise_svd(pixel_data, n_components, mask=None, logger=LOGGER, **kwargs):
     """
     Computes a truncated blockwise SVD and returns spatial and singular value scaled temporal components
 
-    :param pixel_data: some object supporting pixel_data.shape (T, X, Y)/(T, C, X, Y)
+    :param pixel_data: some object supporting pixel_data.shape (T, X, Y)/(T, C, X, Y),
+    might be modified by masking
     and __getitem__ slicing in those dimensions. E.g. DecompData.pixel
 
     :param n_components: Number of components the SVD gets truncated to.
@@ -28,7 +32,10 @@ def blockwise_svd(pixel_data, n_components, mask=None, logger=None, **kwargs):
                 if not isinstance(keys, tuple):
                     keys = (keys,)
                 return self._pixel.__getitem__((keys[0], *keys[2:]))
-            #TODO add __setitem__ to set mask
+            def __setitem__(self, keys, value):
+                if not isinstance(keys, tuple):
+                    keys = (keys,)
+                self._pixel.__setitem__((keys[0], *keys[2:]), value)
             @property
             def shape(self):
                 shape = self._pixel.shape
@@ -36,6 +43,8 @@ def blockwise_svd(pixel_data, n_components, mask=None, logger=None, **kwargs):
         # overwrite __getitem__ and shape, so that it ignores the channel dimension
         pixel_data = add_channel(pixel_data)
 
+    # TODO maybe flatten both mask and spatial dimension before, so we do not have to calculate
+    # masked components (also maybe could be implemented into DecompData)
     if mask is not None:
         pixel_data[:,:,np.logical_not(mask)] = 0
 
@@ -45,7 +54,11 @@ def blockwise_svd(pixel_data, n_components, mask=None, logger=None, **kwargs):
     # TODO check
     avrg = np.zeros((c,x,y), dtype=float)
 
-    u, svt, s, _ = wfield.decomposition.svd_blockwise(pixel_data, avrg, k=n_components, divide_by_average=False, **kwargs)
+    u, svt, s, _ = wfield.decomposition.svd_blockwise(
+                pixel_data, avrg,
+                k=n_components, divide_by_average=False,
+                **kwargs
+            )
 
     logger.debug(f"{u.shape=}")
     # u.shape = (X * Y) x N - > spatials.shape = N x X x Y
@@ -66,9 +79,12 @@ def blockwise_svd(pixel_data, n_components, mask=None, logger=None, **kwargs):
     # s is already sorted and multiplied into svt/temporals
     logger.debug(f"{s=}")
 
+    if mask is not None:
+        spatials[:,np.logical_not(mask)] = np.nan
+
     return temporals, spatials, s
 
-def svd(data, n_components=None, mask=None):
+def svd(data, n_components=None, blocksize=60, mask=None, logger=LOGGER, **kwargs):
     """
     Recomputes an SVD from a DecompData object; uses `blockwise_svd`
 
@@ -83,7 +99,8 @@ def svd(data, n_components=None, mask=None):
     """
     if n_components is None:
         n_components = data.n_components
-    Vc, U = blockwise_svd(data.pixel, n_components, mask)
+    Vc, U, S = blockwise_svd(data.pixel, n_components, blocksize=blocksize, mask=mask,
+                             logger=logger, **kwargs)
     return data.recreate(Vc, U)
 
 def postprocess_SVD(data, n_components):

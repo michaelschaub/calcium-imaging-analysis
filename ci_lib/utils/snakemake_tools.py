@@ -33,10 +33,10 @@ def save_conf(snakemake, sections, params=None, additional_config=None):
     config = { 'static_params' : {}, 'branch_opts' : {} }
     for sec in sections:
         config['branch_opts'][sec] = json.loads(json.dumps(
-                                                snakemake.config['branch_opts'][sec]))
+                                                snakemake.config['branch_opts'].get(sec, {})))
         if sec not in ['conditions']:
             config['static_params'][sec] = json.loads(json.dumps(
-                                                snakemake.config['static_params'][sec]))
+                                                snakemake.config['static_params'].get(sec, {})))
     for par in params:
         config[par] = snakemake.params[par]
     config["wildcards"] = json.loads(json.dumps(dict(snakemake.wildcards)))
