@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.decomposition import TruncatedSVD
+import scipy
 
 from pathlib import Path
 import sys
@@ -101,12 +102,18 @@ try:
     elif method == "block_svd":
         all_data = [ DecompData.load(f) for f in input_files ]
 
-        mask_path = snakemake.config['paths'].get('SVD',{}).get('allenMask', None)
+        mask_path = snakemake.config['paths']['parcellations'].get('SVD',{}).get('allenMask', None)
         if mask_path is None:
+            logger.warning(f"No Mask found!")
             mask = None
         else:
             # convert from mask, so that True indicates brain, not not brain
             mask = np.logical_not(scipy.io.loadmat(mask_path)['allenMask'])
+            width = min(all_data[-1].n_xaxis, mask.shape[0])
+            height = min(all_data[-1].n_yaxis, mask.shape[1])
+            mask_sized = np.zeros((all_data[-1].n_xaxis, all_data[-1].n_yaxis), dtype=bool)
+            mask_sized[:width,:height] = mask[:width,:height]
+            mask = mask_sized
         for data in all_data:
             # remove nans in all components
             np.nan_to_num(data.temporals_flat, copy=False)
@@ -116,6 +123,7 @@ try:
         # actual blockwise svd
         # TODO remove hardcoded blocksize
         Vc, U, S = blockwise_svd(pixel, all_data[-1].n_components, blocksize=60, logger=logger, mask=mask)
+        logger.debug(f"SVD spatial nans: {np.where(np.isnan(U))}")
 
         # create new trial_starts and sessions dataframe
         trial_starts = []
@@ -131,6 +139,8 @@ try:
     ### Save into new DecompData
 
     svd = DecompData( sessions, Vc, U, trial_starts, allowed_overlap=0) #TODO remove hardcode
+    logger.debug(f"DecompData spatial nans: {np.where(np.isnan(svd.spatials))}")
+
     svd.frame['decomposition_space'] = snakemake.wildcards['dataset_id']
     svd.frame['unification_method']  = method
     svd.save( snakemake.output[0] )
