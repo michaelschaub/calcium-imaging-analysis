@@ -29,7 +29,7 @@ def flat_time_resolved_c(connectivity, diagonal,timepoints=slice(None)):
 class Cofluctuation(Features):
     _type = FeatureType.UNDIRECTED
 
-    def __init__(self, frame, data, feature, file=None, include_diagonal=True, range=None, full=False):
+    def __init__(self, frame, data, feature, file=None, include_diagonal=True, range=None, full=False, time_resolved=True):
         super().__init__(frame=frame, data=data, feature=feature, file=file,full=full)
         self._time_resolved = True
         self._include_diagonal = include_diagonal

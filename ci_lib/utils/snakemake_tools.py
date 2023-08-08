@@ -46,11 +46,11 @@ def save_conf(snakemake, sections, params=None, additional_config=None):
     with open( snakemake.output["config"], 'w', encoding='utf-8') as conf_file:
         yaml.dump(config, conf_file)
 
-def save(path, data):
+def save(path, data, force_pkl=False):
     '''
     Saves `data` into `path` in a format specified by the extension of `path`
     '''
-    if isinstance(data, numpy.ndarray):
+    if isinstance(data, (numpy.ndarray,dict)) and not force_pkl:
         ext = path.split('.')[-1]
         if ext == 'csv':
             numpy.savetxt(path, data, delimiter=',')
@@ -59,11 +59,14 @@ def save(path, data):
         elif ext == 'npz':
             numpy.savez_compressed(path, data)
         elif ext == 'mat':
-            scipy.io.savemat(path, {'data':data})
+            if isinstance(data, dict):
+                scipy.io.savemat(path, data)
+            else: 
+                scipy.io.savemat(path, {'data':data})
         else:
             pass
     else:
-        with open(path, 'wb', encoding='utf-8') as file:
+        with open(path, 'wb') as file: #, encoding='utf-8') 
             pickle.dump(data, file)
 
 def load(path, dtype="float"):
