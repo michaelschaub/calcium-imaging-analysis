@@ -10,7 +10,11 @@ def sessions_input_gerion(wildcards):
     '''
     Matches the corresponding input files for one subject and date in the the {session_id} wildcard, task_flatten is only passed to make sure files are present. Rules uses the structured task files from the params.
     '''
-    session_id = wildcards['session_id'].split('-')
+    session_id = wildcards['session_id']
+    sessions = config["dataset_sessions"][config["dataset_aliases"]["All"]]
+    if session_id not in sessions:
+        raise ValueError(f"{session_id=} not in {sessions=}")
+    session_id = session_id.split('-')
     subject_id = session_id[0]
     date = '-'.join(session_id[1:])
     input = {
@@ -23,7 +27,11 @@ def sessions_input_simon(wildcards):
     '''
     Matches the corresponding input files for one subject and date in the the {subject_date} wildcard, task_flatten is only passed to make sure files are present. Rules uses the structured task files from the params.
     '''
-    session_id = wildcards['session_id'].split('-')
+    session_id = wildcards['session_id']
+    sessions = config["dataset_sessions"][dataset_aliases["All"]]
+    if session_id not in sessions:
+        raise ValueError(f"{session_id=} not in {sessions=}")
+    session_id = session_id.split('-')
     subject_id = session_id[0]
     date = session_id[1:]
     input = {
@@ -36,10 +44,10 @@ def sessions_input_simon(wildcards):
 
 rule load_Random:
     output:
-        "results/random.random/SVD/data.h5",
-        config = "results/random.random/SVD/conf.yaml"
+        f"results/random.random/{config['loaded_decomposition']}/data.h5",
+        config = f"results/random.random/{config['loaded_decomposition']}/conf.yaml"
     log:
-        f"results/random.random/SVD/random.log"
+        f"results/random.random/{config['loaded_decomposition']}/random.log"
     conda:
         "../envs/environment.yaml"
     script:
@@ -52,14 +60,14 @@ rule load_GN:
     input:
         unpack(sessions_input_gerion)
     output:
-        temp_c(f"{DATA_DIR}/{{session_id}}/SVD/{{session_id}}/data.h5", rule="load"),
-        align_plot = report(f"{DATA_DIR}/{{session_id}}/SVD/{{session_id}}/alignment.pdf", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "GN", "Subjects":"{{session_id}}"}),
-        config = f"{DATA_DIR}/{{session_id}}/SVD/{{session_id}}/conf.yaml",
-        stim_side = report(f"{DATA_DIR}/{{session_id}}/SVD/{{session_id}}/stim_side.pdf", caption="../report/alignment.rst", category="0 Loading", labels={"Dataset": "GN", "Subjects":"{{session_id}}"})
+        temp_c(f"{DATA_DIR}/{{session_id}}/{config['loaded_decomposition']}/{{session_id}}/data.h5", rule="load"),
+        align_plot = report(f"{DATA_DIR}/{{session_id}}/{config['loaded_decomposition']}/{{session_id}}/alignment.pdf", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "GN", "Subjects":"{{session_id}}"}),
+        config = f"{DATA_DIR}/{{session_id}}/{config['loaded_decomposition']}/{{session_id}}/conf.yaml",
+        stim_side = report(f"{DATA_DIR}/{{session_id}}/{config['loaded_decomposition']}/{{session_id}}/stim_side.pdf", caption="../report/alignment.rst", category="0 Loading", labels={"Dataset": "GN", "Subjects":"{{session_id}}"})
     wildcard_constraints:
         session_id = r"GN[\w_.\-]*"
     log:
-        f"{DATA_DIR}/{{session_id}}/SVD/{{session_id}}/pipeline_entry.log"
+        f"{DATA_DIR}/{{session_id}}/{config['loaded_decomposition']}/{{session_id}}/pipeline_entry.log"
     conda:
         "../envs/environment.yaml"
     resources:
@@ -75,19 +83,53 @@ rule load_mSM:
     input:
         unpack(sessions_input_simon)
     output:
-        temp_c(f"{DATA_DIR}/{{session_id}}/SVD/{{session_id}}/data.h5", rule="load"),
-        align_plot = report(f"{DATA_DIR}/{{session_id}}/SVD/{{session_id}}/alignment.pdf", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "mSM", "Subjects":"{{session_id}}"}),
-        config = f"{DATA_DIR}/{{session_id}}/SVD/{{session_id}}/conf.yaml",
+        temp_c(f"{DATA_DIR}/{{session_id}}/{config['loaded_decomposition']}/{{session_id}}/data.h5", rule="load"),
+        align_plot = report(f"{DATA_DIR}/{{session_id}}/{config['loaded_decomposition']}/{{session_id}}/alignment.pdf", caption="../report/alignment.rst", category="1 Brain Alignment", labels={"Dataset": "mSM", "Subjects":"{{session_id}}"}),
+        config = f"{DATA_DIR}/{{session_id}}/{config['loaded_decomposition']}/{{session_id}}/conf.yaml",
     wildcard_constraints:
         session_id = r"mSM[\w_.\-]*"
     log:
-        f"{DATA_DIR}/{{session_id}}/SVD/{{session_id}}/pipeline_entry.log"
+        f"{DATA_DIR}/{{session_id}}/{config['loaded_decomposition']}/{{session_id}}/pipeline_entry.log"
     conda:
         "../envs/environment.yaml"
     resources:
         mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,4000,1000)
     script:
         "../scripts/loading/load_mSM.py"
+
+def svd_input(wildcards):
+    if config['loaded_decomposition'] == "SVD":
+        raise ValueError("This output should be generated by loading")
+    session_id = wildcards['dataset_id']
+    sessions = config["dataset_sessions"][config["dataset_aliases"]["All"]]
+    if session_id not in sessions:
+        raise ValueError(f"{session_id=} not in {sessions=}")
+    input = {
+        "data"	: f"{{data_dir}}/{{dataset_id}}/{config['loaded_decomposition']}/{{dataset_id}}/data.h5",
+        "config": f"{{data_dir}}/{{dataset_id}}/{config['loaded_decomposition']}/{{dataset_id}}/conf.yaml" }
+    input.update( config["paths"]["parcellations"].get('SVD') )
+    return input
+
+rule svd:
+    '''
+    Perform SVD on any DecompData object
+    '''
+    input:
+        unpack(svd_input)
+    output:
+        temp_c("{data_dir}/{dataset_id}/SVD/{dataset_id}/data.h5", rule="parcellate"),
+        config = "{data_dir}/{dataset_id}/SVD/{dataset_id}/conf.yaml",
+    params:
+        params = {}
+    log:
+        "{data_dir}/{dataset_id}/SVD/{dataset_id}/parcellation.log"
+    conda:
+        "../envs/environment.yaml"
+    threads: min(workflow.cores,24)
+    resources:
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,16000,8000)
+    script:
+        "../scripts/loading/svd.py"
 
 def input_unification(wildcards):
     dataset_id = wildcards['dataset_id']
@@ -123,7 +165,7 @@ rule unify:
        method=config["unification_method"]
     conda:
         "../envs/environment.yaml"
-    threads: 8
+    threads: min(workflow.cores,24)
     resources:
         mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,16000,8000)
     script:
