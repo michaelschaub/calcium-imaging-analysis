@@ -29,7 +29,7 @@ class DecompData:
     #TODO Add support for data without trial data and split DecompData into subclasses
 
     def __init__(self, data_frame, temporal_comps, spatial_comps, trial_starts, allowed_overlap=0,
-                 cond_filter=None, trans_params=None, savefile=None, spatial_labels=None,
+                 cond_filter=None, savefile=None, spatial_labels=None,
                  mean=None, stdev=None, dataset_id_column="dataset_id", logger=None):
         self.logger = LOGGER if logger is None else logger
         assert len(data_frame) == trial_starts.shape[0], (
@@ -37,10 +37,7 @@ class DecompData:
                     ({len(data_frame)} != {len(trial_starts)})")
         self._df = data_frame.reset_index(drop=True)
         self._temps = temporal_comps
-        if trans_params is None:
-            self._spats = spatial_comps
-        else:
-            align_spatials(spatial_comps,trans_params, logger=self.logger)
+        self._spats = spatial_comps
         self._starts = trial_starts
         self._allowed_overlap = np.asarray(allowed_overlap)
         # has to be 0 if trials are not containing continous frames,
@@ -313,14 +310,14 @@ class DecompData:
             return np.tensordot(temps, spats, (-1, 0))
 
         def __setitem__(self, keys, value):
-            if np.any(value != 0):
+            if not np.all(np.logical_or(value == 0, np.isnan(value))):
                 raise ValueError("value is not zero, PixelSlice.__setitem__ can only be used for masking")
             if not isinstance(keys, tuple):
                 keys = (keys,)
             if np.all([k == slice(None) for k in keys[1:]]):
                 self._temps[keys[0], :] = value
             elif keys[0] == slice(None):
-                self._spats[(*keys[1:],)] = value
+                self._spats[(slice(None), *keys[1:])] = value
             else:
                 raise ValueError("PixelSlice.__setitem__ can only mask temporal or spatial dimensions at once")
 
@@ -360,7 +357,7 @@ class DecompData:
                     for pixel, temps in zip(self._pixels, temp_indx):
                         pixel.__setitem__(temps, value)
                 elif keys[0] == slice(None):
-                    for pixel in self._pixel:
+                    for pixel in self._pixels:
                         pixel.__setitem__(keys, value)
                 else:
                     raise ValueError("PixelConcat.__setitem__ can only mask temporal or spatial dimensions at once")
