@@ -563,7 +563,7 @@ branch_opts:
       max_trials: [ 15, null ]
     MLR:
       C: [ 0.1 ]
-    LDA:
+    #LDA:
     #MLRshuffle:
 
 static_params:
