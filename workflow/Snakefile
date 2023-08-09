@@ -113,12 +113,12 @@ rule decode:
 
 rule decode_generalized:
     input:
-        expand([f"{PLOTS_DIR}/{dataset_id}/{subset_id}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/from_{generalize_from}/ClusturedModels_perf.pdf"
-                        for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
+        expand([f"{PLOTS_DIR}/{dataset_id}/{generalization['decoderset_id']}_on_{generalization['subset_id']}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.pdf"
+                        for dataset_id, generalizations in generalize.items() for generalization in generalizations],
                     parcellation = parcellations, feature =  features, decoder=decoders),
-        expand([f"{DATA_DIR}/{dataset_id}/{{parcellation}}/{subset_id}/Decoding/decoder/{'.'.join(aggr_conditions)}/{{feature}}/{{decoder}}/from_{generalize_from}/cluster_perf.pkl"
-                        for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
-                    parcellation = parcellations, feature =  features, decoder=decoders),
+        expand([f"{DATA_DIR}/{dataset_id}/{{parcellation}}/{generalization['subset_id']}/Decoding/decoder/{'.'.join(aggr_conditions)}/{{feature}}/{{decoder}}/model_from/{generalization['decoderset_id']}/cluster_perf.pkl"
+                        for dataset_id, generalizations in generalize.items() for generalization in generalizations],
+                    parcellation = parcellations, feature =  features, decoder=decoders, generalize_from=generalize),
 
 rule aggregated_decoding_plots:
     input:

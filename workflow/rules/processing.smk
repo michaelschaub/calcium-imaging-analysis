@@ -340,3 +340,44 @@ rule decoding:
     script:
         "../scripts/decoding.py"
 
+rule cluster_coef:
+    input:
+        model  = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{{conditions}}/{{feature}}/{{decoder}}/decoder_model.pkl",
+        parcel = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/data.h5"
+    output:
+        no_cluster = f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime.pdf",
+        cluster    = f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.pdf",
+        PCA_3D = f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_PCA_3D.html",
+        Cluster_3D = f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_Clustered_3D.html",
+
+        cluster_small    = f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.png",
+        models     = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{{conditions}}/{{feature}}/{{decoder}}/ClusterModels.pkl",
+        coef_plots  = directory(f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/Clusters/")
+    params:
+        phases = config["phase_conditions"]
+    log:
+         f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.log",
+    conda:
+        "../envs/environment_clustering.yaml"
+    script:
+        "../scripts/cluster_models_UMAP.py"
+
+rule decoding_with_existing_model:
+    input:
+        feat = [f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Features/{cond}/{{feature}}/features.h5" for cond in config['aggr_conditions']],
+        models = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{decoderset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/ClusterModels.pkl",
+    output:
+        perf =f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/model_from/{{decoderset_id}}/cluster_perf.pkl"
+    params:
+        conds = list(config['aggr_conditions']),
+        decoders=[f"{{decoder}}"],
+        params = lambda wildcards: config["decoders"][wildcards["decoder"]], #TODO actually we just need number of reps, or we could also just test once on whole dataset
+    log:
+        f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/model_from/{{decoderset_id}}/cluster_perf.log"
+    conda:
+        "../envs/environment.yaml"
+    resources:
+        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,1000,1000)
+    script:
+        "../scripts/test_models.py"
+

@@ -24,7 +24,14 @@ branch_opts:
     unification_method: "sv_weighted"
 
 
-  generalize_from: "GN06.01-20#GN06.03-01#GN06.03-02#GN06.03-03#GN06.03-04#GN06.03-05#GN06.03-26#GN06.03-29"
+  generalize:
+    # decomposition space in which generalization takes place
+    All:
+      # decoders from the decodersets are applied to these subsets
+      - decoderset: All
+        subset:     GN06_expert
+      - decoderset: GN06_expert
+        subset:     All
 
     
     #GN06_untrained combined im shared_space von untrained
@@ -555,7 +562,8 @@ branch_opts:
       reps: [5]
       max_trials: [ 15, null ]
     MLR:
-    #LDA:
+      C: [ 0.1 ]
+    LDA:
     #MLRshuffle:
 
 static_params:
