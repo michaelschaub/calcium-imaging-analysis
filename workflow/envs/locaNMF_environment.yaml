@@ -7,7 +7,7 @@ dependencies:
   - python>=3.8
   - pip
   - numpy
-  - pandas
+  - pandas=2.0.3
   - scipy
 
 
@@ -26,7 +26,8 @@ dependencies:
 
       - networkx
       - Shapely
-
+      - seaborn==0.12.2
+      
       # ?
       - psutil
 

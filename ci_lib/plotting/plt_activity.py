@@ -21,7 +21,7 @@ from .colormaps import cmap_blueblackred
 def plot_spatial_activity(activity,decomp_object,overlay=False):
     pass
 
-def draw_neural_activity(frames,path=None,plt_title="",subfig_titles=None,overlay=True,outlined=True,masked=True,logger=LOGGER,share_v=True,vmin=None,vmax=None,font_scale=1,cmap=cmap_blueblackred()):
+def draw_neural_activity(frames,path=None,plt_title="",subfig_titles=None,overlay=True,outlined=True,masked=True,logger=LOGGER,share_v=True,vmin=None,vmax=None,font_scale=1,cmap=cmap_blueblackred(),cutoff=False):
     """ Draws multiple frames of neural activity in the spatial context of the brain with optional Atlas-Overlay and Cutout.
 
     Args:
@@ -84,7 +84,11 @@ def draw_neural_activity(frames,path=None,plt_title="",subfig_titles=None,overla
     #plt.subplots_adjust(wspace=0)
 
     #Uniform vmax,vmin over all subfigures, diverging color map centered at 0, scales ind. to both sides, if one sign is larger by magnitude 2, cut off that sign
-    vmin, vmax = (np.nanmin(frames) if vmin is None else vmin,np.nanmax(frames) if vmax is None else vmax)
+    if cutoff:
+        cutoff_p = 0.02*100
+        vmin, vmax = (np.percentile(frames,cutoff_p) if vmin is None else vmin,np.percentile(frames,100-cutoff_p) if vmax is None else vmax)
+    else:
+        vmin, vmax = (np.nanmin(frames) if vmin is None else vmin,np.nanmax(frames) if vmax is None else vmax)
     logger.info(f"vmin {vmin},vmax {vmax}")
     #if vmax>100*-vmin:
     #    vmin = -vmax

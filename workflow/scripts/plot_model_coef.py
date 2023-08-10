@@ -19,10 +19,10 @@ try:
     timer_start = snakemake_tools.start_timer()
 
     with open(snakemake.input["model"], "rb") as f:
-        pipelines = pickle.load(f) #TODO decoding timesteps x n_reps, currently only works for 1 timestep
+        models = pickle.load(f) 
 
-    classes = np.asarray([pipeline[1].classes_ for pipeline in pipelines[0]]) #n_reps x n_classes 
-    coefs = np.asarray([pipeline[1].coef_ for pipeline in pipelines[0]],dtype=float) # n_reps x n_classes x n_features
+    classes = np.asarray([model_rep.classes_ for models_t in models for model_rep in models_t] ) #n_timepoints * n_reps x n_classes 
+    coefs = np.asarray([model_rep.coef_  for models_t in models for model_rep in models_t],dtype=float) #n_timepoints * n_reps x n_classes x n_features
 
     if not (classes == classes[0,:]).all(-1).any(-1):
         #Labels are not identically ordered, different order of occurence in reps, sorting needed
@@ -30,9 +30,10 @@ try:
         classes = np.take_along_axis(classes, sort_classes, axis=1)
         coefs = np.take_along_axis(coefs, sort_classes[:,:,np.newaxis], axis=1)
     
+
     dispersion = np.std(coefs,axis=0)
     logger.info(np.amax(dispersion))
-    coefs= np.mean(coefs,axis=0) #mean over runs
+    coefs= np.mean(coefs,axis=0) #mean over time points and runs
     
     spatials = DecompData.load(snakemake.input["parcel"])._spats
 
@@ -64,8 +65,8 @@ try:
         
     labels=classes[0] if n_classes>1 else classes[0][1] #n-classes or binary case, where last class corresponds to 1
     
-    draw_neural_activity(frames=means,path=snakemake.output['coef_plot'],plt_title=f"Mean Coef for {snakemake.wildcards['feature']} across Splits",subfig_titles= labels,overlay=True,outlined=True, logger=logger,font_scale=snakemake.config["font_scale"])
-    draw_neural_activity(frames=dispersion,path=snakemake.output['var_plot'],plt_title=f"Std Coef for {snakemake.wildcards['feature']} across Splits",subfig_titles= labels,overlay=True,outlined=True, logger=logger,font_scale=snakemake.config["font_scale"])
+    draw_neural_activity(frames=means,path=snakemake.output['coef_plot'],plt_title=f"Mean Coef for {snakemake.wildcards['feature']} across Splits",subfig_titles= labels,overlay=True,outlined=True, logger=logger,font_scale=snakemake.config["font_scale"],cutoff=True)
+    draw_neural_activity(frames=dispersion,path=snakemake.output['var_plot'],plt_title=f"Std Coef for {snakemake.wildcards['feature']} across Splits",subfig_titles= labels,overlay=True,outlined=True, logger=logger,font_scale=snakemake.config["font_scale"],cutoff=True)
 
     snakemake_tools.stop_timer(timer_start, logger=logger)
 

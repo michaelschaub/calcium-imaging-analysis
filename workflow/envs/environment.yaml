@@ -6,7 +6,7 @@ dependencies:
   - python=3.10
   - pip
   - numpy=1.23.3
-  - pandas
+  - pandas=2.0.3
   - scipy
 
   - scikit-learn
@@ -23,7 +23,7 @@ dependencies:
 
       - networkx
       - Shapely
-      - seaborn==0.12.1
+      - seaborn==0.12.2
             
       - psutil # ?
 

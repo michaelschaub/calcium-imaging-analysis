@@ -93,9 +93,9 @@ rule decode:
                     parcellation = parcellations, feature =  features, decoder=decoders, ),
         
         #Plot coefs
-        #expand([f"{PLOTS_DIR}/{dataset_id}/{subset_id}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/model_coef_mean.pdf"
-        #                for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
-        #            parcellation = parcellations, feature =  features, decoder=decoders, ),
+        expand([f"{PLOTS_DIR}/{dataset_id}/{subset_id}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/model_coef_mean.pdf"
+                        for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
+                    parcellation = parcellations, feature =  features, decoder=decoders, ),
 
         #Plot clustered coefs
         #expand([f"{PLOTS_DIR}/{dataset_id}/{subset_id}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.pdf"

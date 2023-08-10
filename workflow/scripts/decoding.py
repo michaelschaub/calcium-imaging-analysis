@@ -43,7 +43,7 @@ def start_thread():
         print("No more threads to start, waiting for other threads to finish")
     thread_semaphore = False
 
-def decoding_iteration(t,feat_list,label_list,decoder,reps,perf_list,model_list,perf_matrix,accumulate=False,shuffling=False):
+def decoding_iteration(t,feat_list,label_list,decoder,reps,perf_list,model_list_normalized,perf_matrix,accumulate=False,shuffling=False):
     #logger.info(f"Thread {t} started")
 
     if accumulate:
@@ -60,7 +60,7 @@ def decoding_iteration(t,feat_list,label_list,decoder,reps,perf_list,model_list,
     perf_t, confusion_t, model_t = decode(feats_t, labels_t,decoder,reps,
                                           label_order=label_list, seed=seed)
     perf_list[t,:] = perf_t
-    model_list[t]= model_t
+    model_list_normalized[t]= model_t
 
     #Test on other timepoints
     for j,t2 in enumerate(t_range, 1):
@@ -127,6 +127,7 @@ try:
 
     perf_list = np.zeros((n_timepoints,reps))
     model_list = np.zeros((n_timepoints,reps),dtype=object)
+    model_list_normalized = np.zeros((n_timepoints,reps),dtype=object)
     perf_matrix = np.zeros((n_timepoints,n_timepoints,reps))
     conf_matrix = np.zeros((n_timepoints,reps,n_classes,n_classes))
     norm_conf_matrix = np.zeros((n_timepoints,reps,n_classes,n_classes))
@@ -142,7 +143,7 @@ try:
 
     if multithreading:
         threads_n = snakemake.threads -1 
-        threads = [Thread(target=decoding_iteration, args=(t,feat_list,label_list,decoder,reps,perf_list,model_list,perf_matrix,accumulate,shuffling)) for t in t_range]
+        threads = [Thread(target=decoding_iteration, args=(t,feat_list,label_list,decoder,reps,perf_list,model_list_normalized,perf_matrix,accumulate,shuffling)) for t in t_range]
 
         #start intitial_threads, each thread will start a new one after it is finished
         next_thread = threads_n
@@ -178,14 +179,16 @@ try:
 
             #Decode
             logger.info(f"C {C}")
-            perf_t, confusion_t, norm_confusion_t, model_t = decode(feats_t, labels_t,decoder,reps,
+            perf_t, confusion_t, norm_confusion_t, model_t_normalized, scaled_model_t = decode(feats_t, labels_t,decoder,reps,
                                                                     label_order=label_list,
                                                                     cores=cores,logger=logger,
                                                                     C=C, seed=seed)
             perf_list[t,:] = perf_t
             conf_matrix[t,:,:,:] = confusion_t
             norm_conf_matrix[t,:,:,:] = norm_confusion_t
-            model_list[t]= model_t
+
+            model_list_normalized[t]= model_t_normalized
+            model_list[t] = scaled_model_t
 
             #Track stats
             #iterations[t,:] = [model[-1].n_iter_[-1] for model in model_t]
@@ -198,7 +201,7 @@ try:
                 for i,t2 in enumerate(t_range, 1):
                     feats_t2, labels_t2 = flatten(feat_list,label_list,t2)
                     #TODO could be optimizied (run only once for each t2 on all t1)
-                    perf_matrix[t,t2,:], _ , _ , _ = decode(feats_t2, labels_t2,model_t,reps,
+                    perf_matrix[t,t2,:], _ , _ , _ , _ = decode(feats_t2, labels_t2,model_t_normalized,reps,
                                                             label_order=label_list,cores=cores,
                                                             logger=logger, seed=seed*i)
 
@@ -232,7 +235,7 @@ try:
         pickle.dump(perf_list, f)
 
     with open(snakemake.output[0], 'wb') as f:
-        pickle.dump(model_list, f)
+        pickle.dump(model_list_normalized, f) #model_list_normalized if use for decoding
     
     with open(snakemake.output[2], 'wb') as f:
         pickle.dump(perf_matrix, f)

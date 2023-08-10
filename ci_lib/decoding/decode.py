@@ -15,6 +15,7 @@ from sklearn import metrics
 from sklearn.model_selection import StratifiedShuffleSplit
 import numpy as np
 import pickle
+from copy import deepcopy
 
 #Hide convergene warning for shuffled data
 from sklearn.utils._testing import ignore_warnings
@@ -34,17 +35,23 @@ from ci_lib.features import from_string as feat_from_string
 # TODO as classes
 def MLR(cores=1,C=0.05,logger=None):
     logger.info(f"C {C}")
-    return skppl.make_pipeline(skppc.StandardScaler(),
-                                skllm.LogisticRegression(C=C, penalty='l1', multi_class='multinomial',
-                                                        #solver='saga', max_iter=1000, n_jobs=cores))
-                                                        solver='saga', max_iter=1000, n_jobs=cores))
+    # pipeline for RFE
+    # return skppl.make_pipeline(skppc.StandardScaler(),
+    #                             skllm.LogisticRegression(C=C, penalty='l1', multi_class='multinomial',
+    #                                                     #solver='saga', max_iter=1000, n_jobs=cores))
+    #                                                     solver='saga', max_iter=1000, n_jobs=cores))
+    return skllm.LogisticRegression(C=C, penalty='l1', multi_class='multinomial',
+                                                         #solver='saga', max_iter=1000, n_jobs=cores))
+                                                         solver='saga', max_iter=1000, n_jobs=cores)
 
 def NN(cores):
     return sklnn.KNeighborsClassifier(n_neighbors=1, algorithm='brute', metric='correlation')
 
 def LDA(cores,C=None,logger=None):
-    return skppl.make_pipeline(skppc.StandardScaler(),
-                                skda.LinearDiscriminantAnalysis(n_components=None, solver='eigen', shrinkage='auto'))
+    # pipeline for RFE
+    #return skppl.make_pipeline(skppc.StandardScaler(),
+    #                            skda.LinearDiscriminantAnalysis(n_components=None, solver='eigen', shrinkage='auto'))
+    return skda.LinearDiscriminantAnalysis(n_components=None, solver='eigen', shrinkage='auto')
 
 def RF(cores):
     return skens.RandomForestClassifier(n_estimators=10, bootstrap=False)
@@ -147,7 +154,8 @@ def decode(data, labels, decoder, reps, label_order=None,cores=1,logger=None,C=N
     data = scaler.transform(data)
     cv_split = cv.split(data, labels)
     perf = np.zeros((reps),dtype=float)
-    trained_decoders = np.zeros((reps),dtype=object) 
+    trained_decoders_scaled = np.zeros((reps),dtype=object) 
+    trained_decoders_normalized = np.zeros((reps),dtype=object) 
     models = np.zeros((reps),dtype=object) 
 
     norm_confusion = np.zeros((reps,len(label_order),len(label_order)),dtype=float)
@@ -177,6 +185,7 @@ def decode(data, labels, decoder, reps, label_order=None,cores=1,logger=None,C=N
                 models[i] = clone(model)
                 logger.debug(f"Fitting model...")
                 models[i].fit(data[train_index,:],labels[train_index])
+                inv_scale_model_weights = True
             else:
                 #Otherwise its assumed to be an array of already trained decoders
                 models[i] = decoder[i]  
@@ -188,13 +197,19 @@ def decode(data, labels, decoder, reps, label_order=None,cores=1,logger=None,C=N
                 logger.debug(f"Calculating confusion matrix...")
             norm_confusion[i,:,:], confusion[i,:,:] = confusion_matrix(data[test_index,:],labels[test_index],models[i],label_order)
             
-            trained_decoders[i] = models[i]
+            trained_decoders_normalized[i] = models[i]
+            
+            scaled_model =  deepcopy(models[i])
+            if isinstance(decoder,str):
+                scaled_model.coef_ = scaler.inverse_transform(models[i].coef_)
+            trained_decoders_scaled[i] = scaled_model
+
     except Exception as Err:
         raise
         logger.error("Error during training and testing")
         logger.error(Err)
 
-    return perf,  confusion, norm_confusion, trained_decoders
+    return perf,  confusion, norm_confusion, trained_decoders_normalized, trained_decoders_scaled
 
 
     
