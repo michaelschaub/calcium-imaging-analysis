@@ -138,23 +138,22 @@ rule plot_performances_clusters_time:
 
 rule plot_performances_clusters_time_different_subject:
     input:
-        perf = [f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/model_from/{{decoderset_id}}/cluster_perf.pkl"]
+        perf = [f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{testing_set_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/model_from/{{decoding_set_id}}/cluster_perf.pkl"]
     output:
-        f"{PLOTS_DIR}/{{dataset_id}}/{{decoderset_id}}_on_{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.pdf"
-        
+        f"{PLOTS_DIR}/{{dataset_id}}/{{decoding_set_id}}_on_{{testing_set_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.pdf"
 
-        #report(f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{parcellation}}_perf.pdf",
+        #report(f"{PLOTS_DIR}/{{dataset_id}}/{{decoding_set_id}}_on_{{testing_set_id}}/{'.'.join(config['aggr_conditions'])}/{{parcellation}}_perf.pdf",
         #    caption="../report/decode_features.rst",
         #    category="6 Decoding",
         #    subcategory="Compare Features",
         #    labels={"Parcellation":"{parcellation}","Subject/Date": "{dataset_id}"}),
-        #f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/performances_anno.pdf"
+        #f"{PLOTS_DIR}/{{dataset_id}}/{{decoding_set_id}}_on_{{testing_set_id}}/{'.'.join(config['aggr_conditions'])}/{{parcellation}}_performances_anno.pdf"
     params:
         clusters="",
         decoders=[f"{{decoder}}"],
         conds=list(config['aggr_conditions']),
     log:
-        f"{PLOTS_DIR}/{{dataset_id}}/{{decoderset_id}}_on_{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.log"
+        f"{PLOTS_DIR}/{{dataset_id}}/{{decoding_set_id}}_on_{{testing_set_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.log"
         
     conda:
         "../envs/environment.yaml"

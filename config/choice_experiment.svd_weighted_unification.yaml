@@ -27,11 +27,11 @@ branch_opts:
   generalize:
     # decomposition space in which generalization takes place
     All:
-      # decoders from the decodersets are applied to these subsets
-      - decoderset: All
-        subset:     GN06_expert
-      - decoderset: GN06_expert
-        subset:     All
+      # decoders from the decoding sets are applied to these testing sets
+      - decoding_set: All
+        testing_set:  GN06_expert
+      - decoding_set: GN06_expert
+        testing_set:  All
 
     
     #GN06_untrained combined im shared_space von untrained

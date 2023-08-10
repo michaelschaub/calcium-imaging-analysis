@@ -364,16 +364,16 @@ rule cluster_coef:
 
 rule decoding_with_existing_model:
     input:
-        feat = [f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Features/{cond}/{{feature}}/features.h5" for cond in config['aggr_conditions']],
-        models = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{decoderset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/ClusterModels.pkl",
+        feat = [f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{testing_set_id}}/Features/{cond}/{{feature}}/features.h5" for cond in config['aggr_conditions']],
+        models = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{decoding_set_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/ClusterModels.pkl",
     output:
-        perf =f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/model_from/{{decoderset_id}}/cluster_perf.pkl"
+        perf =f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{testing_set_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/model_from/{{decoding_set_id}}/cluster_perf.pkl"
     params:
         conds = list(config['aggr_conditions']),
         decoders=[f"{{decoder}}"],
         params = lambda wildcards: config["decoders"][wildcards["decoder"]], #TODO actually we just need number of reps, or we could also just test once on whole dataset
     log:
-        f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/model_from/{{decoderset_id}}/cluster_perf.log"
+        f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{testing_set_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/model_from/{{decoding_set_id}}/cluster_perf.log"
     conda:
         "../envs/environment.yaml"
     resources:

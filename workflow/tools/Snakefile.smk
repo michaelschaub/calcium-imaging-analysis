@@ -50,9 +50,9 @@ for dataset_alias, generalization_aliases in generalize_aliased.items():
     dataset_id = dataset_aliases[dataset_alias]
     generalize[dataset_id] = []
     for generalization in generalization_aliases:
-        decoderset_id = dataset_aliases[generalization["decoderset"]]
-        subset_id = dataset_aliases[generalization["subset"]]
-        generalize[dataset_id].append({"decoderset_id": decoderset_id, "subset_id": subset_id})
+        decoding_set_id = dataset_aliases[generalization["decoding_set"]]
+        testing_set_id = dataset_aliases[generalization["testing_set"]]
+        generalize[dataset_id].append({"decoding_set_id": decoding_set_id, "testing_set_id": testing_set_id})
 
 session_runs = {}
 for set_id, sub_ids in unification_groups.items():

@@ -113,10 +113,10 @@ rule decode:
 
 rule decode_generalized:
     input:
-        expand([f"{PLOTS_DIR}/{dataset_id}/{generalization['decoderset_id']}_on_{generalization['subset_id']}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.pdf"
+        expand([f"{PLOTS_DIR}/{dataset_id}/{generalization['decoding_set_id']}_on_{generalization['testing_set_id']}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.pdf"
                         for dataset_id, generalizations in generalize.items() for generalization in generalizations],
                     parcellation = parcellations, feature =  features, decoder=decoders),
-        expand([f"{DATA_DIR}/{dataset_id}/{{parcellation}}/{generalization['subset_id']}/Decoding/decoder/{'.'.join(aggr_conditions)}/{{feature}}/{{decoder}}/model_from/{generalization['decoderset_id']}/cluster_perf.pkl"
+        expand([f"{DATA_DIR}/{dataset_id}/{{parcellation}}/{generalization['testing_set_id']}/Decoding/decoder/{'.'.join(aggr_conditions)}/{{feature}}/{{decoder}}/model_from/{generalization['decoding_set_id']}/cluster_perf.pkl"
                         for dataset_id, generalizations in generalize.items() for generalization in generalizations],
                     parcellation = parcellations, feature =  features, decoder=decoders),
 
