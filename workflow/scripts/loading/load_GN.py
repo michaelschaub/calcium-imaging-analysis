@@ -130,6 +130,7 @@ try:
     svd.frame['parcellation'] = 'SVD'
     svd.frame['decomposition_set_id'] = snakemake.wildcards['session_id']
     svd.frame[svd.dataset_id_column] = snakemake.wildcards['session_id']
+    svd.frame['session_id'] = snakemake.wildcards['session_id']
     svd.save( snakemake.output[0] )
 
     snakemake_tools.stop_timer(timer_start, logger=logger)

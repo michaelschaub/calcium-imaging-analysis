@@ -367,7 +367,7 @@ rule decoding_with_existing_model:
         feat = [f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{testing_set_id}}/Features/{cond}/{{feature}}/features.h5" for cond in config['aggr_conditions']],
         models = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{decoding_set_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/ClusterModels.pkl",
     output:
-        perf = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{testing_set_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/model_from/{{decoding_set_id}}/cluster_perf.pkl"
+        perf = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{testing_set_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/model_from/{{decoding_set_id}}/cluster_perf.pkl",
         df =   f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{testing_set_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/model_from/{{decoding_set_id}}/cluster_perf_df.pkl",
     params:
         conds = list(config['aggr_conditions']),
@@ -381,4 +381,17 @@ rule decoding_with_existing_model:
         mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,1000,1000)
     script:
         "../scripts/test_models.py"
+
+use rule decoding_with_existing_model as decoding_on_sessions with:
+    output:
+        perf = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{testing_set_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/model_from/{{decoding_set_id}}/{{session_id}}/cluster_perf.pkl",
+        df =   f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{testing_set_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/model_from/{{decoding_set_id}}/{{session_id}}/cluster_perf_df.pkl",
+    params:
+        conds = list(config['aggr_conditions']),
+        decoders=[f"{{decoder}}"],
+        params = lambda wildcards: config["decoders"][wildcards["decoder"]], #TODO actually we just need number of reps, or we could also just test once on whole dataset
+        select = lambda wildcards: {"session_id": wildcards["session_id"]},
+        forward = ["date_time"],
+    log:
+        f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{testing_set_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/model_from/{{decoding_set_id}}/{{session_id}}/cluster_perf.log"
 

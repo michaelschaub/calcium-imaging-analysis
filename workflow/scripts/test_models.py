@@ -7,6 +7,7 @@ import sklearn.ensemble as skens
 from sklearn import preprocessing
 from sklearn.model_selection import StratifiedShuffleSplit
 import numpy as np
+import pandas as pd
 import pickle
 
 
@@ -42,7 +43,6 @@ try:
     #Load models
     with open(snakemake.input["models"], "rb") as f:
         models = pickle.load(f)
-    logger.info([m.coef_ for m in models])
 
     #Load params from Snakemake
     label_list = snakemake.params['conds'] #TODO maybe needs reordering depending on classes in models
@@ -53,14 +53,28 @@ try:
 
     #Load feature for all conditions
     feat_list = load_feat(snakemake.wildcards["feature"],snakemake.input["feat"])
-    logger.info(feat_list)
     #print(snakemake.input)
 
-           
     ####
-    #
-    #
-    #
+
+    #TODO remove this bullshit
+    if "session_id" not in feat_list[0].frame.keys():
+        for feat in feat_list:
+            subjects = feat.frame["mouse_id"]
+            date_times = feat.frame["date_time"]
+            date_times = [ dt.strftime('%Y-%m-%d_%H-%M-%S') for dt in date_times ]
+            session_ids = [ f"{subject}-{dt}" for subject, dt in zip(subjects, date_times) ]
+
+    logger.debug(f"feat_list[0].frame=\n{feat_list[0].frame}")
+    logger.debug(f"feat_list[0].frame=\n{feat_list[0].frame.keys()}")
+    logger.debug(f"{dict(snakemake.params)}")
+    if "select" in dict(snakemake.params):
+        #TODO use the already in data implemented version of this (somehow)
+        select = snakemake.params["select"]
+        logger.info(f"Selecting {select}")
+        logger.debug(f"feat_list[0].frame[{select.keys()}]=\n{feat_list[0].frame[select.keys()]}")
+        feat_list = [feat.get_conditional(select) for feat in feat_list]
+        logger.debug(f"feat_list[0].frame=\n{feat_list[0].frame}")
 
     ##
     if "org_decomp" in snakemake.input.keys():
@@ -85,22 +99,21 @@ try:
     if balancing:
         #Balances the number of trials for each condition
         feat_list = balance(feat_list, seed=seed)
-    logger.info(feat_list)
     if feat_list[0].timepoints is None or "full" in snakemake.wildcards["feature"]: #TODO full matching just a workaround, save new full property of feature class 
         #1 Iteration for full feature (Timepoint = None)
         t_range = [0]
     else:
         #t Iterations for every timepoint t
         t_range = range(feat_list[0].timepoints)
-    logger.info(t_range)    
+    logger.debug(t_range)
     #Decoding results
     n_timepoints = len(list(t_range))
     n_classes = len(feat_list)
     n_models = len(models)
-    logger.info(n_timepoints)
-    logger.info([m.coef_ for m in models])
+    logger.debug(n_timepoints)
+    logger.debug([m.coef_ for m in models])
     perf_list = np.zeros((n_timepoints,n_models,reps))
-    logger.info(perf_list.shape)
+    logger.debug(perf_list.shape)
     
     conf_matrix = np.zeros((n_timepoints,n_models,reps,n_classes,n_classes))
     norm_conf_matrix = np.zeros((n_timepoints,n_models,reps,n_classes,n_classes))
@@ -120,15 +133,15 @@ try:
         ###
         #Decode
         for m, model in enumerate(models):
-            logger.info(m)
-            logger.info(model)
-            logger.info(model.coef_.shape)
+            logger.debug(m)
+            logger.debug(model)
+            logger.debug(model.coef_.shape)
             #TODO model[1] is hardcoded for mlr pipeline, other decoders are just model
             perf_t, confusion_t, norm_confusion_t, _ = decode(feats_t, labels_t,[model]*reps,reps,
                                                               label_order= label_list,
                                                               logger=logger, seed=seed)
-            logger.info(perf_t.shape)
-            logger.info(f"{t}{t_range}")
+            logger.debug(perf_t.shape)
+            logger.debug(f"{t}{t_range}")
             perf_list[t,m,:] = perf_t
             conf_matrix[t,m,:,:,:] = confusion_t
             norm_conf_matrix[t,m,:,:,:] = norm_confusion_t
@@ -141,19 +154,27 @@ try:
             "decomposition_set_id" : feat_list[0].frame["decomposition_set_id"].iloc[0],
             "parcellation"         : feat_list[0].frame["parcellation"].iloc[0],
             "dataset_id"           : feat_list[0].frame["dataset_id"].iloc[0],
-            "decoding_set_id"      : snakemake.wildcards['decoding_set_id']
-            "testing_set_id"       : snakemake.wildcards['testing_set_id']
+            "decoding_set_id"      : snakemake.wildcards['decoding_set_id'],
+            "testing_set_id"       : snakemake.wildcards['testing_set_id'],
             "conditions"           : '.'.join(np.unique([ f.frame["condition"].iloc[0] for f in feat_list])),
             "feature"              : feat_list[0].frame["feature"].iloc[0],
             "feature_params"       : feat_list[0].frame["feature_params"].iloc[0],
             "decoder"              : snakemake.wildcards["decoder"],
             }
+
+    for forward in snakemake.params.get("forward", []):
+        accuracy_dict[forward] =     feat_list[0].frame[forward].iloc[0]
+    for select, value in snakemake.params.get("select", {}).items():
+        accuracy_dict[select]  =     value
+
     accuracy_dict = [{"t": t, "model": m, "run":r, "accuracy":run_perf, **accuracy_dict}
                      for t, model_perfs in enumerate(perf_list)
                      for m, timepoint_perfs in enumerate(model_perfs)
                      for r, run_perf in  enumerate(timepoint_perfs) ]
     accuracy_df =  pd.json_normalize(accuracy_dict)
     accuracy_df.to_pickle(snakemake.output["df"])
+
+    logger.debug(f"accuracy_df=\n{accuracy_df}")
 
     #Save results
     # TODO replace with better file format
