@@ -34,6 +34,8 @@ class Features:
     _type : FeatureType
 
     def __init__(self, frame, data, feature, file=None, time_resolved=False, full = False):
+        assert len(frame) == feature.shape[0], f"DataFrame frame and feature do not have matching length \
+                    ({len(frame)} != {feature.shape[0]})"
         self.data = data
         self._df = frame.reset_index(drop=True)
         self._feature = feature
@@ -53,15 +55,14 @@ class Features:
         ''' concats feature values from List of Features to this feature'''
         if not isinstance(features, list):
             features = [features]
-        LOGGER.info(self._feature.shape)
-        if overwrite:
-            self._feature = np.concatenate([f.feature for f in features],axis=0)
-            self._df = pd.concat([f._df for f in features]).reset_index(drop=True)
-        else:
-            self._feature = np.concatenate([self._feature,[f.feature for f in features]],axis=0)
-            self._df = pd.concat([self._df,[f._df for f in features]]).reset_index(drop=True)
+        if not overwrite:
+            features = [self, *features]
+        self._feature = np.concatenate([f.feature for f in features],axis=0)
+        self._df = pd.concat([f._df for f in features]).reset_index(drop=True)
 
-        LOGGER.info(self._feature.shape)
+        LOGGER.debug("Concated feature.shape=%s", self.feature.shape)
+        LOGGER.debug("Concated   frame.shape=%s", self.frame.shape)
+        return type(self)(self._df, self.data, self._feature)
 
     def expand(self, data=None):
         '''expand feature into same shape as temporals in Data (for computation)'''
@@ -114,6 +115,16 @@ class Features:
         '''Not sure why we have this'''
         return self._time_resolved
 
+    def __getitem__(self, key):
+        try:
+            data_frame = self._df.iloc[key]
+        except NotImplementedError:
+            data_frame = self._df.loc[key]
+        self._df = data_frame
+        self._feature = self._feature[key]
+        #TODO make copy before
+        return self
+
     def subsample(self,size,seed=None):
         '''
         Subsampling Trials to balance number of datapoints between different conditions
@@ -122,10 +133,25 @@ class Features:
         '''
         rng = np.random.default_rng(seed)
         select_n = rng.choice(self.trials_n,size=size,replace=False)
+        return self[select_n]
 
-        #TODO: either use a clone of self or do not return anything, doing both can cause confusion
-        self._feature = self._feature[select_n ]
-        return self
+    def get_conditional(self, conditions):
+        def check_attr(data_frame, attr, val):
+            if callable(val):
+                return val(getattr( data_frame, attr ))
+            return getattr( data_frame, attr ) == val
+
+        select = True
+        for attr, cond_val in conditions.items():
+            if isinstance(cond_val,list):
+                any_matching = False
+                for val in cond_val:
+                    any_matching = any_matching | check_attr(self._df, attr, val)
+                select = select & any_matching
+            else:
+                select = select & check_attr(self.frame, attr, cond_val)
+        #if(np.any_matching(select)):
+        return self[select]
 
     @property
     def hash(self):
