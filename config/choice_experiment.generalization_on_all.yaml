@@ -1,4 +1,4 @@
-name: "Clean_SVD_blockwise_unification"
+name: "Generalization_on_All"
 
 branch_opts:
   loading:
@@ -21,7 +21,7 @@ branch_opts:
     #   "sv_weighted": rescale spatials by singular values computed from temporals and proceed with the same steps as in naiv, default
     #   "block_svd"    recalculate blockwise svd over all temporals, more resource intensive, but more accurate
     # Warning: changes this will trigger recomputaion of unify rule, overwriting previous output, if not exported
-    unification_method: "block_svd"
+    unification_method: "sv_weighted"
 
 
   generalize:
@@ -29,8 +29,10 @@ branch_opts:
     All:
       # decoders from the decoding sets are applied to these testing sets
       - decoding_set: All
-        testing_set:  GN06_expert
+        testing_set:  All
       - decoding_set: GN06_expert
+        testing_set:  All
+      - decoding_set: GN10_expert
         testing_set:  All
 
     
@@ -562,7 +564,7 @@ branch_opts:
       reps: [5]
       max_trials: [ 15, null ]
     MLR:
-      C: [ 0.1 ]
+      C: [ 1.0 ]
     #LDA:
     #MLRshuffle:
 

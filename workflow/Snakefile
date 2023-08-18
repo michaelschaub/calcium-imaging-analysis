@@ -2,7 +2,7 @@ include: "tools/Snakefile.smk"
 
 report: "report/workflow.rst"
 
-ruleorder:  load_GN > load_mSM > unify > svd > trial_selection > locaNMF > parcellate >  thresholding > feature_grouping > feature_calculation
+ruleorder:  load_GN > load_mSM > unify > svd > trial_selection > locaNMF > parcellate >  thresholding > feature_grouping > feature_calculation > decoding_on_sessions > decoding_with_existing_model
 
 ###   Output accumulation rules   ###
 
@@ -113,11 +113,11 @@ rule decode:
 
 rule decode_generalized:
     input:
-        expand([f"{PLOTS_DIR}/{dataset_id}/{subset_id}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/from_{generalize_from}/ClusturedModels_perf.pdf"
-                        for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
+        expand([f"{PLOTS_DIR}/{dataset_id}/{generalization['decoding_set_id']}_on_{generalization['testing_set_id']}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.pdf"
+                        for dataset_id, generalizations in generalize.items() for generalization in generalizations],
                     parcellation = parcellations, feature =  features, decoder=decoders),
-        expand([f"{DATA_DIR}/{dataset_id}/{{parcellation}}/{subset_id}/Decoding/decoder/{'.'.join(aggr_conditions)}/{{feature}}/{{decoder}}/from_{generalize_from}/cluster_perf.pkl"
-                        for dataset_id, subset_ids in session_runs.items() for subset_id in subset_ids],
+        expand([f"{DATA_DIR}/{dataset_id}/{{parcellation}}/{generalization['testing_set_id']}/Decoding/decoder/{'.'.join(aggr_conditions)}/{{feature}}/{{decoder}}/model_from/{generalization['decoding_set_id']}/cluster_perf.pkl"
+                        for dataset_id, generalizations in generalize.items() for generalization in generalizations],
                     parcellation = parcellations, feature =  features, decoder=decoders),
 
 rule aggregated_decoding_plots:
@@ -128,6 +128,12 @@ rule aggregated_decoding_plots:
         #expand([f"{PLOTS_DIR}/{dataset_id}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/perf_all_space_comp.pdf"
                 #for dataset_id in [dataset_aliases["All"]] if unified_space == "Both" ],
                 #parcellation = parcellations, feature =  features, decoder=decoders, ),
+
+rule aggregated_generalized_decoding:
+    input:
+        expand([f"{PLOTS_DIR}/{dataset_id}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/generalized.pdf"
+                for dataset_id in generalize.keys()],
+                parcellation = parcellations, feature =  features, decoder=decoders, ),
 
 
 rule load:

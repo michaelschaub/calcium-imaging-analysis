@@ -175,7 +175,7 @@ paths:
 
 temporary_outputs:
   # mark all intermediate outputs as temporary
-  default: True
+  default: False
   #
   # mark outputs of specific rules as (not) temporary
   # load: False

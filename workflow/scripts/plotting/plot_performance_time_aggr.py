@@ -28,13 +28,42 @@ try:
             df.append(pickle.load(f))
     accuracy_df = pd.concat(df)
 
-    logger.info(f"{accuracy_df}")
+    logger.info(f"{accuracy_df}=\n{accuracy_df}")
 
-    style = snakemake.params.get("style", None)
-    hue = snakemake.params.get("hue", None)
+    select = snakemake.params.get("select", {})
+    logger.info(f"Selecting {select}.")
+    for key, value in select.items():
+        if isinstance(value, list):
+            selection = False
+            for val in value:
+                selection = selection | accuracy_df[key] == val
+        else:
+            selection = accuracy_df[key] == value
+        accuracy_df = accuracy_df.loc[selection]
+    logger.debug(f"accuracy_df=\n{accuracy_df}")
+
+    def get_plotting_param(key, default=None):
+        param = snakemake.params.get(key, default)
+        if isinstance(param, tuple):
+            format_str, param = param
+            param = [ line for _, line in accuracy_df[param].iterrows()]
+            param = np.array([ format_str.format(**line) for line in param])
+        elif isinstance(param, list):
+            param = [ line for _, line in accuracy_df[param].iterrows()]
+            param = np.array([ ' '.join([str(v) for v in line.values]) for line in param])
+        elif callable(param):
+            param = [param(**line) for _, line in accuracy_df.iterrows()]
+        return param
+
+    style = get_plotting_param("style", None)
+    logger.debug(f"{style=}")
+    hue   = get_plotting_param("hue", None)
+    logger.debug(f"{hue=}")
+    x     = get_plotting_param("x", "t")
+    logger.debug(f"{x=}")
 
     '''
-    subplots = snakemake.params.get("subplots", None)
+    subplots = get_plotting_param("subplots", None)
     if strokes is not None:
         logger.info(f"stroke columns {strokes}")
         stroke_keys = np.unique([ df[col] for col in strokes ])
@@ -50,7 +79,17 @@ try:
     sns.set(rc={'figure.figsize':(15,6)})
     sns.set_style("whitegrid",{'axes.xaxis.grid' : False})
 
-    accuracy_over_time_plot = sns.lineplot(data=accuracy_df, x="t", y="accuracy",hue=hue,style=style,errorbar=('pi',90),palette='deep', err_kws={"alpha":0.25})
+    lineplot = snakemake.params.get('lineplot', True)
+
+    if lineplot:
+        accuracy_over_time_plot = sns.lineplot(
+                data=accuracy_df, y="accuracy",
+                x=x, hue=hue, style=style,
+                errorbar=('pi',90), palette='deep', err_kws={"alpha":0.25})
+    else:
+        accuracy_over_time_plot = sns.scatterplot(data=accuracy_df, y="accuracy",
+                                                  x=x, hue=hue,
+                                                  palette='deep')
     conditions = snakemake.params['conds']
    
     '''
@@ -183,79 +222,90 @@ try:
     
     '''
     
-    start = int(accuracy_df.t.min())
-    stop = int(accuracy_df.t.max())
-    timepoints_n = stop-start #assumes that we have continous timepoints between start and stop
+    if x == "t":
+        start = int(accuracy_df.t.min())
+        stop = int(accuracy_df.t.max())
+        timepoints_n = stop-start #assumes that we have continous timepoints between start and stop
 
-    #sns.set(rc={'figure.figsize':(np.round((stop-start)/20,decimals=1),6)})
-    #plt.rcParams["figure.figsize"] = (np.round((stop-start)/30,decimals=1),6)
-
-
-
-    #Phase annotation 
-    phases = snakemake.config["phase_conditions"].copy()     # TODO only use phases annotation within chosen phase
-    phases.pop("all")
-
-    markers = {}
-    for phase_name, phase_timings in phases.items():
-        markers[phase_timings["start"]] = markers.get(phase_timings["start"], None)
-        markers[phase_timings["stop"]] = phase_name
-
-    trans = accuracy_over_time_plot.get_xaxis_transform()
-    prev_marker = None
-    ordered_marker_keys = np.sort(list(markers.keys()))
-    for marker in ordered_marker_keys:
-        if marker in range(start-2,stop+2):
-            plt.plot([marker,marker], [0,1], ':k', alpha=0.5)
-            accuracy_over_time_plot.plot([marker,marker], [1,1.05], color="k", transform=trans, clip_on=False,alpha=0.5)
-
-            if markers[marker] is not None and prev_marker is not None:
-                plt.text(0.5 * (marker+prev_marker),1.015,markers[marker],fontsize=11*font_scale,ha='center')
-            prev_marker = marker
-
-    # limit range
-    accuracy_over_time_plot.set(ylim=[0,1])
-
-    #accuracy_over_time_plot.set(xlim=[0,timepoints_n]) #only shows x range for datapoints
-    x_lim = np.max(np.asarray(list(markers.keys())+[timepoints_n],dtype=int))
-    #accuracy_over_time_plot.set(xlim=[0,x_lim]) #extends x range for phases TODO integrate better
-
-    #Scale & Shift axis TODO remove hardcoding
-    framerate = 15# 30 #15
-    stim_start= 30  #30 67,5
+        #sns.set(rc={'figure.figsize':(np.round((stop-start)/20,decimals=1),6)})
+        #plt.rcParams["figure.figsize"] = (np.round((stop-start)/30,decimals=1),6)
 
 
-    xticks = np.arange(start,stop+1,framerate/2) #tick every second (framerate)
-    xtick_labels =xticks-stim_start #scale ticks to second (1/framerate)
-    #print(xtick_labels)
-    if True: #Change to seconds
-        xtick_labels =  np.round(np.divide(xtick_labels,framerate),decimals=1)
-        xtick_labels =  ["%.1f" % number for number in xtick_labels]
-        logger.info(f"{xtick_labels}")
-        plt.xlabel("Seconds")
+
+        #Phase annotation
+        phases = snakemake.config["phase_conditions"].copy()     # TODO only use phases annotation within chosen phase
+        phases.pop("all")
+
+        markers = {}
+        for phase_name, phase_timings in phases.items():
+            markers[phase_timings["start"]] = markers.get(phase_timings["start"], None)
+            markers[phase_timings["stop"]] = phase_name
+
+        trans = accuracy_over_time_plot.get_xaxis_transform()
+        prev_marker = None
+        ordered_marker_keys = np.sort(list(markers.keys()))
+        for marker in ordered_marker_keys:
+            if marker in range(start-2,stop+2):
+                plt.plot([marker,marker], [0,1], ':k', alpha=0.5)
+                accuracy_over_time_plot.plot([marker,marker], [1,1.05], color="k", transform=trans, clip_on=False,alpha=0.5)
+
+                if markers[marker] is not None and prev_marker is not None:
+                    plt.text(0.5 * (marker+prev_marker),1.015,markers[marker],fontsize=11*font_scale,ha='center')
+                prev_marker = marker
+
+        # limit range
+        accuracy_over_time_plot.set(ylim=[0,1])
+
+        #accuracy_over_time_plot.set(xlim=[0,timepoints_n]) #only shows x range for datapoints
+        x_lim = np.max(np.asarray(list(markers.keys())+[timepoints_n],dtype=int))
+        #accuracy_over_time_plot.set(xlim=[0,x_lim]) #extends x range for phases TODO integrate better
+
+        #Scale & Shift axis TODO remove hardcoding
+        framerate = 15# 30 #15
+        stim_start= 30  #30 67,5
+
+
+        xticks = np.arange(start,stop+1,framerate/2) #tick every second (framerate)
+        xtick_labels =xticks-stim_start #scale ticks to second (1/framerate)
+        #print(xtick_labels)
+        if True: #Change to seconds
+            xtick_labels =  np.round(np.divide(xtick_labels,framerate),decimals=1)
+            xtick_labels =  ["%.1f" % number for number in xtick_labels]
+            logger.info(f"{xtick_labels}")
+            plt.xlabel("Seconds")
         
-    plt.ylabel("Accuracy")
-    plt.xticks(xticks, xtick_labels)
-    accuracy_over_time_plot.set_xticklabels(xtick_labels)
-    #accuracy_over_time_plot.xaxis.set_major_formatter(FormatStrFormatter('%.1f'))
-    
-    '''
-    middle_plot = False
-    if middle_plot:
-        sns.despine(ax=accuracy_over_time_plot,left=True,right=True)
-        accuracy_over_time_plot.set(yticklabels=[])  
-        accuracy_over_time_plot.set(ylabel=None)
-        accuracy_over_time_plot.tick_params(left=False)
-    else:
         plt.ylabel("Accuracy")
-    '''
-    #remove vertical lines,
-    accuracy_over_time_plot.grid(False) 
-    accuracy_over_time_plot.yaxis.grid(True)
+        plt.xticks(xticks, xtick_labels)
+        accuracy_over_time_plot.set_xticklabels(xtick_labels)
+        #accuracy_over_time_plot.xaxis.set_major_formatter(FormatStrFormatter('%.1f'))
 
-    #Random chance
-    plt.plot([-.5+start, stop +.5], [1/len(conditions), 1/len(conditions)], '--k') #TODO adapt better
-    plt.text(stop-5,1/len(conditions)-0.1,'random chance',fontsize=11*font_scale,ha='center')
+        '''
+        middle_plot = False
+        if middle_plot:
+            sns.despine(ax=accuracy_over_time_plot,left=True,right=True)
+            accuracy_over_time_plot.set(yticklabels=[])
+            accuracy_over_time_plot.set(ylabel=None)
+            accuracy_over_time_plot.tick_params(left=False)
+        else:
+            plt.ylabel("Accuracy")
+        '''
+        #remove vertical lines,
+        accuracy_over_time_plot.grid(False)
+        accuracy_over_time_plot.yaxis.grid(True)
+
+        #Random chance
+        plt.plot([-.5+start, stop +.5], [1/len(conditions), 1/len(conditions)], '--k') #TODO adapt better
+        plt.text(stop-5,1/len(conditions)-0.1,'random chance',fontsize=11*font_scale,ha='center')
+    elif lineplot:
+        start = accuracy_df[x].min()
+        stop = accuracy_df[x].max()
+
+        #Random chance
+        plt.plot([start, stop], [1/len(conditions), 1/len(conditions)], '--k') #TODO adapt better
+        plt.text(stop,1/len(conditions)-0.1,'random chance',fontsize=11*font_scale,ha='center')
+
+        accuracy_over_time_plot.set(ylim=[0,1])
+        #accuracy_over_time_plot.set(xlim=[start,stop])
     
 
     #accuracy_over_time_plot.get_figure().show()

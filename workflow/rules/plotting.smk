@@ -58,6 +58,39 @@ rule plot_from_df_all_space_comp:
     script:
         "../scripts/plotting/plot_performance_time_aggr.py"
 
+def plot_generalization_input(wildcards):
+    perf_path = "{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{testing_set_id}/Decoding/decoder/{{conditions}}/{{feature}}/{{decoder}}/model_from/{decoding_set_id}/{session_id}/cluster_perf_df.pkl"
+    cross_dataset_perfs = [ perf_path.format(DATA_DIR=DATA_DIR,
+                                             testing_set_id=generalization['testing_set_id'],
+                                             decoding_set_id=generalization['decoding_set_id'],
+                                             session_id=session_id)
+                                for generalization in config['generalize'][wildcards['dataset_id']]
+                                for session_id in config['dataset_sessions'][generalization['testing_set_id']]]
+    inner_dataset_perfs = [ perf_path.format(DATA_DIR=DATA_DIR,
+                                             testing_set_id=generalization['decoding_set_id'],
+                                             decoding_set_id=generalization['decoding_set_id'],
+                                             session_id=session_id)
+                                for generalization in config['generalize'][wildcards['dataset_id']]
+                                for session_id in config['dataset_sessions'][generalization['decoding_set_id']]]
+    return [*cross_dataset_perfs , *inner_dataset_perfs]
+
+rule plot_generalization:
+    input:
+        plot_generalization_input
+    output:
+        f"{PLOTS_DIR}/{{dataset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/generalized.pdf"
+    params:
+        #hue   = 'model',
+        hue  = ("{decoding_set_id} on {testing_set_id}", ['decoding_set_id', 'testing_set_id']),
+        x     = 'date_time',
+        conds=list(config['aggr_conditions']), #maybe get from config within script?
+    log:
+        f"{PLOTS_DIR}/{{dataset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/generalized.log"
+    conda:
+        "../envs/environment.yaml"
+    script:
+        "../scripts/plotting/plot_performance_time_aggr.py"
+
 
 
 # noinspection SmkNotSameWildcardsSet
@@ -106,72 +139,6 @@ rule plot_model_coef:
     script:
         "../scripts/plot_model_coef.py"
 
-### move to processing
-rule cluster_coef:
-    input:
-        model  = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{{conditions}}/{{feature}}/{{decoder}}/decoder_model.pkl",
-        parcel = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{dataset_id}}/data.h5"
-    output:
-        no_cluster = f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime.pdf",
-        cluster    = f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.pdf",
-        PCA_3D = f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_PCA_3D.html",
-        Cluster_3D = f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_Clustered_3D.html",
-
-        cluster_small    = f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.png",
-        models     = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{{conditions}}/{{feature}}/{{decoder}}/ClusterModels.pkl",
-        coef_plots  = directory(f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/Clusters/")
-    params:
-        phases = config["phase_conditions"]
-    log:
-         f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/CoefsAcrossTime_clustered.log",
-    conda:
-        "../envs/environment_clustering.yaml"
-    script:
-        "../scripts/cluster_models_UMAP.py"
-
-
-rule decoding_with_existing_model:
-    input:
-        feat = [f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Features/{cond}/{{feature}}/features.h5" for cond in config['aggr_conditions']],
-        models = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/ClusterModels.pkl",
-    output:
-        perf =f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/cluster_perf.pkl"
-    params:
-        conds = list(config['aggr_conditions']),
-        decoders=[f"{{decoder}}"],
-        params = lambda wildcards: config["decoders"][wildcards["decoder"]], #TODO actually we just need number of reps, or we could also just test once on whole dataset
-    log:
-        f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/cluster_perf.log",
-    conda:
-        "../envs/environment.yaml"
-    resources:
-        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,1000,1000)
-    script:
-        "../scripts/test_models.py"
-
-#TODO do properly
-
-rule decoding_with_existing_model_different_subject:
-    input:
-        feat = [f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Features/{cond}/{{feature}}/features.h5" for cond in config['aggr_conditions']],
-        models = f"{DATA_DIR}/{config['generalize_from']}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/ClusterModels.pkl",
-        org_decomp = f"{DATA_DIR}/{config['generalize_from']}/{{parcellation}}/data.h5",
-        new_decomp = f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{dataset_id}}/data.h5",
-    output:
-        perf =f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/from_{config['generalize_from']}/cluster_perf.pkl"
-    params:
-        conds = list(config['aggr_conditions']),
-
-        decoders=[f"{{decoder}}"],
-        params = lambda wildcards: config["decoders"][wildcards["decoder"]], #TODO actually we just need number of reps, or we could also just test once on whole dataset
-    log:
-        f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/from_{config['generalize_from']}/cluster_perf.log",
-    conda:
-        "../envs/environment.yaml"
-    resources:
-        mem_mib=lambda wildcards, input, attempt: mem_res(wildcards,input,attempt,1000,1000)
-    script:
-        "../scripts/test_models.py"
 ######
 
 rule plot_performances_clusters_time:
@@ -204,23 +171,22 @@ rule plot_performances_clusters_time:
 
 rule plot_performances_clusters_time_different_subject:
     input:
-        perf   =[f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/from_{config['generalize_from']}/cluster_perf.pkl"],
+        perf = [f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{testing_set_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{decoder}}/model_from/{{decoding_set_id}}/cluster_perf.pkl"]
     output:
-        f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/from_{config['generalize_from']}/ClusturedModels_perf.pdf"
-        
+        f"{PLOTS_DIR}/{{dataset_id}}/{{decoding_set_id}}_on_{{testing_set_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.pdf"
 
-        #report(f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{parcellation}}_perf.pdf",
+        #report(f"{PLOTS_DIR}/{{dataset_id}}/{{decoding_set_id}}_on_{{testing_set_id}}/{'.'.join(config['aggr_conditions'])}/{{parcellation}}_perf.pdf",
         #    caption="../report/decode_features.rst",
         #    category="6 Decoding",
         #    subcategory="Compare Features",
         #    labels={"Parcellation":"{parcellation}","Subject/Date": "{dataset_id}"}),
-        #f"{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{{subset_id}}/Decoding/decoder/{'.'.join(config['aggr_conditions'])}/performances_anno.pdf"
+        #f"{PLOTS_DIR}/{{dataset_id}}/{{decoding_set_id}}_on_{{testing_set_id}}/{'.'.join(config['aggr_conditions'])}/{{parcellation}}_performances_anno.pdf"
     params:
         clusters="",
         decoders=[f"{{decoder}}"],
         conds=list(config['aggr_conditions']),
     log:
-        f"{PLOTS_DIR}/{{dataset_id}}/{{subset_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.log"
+        f"{PLOTS_DIR}/{{dataset_id}}/{{decoding_set_id}}_on_{{testing_set_id}}/{'.'.join(config['aggr_conditions'])}/{{feature}}/{{parcellation}}/{{decoder}}/ClusturedModels_perf.log"
         
     conda:
         "../envs/environment.yaml"

@@ -27,6 +27,14 @@ def set_nested_dict_recursive(dict,keys,val=None):
         keys.pop(0) #removes that key from key list
         dict[key] = set_nested_dict_recursive(dict[key],keys,val) #continues the recursion on the next key
         return dict
+    
+def print_dict_keys(print_dict,level=0):
+    if type(print_dict) is dict:
+        print(f"Level {level}:",end=" ")
+        print(list(print_dict.keys()))
+        print_dict_keys(next(iter(print_dict.values())),level+1)
+    else:
+        print(f"Example shape of Value (feature): {print_dict.shape}")
 
 def reorder_feats(generic_dict):
     #Due to the generic nature of the pipeline, the loaded feature mirror the internal file structure resulting from the independent runs
@@ -35,17 +43,23 @@ def reorder_feats(generic_dict):
     feats = {}
 
     for dataset,ddict in generic_dict.items():
-        for subset,sdict in ddict.items():
-            for parcellation,pdict in sdict.items():
-                feats[parcellation]=feats.get(parcellation, {})
-                for condition,cdict in pdict.items():
+        #for subset,sdict in ddict.items():
 
-                    for feature, data in cdict.items():
-                        feats[parcellation][feature] = feats[parcellation].get(feature, {})
-                        feats[parcellation][feature][condition] = feats[parcellation][feature].get(condition, {})
-                        feats[parcellation][feature][condition][dataset] = feats[parcellation][feature].get(dataset, {})
+        subset = dataset #only subset = dataset considered
+        sdict = ddict[subset] 
+        
+        for parcellation,pdict in sdict.items():
+            feats[parcellation]=feats.get(parcellation, {})
+            for condition,cdict in pdict.items():
 
-                        feats[parcellation][feature][condition][dataset][subset] = data
+                for feature, data in cdict.items():
+                    feats[parcellation][feature] = feats[parcellation].get(feature, {})
+                    feats[parcellation][feature][condition] = feats[parcellation][feature].get(condition, {})
+                    feats[parcellation][feature][condition][dataset] = feats[parcellation][feature][condition].get(dataset, {})
+                    #feats[parcellation][feature][condition][dataset][subset] = feats[parcellation][feature][dataset].get(subset, {})
+                    
+                    feats[parcellation][feature][condition][dataset][subset] = data
+
     return feats
 
 logger = start_log(snakemake)
@@ -61,14 +75,15 @@ try:
     # loops over all arrays in iter in occuring order [X,Y] -> (x1,y1),(x1,y2), ...
     logger.debug("session_runs: %s", snakemake.params['iter'][0])
     for dataset_id, subset_ids in snakemake.params['iter'][0].items():
-        for subset_id in subset_ids:
-            for i, keys in enumerate(itertools.product(*snakemake.params['iter'][1:])):
-                val = snakemake_tools.load(snakemake.input[i])
-                nest = set_nested_dict_recursive(nest, [dataset_id, subset_id, *keys], val)
+        #for subset_id in subset_ids:
+        subset_id = dataset_id #only consider subset = dataset
+        for i, keys in enumerate(itertools.product(*snakemake.params['iter'][1:])):
+            val = snakemake_tools.load(snakemake.input[i])
+            nest = set_nested_dict_recursive(nest, [dataset_id, subset_id, *keys], val)
 
     #Removes lambda by converting to normal dict class
     generic_dict = dict(nest)
-
+    print_dict_keys(generic_dict)
     #Reorders generic dict that mirrors pipeline structure into a more useful structure based on the output type
     if snakemake.params["reorder"] is not None:
         match snakemake.params["reorder"]:
@@ -76,16 +91,9 @@ try:
                 output_dict = reorder_feats(generic_dict)
             case other:
                 output_dict = generic_dict
-    #print(generic_dict)
- 
-    #print(output_dict)
 
-    snakemake_tools.save(snakemake.output["dict"],output_dict)
+    snakemake_tools.save(snakemake.output["dict"],output_dict,force_pkl=True)
 
-    #remove lambda exp. so nested_dict can be pickled
-    #pkl_save_dict = json.loads(json.dumps(nest))
-    #nest.default_factory = None
-    # i just went with dict(nesteddict)
 
     snakemake_tools.stop_timer(timer_start, logger=logger)
 except Exception:
