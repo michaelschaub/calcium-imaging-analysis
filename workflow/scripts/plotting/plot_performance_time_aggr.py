@@ -79,7 +79,17 @@ try:
     sns.set(rc={'figure.figsize':(15,6)})
     sns.set_style("whitegrid",{'axes.xaxis.grid' : False})
 
-    accuracy_over_time_plot = sns.lineplot(data=accuracy_df, x=x, y="accuracy",hue=hue,style=style,errorbar=('pi',90),palette='deep', err_kws={"alpha":0.25}, sort=True)
+    lineplot = snakemake.params.get('lineplot', True)
+
+    if lineplot:
+        accuracy_over_time_plot = sns.lineplot(
+                data=accuracy_df, y="accuracy",
+                x=x, hue=hue, style=style,
+                errorbar=('pi',90), palette='deep', err_kws={"alpha":0.25})
+    else:
+        accuracy_over_time_plot = sns.scatterplot(data=accuracy_df, y="accuracy",
+                                                  x=x, hue=hue,
+                                                  palette='deep')
     conditions = snakemake.params['conds']
    
     '''
@@ -286,7 +296,7 @@ try:
         #Random chance
         plt.plot([-.5+start, stop +.5], [1/len(conditions), 1/len(conditions)], '--k') #TODO adapt better
         plt.text(stop-5,1/len(conditions)-0.1,'random chance',fontsize=11*font_scale,ha='center')
-    else:
+    elif lineplot:
         start = accuracy_df[x].min()
         stop = accuracy_df[x].max()
 
