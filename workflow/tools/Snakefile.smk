@@ -154,6 +154,7 @@ config["plotting"] =   {
                         "default_conditions":default_conditions,
                         "generalize":generalize,
                         "dataset_aliases":dataset_aliases,
+                        "dataset_sessions":dataset_sessions,
                         "session_runs":session_runs,
                         "datasets":datasets,
                         }

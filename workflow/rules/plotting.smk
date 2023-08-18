@@ -58,6 +58,39 @@ rule plot_from_df_all_space_comp:
     script:
         "../scripts/plotting/plot_performance_time_aggr.py"
 
+def plot_generalization_input(wildcards):
+    perf_path = "{DATA_DIR}/{{dataset_id}}/{{parcellation}}/{testing_set_id}/Decoding/decoder/{{conditions}}/{{feature}}/{{decoder}}/model_from/{decoding_set_id}/{session_id}/cluster_perf_df.pkl"
+    cross_dataset_perfs = [ perf_path.format(DATA_DIR=DATA_DIR,
+                                             testing_set_id=generalization['testing_set_id'],
+                                             decoding_set_id=generalization['decoding_set_id'],
+                                             session_id=session_id)
+                                for generalization in config['generalize'][wildcards['dataset_id']]
+                                for session_id in config['dataset_sessions'][generalization['testing_set_id']]]
+    inner_dataset_perfs = [ perf_path.format(DATA_DIR=DATA_DIR,
+                                             testing_set_id=generalization['decoding_set_id'],
+                                             decoding_set_id=generalization['decoding_set_id'],
+                                             session_id=session_id)
+                                for generalization in config['generalize'][wildcards['dataset_id']]
+                                for session_id in config['dataset_sessions'][generalization['decoding_set_id']]]
+    return [*cross_dataset_perfs , *inner_dataset_perfs]
+
+rule plot_generalization:
+    input:
+        plot_generalization_input
+    output:
+        f"{PLOTS_DIR}/{{dataset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/generalized.pdf"
+    params:
+        #hue   = 'model',
+        hue  = ("{decoding_set_id} on {testing_set_id}", ['decoding_set_id', 'testing_set_id']),
+        x     = 'date_time',
+        conds=list(config['aggr_conditions']), #maybe get from config within script?
+    log:
+        f"{PLOTS_DIR}/{{dataset_id}}/{{conditions}}/{{feature}}/{{parcellation}}/{{decoder}}/generalized.log"
+    conda:
+        "../envs/environment.yaml"
+    script:
+        "../scripts/plotting/plot_performance_time_aggr.py"
+
 
 
 # noinspection SmkNotSameWildcardsSet

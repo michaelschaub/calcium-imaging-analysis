@@ -129,6 +129,12 @@ rule aggregated_decoding_plots:
                 #for dataset_id in [dataset_aliases["All"]] if unified_space == "Both" ],
                 #parcellation = parcellations, feature =  features, decoder=decoders, ),
 
+rule aggregated_generalized_decoding:
+    input:
+        expand([f"{PLOTS_DIR}/{dataset_id}/{'.'.join(aggr_conditions)}/{{feature}}/{{parcellation}}/{{decoder}}/generalized.pdf"
+                for dataset_id in generalize.keys()],
+                parcellation = parcellations, feature =  features, decoder=decoders, ),
+
 
 rule load:
     input:
