@@ -17,6 +17,7 @@ dependencies:
   - pyyaml
   - pytables
   - opencv
+  - pycairo
 
   - pip:
       - umap-learn
@@ -24,7 +25,7 @@ dependencies:
 
       - networkx
       - Shapely
-      - seaborn==0.12.1
+      - seaborn>=0.12.2
       - plotly
       - kaleido
             

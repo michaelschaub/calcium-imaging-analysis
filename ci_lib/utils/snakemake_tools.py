@@ -13,6 +13,9 @@ import scipy
 import yaml
 import numpy
 
+import matplotlib
+matplotlib.use('cairo')
+
 def load_wildcards(snakemake):
     '''
     Loads wildcards from a saved config yaml file

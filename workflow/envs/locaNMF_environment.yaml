@@ -19,6 +19,7 @@ dependencies:
   - pyyaml
   - pytables>=3.5.1
   - opencv
+  - pycairo
   - locanmf
 
   - pip:

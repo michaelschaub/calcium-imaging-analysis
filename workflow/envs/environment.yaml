@@ -17,13 +17,14 @@ dependencies:
   - pyyaml
   - pytables
   - opencv
+  - pycairo
 
   - pip:
       - pyMou@git+https://github.com/mb-BCA/pyMOU.git@master
 
       - networkx
       - Shapely
-      - seaborn==0.12.1
+      - seaborn>=0.12.2
             
       - psutil # ?
 
