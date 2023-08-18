@@ -141,7 +141,7 @@ try:
     svd = DecompData( sessions, Vc, U, trial_starts, allowed_overlap=0) #TODO remove hardcode
     logger.debug(f"DecompData spatial nans: {np.where(np.isnan(svd.spatials))}")
 
-    svd.frame['decomposition_space'] = snakemake.wildcards['dataset_id']
+    svd.frame['decomposition_set_id'] = snakemake.wildcards['dataset_id']
     svd.frame['unification_method']  = method
     svd.save( snakemake.output[0] )
 

@@ -34,6 +34,8 @@ try:
     sessions = load_task_data_as_pandas_df.extract_session_data_and_save(
             root_paths=task_paths, reextract=True, logger=logger) #reextraction needs to be done for different set of dates otherwise session will have wrong dims
 
+    logger.info("Loaded sessions. Processing...")
+
     sessions['subject_id'] = sessions['mouse_id']
 
     #annotate meta data with switch/non switch from previous stimulus and mouse choice to balance trials (with out requiring their order)
@@ -50,7 +52,8 @@ try:
 
 
 
-    logger.info(f"{sessions}")
+    logger.info(f"{sessions=}")
+    logger.info("Done.")
 
     ###
     switch  = []
@@ -125,7 +128,7 @@ try:
 
     svd = DecompData( sessions, Vc, U, trial_starts, allowed_overlap=0) #TODO remove hardcode
     svd.frame['parcellation'] = 'SVD'
-    svd.frame['decomposition_space'] = snakemake.wildcards['session_id']
+    svd.frame['decomposition_set_id'] = snakemake.wildcards['session_id']
     svd.frame[svd.dataset_id_column] = snakemake.wildcards['session_id']
     svd.save( snakemake.output[0] )
 
