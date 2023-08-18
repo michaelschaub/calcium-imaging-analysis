@@ -6,6 +6,10 @@ and a class usefull to redirect std streams to loggers
 import sys
 import logging
 
+logging.getLogger("matplotlib").level = logging.WARNING
+logging.getLogger("numba").level      = logging.INFO
+logging.getLogger("h5py").level       = logging.INFO
+
 LOGLEVELS = {
             "DEBUG":logging.DEBUG,
             "INFO":logging.INFO,
