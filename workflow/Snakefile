@@ -2,7 +2,7 @@ include: "tools/Snakefile.smk"
 
 report: "report/workflow.rst"
 
-ruleorder:  load_GN > load_mSM > unify > svd > trial_selection > locaNMF > parcellate >  thresholding > feature_grouping > feature_calculation
+ruleorder:  load_GN > load_mSM > unify > svd > trial_selection > locaNMF > parcellate >  thresholding > feature_grouping > feature_calculation > decoding_on_sessions > decoding_with_existing_model
 
 ###   Output accumulation rules   ###
 
