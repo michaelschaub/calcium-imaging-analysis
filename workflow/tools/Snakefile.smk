@@ -6,8 +6,6 @@ from snakemake_tools import create_datasets, create_parameters, create_condition
 if config.get('name', None) is None:
     config['name'] = "Default"
 
-generalize_from = config["branch_opts"]["generalize_from"]
-
 datasets = config["branch_opts"]["datasets"]
 if not 'All' in datasets.keys():
     datasets['All'] = { 'group': list(datasets.keys()) }
@@ -44,6 +42,17 @@ else:
 if include_individual_sessions:
     unification_groups.update({ session_id : [session_id]
                                for session_id in dataset_sessions[dataset_aliases["All"]] })
+
+
+generalize_aliased = config["branch_opts"].get("generalize", {})
+generalize = {}
+for dataset_alias, generalization_aliases in generalize_aliased.items():
+    dataset_id = dataset_aliases[dataset_alias]
+    generalize[dataset_id] = []
+    for generalization in generalization_aliases:
+        decoding_set_id = dataset_aliases[generalization["decoding_set"]]
+        testing_set_id = dataset_aliases[generalization["testing_set"]]
+        generalize[dataset_id].append({"decoding_set_id": decoding_set_id, "testing_set_id": testing_set_id})
 
 session_runs = {}
 for set_id, sub_ids in unification_groups.items():
@@ -143,7 +152,7 @@ config["plotting"] =   {
                         "features": features,
                         "parcellations" :parcellations,
                         "default_conditions":default_conditions,
-                        "generalize_from":generalize_from,
+                        "generalize":generalize,
                         "dataset_aliases":dataset_aliases,
                         "session_runs":session_runs,
                         "datasets":datasets,

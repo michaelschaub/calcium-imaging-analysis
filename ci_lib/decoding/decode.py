@@ -190,6 +190,7 @@ def decode(data, labels, decoder, reps, label_order=None,cores=1,logger=None,C=N
             
             trained_decoders[i] = models[i]
     except Exception as Err:
+        raise
         logger.error("Error during training and testing")
         logger.error(Err)
 

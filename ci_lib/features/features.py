@@ -145,7 +145,7 @@ class Features:
             if hasattr(self, '_data_hash') and self._data_hash in LOADED_DATA:
                 self._data = LOADED_DATA[self._data_hash]
             elif hasattr(self, '_data_file'):
-                self._data = DecompData.load(self._data_file)
+                self._data = DecompData(pd.DataFrame(),np.array([]),np.array([]),np.array([]))#DecompData.load(self._data_file)
             else:
                 raise ValueError("Data object of this Feature could not be reconstructed")
         return self._data
@@ -206,13 +206,16 @@ class Features:
         h5_file = save_h5( self, file, { "df": self._df, "feature": self._feature,
                                         "time_resolved":np.asarray(self._time_resolved) } )
         h5_file.attrs["data_hash"] = self.data_hash.hex()
+        
         if self.data.savefile is None:
             if data_file is None:
                 path = pathlib.Path(file)
                 data_file = path.parent / f"data.{path.stem}{path.suffix}"
-            self.data.save(data_file)
-        assert (self._data.savefile is not None), "Failure in saving underlaying data object!"
-        h5_file.attrs["data_file"] = str(self._data.savefile)
+            #self.data.save(data_file)
+        #assert (self._data.savefile is not None), "Failure in saving underlaying data object!"
+        #self._data.savefile = data_file  
+        h5_file.attrs["data_file"] = str(data_file) #self._data.savefile)
+        
         self._savefile = file
 
     @classmethod
